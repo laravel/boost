@@ -7,10 +7,6 @@
 <a href="https://packagist.org/packages/laravel/boost"><img src="https://img.shields.io/packagist/l/boost" alt="License"></a>
 </p>
 
-> 1. Replace the `art/logo.svg` with the new package logo
-> 2. Replace the `public/favicon.ico` with the new package favicon (optional)
-> 3. Write a great README
-
 ## Introduction
 Laravel Boost gives you a jump-start with AI assisted coding by making it simple to add everything you need to help AI make good choices.
 
