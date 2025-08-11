@@ -84,7 +84,6 @@ class BoostServiceProvider extends ServiceProvider
             $this->commands([
                 Console\StartCommand::class,
                 Console\InstallCommand::class,
-                Console\ExecuteToolCommand::class,
             ]);
         }
     }
