@@ -1,5 +1,6 @@
 - Pest v4 is a huge upgrade offering: browser testing, smoke testing, visual regression testing, test sharding, faster type coverage, and profanity checking.
 - Browser testing is incredibly powerful and useful for this project.
+- Browser tests should live in `tests/Browser/`.
 - Use the `search-docs` tool for detailed guidance on utilising these features.
 
 ## Browser testing
