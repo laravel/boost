@@ -70,7 +70,7 @@ class InstallCommand extends Command
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
         $this->performInstallation();
-        $this->outro();
+        $this->displayInstallationComplete();
     }
 
     private function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
@@ -155,34 +155,11 @@ class InstallCommand extends Command
         return $tools;
     }
 
-    private function outro(): void
+    private function displayInstallationComplete(): void
     {
-        $label = 'https://boost.laravel.com/installed';
-
-        $ideNames = $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient) => 'i:'.$mcpClient->mcpClientName())
-            ->toArray();
-        $agentNames = $this->selectedTargetAgents->map(fn (Agent $agent) => 'a:'.$agent->agentName())->toArray();
-        $boostFeatures = $this->selectedBoostFeatures->map(fn ($feature) => 'b:'.$feature)->toArray();
-
-        $guidelines = [];
-        if ($this->shouldInstallAiGuidelines()) {
-            $guidelines[] = 'g:ai';
-        }
-
-        if ($this->shouldInstallStyleGuidelines()) {
-            $guidelines[] = 'g:style';
-        }
-
-        $allData = array_merge($ideNames, $agentNames, $boostFeatures, $guidelines);
-        $installData = base64_encode(implode(',', $allData));
-
-        $link = $this->hyperlink($label, 'https://boost.laravel.com/installed/?d='.$installData);
-
-        $text = 'Enjoy the boost 🚀 ';
-        $paddingLength = (int) (floor(($this->terminal->cols() - mb_strlen($text.$label)) / 2)) - 2;
-
-        echo "\033[42m\033[2K".str_repeat(' ', $paddingLength); // Make the entire line have a green background
-        echo $this->black($this->bold($text.$link)).$this->reset(PHP_EOL);
+        $link = $this->trackInstallation();
+        $successMessage = 'Enjoy the boost 🚀';
+        note($this->bgGreen($this->black($successMessage.' '.$this->bold($link))));
     }
 
     private function hyperlink(string $label, string $url): string
@@ -380,7 +357,6 @@ class InstallCommand extends Command
         $guidelineConfig = new GuidelineConfig;
         $guidelineConfig->enforceTests = $this->enforceTests;
         $guidelineConfig->laravelStyle = $this->shouldInstallStyleGuidelines();
-        $guidelineConfig->caresAboutLocalization = $this->detectLocalization();
         $guidelineConfig->hasAnApi = false;
 
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
@@ -453,91 +429,101 @@ class InstallCommand extends Command
         }
 
         if ($this->selectedTargetMcpClient->isEmpty()) {
-            $this->info('No agents selected for guideline installation.');
-
+            $this->info('No MCP clients selected for installation.');
             return;
         }
+
+        // Define MCP server configurations
+        $mcpServers = collect([
+            'boost' => [
+                'enabled' => $this->shouldInstallMcp(),
+                'key' => 'laravel-boost',
+                'command' => 'php',
+                'args' => ['./artisan', 'boost:mcp'],
+                'env' => [],
+                'label' => 'Boost',
+            ],
+            'herd' => [
+                'enabled' => $this->shouldInstallHerdMcp(),
+                'key' => 'herd',
+                'command' => 'php',
+                'args' => [$this->herd->mcpPath()],
+                'env' => ['SITE_PATH' => base_path()],
+                'label' => 'Herd',
+            ],
+        ])->filter(fn ($server) => $server['enabled']);
+
         $this->newLine();
         $this->info(' Installing MCP servers to your selected IDEs');
         $this->newLine();
-
         usleep(750000);
 
-        $failed = [];
-        $longestIdeName = max(
-            1,
-            ...$this->selectedTargetMcpClient->map(
-                fn (McpClient $mcpClient) => Str::length($mcpClient->mcpClientName())
-            )->toArray()
-        );
+        // Calculate display formatting
+        $longestIdeName = $this->selectedTargetMcpClient->max(fn (McpClient $client) => Str::length($client->mcpClientName()));
+        $failed = collect();
 
+        // Install MCP servers for each client
         foreach ($this->selectedTargetMcpClient as $mcpClient) {
             $ideName = $mcpClient->mcpClientName();
             $ideDisplay = str_pad($ideName, $longestIdeName);
             $this->output->write("  {$ideDisplay}... ");
-            $results = [];
 
-            if ($this->shouldInstallMcp()) {
-                try {
-                    $result = $mcpClient->installMcp('laravel-boost', 'php', ['./artisan', 'boost:mcp']);
-
-                    if ($result) {
-                        $results[] = $this->greenTick.' Boost';
-                    } else {
-                        $results[] = $this->redCross.' Boost';
-                        $failed[$ideName]['boost'] = 'Failed to write configuration';
-                    }
-                } catch (Exception $e) {
-                    $results[] = $this->redCross.' Boost';
-                    $failed[$ideName]['boost'] = $e->getMessage();
-                }
-            }
-
-            // Install Herd MCP if enabled
-            if ($this->shouldInstallHerdMcp()) {
+            $results = $mcpServers->map(function ($serverConfig, $serverKey) use ($mcpClient, $ideName, &$failed) {
                 try {
                     $result = $mcpClient->installMcp(
-                        key: 'herd',
-                        command: 'php',
-                        args: [$this->herd->mcpPath()],
-                        env: ['SITE_PATH' => base_path()]
+                        key: $serverConfig['key'],
+                        command: $serverConfig['command'],
+                        args: $serverConfig['args'],
+                        env: $serverConfig['env']
                     );
 
                     if ($result) {
-                        $results[] = $this->greenTick.' Herd';
+                        return $this->greenTick.' '.$serverConfig['label'];
                     } else {
-                        $results[] = $this->redCross.' Herd';
-                        $failed[$ideName]['herd'] = 'Failed to write configuration';
+                        $failed->push(['ide' => $ideName, 'server' => $serverKey, 'error' => 'Failed to write configuration']);
+                        return $this->redCross.' '.$serverConfig['label'];
                     }
                 } catch (Exception $e) {
-                    $results[] = $this->redCross.' Herd';
-                    $failed[$ideName]['herd'] = $e->getMessage();
+                    $failed->push(['ide' => $ideName, 'server' => $serverKey, 'error' => $e->getMessage()]);
+                    return $this->redCross.' '.$serverConfig['label'];
                 }
-            }
+            });
 
-            $this->line(implode(' ', $results));
+            $this->line($results->implode(' '));
         }
 
         $this->newLine();
 
-        if (count($failed) > 0) {
+        // Display any installation failures
+        $failed->whenNotEmpty(function ($failures) {
             $this->error(sprintf('%s Some MCP servers failed to install:', $this->redCross));
-            foreach ($failed as $ideName => $errors) {
-                foreach ($errors as $server => $error) {
-                    $this->line("  - {$ideName} ({$server}): {$error}");
-                }
-            }
-        }
+            $failures->each(function ($failure) {
+                $this->line("  - {$failure['ide']} ({$failure['server']}): {$failure['error']}");
+            });
+        });
     }
 
-    /**
-     * Is the project actually using localization for their new features?
-     */
-    private function detectLocalization(): bool
+
+    public function trackInstallation(): string
     {
-        $actuallyUsing = false;
+        $baseUrl = 'https://boost.laravel.com/installed';
 
-        /** @phpstan-ignore-next-line  */
-        return $actuallyUsing && is_dir(base_path('lang'));
+        $ideNames = $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient) => 'i:'.$mcpClient->mcpClientName())->toArray();
+        $agentNames = $this->selectedTargetAgents->map(fn (Agent $agent) => 'a:'.$agent->agentName())->toArray();
+        $boostFeatures = $this->selectedBoostFeatures->map(fn ($feature) => 'b:'.$feature)->toArray();
+
+        $guidelines = [];
+        if ($this->shouldInstallAiGuidelines()) {
+            $guidelines[] = 'g:ai';
+        }
+
+        if ($this->shouldInstallStyleGuidelines()) {
+            $guidelines[] = 'g:style';
+        }
+        $installationData = array_merge($ideNames, $agentNames, $boostFeatures, $guidelines);
+        $encodedData = base64_encode(implode(',', $installationData));
+        $trackingUrl = $baseUrl.'/?d='.$encodedData;
+        return $this->hyperlink($baseUrl, $trackingUrl);
     }
+
 }
