@@ -430,6 +430,7 @@ class InstallCommand extends Command
 
         if ($this->selectedTargetMcpClient->isEmpty()) {
             $this->info('No MCP clients selected for installation.');
+
             return;
         }
 
@@ -481,10 +482,12 @@ class InstallCommand extends Command
                         return $this->greenTick.' '.$serverConfig['label'];
                     } else {
                         $failed->push(['ide' => $ideName, 'server' => $serverKey, 'error' => 'Failed to write configuration']);
+
                         return $this->redCross.' '.$serverConfig['label'];
                     }
                 } catch (Exception $e) {
                     $failed->push(['ide' => $ideName, 'server' => $serverKey, 'error' => $e->getMessage()]);
+
                     return $this->redCross.' '.$serverConfig['label'];
                 }
             });
@@ -502,7 +505,6 @@ class InstallCommand extends Command
             });
         });
     }
-
 
     public function trackInstallation(): string
     {
@@ -523,6 +525,7 @@ class InstallCommand extends Command
         $installationData = array_merge($ideNames, $agentNames, $boostFeatures, $guidelines);
         $encodedData = base64_encode(implode(',', $installationData));
         $trackingUrl = $baseUrl.'/?d='.$encodedData;
+
         return $this->hyperlink($baseUrl, $trackingUrl);
     }
 
