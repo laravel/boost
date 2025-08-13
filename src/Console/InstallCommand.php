@@ -295,7 +295,7 @@ class InstallCommand extends Command
     private function getSelectionConfig(string $contractClass): array
     {
         return match ($contractClass) {
-            Agent::class => ['scroll' => 4, 'required' => false, 'displayMethod' => 'agentName'],
+            Agent::class => ['scroll' => 5, 'required' => false, 'displayMethod' => 'agentName'],
             McpClient::class => ['scroll' => 5, 'required' => true, 'displayMethod' => 'displayName'],
             default => throw new InvalidArgumentException("Unsupported contract class: {$contractClass}"),
         };
