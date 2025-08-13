@@ -11,11 +11,25 @@ class FileWriter
 {
     protected string $configKey = 'mcpServers';
 
+    /** @var array<string, mixed> */
+    protected array $newConfig = [];
+
     protected array $serversToAdd = [];
 
     protected int $defaultIndentation = 8;
 
     public function __construct(protected string $filePath) {}
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return $this
+     */
+    public function withNewConfig(array $config): self
+    {
+        $this->newConfig = $config;
+
+        return $this;
+    }
 
     public function configKey(string $key): self
     {
@@ -36,6 +50,18 @@ class FileWriter
             'args' => $args,
             'env' => $env,
         ])->filter()->toArray();
+
+        return $this;
+    }
+
+    /**
+     * @param  string  $key  MCP Server Name
+     * @param  array<string, mixed>  $config
+     * @return $this
+     */
+    public function addRawServer(string $key, array $config = []): self
+    {
+        $this->serversToAdd[$key] = $config;
 
         return $this;
     }
@@ -358,7 +384,7 @@ class FileWriter
 
     protected function createNewFile(): bool
     {
-        $config = [];
+        $config = $this->newConfig;
         $this->addServersToConfig($config);
 
         return $this->writeJsonConfig($config);
