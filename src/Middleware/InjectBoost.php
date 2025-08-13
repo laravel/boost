@@ -30,8 +30,13 @@ class InjectBoost
         return $response;
     }
 
-    private function shouldInject(string $content): bool
+    private function shouldInject(string|false $content): bool
     {
+        // Check if there is content at all
+        if ($content === false) {
+            return false;
+        }
+
         // Check if it's HTML
         if (! str_contains($content, '<html') && ! str_contains($content, '<head')) {
             return false;
