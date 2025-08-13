@@ -12,6 +12,7 @@ use Laravel\Boost\Install\CodeEnvironment\Copilot;
 use Laravel\Boost\Install\CodeEnvironment\Cursor;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
+use Laravel\Boost\Install\CodeEnvironment\Windsurf;
 use Laravel\Boost\Install\Enums\Platform;
 
 class CodeEnvironmentsDetector
@@ -23,6 +24,7 @@ class CodeEnvironmentsDetector
         'cursor' => Cursor::class,
         'claudecode' => ClaudeCode::class,
         'copilot' => Copilot::class,
+        'windsurf' => Windsurf::class,
     ];
 
     public function __construct(
