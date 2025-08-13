@@ -1,27 +1,27 @@
 ## Pest 4
 
-- Pest v4 is a huge upgrade offering: browser testing, smoke testing, visual regression testing, test sharding, faster type coverage, and profanity checking.
+- Pest v4 is a huge upgrade to Pest and offers: browser testing, smoke testing, visual regression testing, test sharding, and faster type coverage.
 - Browser testing is incredibly powerful and useful for this project.
 - Browser tests should live in `tests/Browser/`.
-- Use the `search-docs` tool for detailed guidance on utilising these features.
+- Use the `search-docs` tool for detailed guidance on utilizing these features.
 
-## Browser testing
-- You can use Laravel features like `Event::fake()`, `assertAuthenticated()`, and model factories within browser tests, as well as `RefreshDatabase` (when needed) to ensure a clean state for each test.
-- Test on multiple browsers (Chrome, Firefox, Safari).
-- Test on different devices and viewports (like iPhone 14 Pro, tablets, or custom breakpoints).
-- Switch color schemes (light/dark mode).
-- Interact with the page (click, type, scroll, select, submit, drag-and-drop, touch gestures, etc.).
-- Take screenshots or pause tests for debugging.
+### Browser Testing
+- You can use Laravel features like `Event::fake()`, `assertAuthenticated()`, and model factories within Pest v4 browser tests, as well as `RefreshDatabase` (when needed) to ensure a clean state for each test.
+- If requested, test on multiple browsers (Chrome, Firefox, Safari).
+- If requested, test on different devices and viewports (like iPhone 14 Pro, tablets, or custom breakpoints).
+- Switch color schemes (light/dark mode) when appropriate.
+- Interact with the page (click, type, scroll, select, submit, drag-and-drop, touch gestures, etc.) when appropriate to complete the test.
+- Take screenshots or pause tests for debugging when appropriate.
 
+### Example Tests
 @verbatim
-<code-snippet name="Pest browser test example" lang="php">
+<code-snippet name="Pest Browser Test Example" lang="php">
 it('may reset the password', function () {
     Notification::fake();
+
     $this->actingAs(User::factory()->create());
 
-    $page = visit('/sign-in') // visit on a real browser...
-        ->on()->mobile() // or ->desktop(), ->tablet(), etc...
-        ->inDarkMode(); // or ->inLightMode()
+    $page = visit('/sign-in'); // Visit on a real browser...
 
     $page->assertSee('Sign In')
         ->assertNoJavascriptErrors() // or ->assertNoConsoleLogs()
@@ -34,9 +34,11 @@ it('may reset the password', function () {
 });
 </code-snippet>
 @endverbatim
+
 @verbatim
-<code-snippet name="Pest smoke testing example" lang="php">
+<code-snippet name="Pest Smoke Testing Example" lang="php">
 $pages = visit(['/', '/about', '/contact']);
+
 $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
 </code-snippet>
 @endverbatim
