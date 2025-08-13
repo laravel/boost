@@ -37,6 +37,10 @@ class InjectBoost
         }
 
         $content = $response->getContent();
+        if ($content === false) {
+            return false;
+        }
+
         // Check if it's HTML
         if (! str_contains($content, '<html') && ! str_contains($content, '<head')) {
             return false;
