@@ -100,6 +100,12 @@ abstract class CodeEnvironment
         return 'mcpServers';
     }
 
+    /** @return array<string, mixed> */
+    public function newMcpConfig(): array
+    {
+        return [];
+    }
+
     /**
      * Install MCP server using the appropriate strategy.
      *
@@ -174,17 +180,30 @@ abstract class CodeEnvironment
 
         $config = File::exists($path)
             ? json_decode(File::get($path), true) ?: []
-            : [];
+            : $this->newMcpConfig();
 
         $mcpKey = $this->mcpConfigKey();
-        data_set($config, "{$mcpKey}.{$key}", collect([
-            'command' => $command,
-            'args' => $args,
-            'env' => $env,
-        ])->filter()->toArray());
+        $mcpConfig = $this->buildMcpConfig($command, $args, $env);
+        data_set($config, "{$mcpKey}.{$key}", $mcpConfig);
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
         return $json && File::put($path, $json);
+    }
+
+    /**
+     * Build MCP config array.
+     *
+     * @param array<int, string> $args
+     * @param array<string, string> $env
+     * @return array<string, mixed>
+     */
+    protected function buildMcpConfig(string $command, array $args = [], array $env = []): array
+    {
+        return collect([
+            'command' => $command,
+            'args' => $args,
+            'env' => $env,
+        ])->filter()->toArray();
     }
 }
