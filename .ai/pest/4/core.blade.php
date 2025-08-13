@@ -7,10 +7,10 @@
 
 ### Browser Testing
 - You can use Laravel features like `Event::fake()`, `assertAuthenticated()`, and model factories within Pest v4 browser tests, as well as `RefreshDatabase` (when needed) to ensure a clean state for each test.
+- Interact with the page (click, type, scroll, select, submit, drag-and-drop, touch gestures, etc.) when appropriate to complete the test.
 - If requested, test on multiple browsers (Chrome, Firefox, Safari).
 - If requested, test on different devices and viewports (like iPhone 14 Pro, tablets, or custom breakpoints).
 - Switch color schemes (light/dark mode) when appropriate.
-- Interact with the page (click, type, scroll, select, submit, drag-and-drop, touch gestures, etc.) when appropriate to complete the test.
 - Take screenshots or pause tests for debugging when appropriate.
 
 ### Example Tests
