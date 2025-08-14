@@ -96,9 +96,20 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 
 To augment Laravel Boost with your own custom AI guidelines, add `.blade.php` files to your application's `.ai/guidelines/*` directory. These files will automatically be included with Laravel Boost's guidelines when you run `boost:install`.
 
+## Supported IDEs and Editors
+
+Laravel Boost automatically detects and configures MCP servers for the following development environments:
+
+- **Cursor** - AI-powered code editor
+- **VSCode** - Visual Studio Code
+- **PhpStorm** - JetBrains PHP IDE
+- **Claude Code** - Anthropic's code editor
+- **GitHub Copilot** - AI pair programmer
+- **Kiro** - AI assistant and IDE
+
 ## Manually Registering the Boost MCP Server
 
-Sometimes you may need to manually register the Laravel Boost MCP server with your editor of choice. You should register the MCP server using the following details:
+If your editor isn't automatically detected or you need to manually register the Laravel Boost MCP server, you should register the MCP server using the following details:
 
 <table>
 <tr><td><strong>Command</strong></td><td><code>php</code></td></tr>
@@ -117,6 +128,8 @@ JSON Example:
     }
 }
 ```
+
+For **Kiro IDE**, the configuration file should be placed at `.kiro/settings/mcp.json` in your project root.
 
 ## Contributing
 
