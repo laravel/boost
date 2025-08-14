@@ -34,6 +34,8 @@ class InstallCommand extends Command
 {
     use Colors;
 
+    private const SAIL_PATH = 'vendor/bin/sail';
+
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
     private Herd $herd;
@@ -462,6 +464,8 @@ class InstallCommand extends Command
             )->toArray()
         );
 
+        $projectUsesSail = file_exists(base_path(self::SAIL_PATH));
+
         /** @var CodeEnvironment $mcpClient */
         foreach ($this->selectedTargetMcpClient as $mcpClient) {
             $ideName = $mcpClient->mcpClientName();
@@ -471,8 +475,14 @@ class InstallCommand extends Command
 
             if ($this->shouldInstallMcp()) {
                 try {
-                    $artisan = $mcpClient->useAbsolutePathForMcp ? base_path('artisan') : './artisan';
-                    $result = $mcpClient->installMcp('laravel-boost', 'php', [$artisan, 'boost:mcp']);
+                    if ($projectUsesSail) {
+                        $command = $mcpClient->useAbsolutePathForMcp ? base_path(self::SAIL_PATH) : self::SAIL_PATH;
+                        $artisan = 'artisan';
+                    } else {
+                        $command = 'php';
+                        $artisan = $mcpClient->useAbsolutePathForMcp ? base_path('artisan') : './artisan';
+                    }
+                    $result = $mcpClient->installMcp('laravel-boost', $command, [$artisan, 'boost:mcp']);
 
                     if ($result) {
                         $results[] = $this->greenTick.' Boost';
