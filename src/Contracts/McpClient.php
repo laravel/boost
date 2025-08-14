@@ -27,7 +27,7 @@ interface McpClient
     /**
      * Get the artisan path for this MCP client.
      */
-    public function getArtisanPath(): string;
+    public function getArtisanPath($forceAbsolutePath = false): string;
 
     /**
      * Install an MCP server configuration in this IDE.
