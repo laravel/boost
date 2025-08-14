@@ -16,8 +16,16 @@ it('includes kiro in available code environments', function () {
 it('can detect kiro in project when .kiro directory exists', function () {
     $detector = app(CodeEnvironmentsDetector::class);
 
-    // Since we're in a project with .kiro directory, it should be detected
-    $projectEnvironments = $detector->discoverProjectInstalledCodeEnvironments(base_path());
+    // Create a temporary directory with .kiro folder
+    $tempDir = sys_get_temp_dir() . '/boost_test_' . uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir . '/.kiro');
+
+    $projectEnvironments = $detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
     expect($projectEnvironments)->toContain('kiro');
+
+    // Cleanup
+    rmdir($tempDir . '/.kiro');
+    rmdir($tempDir);
 });
