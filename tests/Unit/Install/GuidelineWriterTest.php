@@ -100,6 +100,29 @@ test('it replaces existing guidelines in-place', function () {
     unlink($tempFile);
 });
 
+test('it avoids adding extra newline if one already exists', function () {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+    $initialContent = "# Header\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n\n# Footer\n";
+    file_put_contents($tempFile, $initialContent);
+
+    $agent = Mockery::mock(Agent::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+
+    $writer = new GuidelineWriter($agent);
+    $writer->write('updated guidelines');
+
+    $content = file_get_contents($tempFile);
+    expect($content)->toBe("# Header\n\n<laravel-boost-guidelines>\nupdated guidelines\n</laravel-boost-guidelines>\n\n# Footer\n");
+
+    // Assert no double newline at the end
+    expect(substr($content, -2))->not->toBe("\n\n");
+    // Assert still ends with exactly one newline
+    expect(substr($content, -1))->toBe("\n");
+
+    unlink($tempFile);
+});
+
 test('it handles multiline existing guidelines', function () {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     $initialContent = "Start\n<laravel-boost-guidelines>\nline 1\nline 2\nline 3\n</laravel-boost-guidelines>\nEnd";
