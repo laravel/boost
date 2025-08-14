@@ -487,14 +487,13 @@ class InstallCommand extends Command
             $this->output->write("  {$ideDisplay}... ");
             $results = [];
 
-            $php = $mcpClient->getPhpPath();
             if ($this->shouldInstallMcp()) {
+                $php = $mcpClient->getPhpPath($this->isRunningInWsl());
+                $artisan = $mcpClient->getArtisanPath($this->isRunningInWsl());
                 try {
                     if ($this->isRunningInWsl()) {
-                        $artisan = $mcpClient->getArtisanPath(true);
                         $result = $mcpClient->installMcp('laravel-boost', 'wsl', [$php, $artisan, 'boost:mcp']);
                     } else {
-                        $artisan = $mcpClient->getArtisanPath();
                         $result = $mcpClient->installMcp('laravel-boost', $php, [$artisan, 'boost:mcp']);
                     }
 
@@ -512,6 +511,7 @@ class InstallCommand extends Command
 
             // Install Herd MCP if enabled
             if ($this->shouldInstallHerdMcp()) {
+                $php = $mcpClient->getPhpPath();
                 try {
                     $result = $mcpClient->installMcp(
                         key: 'herd',

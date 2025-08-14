@@ -38,9 +38,9 @@ abstract class CodeEnvironment
         return $this->useAbsolutePathForMcp;
     }
 
-    public function getPhpPath(): string
+    public function getPhpPath($forceAbsolutePath = false): string
     {
-        return $this->useAbsolutePathForMcp() ? PHP_BINARY : 'php';
+        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
     }
 
     public function getArtisanPath($forceAbsolutePath = false): string
