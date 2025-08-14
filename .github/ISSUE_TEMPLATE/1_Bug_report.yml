@@ -27,11 +27,11 @@ body:
       required: true
   - type: input
     attributes:
-      label: Database Driver & Version
-      description: If applicable, provide the database driver and version you are using.
-      placeholder: "MySQL 8.0.31 for macOS 13.0 on arm64 (Homebrew)"
+      label: System Info
+      description: Provide your system details including OS, PHP setup, and development environment.
+      placeholder: "macOS 14.1 (M1) with Herd or Ubuntu 22.04 with Laravel Sail"
     validations:
-      required: false
+      required: true
   - type: textarea
     attributes:
       label: Description
@@ -44,4 +44,4 @@ body:
       description: Provide detailed steps to reproduce your issue. If necessary, please provide a GitHub repository to demonstrate your issue using `laravel new bug-report --github="--public"`.
     validations:
       required: true
-      
+
