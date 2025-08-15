@@ -146,6 +146,20 @@ test('discoverProjectInstalledCodeEnvironments detects applications with mixed t
     rmdir($tempDir);
 });
 
+test('discoverProjectInstalledCodeEnvironments detects warp with WARP.md file', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    file_put_contents($tempDir.'/WARP.md', 'test');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('warp');
+
+    // Cleanup
+    unlink($tempDir.'/WARP.md');
+    rmdir($tempDir);
+});
+
 test('discoverProjectInstalledCodeEnvironments detects copilot with nested file path', function () {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
@@ -224,17 +238,20 @@ test('discoverProjectInstalledCodeEnvironments handles multiple detections', fun
     mkdir($tempDir.'/.vscode');
     mkdir($tempDir.'/.cursor');
     file_put_contents($tempDir.'/CLAUDE.md', 'test');
+    file_put_contents($tempDir.'/WARP.md', 'test');
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
     expect($detected)->toContain('vscode');
     expect($detected)->toContain('cursor');
     expect($detected)->toContain('claudecode');
-    expect(count($detected))->toBeGreaterThanOrEqual(3);
+    expect($detected)->toContain('warp');
+    expect(count($detected))->toBeGreaterThanOrEqual(4);
 
     // Cleanup
     rmdir($tempDir.'/.vscode');
     rmdir($tempDir.'/.cursor');
     unlink($tempDir.'/CLAUDE.md');
+    unlink($tempDir.'/WARP.md');
     rmdir($tempDir);
 });

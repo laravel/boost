@@ -45,7 +45,7 @@ class Warp extends CodeEnvironment implements Agent
     public function projectDetectionConfig(): array
     {
         return [
-            'paths' => [],
+            'files' => ['WARP.md'],
         ];
     }
 
