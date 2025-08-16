@@ -19,7 +19,6 @@ use Laravel\Roster\Roster;
 
 class BoostServiceProvider extends ServiceProvider
 {
-
     public function register(): void
     {
         $this->mergeConfigFrom(
