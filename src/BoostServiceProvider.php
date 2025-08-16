@@ -64,7 +64,6 @@ class BoostServiceProvider extends ServiceProvider
             return;
         }
 
-        // @phpstan-ignore-next-line
         Mcp::local('laravel-boost', Boost::class);
 
         $this->registerPublishing();
