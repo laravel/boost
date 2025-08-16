@@ -41,6 +41,7 @@ test('discoverSystemInstalledCodeEnvironments returns detected programs', functi
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program3);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Windsurf::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -65,6 +66,7 @@ test('discoverSystemInstalledCodeEnvironments returns empty array when no progra
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Windsurf::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -213,6 +215,20 @@ test('discoverProjectInstalledCodeEnvironments detects cursor with cursor direct
 
     // Cleanup
     rmdir($tempDir.'/.cursor');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects windsurf with windsurf directory', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir.'/.windsurf');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('windsurf');
+
+    // Cleanup
+    rmdir($tempDir.'/.windsurf');
     rmdir($tempDir);
 });
 

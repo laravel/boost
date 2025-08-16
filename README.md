@@ -32,7 +32,7 @@ Next, install the MCP server and coding guidelines:
 php artisan boost:install
 ```
 
-Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
+Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, Windsurf, or your AI agent of choice.
 
 ## Available MCP Tools
 
