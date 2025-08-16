@@ -1,6 +1,6 @@
 <p align="center">
-    ![Boost Logo Dark Mode](/art/boost-light-mode.svg#gh-light-mode-only)
-    ![Boost Logo Dark Mode](/art/boost-dark-mode.svg#gh-dark-mode-only)
+    <img alt="Boost Logo Dark Mode" src="/art/boost-light-mode.svg#gh-light-mode-only"/>
+    <img alt="Boost Logo Dark Mode" src="/art/boost-dark-mode.svg#gh-dark-mode-only"/>
 </p>
 
 <p align="center">
