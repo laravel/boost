@@ -22,7 +22,7 @@ class BoostServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/boost.php',
+            __DIR__.'/../config/boost.php',
             'boost'
         );
 
@@ -36,7 +36,7 @@ class BoostServiceProvider extends ServiceProvider
             ];
 
             $cacheKey = 'boost.roster.scan';
-            $lastModified = max(array_map(fn($path) => file_exists($path) ? filemtime($path) : 0, $lockFiles));
+            $lastModified = max(array_map(fn ($path) => file_exists($path) ? filemtime($path) : 0, $lockFiles));
 
             $cached = cache()->get($cacheKey);
             if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
@@ -70,7 +70,7 @@ class BoostServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRoutes();
         $this->registerBrowserLogger();
-        $this->callAfterResolving('blade.compiler', fn(BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
+        $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
         $this->hookIntoResponses($router);
     }
 
@@ -78,7 +78,7 @@ class BoostServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/boost.php' => config_path('boost.php'),
+                __DIR__.'/../config/boost.php' => config_path('boost.php'),
             ], 'boost-config');
         }
     }
@@ -163,7 +163,7 @@ class BoostServiceProvider extends ServiceProvider
 
     private function registerBladeDirectives(BladeCompiler $bladeCompiler): void
     {
-        $bladeCompiler->directive('boostJs', fn() => '<?php echo \\Laravel\\Boost\\Services\\BrowserLogger::getScript(); ?>');
+        $bladeCompiler->directive('boostJs', fn () => '<?php echo \\Laravel\\Boost\\Services\\BrowserLogger::getScript(); ?>');
     }
 
     private static function mapJsTypeToPsr3Level(string $type): string
