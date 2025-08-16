@@ -54,16 +54,30 @@ class InjectBoost
     {
         $script = BrowserLogger::getScript();
 
-        // Try to inject before closing </head>
-        if (str_contains($content, '</head>')) {
-            return str_replace('</head>', $script."\n</head>", $content);
+        $dom = new \DOMDocument();
+        // Suppress warnings for malformed HTML
+        @$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+        $head = $dom->getElementsByTagName('head')->item(0);
+        $body = $dom->getElementsByTagName('body')->item(0);
+
+        $scriptNode = $dom->createDocumentFragment();
+        $scriptNode->appendXML($script);
+
+        if ($head) {
+            $head->appendChild($scriptNode);
+        } elseif ($body) {
+            $body->insertBefore($scriptNode, $body->firstChild);
+        } else {
+            // Fallback for documents without <head> or <body>
+            $html = $dom->getElementsByTagName('html')->item(0);
+            if ($html) {
+                $html->appendChild($scriptNode);
+            } else {
+                return $content . $script;
+            }
         }
 
-        // Fallback: inject before closing </body>
-        if (str_contains($content, '</body>')) {
-            return str_replace('</body>', $script."\n</body>", $content);
-        }
-
-        return $content.$script;
+        return $dom->saveHTML();
     }
 }
