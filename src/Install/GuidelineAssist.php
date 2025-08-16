@@ -156,4 +156,15 @@ class GuidelineAssist
 
         return file_get_contents(current($this->enumPaths));
     }
+
+    public function nodePackageManager(): string
+    {
+        return match (true) {
+            file_exists(base_path('package-lock.json')) => 'npm',
+            file_exists(base_path('pnpm-lock.yaml')) => 'pnpm',
+            file_exists(base_path('yarn.lock')) => 'yarn',
+            file_exists(base_path('bun.lockb')) => 'bun',
+            default => 'npm',
+        };
+    }
 }
