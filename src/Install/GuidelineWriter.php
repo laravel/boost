@@ -72,6 +72,11 @@ class GuidelineWriter
                 $newContent = $frontMatter.$existingContent.$separatingNewlines.$replacement;
             }
 
+            // Ensure file content ends with a newline
+            if (! str_ends_with($newContent, "\n")) {
+                $newContent .= "\n";
+            }
+
             if (ftruncate($handle, 0) === false || fseek($handle, 0) === -1) {
                 throw new RuntimeException("Failed to reset file pointer: {$filePath}");
             }
