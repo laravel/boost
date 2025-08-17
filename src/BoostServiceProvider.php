@@ -55,6 +55,10 @@ class BoostServiceProvider extends ServiceProvider
 
     public function boot(Router $router): void
     {
+        if (! config('boost.enabled', true)) {
+            return;
+        }
+
         // Only enable Boost on local environments
         if (! app()->environment(['local', 'testing']) && config('app.debug', false) !== true) {
             return;
