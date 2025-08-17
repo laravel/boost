@@ -3,6 +3,18 @@
 declare(strict_types=1);
 
 return [
+    /*
+    |--------------------------------------------------------------------------
+    | Boost Master Switch
+    |--------------------------------------------------------------------------
+    |
+    | This option may be used to disable all Boost functionality, which
+    | simply provides a single and convenient way to enable or disable
+    | Boost's AI development tools.
+    |
+    */
+
+    'enabled' => env('BOOST_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
