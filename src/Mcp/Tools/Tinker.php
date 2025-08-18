@@ -25,12 +25,14 @@ DESCRIPTION;
 
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
+        $configTimeout = config('boost.process_isolation.timeout');
+
         return $schema
             ->string('code')
             ->description('PHP code to execute (without opening <?php tags)')
             ->required()
             ->integer('timeout')
-            ->description('Maximum execution time in seconds (default: 30)');
+            ->description("Maximum execution time in seconds (default: {$configTimeout})");
     }
 
     /**
@@ -42,7 +44,9 @@ DESCRIPTION;
     {
         $code = str_replace(['<?php', '?>'], '', (string) Arr::get($arguments, 'code'));
 
-        $timeout = min(180, (int) (Arr::get($arguments, 'timeout', 30)));
+        $configTimeout = config('boost.process_isolation.timeout');
+        $timeout = max($configTimeout, min(600, (int) (Arr::get($arguments, 'timeout', $configTimeout))));
+
         set_time_limit($timeout);
         ini_set('memory_limit', '128M');
 
@@ -59,10 +63,6 @@ DESCRIPTION;
 
         try {
             $result = eval($code);
-
-            if (function_exists('pcntl_alarm')) {
-                pcntl_alarm(0);
-            }
 
             $output = ob_get_contents();
             ob_end_clean();
@@ -81,10 +81,6 @@ DESCRIPTION;
             return ToolResult::json($response);
 
         } catch (Throwable $e) {
-            if (function_exists('pcntl_alarm')) {
-                pcntl_alarm(0);
-            }
-
             ob_end_clean();
 
             return ToolResult::json([
@@ -93,6 +89,11 @@ DESCRIPTION;
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
+        } finally {
+            // Clean up PCNTL alarm
+            if (function_exists('pcntl_alarm')) {
+                pcntl_alarm(0);
+            }
         }
     }
 }
