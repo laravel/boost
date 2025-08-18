@@ -24,7 +24,7 @@
         "laravel/roster": "^0.2"
     },
     "require-dev": {
-        "laravel/pint": "^1.14|^1.23",
+        "laravel/pint": "^1.14",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^8.22.0|^9.0|^10.0",
         "pestphp/pest": "^2.0|^3.0",
