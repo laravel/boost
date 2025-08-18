@@ -14,6 +14,8 @@ class ExecuteToolCommand extends Command
 
     protected $description = 'Execute a Boost MCP tool in isolation (internal command)';
 
+    protected $hidden = true;
+
     public function handle(): int
     {
         $toolClass = $this->argument('tool');

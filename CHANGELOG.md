@@ -1,6 +1,32 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.0.16...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.0.18...main)
+
+## [v1.0.18](https://github.com/laravel/boost/compare/v1.0.17...v1.0.18) - 2025-08-16
+
+### What's Changed
+
+* fix: Prevent install command from breaking when `/tests` doesn't exist by [@sagalbot](https://github.com/sagalbot) in https://github.com/laravel/boost/pull/93
+* [1.x] Add enabled option to `config/boost.php`. by [@xiCO2k](https://github.com/xiCO2k) in https://github.com/laravel/boost/pull/143
+
+### New Contributors
+
+* [@sagalbot](https://github.com/sagalbot) made their first contribution in https://github.com/laravel/boost/pull/93
+* [@xiCO2k](https://github.com/xiCO2k) made their first contribution in https://github.com/laravel/boost/pull/143
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.17...v1.0.18
+
+## [v1.0.17](https://github.com/laravel/boost/compare/v1.0.16...v1.0.17) - 2025-08-14
+
+### What's Changed
+
+* Fix: Replace APP_DEBUG with environment-based gating by [@eduardocruz](https://github.com/eduardocruz) in https://github.com/laravel/boost/pull/90
+
+### New Contributors
+
+* [@eduardocruz](https://github.com/eduardocruz) made their first contribution in https://github.com/laravel/boost/pull/90
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.16...v1.0.17
 
 ## [v1.0.16](https://github.com/laravel/boost/compare/v1.0.15...v1.0.16) - 2025-08-14
 

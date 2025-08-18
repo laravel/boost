@@ -6,6 +6,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Boost Master Switch
+    |--------------------------------------------------------------------------
+    |
+    | This option may be used to disable all Boost functionality - which
+    | will prevent Boost's routes from being registered and will also
+    | disable Boost's browser logging functionality from operating.
+    |
+    */
+
+    'enabled' => env('BOOST_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Browser Logs Watcher
     |--------------------------------------------------------------------------
     |
