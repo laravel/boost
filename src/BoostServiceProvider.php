@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost;
 
+use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Log\Logger;
@@ -57,7 +58,7 @@ class BoostServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot(Router $router): void
+    public function boot(): void
     {
         if (! $this->shouldRun()) {
             return;
@@ -72,7 +73,7 @@ class BoostServiceProvider extends ServiceProvider
         if (config('boost.browser_logs_watcher', true)) {
             $this->registerBrowserLogger();
             $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
-            $this->hookIntoResponses($router);
+            $this->hookIntoResponses();
         }
     }
 
@@ -178,9 +179,9 @@ class BoostServiceProvider extends ServiceProvider
         };
     }
 
-    private function hookIntoResponses(Router $router): void
+    private function hookIntoResponses(): void
     {
-        $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        app(Kernel::class)->appendMiddlewareToGroup('web', InjectBoost::class);
     }
 
     private function shouldRun(): bool
