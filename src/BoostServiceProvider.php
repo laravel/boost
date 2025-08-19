@@ -16,6 +16,7 @@ use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Mcp\Server\Facades\Mcp;
 use Laravel\Roster\Roster;
+use Illuminate\Contracts\Http\Kernel;
 
 class BoostServiceProvider extends ServiceProvider
 {
@@ -57,7 +58,7 @@ class BoostServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot(Router $router): void
+    public function boot(Kernel $kernel): void
     {
         if (! $this->shouldRun()) {
             return;
@@ -72,7 +73,7 @@ class BoostServiceProvider extends ServiceProvider
         if (config('boost.browser_logs_watcher', true)) {
             $this->registerBrowserLogger();
             $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
-            $this->hookIntoResponses($router);
+            $this->hookIntoResponses($kernel);
         }
     }
 
@@ -178,9 +179,9 @@ class BoostServiceProvider extends ServiceProvider
         };
     }
 
-    private function hookIntoResponses(Router $router): void
+    private function hookIntoResponses(Kernel $kernel): void
     {
-        $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        $kernel->appendMiddlewareToGroup('web', InjectBoost::class);
     }
 
     private function shouldRun(): bool
