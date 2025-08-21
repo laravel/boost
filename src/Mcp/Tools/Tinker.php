@@ -25,14 +25,12 @@ DESCRIPTION;
 
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
-        $configTimeout = config('boost.process_isolation.timeout');
-
         return $schema
             ->string('code')
             ->description('PHP code to execute (without opening <?php tags)')
             ->required()
             ->integer('timeout')
-            ->description("Maximum execution time in seconds (default: {$configTimeout})");
+            ->description('Maximum execution time in seconds (default: 30)');
     }
 
     /**
@@ -44,14 +42,14 @@ DESCRIPTION;
     {
         $code = str_replace(['<?php', '?>'], '', (string) Arr::get($arguments, 'code'));
 
-        $configTimeout = config('boost.process_isolation.timeout');
-        $timeout = max($configTimeout, min(600, (int) (Arr::get($arguments, 'timeout', $configTimeout))));
+        $timeout = min(180, (int) (Arr::get($arguments, 'timeout', 30)));
 
         // Only set time limit if process isolation is disabled
         // When process isolation is enabled, the ToolExecutor handles timeouts
         if (! config('boost.process_isolation.enabled', false)) {
             set_time_limit($timeout);
         }
+
         ini_set('memory_limit', '128M');
 
         // Use PCNTL alarm for additional timeout control if available (Unix only)
