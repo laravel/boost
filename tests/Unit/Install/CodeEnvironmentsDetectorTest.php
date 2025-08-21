@@ -41,6 +41,7 @@ test('discoverSystemInstalledCodeEnvironments returns detected programs', functi
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program3);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Trae::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -65,6 +66,7 @@ test('discoverSystemInstalledCodeEnvironments returns empty array when no progra
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Trae::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -92,6 +94,7 @@ test('discoverProjectInstalledCodeEnvironments detects programs in project', fun
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program1);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\PhpStorm::class, fn () => $program2);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $program3);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Trae::class, fn () => $program2);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);
@@ -109,6 +112,7 @@ test('discoverProjectInstalledCodeEnvironments returns empty array when no progr
     // Bind mocked program to container
     $container = new \Illuminate\Container\Container;
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program1);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Trae::class, fn () => $program1);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);
@@ -216,23 +220,40 @@ test('discoverProjectInstalledCodeEnvironments detects cursor with cursor direct
     rmdir($tempDir);
 });
 
+test('discoverProjectInstalledCodeEnvironments detects trae with trae directory', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir.'/.trae');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('trae');
+
+    // Cleanup
+    rmdir($tempDir.'/.trae');
+    rmdir($tempDir);
+});
+
 test('discoverProjectInstalledCodeEnvironments handles multiple detections', function () {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.vscode');
     mkdir($tempDir.'/.cursor');
+    mkdir($tempDir.'/.trae');
     file_put_contents($tempDir.'/CLAUDE.md', 'test');
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
     expect($detected)->toContain('vscode');
     expect($detected)->toContain('cursor');
+    expect($detected)->toContain('trae');
     expect($detected)->toContain('claudecode');
-    expect(count($detected))->toBeGreaterThanOrEqual(3);
+    expect(count($detected))->toBeGreaterThanOrEqual(4);
 
     // Cleanup
     rmdir($tempDir.'/.vscode');
     rmdir($tempDir.'/.cursor');
+    rmdir($tempDir.'/.trae');
     unlink($tempDir.'/CLAUDE.md');
     rmdir($tempDir);
 });
