@@ -173,25 +173,23 @@ test('uses default timeout when not specified', function () {
         ->and($data['type'])->toBe('integer');
 });
 
-test('uses configurable timeout from environment', function () {
-
-    // Test with a custom config timeout
-    config(['boost.process_isolation.timeout' => 300]);
-
+test('times out when code takes too long', function () {
     $tool = new Tinker;
 
-    // Execute simple code that should complete well within any reasonable timeout
-    $result = $tool->handle(['code' => 'return "config timeout test";']);
+    // Code that will take more than 1 second to execute
+    $slowCode = '
+        $start = microtime(true);
+        while (microtime(true) - $start < 1.2) {
+            usleep(50000); // Don\'t waste entire CPU
+        }
+        return "should not reach here";
+    ';
+
+    $result = $tool->handle(['code' => $slowCode, 'timeout' => 1]);
 
     expect($result)->toBeInstanceOf(ToolResult::class);
+
     $data = getToolResultData($result);
-    expect($data['result'])->toBe('config timeout test');
-
-    // Test that timeout parameter larger than config works
-    $result2 = $tool->handle(['code' => 'return "large timeout test";', 'timeout' => 400]);
-
-    expect($result2)->toBeInstanceOf(ToolResult::class);
-    $data2 = getToolResultData($result2);
-    expect($data2['result'])->toBe('large timeout test');
-
+    expect($data)->toHaveKey('error')
+        ->and($data['error'])->toMatch('/(Maximum execution time|Code execution timed out)/');
 });
