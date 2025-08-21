@@ -47,7 +47,11 @@ DESCRIPTION;
         $configTimeout = config('boost.process_isolation.timeout');
         $timeout = max($configTimeout, min(600, (int) (Arr::get($arguments, 'timeout', $configTimeout))));
 
-        set_time_limit($timeout);
+        // Only set time limit if process isolation is disabled
+        // When process isolation is enabled, the ToolExecutor handles timeouts
+        if (! config('boost.process_isolation.enabled', false)) {
+            set_time_limit($timeout);
+        }
         ini_set('memory_limit', '128M');
 
         // Use PCNTL alarm for additional timeout control if available (Unix only)
