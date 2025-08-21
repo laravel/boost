@@ -65,6 +65,8 @@ class InstallCommand extends Command
 
     private string $redCross;
 
+    private bool $isInteractive = true;
+
     public function handle(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
     {
         $this->bootstrap($codeEnvironmentsDetector, $herd, $terminal);
@@ -90,6 +92,8 @@ class InstallCommand extends Command
         $this->selectedTargetMcpClient = collect();
 
         $this->projectName = config('app.name');
+
+        $this->isInteractive = ! $this->option('no-interaction');
     }
 
     private function displayBoostHeader(): void
@@ -114,16 +118,18 @@ class InstallCommand extends Command
 
     private function discoverEnvironment(): void
     {
-        $this->systemInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverSystemInstalledCodeEnvironments();
-        $this->projectInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverProjectInstalledCodeEnvironments(base_path());
+        $this->systemInstalledCodeEnvironments = $this->codeEnvironmentsDetector
+            ->discoverSystemInstalledCodeEnvironments();
+        $this->projectInstalledCodeEnvironments = $this->codeEnvironmentsDetector
+            ->discoverProjectInstalledCodeEnvironments(base_path());
     }
 
     private function collectInstallationPreferences(): void
     {
         $this->selectedBoostFeatures = $this->selectBoostFeatures();
+        $this->enforceTests = $this->determineTestEnforcement(ask: $this->isInteractive);
         $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
         $this->selectedTargetAgents = $this->selectTargetAgents();
-        $this->enforceTests = $this->determineTestEnforcement(ask: false);
     }
 
     private function performInstallation(): void
@@ -201,6 +207,26 @@ class InstallCommand extends Command
      */
     protected function determineTestEnforcement(bool $ask = true): bool
     {
+        if ($ask) {
+            $envValue = config('boost.install.enforce_tests');
+            $default = 'Yes';
+
+            if ($envValue !== null && $envValue !== '') {
+                $default = filter_var($envValue, FILTER_VALIDATE_BOOLEAN) ? 'Yes' : 'No';
+            }
+
+            return select(
+                label: 'Should AI always create tests?',
+                options: ['Yes', 'No'],
+                default: $default
+            ) === 'Yes';
+        }
+
+        $envValue = config('boost.install.enforce_tests');
+        if ($envValue !== null && $envValue !== '') {
+            return filter_var($envValue, FILTER_VALIDATE_BOOLEAN);
+        }
+
         $hasMinimumTests = false;
 
         if (file_exists(base_path('vendor/bin/phpunit'))) {
@@ -215,14 +241,6 @@ class InstallCommand extends Command
                 ->count() >= self::MIN_TEST_COUNT;
         }
 
-        if (! $hasMinimumTests && $ask) {
-            $hasMinimumTests = select(
-                label: 'Should AI always create tests?',
-                options: ['Yes', 'No'],
-                default: 'Yes'
-            ) === 'Yes';
-        }
-
         return $hasMinimumTests;
     }
 
@@ -231,14 +249,44 @@ class InstallCommand extends Command
      */
     private function selectBoostFeatures(): Collection
     {
-        $defaultInstallOptions = ['mcp_server', 'ai_guidelines'];
+        if (! $this->isInteractive) {
+            $features = collect();
+
+            if (config('boost.install.mcp_server')) {
+                $features->push('mcp_server');
+            }
+
+            if (config('boost.install.ai_guidelines')) {
+                $features->push('ai_guidelines');
+            }
+
+            if ($this->herd->isMcpAvailable() && config('boost.install.herd')) {
+                $features->push('herd_mcp');
+            }
+
+            return $features;
+        }
+
+        $defaultInstallOptions = [];
         $installOptions = [
             'mcp_server' => 'Boost MCP Server (with 15+ tools)',
             'ai_guidelines' => 'Boost AI Guidelines (for Laravel, Inertia, and more)',
         ];
 
+        if (config('boost.install.mcp_server')) {
+            $defaultInstallOptions[] = 'mcp_server';
+        }
+
+        if (config('boost.install.ai_guidelines')) {
+            $defaultInstallOptions[] = 'ai_guidelines';
+        }
+
         if ($this->herd->isMcpAvailable()) {
             $installOptions['herd_mcp'] = 'Herd MCP Server';
+
+            if (config('boost.install.herd')) {
+                $defaultInstallOptions[] = 'herd_mcp';
+            }
 
             return collect(multiselect(
                 label: 'What do you want to install?',
@@ -277,6 +325,38 @@ class InstallCommand extends Command
             return collect();
         }
 
+        if (! $this->isInteractive) {
+            $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
+            $availableClients = $allEnvironments->filter(function (CodeEnvironment $environment) {
+                return $environment instanceof McpClient;
+            });
+
+            $envDefaults = $this->getEnvironmentDefaults(McpClient::class, $availableClients);
+            if (! empty($envDefaults)) {
+                return collect($envDefaults)->map(fn ($className) => $availableClients
+                    ->first(fn ($env) => get_class($env) === $className)
+                );
+            }
+
+            $installedEnvNames = array_unique(array_merge(
+                $this->projectInstalledCodeEnvironments,
+                $this->systemInstalledCodeEnvironments
+            ));
+
+            foreach ($installedEnvNames as $envKey) {
+                $matchingEnv = $availableClients
+                    ->first(fn (CodeEnvironment $env) => strtolower($envKey) === strtolower($env->name())
+                );
+                if ($matchingEnv) {
+                    return collect([$matchingEnv]);
+                }
+            }
+
+            $firstClient = $availableClients->first();
+
+            return $firstClient ? collect([$firstClient]) : collect();
+        }
+
         return $this->selectCodeEnvironments(
             McpClient::class,
             sprintf('Which code editors do you use to work on %s?', $this->projectName)
@@ -290,6 +370,38 @@ class InstallCommand extends Command
     {
         if (! $this->shouldInstallAiGuidelines()) {
             return collect();
+        }
+
+        if (! $this->isInteractive) {
+            $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
+            $availableAgents = $allEnvironments->filter(function (CodeEnvironment $environment) {
+                return $environment instanceof Agent;
+            });
+
+            $envDefaults = $this->getEnvironmentDefaults(Agent::class, $availableAgents);
+            if (! empty($envDefaults)) {
+                return collect($envDefaults)->map(fn ($className) => $availableAgents
+                    ->first(fn ($env) => get_class($env) === $className)
+                );
+            }
+
+            $installedEnvNames = array_unique(array_merge(
+                $this->projectInstalledCodeEnvironments,
+                $this->systemInstalledCodeEnvironments
+            ));
+
+            foreach ($installedEnvNames as $envKey) {
+                $matchingEnv = $availableAgents
+                    ->first(fn (CodeEnvironment $env) => strtolower($envKey) === strtolower($env->name())
+                );
+                if ($matchingEnv) {
+                    return collect([$matchingEnv]);
+                }
+            }
+
+            $firstAgent = $availableAgents->first();
+
+            return $firstAgent ? collect([$firstAgent]) : collect();
         }
 
         return $this->selectCodeEnvironments(
@@ -342,29 +454,29 @@ class InstallCommand extends Command
         ));
 
         foreach ($installedEnvNames as $envKey) {
-            $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env) => strtolower($envKey) === strtolower($env->name()));
+            $matchingEnv = $availableEnvironments
+                ->first(fn (CodeEnvironment $env) => strtolower($envKey) === strtolower($env->name()));
+
             if ($matchingEnv) {
                 $detectedClasses[] = get_class($matchingEnv);
             }
         }
 
+        $envDefaults = $this->getEnvironmentDefaults($contractClass, $availableEnvironments);
+        $defaultClasses = $envDefaults !== null ? $envDefaults : $detectedClasses;
+        $hintText = $this->generateHintText($detectedClasses, $availableEnvironments, $config, $contractClass);
+
         $selectedClasses = collect(multiselect(
             label: $label,
             options: $options->toArray(),
-            default: array_unique($detectedClasses),
+            default: array_unique($defaultClasses),
             scroll: $config['scroll'],
             required: $config['required'],
-            hint: empty($detectedClasses) ? '' : sprintf('Auto-detected %s for you',
-                Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
-                    $env = $availableEnvironments->first(fn ($env) => get_class($env) === $className);
-                    $displayMethod = $config['displayMethod'];
-
-                    return $env->{$displayMethod}();
-                }, $detectedClasses), ', ', ' & ')
-            )
+            hint: $hintText
         ))->sort();
 
-        return $selectedClasses->map(fn ($className) => $availableEnvironments->first(fn ($env) => get_class($env) === $className));
+        return $selectedClasses->map(fn ($className) => $availableEnvironments
+            ->first(fn ($env) => get_class($env) === $className));
     }
 
     private function installGuidelines(): void
@@ -397,7 +509,9 @@ class InstallCommand extends Command
         $failed = [];
         $composedAiGuidelines = $composer->compose();
 
-        $longestAgentName = max(1, ...$this->selectedTargetAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
+        $longestAgentName = max(1, ...$this->selectedTargetAgents
+            ->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
+
         /** @var CodeEnvironment $agent */
         foreach ($this->selectedTargetAgents as $agent) {
             $agentName = $agent->agentName();
@@ -545,4 +659,87 @@ class InstallCommand extends Command
         /** @phpstan-ignore-next-line  */
         return $actuallyUsing && is_dir(base_path('lang'));
     }
+
+    /**
+     * Get environment variable defaults for the given contract class.
+     */
+    private function getEnvironmentDefaults(string $contractClass, Collection $availableEnvironments): ?array
+    {
+        $envVar = match ($contractClass) {
+            Agent::class => config('boost.install.agents'),
+            McpClient::class => config('boost.install.editors'),
+            default => null,
+        };
+
+        if ($envVar === null) {
+            return null;
+        }
+
+        if ($contractClass === Agent::class && ($envVar === false || $envVar === 'false' || $envVar === '0')) {
+            return [];
+        }
+
+        if (! $envVar) {
+            return null;
+        }
+
+        $names = array_map('trim', explode(',', $envVar));
+        $defaultClasses = [];
+
+        foreach ($names as $name) {
+            $env = $availableEnvironments->first(function (CodeEnvironment $env) use ($name, $contractClass) {
+                $nameMatches = strtolower($env->name()) === strtolower($name);
+
+                if ($contractClass === Agent::class && $env instanceof Agent) {
+                    return $nameMatches || strtolower($env->agentName()) === strtolower($name);
+                }
+
+                if ($contractClass === McpClient::class && $env instanceof McpClient) {
+                    return $nameMatches || strtolower($env->mcpClientName()) === strtolower($name);
+                }
+
+                return $nameMatches;
+            });
+
+            if ($env) {
+                $defaultClasses[] = get_class($env);
+            }
+        }
+
+        return $defaultClasses;
+    }
+
+    /**
+     * Generate hint text for multiselect prompts.
+     */
+    private function generateHintText(array $detectedClasses, Collection $availableEnvironments, array $config, string $contractClass): string
+    {
+        $envVar = match ($contractClass) {
+            Agent::class => config('boost.install.agents'),
+            McpClient::class => config('boost.install.editors'),
+            default => null,
+        };
+
+        if ($envVar !== null) {
+            if ($contractClass === Agent::class && ($envVar === false || $envVar === 'false' || $envVar === '0')) {
+                return 'None selected via environment variable';
+            }
+
+            return 'Pre-selected from environment variable';
+        }
+
+        if (empty($detectedClasses)) {
+            return '';
+        }
+
+        return sprintf('Auto-detected %s for you',
+            Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
+                $env = $availableEnvironments->first(fn ($env) => get_class($env) === $className);
+                $displayMethod = $config['displayMethod'];
+
+                return $env->{$displayMethod}();
+            }, $detectedClasses), ', ', ' & ')
+        );
+    }
+
 }
