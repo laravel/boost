@@ -19,7 +19,7 @@
         "illuminate/contracts": "^10.0|^11.0|^12.0",
         "illuminate/routing": "^10.0|^11.0|^12.0",
         "illuminate/support": "^10.0|^11.0|^12.0",
-        "laravel/mcp": "^0.1.0",
+        "laravel/mcp": "^0.1.1",
         "laravel/prompts": "^0.1.9|^0.3",
         "laravel/roster": "^0.2"
     },
