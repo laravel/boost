@@ -41,7 +41,7 @@ return [
 
     'process_isolation' => [
         'enabled' => env('BOOST_PROCESS_ISOLATION', true),  // Default ON to prevent MCP server crashes
-        'timeout' => env('BOOST_PROCESS_TIMEOUT', 120),     // 2 minutes default
+        'timeout' => env('BOOST_PROCESS_TIMEOUT', 180),     // 5 minutes default
     ],
 
 ];
