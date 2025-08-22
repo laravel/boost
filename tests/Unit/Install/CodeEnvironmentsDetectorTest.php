@@ -41,6 +41,7 @@ test('discoverSystemInstalledCodeEnvironments returns detected programs', functi
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program3);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Roocode::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -65,6 +66,7 @@ test('discoverSystemInstalledCodeEnvironments returns empty array when no progra
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Roocode::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -213,6 +215,34 @@ test('discoverProjectInstalledCodeEnvironments detects cursor with cursor direct
 
     // Cleanup
     rmdir($tempDir.'/.cursor');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects roocode with roo directory', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir.'/.roo');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('roocode');
+
+    // Cleanup
+    rmdir($tempDir.'/.roo');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects roocode with roorules file', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    file_put_contents($tempDir.'/.roorules', 'test rules');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('roocode');
+
+    // Cleanup
+    unlink($tempDir.'/.roorules');
     rmdir($tempDir);
 });
 
