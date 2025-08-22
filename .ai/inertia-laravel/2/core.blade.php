@@ -8,10 +8,7 @@
 - Deferred props
 - Infinite scrolling using merging props and `WhenVisible`
 - Lazy loading data on scroll
-- New <Form /> component
+- New <Form /> component to handle form submissions without full page reload.
 
 ### Deferred Props & Empty States
 - When using deferred props on the frontend, you should add a nice empty state with pulsing / animated skeleton.
-
-### New <Form /> component
-This is the simplest way to get started with buildings forms in Inertia v2.
