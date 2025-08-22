@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install;
 use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
+use Laravel\Boost\Install\CodeEnvironment\Cline;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironment\Copilot;
 use Laravel\Boost\Install\CodeEnvironment\Cursor;
@@ -23,6 +24,7 @@ class CodeEnvironmentsDetector
         'cursor' => Cursor::class,
         'claudecode' => ClaudeCode::class,
         'copilot' => Copilot::class,
+        'cline' => Cline::class,
     ];
 
     public function __construct(

@@ -41,6 +41,7 @@ test('discoverSystemInstalledCodeEnvironments returns detected programs', functi
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program3);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cline::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -65,6 +66,7 @@ test('discoverSystemInstalledCodeEnvironments returns empty array when no progra
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cline::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -92,6 +94,9 @@ test('discoverProjectInstalledCodeEnvironments detects programs in project', fun
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program1);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\PhpStorm::class, fn () => $program2);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $program3);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program2);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $program2);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cline::class, fn () => $program2);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);
@@ -109,6 +114,11 @@ test('discoverProjectInstalledCodeEnvironments returns empty array when no progr
     // Bind mocked program to container
     $container = new \Illuminate\Container\Container;
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program1);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\PhpStorm::class, fn () => $program1);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $program1);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program1);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $program1);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cline::class, fn () => $program1);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);
@@ -213,6 +223,34 @@ test('discoverProjectInstalledCodeEnvironments detects cursor with cursor direct
 
     // Cleanup
     rmdir($tempDir.'/.cursor');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects cline with clinerules directory', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir.'/.clinerules');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('cline');
+
+    // Cleanup
+    rmdir($tempDir.'/.clinerules');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects cline with clinerules file', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    file_put_contents($tempDir.'/.clinerules', 'test rules');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('cline');
+
+    // Cleanup
+    unlink($tempDir.'/.clinerules');
     rmdir($tempDir);
 });
 
