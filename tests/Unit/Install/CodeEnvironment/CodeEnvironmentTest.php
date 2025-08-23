@@ -134,16 +134,16 @@ test('mcpClientName returns displayName by default', function () {
     expect($environment->mcpClientName())->toBe('Test Environment');
 });
 
-test('IsAgent returns true when implements Agent interface and has agentName', function () {
+test('isAgent returns true when implements Agent interface and has agentName', function () {
     $agent = new TestAgent($this->strategyFactory);
 
-    expect($agent->IsAgent())->toBe(true);
+    expect($agent->isAgent())->toBe(true);
 });
 
-test('IsAgent returns false when does not implement Agent interface', function () {
+test('isAgent returns false when does not implement Agent interface', function () {
     $environment = new TestCodeEnvironment($this->strategyFactory);
 
-    expect($environment->IsAgent())->toBe(false);
+    expect($environment->isAgent())->toBe(false);
 });
 
 test('isMcpClient returns true when implements McpClient interface and has mcpClientName', function () {
@@ -259,8 +259,8 @@ test('installShellMcp executes command with placeholders replaced', function () 
         ->once()
         ->with(Mockery::on(function ($command) {
             return str_contains($command, 'install test-key test-command "arg1" "arg2"') &&
-                   str_contains($command, '-e ENV1="value1"') &&
-                   str_contains($command, '-e ENV2="value2"');
+                str_contains($command, '-e ENV1="value1"') &&
+                str_contains($command, '-e ENV2="value2"');
         }))
         ->andReturn($mockResult);
 
@@ -355,7 +355,7 @@ test('installFileMcp updates existing config file', function () {
             $config = json_decode($json, true);
 
             return isset($config['mcpServers']['test-key']) &&
-                   isset($config['mcpServers']['existing']);
+                isset($config['mcpServers']['existing']);
         }))
         ->andReturn(true);
 

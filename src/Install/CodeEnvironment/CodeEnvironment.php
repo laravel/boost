@@ -17,9 +17,7 @@ abstract class CodeEnvironment
 {
     public bool $useAbsolutePathForMcp = false;
 
-    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory)
-    {
-    }
+    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory) {}
 
     abstract public function name(): string;
 
@@ -48,7 +46,6 @@ abstract class CodeEnvironment
     public function getArtisanPath(): string
     {
         return $this->useAbsolutePathForMcp() ? base_path('artisan') : './artisan';
-
     }
 
     /**
@@ -81,7 +78,7 @@ abstract class CodeEnvironment
         return $strategy->detect($config);
     }
 
-    public function IsAgent(): bool
+    public function isAgent(): bool
     {
         return $this->agentName() && $this instanceof Agent;
     }
