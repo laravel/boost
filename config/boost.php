@@ -29,4 +29,24 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Process Isolation for Tools
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, tools like Tinker will run in isolated processes to prevent
+    | timeouts from affecting the main MCP server. This provides better stability
+    | and protection against runaway code execution.
+    |
+    | Platform Considerations:
+    | - Windows: Process isolation is strongly recommended as timeout errors
+    |   cause uncatchable fatal crashes when disabled
+    | - Unix/Linux: Can be safely disabled for better performance as PCNTL
+    |   provides graceful timeout handling with catchable exceptions
+    */
+
+    'process_isolation' => [
+        'enabled' => env('BOOST_PROCESS_ISOLATION', true),  // Default ON for cross-platform safety
+        'timeout' => env('BOOST_PROCESS_TIMEOUT', 180),     // 3 minutes default
+    ]
 ];
