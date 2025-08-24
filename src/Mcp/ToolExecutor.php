@@ -103,7 +103,7 @@ class ToolExecutor
             return false;
         }
 
-        return config('boost.process_isolation.enabled', false);
+        return config('boost.process_isolation.enabled', true);
     }
 
     /**
