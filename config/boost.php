@@ -29,4 +29,17 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | MCP
+    |--------------------------------------------------------------------------
+    |
+    | This option may be used to configure the MCP settings for Boost.
+    |
+    */
+    'mcp' => [
+        'tinker' => [
+            'memory_limit' => env('BOOST_TINKER_MEMORY_LIMIT', '128M'),
+        ],
+    ]
 ];
