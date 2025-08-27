@@ -64,6 +64,7 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 | Core & Boost | core |
 | Laravel Framework | core, 10.x, 11.x, 12.x |
 | Livewire | core, 2.x, 3.x |
+| ESLint | core |
 | Filament | core, 4.x |
 | Flux UI | core, free, pro |
 | Herd | core |
@@ -73,6 +74,7 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 | Pest | core, 4.x |
 | PHPUnit | core |
 | Pint | core |
+| Prettier | core |
 | Tailwind CSS | core, 3.x, 4.x |
 | Livewire Volt | core |
 | Laravel Folio | core |
