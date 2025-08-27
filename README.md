@@ -88,6 +88,7 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 | Flux UI | 2.x Free, 2.x Pro |
 | Inertia | 1.x, 2.x |
 | Livewire | 1.x, 2.x, 3.x |
+| Nova | 4.x, 5.x |
 | Pest | 3.x, 4.x |
 | Tailwind CSS | 3.x, 4.x |
 
