@@ -18,6 +18,9 @@ class ExecuteToolCommand extends Command
 
     public function handle(): int
     {
+        // Refresh environment variables
+        $this->refreshEnvironmentVariables();
+
         $toolClass = $this->argument('tool');
         $argumentsEncoded = $this->argument('arguments');
 
@@ -53,5 +56,25 @@ class ExecuteToolCommand extends Command
 
             return 1;
         }
+    }
+
+    /**
+     * Refresh environment variables and configuration.
+     */
+    protected function refreshEnvironmentVariables(): void
+    {
+        // Clear any cached config file
+        $configPath = app()->getCachedConfigPath();
+        if (file_exists($configPath)) {
+            unlink($configPath);
+        }
+
+        // Reload environment variables
+        $envLoader = new \Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables();
+        $envLoader->bootstrap(app());
+
+        // Force reload configuration from files
+        $configLoader = new \Illuminate\Foundation\Bootstrap\LoadConfiguration();
+        $configLoader->bootstrap(app());
     }
 }
