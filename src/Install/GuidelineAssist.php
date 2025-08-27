@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install;
 use Illuminate\Database\Eloquent\Model;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
+use Throwable;
 
 class GuidelineAssist
 {
@@ -86,10 +87,10 @@ class GuidelineAssist
                         continue;
                     }
 
-                    if (class_exists($className)) {
+                    if (class_exists($className, false)) {
                         self::$classes[$className] = $path;
                     }
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     // Ignore exceptions and errors from class loading/reflection
                 }
             }

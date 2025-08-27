@@ -148,7 +148,7 @@ class InstallCommand extends Command
 
         foreach ($finder as $toolFile) {
             $fullyClassifiedClassName = 'Laravel\\Boost\\Mcp\\Tools\\'.$toolFile->getBasename('.php');
-            if (class_exists($fullyClassifiedClassName)) {
+            if (class_exists($fullyClassifiedClassName, false)) {
                 $tools[$fullyClassifiedClassName] = Str::headline($toolFile->getBasename('.php'));
             }
         }
