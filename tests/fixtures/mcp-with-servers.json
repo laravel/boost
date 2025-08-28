@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "existing-server": {
+      "command": "existing-cmd",
+      "args": ["arg1"]
+    }
+  },
+  "other": "data"
+}

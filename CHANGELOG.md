@@ -1,6 +1,46 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.0.18...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.0.20...main)
+
+## [v1.0.20](https://github.com/laravel/boost/compare/v1.0.19...v1.0.20) - 2025-08-28
+
+### What's Changed
+
+* fix: defer InjectBoost middleware registration until app is booted by [@Sairahcaz](https://github.com/Sairahcaz) in https://github.com/laravel/boost/pull/172
+* feat: add robust MCP file configuration writer by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/204
+* Feat: Detect env changes by default, fixes 130 by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/217
+
+### New Contributors
+
+* [@Sairahcaz](https://github.com/Sairahcaz) made their first contribution in https://github.com/laravel/boost/pull/172
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.19...v1.0.20
+
+## [v1.0.19](https://github.com/laravel/boost/compare/v1.0.18...v1.0.19) - 2025-08-27
+
+### What's Changed
+
+* Refactor creating laravel application instance using Testbench by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/boost/pull/127
+* Fix Tailwind CSS title on README.md for consistency by [@xavizera](https://github.com/xavizera) in https://github.com/laravel/boost/pull/159
+* feat: don't run Boost during testing by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/144
+* Hide Internal Command `ExecuteToolCommand.php` from Artisan List by [@yitzwillroth](https://github.com/yitzwillroth) in https://github.com/laravel/boost/pull/155
+* chore: removes non necessary php version constrant by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/166
+* chore: removes non necessary pint version constrant by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/167
+* Do not autoload classes while boost:install by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/180
+* fix: prevent unwanted "null" file creation on Windows during installation by [@andreilungeanu](https://github.com/andreilungeanu) in https://github.com/laravel/boost/pull/189
+* Improve `InjectBoost` middleware for response-type handling by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/179
+* docs: README: Add Nova 4.x and 5.x by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/213
+* refactor: change ./artisan to artisan by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/214
+* feat: guidelines: add Inertia form guidelines by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/211
+
+### New Contributors
+
+* [@crynobone](https://github.com/crynobone) made their first contribution in https://github.com/laravel/boost/pull/127
+* [@xavizera](https://github.com/xavizera) made their first contribution in https://github.com/laravel/boost/pull/159
+* [@nunomaduro](https://github.com/nunomaduro) made their first contribution in https://github.com/laravel/boost/pull/166
+* [@andreilungeanu](https://github.com/andreilungeanu) made their first contribution in https://github.com/laravel/boost/pull/189
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.18...v1.0.19
 
 ## [v1.0.18](https://github.com/laravel/boost/compare/v1.0.17...v1.0.18) - 2025-08-16
 

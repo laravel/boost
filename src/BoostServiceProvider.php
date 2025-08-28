@@ -180,7 +180,9 @@ class BoostServiceProvider extends ServiceProvider
 
     private function hookIntoResponses(Router $router): void
     {
-        $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        $this->app->booted(function () use ($router) {
+            $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        });
     }
 
     private function shouldRun(): bool

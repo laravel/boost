@@ -1,0 +1,7 @@
+{
+  "existing": "data",
+  "other": "value",
+  "nested": {
+    "key": "value"
+  }
+}

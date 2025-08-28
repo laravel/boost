@@ -1,0 +1,67 @@
+{
+    // Here are comments within my JSON
+    // This file also has inline comments and trailing commas 🤯
+    "servers": {
+        "mysql": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "@benborla29/mcp-server-mysql@2.0.3",
+            ],
+            "env": {
+                "MYSQL_HOST": "${input:mysql_host}",
+                "MYSQL_PORT": "${input:mysql_port}",
+                "MYSQL_USER": "${input:mysql_user}",
+                "MYSQL_PASS": "${input:mysql_pass}",
+                "MYSQL_DB": "${input:mysql_db}",
+            }
+        },
+        "laravel-boost": {
+            "command": "php",
+            "args": [
+                "./artisan",
+                "boost:mcp",
+                // Ooo, pretty cool
+            ]
+        },
+        "boost": {
+            "command": "php",
+            "args": [
+                "artisan",
+                "boost:mcp"
+            ],
+            "env": {
+                "SITE_PATH": "/tmp/"
+            }
+        }
+    },
+    "inputs": [
+        {
+            "id": "mysql_host",
+            "type": "promptString",
+            "description": "MySQL Hostname"
+        },
+        {
+            "id": "mysql_port",
+            "type": "promptString",
+            "description": "MySQL Port"
+        },
+        {
+            "id": "mysql_user",
+            "type": "promptString",
+            "description": "MySQL Username"
+        },
+        {
+            "id": "mysql_pass",
+            "type": "promptString",
+            "description": "MySQL Password",
+            // Don't just pick 'password', it's 2025!
+        },
+        {
+            "id": "mysql_db",
+            "type": "promptString",
+            "description": "MySQL Database Name (leave blank for multi-DB mode)",
+            // I'm trailing
+        }
+    ]
+}

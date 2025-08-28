@@ -77,7 +77,7 @@ test('mcpPath builds correct Windows path from USERPROFILE when HOME missing', f
     expect($herd->mcpPath())->toBe($expected);
 })->onlyOnWindows();
 
-test('isMcpAvailable returns false when MCP file is missing', function () {
+test('isMcpAvailable returns false when MCP file is missing from home', function () {
     $testHome = getHerdTestTempDir().'/home';
     mkdir($testHome, 0755, true);
     $_SERVER['HOME'] = $testHome;
@@ -85,9 +85,9 @@ test('isMcpAvailable returns false when MCP file is missing', function () {
     $herd = new Herd;
 
     expect($herd->isMcpAvailable())->toBeFalse();
-});
+})->onlyOnWindows();
 
-test('isMcpAvailable returns true when MCP file exists', function () {
+test('isMcpAvailable returns true when MCP file exists in home', function () {
     $testHome = getHerdTestTempDir().'/home';
     mkdir($testHome, 0755, true);
     $_SERVER['HOME'] = $testHome;

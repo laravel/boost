@@ -1,0 +1,10 @@
+{
+  "exampleCode": "// here is the example code\n<?php",
+  "anotherExample": "some /* block comment */ code",
+  "urlExample": "https://example.com/path?param=value",
+  "servers": {
+    "existing": {
+      "command": "test"
+    }
+  }
+}

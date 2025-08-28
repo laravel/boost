@@ -24,7 +24,7 @@ class GuidelineComposer
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->config = new GuidelineConfig;
-        $this->guidelineAssist = new GuidelineAssist;
+        $this->guidelineAssist = new GuidelineAssist($roster);
     }
 
     public function config(GuidelineConfig $config): self
@@ -50,10 +50,10 @@ class GuidelineComposer
      */
     public static function composeGuidelines(Collection $guidelines): string
     {
-        return trim($guidelines
+        return str_replace("\n\n\n\n", "\n\n", trim($guidelines
             ->filter(fn ($content) => ! empty(trim($content)))
             ->map(fn ($content, $key) => "\n=== {$key} rules ===\n\n".trim($content))
-            ->join("\n\n"));
+            ->join("\n\n")));
     }
 
     /**
@@ -139,7 +139,7 @@ class GuidelineComposer
 
         return $guidelines
             ->whereNotNull()
-            ->where(fn ($guideline) => ! empty(trim($guideline)));
+            ->where(fn (string $guideline) => ! empty(trim($guideline)));
     }
 
     /**
@@ -196,8 +196,8 @@ class GuidelineComposer
             return null;
         }
 
-        // Read the file content
         $content = file_get_contents($path);
+        $content = $this->processBoostSnippets($content);
 
         // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
         // This prevents Blade from trying to execute PHP code examples and supports inline code
@@ -211,7 +211,26 @@ class GuidelineComposer
             'assist' => $this->guidelineAssist,
         ]);
         $rendered = str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
+        $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
+        $this->storedSnippets = []; // Clear for next use
 
         return trim($rendered);
+    }
+
+    private array $storedSnippets = [];
+
+    private function processBoostSnippets(string $content): string
+    {
+        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function ($matches) {
+            $name = $matches['name'];
+            $lang = ! empty($matches['lang']) ? $matches['lang'] : 'html';
+            $snippetContent = $matches['content'];
+
+            $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
+
+            $this->storedSnippets[$placeholder] = '<code-snippet name="'.$name.'" lang="'.$lang.'">'."\n".$snippetContent."\n".'</code-snippet>'."\n\n";
+
+            return $placeholder;
+        }, $content);
     }
 }

@@ -26,6 +26,7 @@ uses(Tests\TestCase::class)->in('Feature');
 |
 */
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
+function fixture(string $name): string
+{
+    return file_get_contents(\Pest\testDirectory('fixtures/'.$name));
+}

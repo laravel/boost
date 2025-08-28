@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+use Laravel\Boost\Install\CodeEnvironment\VSCode;
 use Laravel\Boost\Install\Contracts\DetectionStrategy;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
@@ -58,19 +59,6 @@ class TestAgent extends TestCodeEnvironment implements Agent
 
 class TestMcpClient extends TestCodeEnvironment implements McpClient
 {
-    public function mcpConfigPath(): string
-    {
-        return '.test/mcp.json';
-    }
-}
-
-class TestAgentAndMcpClient extends TestCodeEnvironment implements Agent, McpClient
-{
-    public function guidelinesPath(): string
-    {
-        return 'test-guidelines.md';
-    }
-
     public function mcpConfigPath(): string
     {
         return '.test/mcp.json';
@@ -137,13 +125,13 @@ test('mcpClientName returns displayName by default', function () {
 test('IsAgent returns true when implements Agent interface and has agentName', function () {
     $agent = new TestAgent($this->strategyFactory);
 
-    expect($agent->IsAgent())->toBe(true);
+    expect($agent->isAgent())->toBe(true);
 });
 
 test('IsAgent returns false when does not implement Agent interface', function () {
     $environment = new TestCodeEnvironment($this->strategyFactory);
 
-    expect($environment->IsAgent())->toBe(false);
+    expect($environment->isAgent())->toBe(false);
 });
 
 test('isMcpClient returns true when implements McpClient interface and has mcpClientName', function () {
@@ -303,6 +291,22 @@ test('installFileMcp returns false when mcpConfigPath is null', function () {
 test('installFileMcp creates new config file when none exists', function () {
     $environment = Mockery::mock(TestMcpClient::class)->makePartial();
     $environment->shouldAllowMockingProtectedMethods();
+    $capturedContent = '';
+    $expectedContent = <<<'JSON'
+{
+    "mcpServers": {
+        "test-key": {
+            "command": "test-command",
+            "args": [
+                "arg1"
+            ],
+            "env": {
+                "ENV": "value"
+            }
+        }
+    }
+}
+JSON;
 
     $environment->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::FILE);
@@ -318,17 +322,21 @@ test('installFileMcp creates new config file when none exists', function () {
 
     File::shouldReceive('put')
         ->once()
-        ->with('.test/mcp.json', Mockery::type('string'))
+        ->with(Mockery::capture($capturedPath), Mockery::capture($capturedContent))
         ->andReturn(true);
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
     expect($result)->toBe(true);
+    expect($capturedPath)->toBe($environment->mcpConfigPath());
+    expect($capturedContent)->toBe($expectedContent);
 });
 
 test('installFileMcp updates existing config file', function () {
     $environment = Mockery::mock(TestMcpClient::class)->makePartial();
     $environment->shouldAllowMockingProtectedMethods();
+    $capturedPath = '';
+    $capturedContent = '';
 
     $environment->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::FILE);
@@ -338,6 +346,8 @@ test('installFileMcp updates existing config file', function () {
     File::shouldReceive('ensureDirectoryExists')
         ->once()
         ->with('.test');
+
+    File::shouldReceive('size')->once()->andReturn(10);
 
     File::shouldReceive('exists')
         ->once()
@@ -351,15 +361,51 @@ test('installFileMcp updates existing config file', function () {
 
     File::shouldReceive('put')
         ->once()
-        ->with('.test/mcp.json', Mockery::on(function ($json) {
-            $config = json_decode($json, true);
-
-            return isset($config['mcpServers']['test-key']) &&
-                   isset($config['mcpServers']['existing']);
-        }))
+        ->with(Mockery::capture($capturedPath), Mockery::capture($capturedContent))
         ->andReturn(true);
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
-    expect($result)->toBe(true);
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'existing' => [
+                    'command' => 'existing-cmd',
+                ],
+                'test-key' => [
+                    'command' => 'test-command',
+                    'args' => ['arg1'],
+                    'env' => ['ENV' => 'value'],
+                ],
+            ],
+        ]);
+
+});
+
+test('installFileMcp works with existing config file using JSON 5', function () {
+    $vscode = new VSCode($this->strategyFactory);
+    $capturedPath = '';
+    $capturedContent = '';
+    $json5 = fixture('mcp.json5');
+
+    File::shouldReceive('exists')->once()->andReturn(true);
+    File::shouldReceive('size')->once()->andReturn(10);
+    File::shouldReceive('put')
+        ->with(
+            Mockery::capture($capturedPath),
+            Mockery::capture($capturedContent),
+        )
+        ->andReturn(true);
+
+    File::shouldReceive('get')
+        ->with($vscode->mcpConfigPath())
+        ->andReturn($json5)->getMock()->shouldIgnoreMissing();
+
+    $wasWritten = $vscode->installMcp('boost', 'php', ['artisan', 'boost:mcp'], ['SITE_PATH' => '/tmp/']);
+
+    expect($wasWritten)->toBeTrue()
+        ->and($capturedPath)->toBe($vscode->mcpConfigPath())
+        ->and($capturedContent)->toBe(fixture('mcp-expected.json5'));
 });

@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Laravel\Boost\Middleware;
 
 use Closure;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Laravel\Boost\Services\BrowserLogger;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InjectBoost
 {
     public function handle(Request $request, Closure $next): Response
     {
-        /** @var \Symfony\Component\HttpFoundation\Response $response */
+        /** @var Response $response */
         $response = $next($request);
 
         if ($this->shouldInject($response)) {
@@ -32,7 +36,19 @@ class InjectBoost
 
     private function shouldInject(Response $response): bool
     {
-        if (str_contains($response->headers->get('content-type', ''), 'html') === false) {
+        $responseTypes = [
+            StreamedResponse::class,
+            BinaryFileResponse::class,
+            JsonResponse::class,
+            RedirectResponse::class,
+        ];
+        foreach ($responseTypes as $type) {
+            if ($response instanceof $type) {
+                return false;
+            }
+        }
+
+        if (! str_contains($response->headers->get('content-type', ''), 'html')) {
             return false;
         }
 
