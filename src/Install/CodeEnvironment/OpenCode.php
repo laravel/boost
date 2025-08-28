@@ -9,26 +9,26 @@ use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class ClaudeCode extends CodeEnvironment implements Agent, McpClient
+class OpenCode extends CodeEnvironment implements Agent, McpClient
 {
     public function name(): string
     {
-        return 'claudecode';
+        return 'opencode';
     }
 
     public function displayName(): string
     {
-        return 'Claude Code';
+        return 'opencode'; // intentional
     }
 
     public function systemDetectionConfig(Platform $platform): array
     {
         return match ($platform) {
             Platform::Darwin, Platform::Linux => [
-                'command' => 'command -v claude',
+                'command' => 'command -v opencode',
             ],
             Platform::Windows => [
-                'command' => 'where claude 2>nul',
+                'command' => 'where opencode 2>null',
             ],
         };
     }
@@ -36,8 +36,7 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient
     public function projectDetectionConfig(): array
     {
         return [
-            'paths' => ['.claude'],
-            'files' => ['CLAUDE.md'],
+            'files' => ['AGENTS.md', 'opencode.json'],
         ];
     }
 
@@ -48,11 +47,35 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient
 
     public function mcpConfigPath(): string
     {
-        return '.mcp.json';
+        return 'opencode.json';
     }
 
     public function guidelinesPath(): string
     {
-        return 'CLAUDE.md';
+        return 'AGENTS.md';
+    }
+
+    public function mcpConfigKey(): string
+    {
+        return 'mcp';
+    }
+
+    /** @inheritDoc */
+    public function newMcpConfig(): array
+    {
+        return [
+            '$schema' => 'https://opencode.ai/config.json',
+        ];
+    }
+
+    /** @inheritDoc */
+    protected function buildMcpConfig(string $command, array $args = [], array $env = []): array
+    {
+        return collect([
+            'type' => 'local',
+            'enabled' => true,
+            'command' => [$command, ...$args],
+            'env' => $env,
+        ])->filter()->toArray();
     }
 }
