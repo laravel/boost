@@ -60,10 +60,10 @@ class LastError extends Tool
         // First, attempt to retrieve the cached last error captured during runtime.
         // This works even if the log driver isn't a file driver, so is the preferred approach
         $cached = Cache::get('boost:last_error');
-        if ($cached) {
+        if ($cached && isset($cached['timestamp'], $cached['level'], $cached['message'])) {
             $entry = "[{$cached['timestamp']}] {$cached['level']}: {$cached['message']}";
-            if (! empty($cached['context'])) {
-                $entry .= ' '.json_encode($cached['context']);
+            if (!empty($cached['context'])) {
+                $entry .= ' ' . json_encode($cached['context'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             }
 
             return ToolResult::text($entry);
@@ -72,7 +72,7 @@ class LastError extends Tool
         // Locate the correct log file using the shared helper.
         $logFile = $this->resolveLogFilePath();
 
-        if (! file_exists($logFile)) {
+        if (! is_readable($logFile)) {
             return ToolResult::error("Log file not found at {$logFile}");
         }
 
