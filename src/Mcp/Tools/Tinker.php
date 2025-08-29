@@ -44,7 +44,8 @@ DESCRIPTION;
 
         $timeout = min(180, (int) (Arr::get($arguments, 'timeout', 30)));
         set_time_limit($timeout);
-        ini_set('memory_limit', '128M');
+        $memoryLimit = config('boost.mcp.tinker.memory_limit', '128M');
+        ini_set('memory_limit', $memoryLimit);
 
         // Use PCNTL alarm for additional timeout control if available (Unix only)
         if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal')) {
