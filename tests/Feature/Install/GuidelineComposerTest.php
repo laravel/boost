@@ -206,9 +206,9 @@ test('handles multiple package versions correctly', function () {
 
     expect($guidelines)
         ->toContain('=== inertia-react/core rules ===')
-        ->toContain('=== inertia-react/v2 rules ===')
+        ->toContain('=== inertia-react/v2/forms rules ===')
         ->toContain('=== inertia-vue/core rules ===')
-        ->toContain('=== inertia-vue/v2 rules ===')
+        ->toContain('=== inertia-vue/v2/forms rules ===')
         ->toContain('=== pest/core rules ===');
 });
 
@@ -250,4 +250,51 @@ test('returns list of used guidelines', function () {
         ->toContain('laravel/core')
         ->toContain('laravel/v11')
         ->toContain('pest/core');
+});
+
+test('includes user custom guidelines from .ai/guidelines directory', function () {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = '') => realpath(\Pest\testDirectory('fixtures/.ai/guidelines')).'/'.ltrim($path, '/'));
+
+    expect($composer->compose())
+        ->toContain('=== .ai/custom-rule rules ===')
+        ->toContain('=== .ai/project-specific rules ===')
+        ->toContain('This is a custom project-specific guideline')
+        ->toContain('Project-specific coding standards')
+        ->toContain('Database tables must use `snake_case` naming')
+        ->and($composer->used())
+        ->toContain('.ai/custom-rule')
+        ->toContain('.ai/project-specific');
+});
+
+test('non-empty custom guidelines override Boost guidelines', function () {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = '') => realpath(\Pest\testDirectory('fixtures/.ai/guidelines')).'/'.ltrim($path, '/'));
+
+    $guidelines = $composer->compose();
+    $overrideStringCount = substr_count($guidelines, 'Thanks though, appreciate you');
+
+    expect($overrideStringCount)->toBe(1)
+        ->and($guidelines)
+        ->toContain('Thanks though, appreciate you') // From user guidelines
+        ->not->toContain('## Laravel 11') // Heading from Boost's L11/core guideline
+        ->and($composer->used())
+        ->toContain('.ai/custom-rule')
+        ->toContain('.ai/project-specific');
 });
