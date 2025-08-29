@@ -110,6 +110,16 @@ class GuidelineComposer
             // In future, if using NextJS localization/etc.. then have a diff. rule here
         }
 
+        if ($this->config->usesLaravelModules) {
+            $guidelines->put('nwidart-laravel-modules/core', $this->guideline('nwidart-laravel-modules/core'));
+
+            // Add version-specific guidelines if available
+            $version12Path = $this->guidelinesDir('nwidart-laravel-modules/12');
+            if (is_dir($version12Path)) {
+                $guidelines->put('nwidart-laravel-modules/12', $version12Path);
+            }
+        }
+
         // Add all core and version specific docs for Roster supported packages
         // We don't add guidelines for packages unsupported by Roster right now
         foreach ($this->roster->packages() as $package) {

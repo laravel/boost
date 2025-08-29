@@ -13,4 +13,6 @@ class GuidelineConfig
     public bool $caresAboutLocalization = false;
 
     public bool $hasAnApi = false;
+
+    public bool $usesLaravelModules = false;
 }

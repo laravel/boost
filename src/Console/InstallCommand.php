@@ -59,6 +59,8 @@ class InstallCommand extends Command
 
     private bool $enforceTests = true;
 
+    private const LARAVEL_MODULES_PACKAGE = 'nwidart/laravel-modules';
+
     const MIN_TEST_COUNT = 6;
 
     private string $greenTick;
@@ -384,6 +386,7 @@ class InstallCommand extends Command
         $guidelineConfig->laravelStyle = $this->shouldInstallStyleGuidelines();
         $guidelineConfig->caresAboutLocalization = $this->detectLocalization();
         $guidelineConfig->hasAnApi = false;
+        $guidelineConfig->usesLaravelModules = $this->projectUsesLaravelModules();
 
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
         $guidelines = $composer->guidelines();
@@ -435,6 +438,28 @@ class InstallCommand extends Command
 
     private function shouldInstallStyleGuidelines(): bool
     {
+        return false;
+    }
+
+    /**
+     * Check if the project uses Laravel Modules.
+     */
+    private function projectUsesLaravelModules(): bool
+    {
+        $composerLock = base_path('composer.lock');
+
+        if (! file_exists($composerLock)) {
+            return false;
+        }
+
+        $lockContent = json_decode(file_get_contents($composerLock), true);
+
+        foreach ($lockContent['packages'] ?? [] as $package) {
+            if ($package['name'] === self::LARAVEL_MODULES_PACKAGE) {
+                return true;
+            }
+        }
+
         return false;
     }
 
