@@ -15,17 +15,31 @@ declare(strict_types=1);
 
 uses(Tests\TestCase::class)->in('Feature');
 
-/*
-|--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
-*/
-
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+expect()->extend('isToolResult', function () {
+    return $this->toBeInstanceOf(\Laravel\Mcp\Server\Tools\ToolResult::class);
 });
+
+expect()->extend('toolTextContains', function (mixed ...$needles) {
+    /** @var \Laravel\Mcp\Server\Tools\ToolResult $this->value */
+    $output = implode('', array_column($this->value->toArray()['content'], 'text'));
+    expect($output)->toContain(...func_get_args());
+
+    return $this;
+});
+
+expect()->extend('toolHasError', function () {
+    expect($this->value->toArray()['isError'])->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toolHasNoError', function () {
+    expect($this->value->toArray()['isError'])->toBeFalse();
+
+    return $this;
+});
+
+function fixture(string $name): string
+{
+    return file_get_contents(\Pest\testDirectory('fixtures/'.$name));
+}
