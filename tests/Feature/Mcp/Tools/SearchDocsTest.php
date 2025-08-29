@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
-use Laravel\Mcp\Server\Tools\ToolResult;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -26,11 +25,9 @@ test('it searches documentation successfully', function () {
     $tool = new SearchDocs($roster);
     $result = $tool->handle(['queries' => ['authentication', 'testing']]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse()
-        ->and($data['content'][0]['text'])->toBe('Documentation search results');
+    expect($result)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Documentation search results');
 
     Http::assertSent(function ($request) {
         return $request->url() === 'https://boost.laravel.com/api/docs' &&
@@ -59,11 +56,9 @@ test('it handles API error response', function () {
     $tool = new SearchDocs($roster);
     $result = $tool->handle(['queries' => ['authentication']]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeTrue()
-        ->and($data['content'][0]['text'])->toBe('Failed to search documentation: API Error');
+    expect($result)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('Failed to search documentation: API Error');
 });
 
 test('it filters empty queries', function () {
@@ -79,10 +74,8 @@ test('it filters empty queries', function () {
     $tool = new SearchDocs($roster);
     $result = $tool->handle(['queries' => ['test', '  ', '*', ' ']]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse();
+    expect($result)->isToolResult()
+        ->toolHasNoError();
 
     Http::assertSent(function ($request) {
         return $request->url() === 'https://boost.laravel.com/api/docs' &&
@@ -108,7 +101,8 @@ test('it formats package data correctly', function () {
     $tool = new SearchDocs($roster);
     $result = $tool->handle(['queries' => ['test']]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($result)->isToolResult()
+        ->toolHasNoError();
 
     Http::assertSent(function ($request) {
         return $request->data()['packages'] === [
@@ -131,11 +125,9 @@ test('it handles empty results', function () {
     $tool = new SearchDocs($roster);
     $result = $tool->handle(['queries' => ['nonexistent']]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse()
-        ->and($data['content'][0]['text'])->toBe('Empty response');
+    expect($result)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Empty response');
 });
 
 test('it uses custom token_limit when provided', function () {
@@ -151,7 +143,7 @@ test('it uses custom token_limit when provided', function () {
     $tool = new SearchDocs($roster);
     $result = $tool->handle(['queries' => ['test'], 'token_limit' => 5000]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($result)->isToolResult()->toolHasNoError();
 
     Http::assertSent(function ($request) {
         return $request->data()['token_limit'] === 5000;
@@ -171,7 +163,7 @@ test('it caps token_limit at maximum of 1000000', function () {
     $tool = new SearchDocs($roster);
     $result = $tool->handle(['queries' => ['test'], 'token_limit' => 2000000]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($result)->isToolResult()->toolHasNoError();
 
     Http::assertSent(function ($request) {
         return $request->data()['token_limit'] === 1000000;
