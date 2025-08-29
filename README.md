@@ -63,6 +63,7 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 |---------|-------------------|
 | Core & Boost | core |
 | Laravel Framework | core, 10.x, 11.x, 12.x |
+| Laravel Socialite | core, 5.x |
 | Livewire | core, 2.x, 3.x |
 | Filament | core, 4.x |
 | Flux UI | core, free, pro |

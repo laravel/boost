@@ -251,3 +251,88 @@ test('returns list of used guidelines', function () {
         ->toContain('laravel/v11')
         ->toContain('pest/core');
 });
+
+test('includes Socialite guidelines when package is detected', function () {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+
+    $composerLockContent = json_encode([
+        'packages' => [
+            [
+                'name' => 'laravel/socialite',
+                'version' => '5.14.0',
+            ],
+        ],
+    ]);
+
+    $tempComposerLock = base_path('composer.lock.test');
+    file_put_contents($tempComposerLock, $composerLockContent);
+
+    $originalBasePath = base_path('composer.lock');
+    if (file_exists($originalBasePath)) {
+        rename($originalBasePath, $originalBasePath.'.backup');
+    }
+    file_put_contents($originalBasePath, $composerLockContent);
+
+    $guidelines = $this->composer->compose();
+    $used = $this->composer->used();
+
+    expect($guidelines)
+        ->toContain('=== laravel-socialite/core rules ===')
+        ->toContain('=== laravel-socialite/v5 rules ===');
+
+    expect($used)
+        ->toContain('laravel-socialite/core')
+        ->toContain('laravel-socialite/v5');
+
+    unlink($tempComposerLock);
+    if (file_exists($originalBasePath.'.backup')) {
+        rename($originalBasePath.'.backup', $originalBasePath);
+    } else {
+        unlink($originalBasePath);
+    }
+});
+
+test('excludes Socialite guidelines when package is not installed', function () {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composerLockContent = json_encode([
+        'packages' => [
+            [
+                'name' => 'laravel/framework',
+                'version' => '11.0.0',
+            ],
+        ],
+    ]);
+
+    $originalBasePath = base_path('composer.lock');
+    if (file_exists($originalBasePath)) {
+        rename($originalBasePath, $originalBasePath.'.backup');
+    }
+    file_put_contents($originalBasePath, $composerLockContent);
+
+    $guidelines = $this->composer->compose();
+    $used = $this->composer->used();
+
+    expect($guidelines)
+        ->not->toContain('=== laravel-socialite/core rules ===')
+        ->not->toContain('=== laravel-socialite/v5 rules ===');
+
+    expect($used)
+        ->not->toContain('laravel-socialite/core')
+        ->not->toContain('laravel-socialite/v5');
+
+    if (file_exists($originalBasePath.'.backup')) {
+        rename($originalBasePath.'.backup', $originalBasePath);
+    } else {
+        unlink($originalBasePath);
+    }
+});
