@@ -34,20 +34,20 @@ test('it returns application info with packages', function () {
     expect($data['isError'])->toBeFalse();
 
     $content = json_decode($data['content'][0]['text'], true);
-    expect($content['php_version'])->toBe(PHP_VERSION);
-    expect($content['laravel_version'])->toBe(app()->version());
-    expect($content['database_engine'])->toBe(config('database.default'));
-    expect($content['packages'])->toHaveCount(2);
-    expect($content['packages'][0]['roster_name'])->toBe('LARAVEL');
-    expect($content['packages'][0]['package_name'])->toBe('laravel/framework');
-    expect($content['packages'][0]['version'])->toBe('11.0.0');
-    expect($content['packages'][1]['roster_name'])->toBe('PEST');
-    expect($content['packages'][1]['package_name'])->toBe('pestphp/pest');
-    expect($content['packages'][1]['version'])->toBe('2.0.0');
-    expect($content['models'])->toBeArray();
-    expect($content['models'])->toHaveCount(2);
-    expect($content['models'])->toContain('App\\Models\\User');
-    expect($content['models'])->toContain('App\\Models\\Post');
+    expect($content['php_version'])->toBe(PHP_VERSION)
+        ->and($content['laravel_version'])->toBe(app()->version())
+        ->and($content['database_engine'])->toBe(config('database.default'))
+        ->and($content['packages'])->toHaveCount(2)
+        ->and($content['packages'][0]['roster_name'])->toBe('LARAVEL')
+        ->and($content['packages'][0]['package_name'])->toBe('laravel/framework')
+        ->and($content['packages'][0]['version'])->toBe('11.0.0')
+        ->and($content['packages'][1]['roster_name'])->toBe('PEST')
+        ->and($content['packages'][1]['package_name'])->toBe('pestphp/pest')
+        ->and($content['packages'][1]['version'])->toBe('2.0.0')
+        ->and($content['models'])->toBeArray()
+        ->and($content['models'])->toHaveCount(2)
+        ->and($content['models'])->toContain('App\\Models\\User')
+        ->and($content['models'])->toContain('App\\Models\\Post');
 });
 
 test('it returns application info with no packages', function () {
@@ -60,17 +60,17 @@ test('it returns application info with no packages', function () {
     $tool = new ApplicationInfo($roster, $guidelineAssist);
     $result = $tool->handle([]);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($result)->toBeInstanceOf(ToolResult::class)
+        ->and($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
     expect($data['isError'])->toBeFalse();
 
     $content = json_decode($data['content'][0]['text'], true);
-    expect($content['php_version'])->toBe(PHP_VERSION);
-    expect($content['laravel_version'])->toBe(app()->version());
-    expect($content['database_engine'])->toBe(config('database.default'));
-    expect($content['packages'])->toHaveCount(0);
-    expect($content['models'])->toBeArray();
-    expect($content['models'])->toHaveCount(0);
+    expect($content['php_version'])->toBe(PHP_VERSION)
+        ->and($content['laravel_version'])->toBe(app()->version())
+        ->and($content['database_engine'])->toBe(config('database.default'))
+        ->and($content['packages'])->toHaveCount(0)
+        ->and($content['models'])->toBeArray()
+        ->and($content['models'])->toHaveCount(0);
 });

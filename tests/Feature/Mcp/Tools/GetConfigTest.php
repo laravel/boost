@@ -18,8 +18,8 @@ test('it returns config value when key exists', function () {
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['content'][0]['text'])->toContain('"key": "test.key"');
-    expect($data['content'][0]['text'])->toContain('"value": "test_value"');
+    expect($data['content'][0]['text'])->toContain('"key": "test.key"')
+        ->and($data['content'][0]['text'])->toContain('"value": "test_value"');
 });
 
 test('it returns nested config value', function () {
@@ -29,8 +29,8 @@ test('it returns nested config value', function () {
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['content'][0]['text'])->toContain('"key": "nested.config.key"');
-    expect($data['content'][0]['text'])->toContain('"value": "nested_value"');
+    expect($data['content'][0]['text'])->toContain('"key": "nested.config.key"')
+        ->and($data['content'][0]['text'])->toContain('"value": "nested_value"');
 });
 
 test('it returns error when config key does not exist', function () {
@@ -40,8 +40,8 @@ test('it returns error when config key does not exist', function () {
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['isError'])->toBe(true);
-    expect($data['content'][0]['text'])->toContain("Config key 'nonexistent.key' not found.");
+    expect($data['isError'])->toBe(true)
+        ->and($data['content'][0]['text'])->toContain("Config key 'nonexistent.key' not found.");
 });
 
 test('it works with built-in Laravel config keys', function () {
@@ -51,6 +51,6 @@ test('it works with built-in Laravel config keys', function () {
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['content'][0]['text'])->toContain('"key": "app.name"');
-    expect($data['content'][0]['text'])->toContain('"value": "Test App"');
+    expect($data['content'][0]['text'])->toContain('"key": "app.name"')
+        ->and($data['content'][0]['text'])->toContain('"value": "Test App"');
 });

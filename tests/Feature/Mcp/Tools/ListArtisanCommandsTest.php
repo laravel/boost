@@ -14,21 +14,21 @@ test('it returns list of artisan commands', function () {
     expect($data['isError'])->toBe(false);
 
     $content = json_decode($data['content'][0]['text'], true);
-    expect($content)->toBeArray();
-    expect($content)->not->toBeEmpty();
+    expect($content)->toBeArray()
+        ->and($content)->not->toBeEmpty();
 
     // Check that it contains some basic Laravel commands
     $commandNames = array_column($content, 'name');
-    expect($commandNames)->toContain('migrate');
-    expect($commandNames)->toContain('make:model');
-    expect($commandNames)->toContain('route:list');
+    expect($commandNames)->toContain('migrate')
+        ->and($commandNames)->toContain('make:model')
+        ->and($commandNames)->toContain('route:list');
 
     // Check the structure of each command
     foreach ($content as $command) {
-        expect($command)->toHaveKey('name');
-        expect($command)->toHaveKey('description');
-        expect($command['name'])->toBeString();
-        expect($command['description'])->toBeString();
+        expect($command)->toHaveKey('name')
+            ->and($command)->toHaveKey('description')
+            ->and($command['name'])->toBeString()
+            ->and($command['description'])->toBeString();
     }
 
     // Check that commands are sorted alphabetically

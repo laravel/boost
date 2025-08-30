@@ -44,30 +44,27 @@ test('it returns structured database schema', function () {
 
     $schemaArray = json_decode($responseArray['content'][0]['text'], true);
 
-    expect($schemaArray)->toHaveKey('engine');
-    expect($schemaArray['engine'])->toBe('sqlite');
-
-    expect($schemaArray)->toHaveKey('tables');
-    expect($schemaArray['tables'])->toHaveKey('examples');
+    expect($schemaArray)->toHaveKey('engine')
+        ->and($schemaArray['engine'])->toBe('sqlite')
+        ->and($schemaArray)->toHaveKey('tables')
+        ->and($schemaArray['tables'])->toHaveKey('examples');
 
     $exampleTable = $schemaArray['tables']['examples'];
-    expect($exampleTable)->toHaveKey('columns');
-    expect($exampleTable['columns'])->toHaveKey('id');
-    expect($exampleTable['columns'])->toHaveKey('name');
+    expect($exampleTable)->toHaveKey('columns')
+        ->and($exampleTable['columns'])->toHaveKey('id')
+        ->and($exampleTable['columns'])->toHaveKey('name')
+        ->and($exampleTable['columns']['id']['type'])->toBe('integer')
+        ->and($exampleTable['columns']['name']['type'])->toBe('varchar')
+        ->and($exampleTable)->toHaveKey('indexes')
+        ->and($exampleTable)->toHaveKey('foreign_keys')
+        ->and($exampleTable)->toHaveKey('triggers')
+        ->and($exampleTable)->toHaveKey('check_constraints')
+        ->and($schemaArray)->toHaveKey('global')
+        ->and($schemaArray['global'])->toHaveKey('views')
+        ->and($schemaArray['global'])->toHaveKey('stored_procedures')
+        ->and($schemaArray['global'])->toHaveKey('functions')
+        ->and($schemaArray['global'])->toHaveKey('sequences');
 
-    expect($exampleTable['columns']['id']['type'])->toBe('integer');
-    expect($exampleTable['columns']['name']['type'])->toBe('varchar');
-
-    expect($exampleTable)->toHaveKey('indexes');
-    expect($exampleTable)->toHaveKey('foreign_keys');
-    expect($exampleTable)->toHaveKey('triggers');
-    expect($exampleTable)->toHaveKey('check_constraints');
-
-    expect($schemaArray)->toHaveKey('global');
-    expect($schemaArray['global'])->toHaveKey('views');
-    expect($schemaArray['global'])->toHaveKey('stored_procedures');
-    expect($schemaArray['global'])->toHaveKey('functions');
-    expect($schemaArray['global'])->toHaveKey('sequences');
 });
 
 test('it filters tables by name', function () {
@@ -84,14 +81,14 @@ test('it filters tables by name', function () {
     $responseArray = $response->toArray();
     $schemaArray = json_decode($responseArray['content'][0]['text'], true);
 
-    expect($schemaArray['tables'])->toHaveKey('examples');
-    expect($schemaArray['tables'])->not->toHaveKey('users');
+    expect($schemaArray['tables'])->toHaveKey('examples')
+        ->and($schemaArray['tables'])->not->toHaveKey('users');
 
     // Test filtering for 'user'
     $response = $tool->handle(['filter' => 'user']);
     $responseArray = $response->toArray();
     $schemaArray = json_decode($responseArray['content'][0]['text'], true);
 
-    expect($schemaArray['tables'])->toHaveKey('users');
-    expect($schemaArray['tables'])->not->toHaveKey('examples');
+    expect($schemaArray['tables'])->toHaveKey('users')
+        ->and($schemaArray['tables'])->not->toHaveKey('examples');
 });

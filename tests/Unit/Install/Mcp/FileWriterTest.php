@@ -62,8 +62,8 @@ test('written data is correct for brand new file', function (string $configKey, 
     $result = $writer->save();
 
     $simpleContents = Str::of($writtenContent)->replaceMatches('/\s+/', '');
-    expect($result)->toBe(true);
-    expect($simpleContents)->toEqual($expectedJson);
+    expect($result)->toBe(true)
+        ->and($simpleContents)->toEqual($expectedJson);
 })->with(newFileServerConfigurations());
 
 test('updates existing plain JSON file using simple method', function () {
@@ -88,11 +88,12 @@ test('updates existing plain JSON file using simple method', function () {
     expect($result)->toBeTrue();
 
     $decoded = json_decode($writtenContent, true);
-    expect($decoded)->toHaveKey('existing');
-    expect($decoded)->toHaveKey('other');
-    expect($decoded)->toHaveKey('nested.key'); // From fixture
-    expect($decoded)->toHaveKey('servers.new-server');
-    expect($decoded['servers']['new-server']['command'])->toBe('npm');
+    expect($decoded)->toHaveKey('existing')
+        ->and($decoded)->toHaveKey('other')
+        ->and($decoded)->toHaveKey('nested.key')
+        ->and($decoded)->toHaveKey('servers.new-server')
+        ->and($decoded['servers']['new-server']['command'])->toBe('npm');
+    // From fixture
 });
 
 test('adds to existing mcpServers in plain JSON', function () {
@@ -116,9 +117,10 @@ test('adds to existing mcpServers in plain JSON', function () {
 
     $decoded = json_decode($writtenContent, true);
 
-    expect($decoded)->toHaveKey('mcpServers.existing-server'); // Original preserved
-    expect($decoded)->toHaveKey('mcpServers.boost'); // New server added
-    expect($decoded['mcpServers']['boost']['command'])->toBe('php');
+    expect($decoded)->toHaveKey('mcpServers.existing-server')
+        ->and($decoded)->toHaveKey('mcpServers.boost')
+        ->and($decoded['mcpServers']['boost']['command'])->toBe('php'); // Original preserved
+    // New server added
 });
 
 test('preserves complex JSON5 features that VS Code supports', function () {
@@ -137,12 +139,12 @@ test('preserves complex JSON5 features that VS Code supports', function () {
         ->addServer('test', 'cmd')
         ->save();
 
-    expect($result)->toBeTrue();
-    expect($writtenContent)->toContain('"test"'); // New server added
-    expect($writtenContent)->toContain('// Here are comments within my JSON'); // Preserve block comments
-    expect($writtenContent)->toContain("// I'm trailing"); // Preserve inline comments
-    expect($writtenContent)->toContain('// Ooo, pretty cool'); // Preserve comments in arrays
-    expect($writtenContent)->toContain('MYSQL_HOST'); // Preserve complex nested structure
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"test"') // New server added
+        ->and($writtenContent)->toContain('// Here are comments within my JSON') // Preserve block comments
+        ->and($writtenContent)->toContain("// I'm trailing") // Preserve inline comments
+        ->and($writtenContent)->toContain('// Ooo, pretty cool') // Preserve comments in arrays
+        ->and($writtenContent)->toContain('MYSQL_HOST'); // Preserve complex nested structure
 });
 
 test('detects plain JSON with comments inside strings as safe', function () {
@@ -163,9 +165,9 @@ test('detects plain JSON with comments inside strings as safe', function () {
     expect($result)->toBeTrue();
 
     $decoded = json_decode($writtenContent, true);
-    expect($decoded)->toHaveKey('exampleCode'); // Original preserved
-    expect($decoded)->toHaveKey('mcpServers.new-server'); // New server added
-    expect($decoded['exampleCode'])->toContain('// here is the example code'); // Comment in string preserved
+    expect($decoded)->toHaveKey('exampleCode') // Original preserved
+     ->and($decoded)->toHaveKey('mcpServers.new-server') // New server added
+    ->and($decoded['exampleCode'])->toContain('// here is the example code'); // Comment in string preserved
 });
 
 test('hasUnquotedComments detects comments correctly', function (string $content, bool $expected, string $description) {
@@ -251,11 +253,11 @@ test('injects new configKey when it does not exist', function () {
         ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
         ->save();
 
-    expect($result)->toBeTrue();
-    expect($writtenContent)->toContain('"mcpServers"');
-    expect($writtenContent)->toContain('"boost"');
-    expect($writtenContent)->toContain('"php"');
-    expect($writtenContent)->toContain('// No mcpServers key at all'); // Preserve existing comments
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"mcpServers"')
+        ->and($writtenContent)->toContain('"boost"')
+        ->and($writtenContent)->toContain('"php"')
+        ->and($writtenContent)->toContain('// No mcpServers key at all'); // Preserve existing comments
 });
 
 test('injects into existing configKey preserving JSON5 features', function () {
@@ -274,12 +276,12 @@ test('injects into existing configKey preserving JSON5 features', function () {
         ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
         ->save();
 
-    expect($result)->toBeTrue();
-    expect($writtenContent)->toContain('"boost"'); // New server added
-    expect($writtenContent)->toContain('mysql'); // Existing server preserved
-    expect($writtenContent)->toContain('laravel-boost'); // Existing server preserved
-    expect($writtenContent)->toContain('// Here are comments within my JSON'); // Comments preserved
-    expect($writtenContent)->toContain('// Ooo, pretty cool'); // Inline comments preserved
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"boost"') // New server added
+        ->and($writtenContent)->toContain('mysql') // Existing server preserved
+        ->and($writtenContent)->toContain('laravel-boost') // Existing server preserved
+        ->and($writtenContent)->toContain('// Here are comments within my JSON') // Comments preserved
+        ->and($writtenContent)->toContain('// Ooo, pretty cool'); // Inline comments preserved
 });
 
 test('injecting twice into existing JSON 5 doesn\'t cause duplicates', function () {
@@ -305,13 +307,13 @@ test('injecting twice into existing JSON 5 doesn\'t cause duplicates', function 
         ->save();
 
     $boostCounts = substr_count($capturedContent, '"boost"');
-    expect($result)->toBeTrue();
-    expect($boostCounts)->toBe(1);
-    expect($capturedContent)->toContain('"boost"'); // New server added
-    expect($capturedContent)->toContain('mysql'); // Existing server preserved
-    expect($capturedContent)->toContain('laravel-boost'); // Existing server preserved
-    expect($capturedContent)->toContain('// Here are comments within my JSON'); // Comments preserved
-    expect($capturedContent)->toContain('// Ooo, pretty cool'); // Inline comments preserved
+    expect($result)->toBeTrue()
+        ->and($boostCounts)->toBe(1)
+        ->and($capturedContent)->toContain('"boost"') // New server added
+        ->and($capturedContent)->toContain('mysql') // Existing server preserved
+        ->and($capturedContent)->toContain('laravel-boost') // Existing server preserved
+        ->and($capturedContent)->toContain('// Here are comments within my JSON') // Comments preserved
+        ->and($capturedContent)->toContain('// Ooo, pretty cool'); // Inline comments preserved
 
     $newContent = $capturedContent;
 
@@ -351,10 +353,10 @@ test('injects into empty configKey object', function () {
         ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
         ->save();
 
-    expect($result)->toBeTrue();
-    expect($writtenContent)->toContain('"boost"'); // New server added
-    expect($writtenContent)->toContain('// Empty mcpServers object'); // Comments preserved
-    expect($writtenContent)->toContain('test_input'); // Existing content preserved
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"boost"') // New server added
+        ->and($writtenContent)->toContain('// Empty mcpServers object') // Comments preserved
+        ->and($writtenContent)->toContain('test_input'); // Existing content preserved
 });
 
 test('preserves trailing commas when injecting into existing servers', function () {
@@ -372,11 +374,11 @@ test('preserves trailing commas when injecting into existing servers', function 
         ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
         ->save();
 
-    expect($result)->toBeTrue();
-    expect($writtenContent)->toContain('"boost"'); // New server added
-    expect($writtenContent)->toContain('existing-server'); // Existing server preserved
-    expect($writtenContent)->toContain('// Trailing comma here'); // Comments preserved
-    expect($writtenContent)->toContain('arg1'); // Existing args preserved
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"boost"') // New server added
+        ->and($writtenContent)->toContain('existing-server') // Existing server preserved
+        ->and($writtenContent)->toContain('// Trailing comma here') // Comments preserved
+        ->and($writtenContent)->toContain('arg1'); // Existing args preserved
 });
 
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description) {

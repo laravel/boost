@@ -39,13 +39,13 @@ LOG;
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['isError'])->toBeFalse();
-    expect($data['content'][0]['type'])->toBe('text');
+    expect($data['isError'])->toBeFalse()
+        ->and($data['content'][0]['type'])->toBe('text');
 
     $text = $data['content'][0]['text'];
-    expect($text)->toContain('browser.WARNING: Warning message');
-    expect($text)->toContain('browser.ERROR: JavaScript error occurred');
-    expect($text)->not->toContain('browser.DEBUG: console log message');
+    expect($text)->toContain('browser.WARNING: Warning message')
+        ->and($text)->toContain('browser.ERROR: JavaScript error occurred')
+        ->and($text)->not->toContain('browser.DEBUG: console log message');
 });
 
 test('it returns error when entries argument is invalid', function () {
@@ -56,16 +56,16 @@ test('it returns error when entries argument is invalid', function () {
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['isError'])->toBeTrue();
-    expect($data['content'][0]['text'])->toBe('The "entries" argument must be greater than 0.');
+    expect($data['isError'])->toBeTrue()
+        ->and($data['content'][0]['text'])->toBe('The "entries" argument must be greater than 0.');
 
     // Test with negative
     $result = $tool->handle(['entries' => -5]);
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['isError'])->toBeTrue();
-    expect($data['content'][0]['text'])->toBe('The "entries" argument must be greater than 0.');
+    expect($data['isError'])->toBeTrue()
+        ->and($data['content'][0]['text'])->toBe('The "entries" argument must be greater than 0.');
 });
 
 test('it returns error when log file does not exist', function () {
@@ -75,8 +75,8 @@ test('it returns error when log file does not exist', function () {
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['isError'])->toBeTrue();
-    expect($data['content'][0]['text'])->toBe('No log file found, probably means no logs yet.');
+    expect($data['isError'])->toBeTrue()
+        ->and($data['content'][0]['text'])->toBe('No log file found, probably means no logs yet.');
 });
 
 test('it returns error when log file is empty', function () {
@@ -91,8 +91,8 @@ test('it returns error when log file is empty', function () {
     expect($result)->toBeInstanceOf(ToolResult::class);
 
     $data = $result->toArray();
-    expect($data['isError'])->toBeFalse();
-    expect($data['content'][0]['text'])->toBe('Unable to retrieve log entries, or no logs');
+    expect($data['isError'])->toBeFalse()
+        ->and($data['content'][0]['text'])->toBe('Unable to retrieve log entries, or no logs');
 });
 
 test('@boostJs blade directive renders browser logger script', function () {
@@ -106,11 +106,11 @@ test('@boostJs blade directive renders browser logger script', function () {
 
     // Test that the script contains expected content
     $script = BrowserLogger::getScript();
-    expect($script)->toContain('browser-logger-active');
-    expect($script)->toContain('/_boost/browser-logs');
-    expect($script)->toContain('console.log');
-    expect($script)->toContain('console.error');
-    expect($script)->toContain('window.onerror');
+    expect($script)->toContain('browser-logger-active')
+        ->and($script)->toContain('/_boost/browser-logs')
+        ->and($script)->toContain('console.log')
+        ->and($script)->toContain('console.error')
+        ->and($script)->toContain('window.onerror');
 });
 
 test('browser logs endpoint processes logs correctly', function () {
@@ -215,9 +215,10 @@ HTML;
     });
 
     $content = $result->getContent();
-    expect($content)->toContain('browser-logger-active');
-    expect($content)->toContain('</head>');
-    expect(substr_count($content, 'browser-logger-active'))->toBe(1); // Should not inject twice
+    expect($content)->toContain('browser-logger-active')
+        ->and($content)->toContain('</head>')
+        ->and(substr_count($content, 'browser-logger-active'))->toBe(1);
+    // Should not inject twice
 });
 
 test('InjectBoost middleware does not inject into non-HTML responses', function () {
@@ -233,8 +234,8 @@ test('InjectBoost middleware does not inject into non-HTML responses', function 
     });
 
     $content = $result->getContent();
-    expect($content)->toBe($json);
-    expect($content)->not->toContain('browser-logger-active');
+    expect($content)->toBe($json)
+        ->and($content)->not->toContain('browser-logger-active');
 });
 
 test('InjectBoost middleware does not inject script twice', function () {
@@ -284,6 +285,6 @@ HTML;
     });
 
     $content = $result->getContent();
-    expect($content)->toContain('browser-logger-active');
-    expect($content)->toMatch('/<script[^>]*browser-logger-active[^>]*>.*<\/script>\s*<\/body>/s');
+    expect($content)->toContain('browser-logger-active')
+        ->and($content)->toMatch('/<script[^>]*browser-logger-active[^>]*>.*<\/script>\s*<\/body>/s');
 });

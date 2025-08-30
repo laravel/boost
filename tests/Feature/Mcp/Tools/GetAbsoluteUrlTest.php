@@ -19,8 +19,8 @@ test('it returns absolute url for root path by default', function () {
 
     expect($result)->toBeInstanceOf(ToolResult::class);
     $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost');
+    expect($data['isError'])->toBe(false)
+        ->and($data['content'][0]['text'])->toBe('http://localhost');
 });
 
 test('it returns absolute url for given path', function () {
@@ -29,8 +29,8 @@ test('it returns absolute url for given path', function () {
 
     expect($result)->toBeInstanceOf(ToolResult::class);
     $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost/dashboard');
+    expect($data['isError'])->toBe(false)
+        ->and($data['content'][0]['text'])->toBe('http://localhost/dashboard');
 });
 
 test('it returns absolute url for named route', function () {
@@ -39,8 +39,8 @@ test('it returns absolute url for named route', function () {
 
     expect($result)->toBeInstanceOf(ToolResult::class);
     $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost/test');
+    expect($data['isError'])->toBe(false)
+        ->and($data['content'][0]['text'])->toBe('http://localhost/test');
 });
 
 test('it prioritizes path over route when both are provided', function () {
@@ -49,8 +49,8 @@ test('it prioritizes path over route when both are provided', function () {
 
     expect($result)->toBeInstanceOf(ToolResult::class);
     $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost/dashboard');
+    expect($data['isError'])->toBe(false)
+        ->and($data['content'][0]['text'])->toBe('http://localhost/dashboard');
 });
 
 test('it handles empty path', function () {
@@ -59,6 +59,6 @@ test('it handles empty path', function () {
 
     expect($result)->toBeInstanceOf(ToolResult::class);
     $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost');
+    expect($data['isError'])->toBe(false)
+        ->and($data['content'][0]['text'])->toBe('http://localhost');
 });

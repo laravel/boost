@@ -20,19 +20,19 @@ test('it returns list of config keys in dot notation', function () {
     expect($data['isError'])->toBe(false);
 
     $content = json_decode($data['content'][0]['text'], true);
-    expect($content)->toBeArray();
-    expect($content)->not->toBeEmpty();
+    expect($content)->toBeArray()
+        ->and($content)->not->toBeEmpty();
 
     // Check that it contains common Laravel config keys
-    expect($content)->toContain('app.name');
-    expect($content)->toContain('app.env');
-    expect($content)->toContain('database.default');
+    expect($content)->toContain('app.name')
+        ->and($content)->toContain('app.env')
+        ->and($content)->toContain('database.default');
 
     // Check that it contains our test keys
-    expect($content)->toContain('test.simple');
-    expect($content)->toContain('test.nested.key');
-    expect($content)->toContain('test.array.0');
-    expect($content)->toContain('test.array.1');
+    expect($content)->toContain('test.simple')
+        ->and($content)->toContain('test.nested.key')
+        ->and($content)->toContain('test.array.0')
+        ->and($content)->toContain('test.array.1');
 
     // Check that keys are sorted
     $sortedContent = $content;
