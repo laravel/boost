@@ -23,9 +23,9 @@ class ListRoutes extends Tool
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         // Mirror the most common `route:list` options. All are optional.
-        $schema->string('method')->description('Filter the routes by HTTP method.')->required(false);
-        $schema->string('action')->description('Filter the routes by action.')->required(false);
-        $schema->string('name')->description('Filter the routes by name.')->required(false);
+        $schema->string('method')->description('Filter the routes by HTTP method (e.g., GET, POST, PUT, DELETE).')->required(false);
+        $schema->string('action')->description('Filter the routes by controller action (e.g., UserController@index, ChatController, show).')->required(false);
+        $schema->string('name')->description('Filter the routes by route name (no wildcards supported).')->required(false);
         $schema->string('domain')->description('Filter the routes by domain.')->required(false);
         $schema->string('path')->description('Only show routes matching the given path pattern.')->required(false);
         // Keys with hyphens are converted to underscores for PHP variable compatibility.
@@ -58,8 +58,11 @@ class ListRoutes extends Tool
         ];
 
         foreach ($optionMap as $argKey => $cliOption) {
-            if (array_key_exists($argKey, $arguments) && ! empty($arguments[$argKey]) && $arguments[$argKey] !== '*') {
-                $options['--'.$cliOption] = $arguments[$argKey];
+            if (! empty($arguments[$argKey])) {
+                $sanitizedValue = str_replace(['*', '?'], '', $arguments[$argKey]);
+                if (filled($sanitizedValue)) {
+                    $options['--'.$cliOption] = $sanitizedValue;
+                }
             }
         }
 
