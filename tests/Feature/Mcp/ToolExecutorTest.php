@@ -37,8 +37,8 @@ test('can execute tool with process isolation', function () {
         expect(false)->toBeTrue("Tool execution failed with error: {$errorText}");
     }
 
-    expect($result->isError)->toBeFalse();
-    expect($result->content)->toBeArray();
+    expect($result->isError)->toBeFalse()
+        ->and($result->content)->toBeArray();
 
     // The content should contain the app name (which should be "Laravel" in testbench)
     $textContent = $result->content[0]->text ?? '';
@@ -64,15 +64,15 @@ test('subprocess proves fresh process isolation', function () {
     $result1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
     $result2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
 
-    expect($result1->isError)->toBeFalse();
-    expect($result2->isError)->toBeFalse();
+    expect($result1->isError)->toBeFalse()
+        ->and($result2->isError)->toBeFalse();
 
     $pid1 = json_decode($result1->content[0]->text, true)['result'];
     $pid2 = json_decode($result2->content[0]->text, true)['result'];
 
-    expect($pid1)->toBeInt()->not->toBe(getmypid());
-    expect($pid2)->toBeInt()->not->toBe(getmypid());
-    expect($pid1)->not()->toBe($pid2);
+    expect($pid1)->toBeInt()->not->toBe(getmypid())
+        ->and($pid2)->toBeInt()->not->toBe(getmypid())
+        ->and($pid1)->not()->toBe($pid2);
 });
 
 test('subprocess sees modified autoloaded code changes', function () {
@@ -110,8 +110,8 @@ test('subprocess sees modified autoloaded code changes', function () {
         $result2 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
         $response2 = json_decode($result2->content[0]->text, true);
 
-        expect($result2->isError)->toBeFalse();
-        expect($response2['value'])->toBe('MODIFIED_BY_TEST'); // Using updated code, not cached
+        expect($result2->isError)->toBeFalse()
+            ->and($response2['value'])->toBe('MODIFIED_BY_TEST'); // Using updated code, not cached
     } finally {
         $cleanup();
     }
