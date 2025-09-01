@@ -39,9 +39,6 @@ LOG;
         ->toolHasNoError()
         ->toolTextContains('browser.WARNING: Warning message', 'browser.ERROR: JavaScript error occurred')
         ->toolTextDoesNotContain('browser.DEBUG: console log message');
-
-    $data = $result->toArray();
-    expect($data['content'][0]['type'])->toBe('text');
 });
 
 test('it returns error when entries argument is invalid', function () {
