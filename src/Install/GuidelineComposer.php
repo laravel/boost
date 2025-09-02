@@ -126,6 +126,12 @@ class GuidelineComposer
             );
         }
 
+        // Add Laravel Socialite if detected
+        if ($this->isSocialiteInstalled()) {
+            $guidelines->put('laravel-socialite/core', $this->guideline('laravel-socialite/core'));
+            $guidelines->put('laravel-socialite/v5', $this->guideline('laravel-socialite/5/core'));
+        }
+
         if ($this->config->enforceTests) {
             $guidelines->put('tests', $this->guideline('enforce-tests'));
         }
@@ -233,4 +239,37 @@ class GuidelineComposer
             return $placeholder;
         }, $content);
     }
+
+    /**
+     * Check if Laravel Socialite is installed by looking at composer.lock.
+     */
+    private function isSocialiteInstalled(): bool
+    {
+        $composerLockPath = base_path('composer.lock');
+
+        if (! file_exists($composerLockPath)) {
+            return false;
+        }
+
+        $contents = file_get_contents($composerLockPath);
+        if ($contents === false) {
+            return false;
+        }
+
+        $data = json_decode($contents, true);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($data)) {
+            return false;
+        }
+
+        $packages = array_merge($data['packages'] ?? [], $data['packages-dev'] ?? []);
+
+        foreach ($packages as $package) {
+            if (($package['name'] ?? '') === 'laravel/socialite') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }
