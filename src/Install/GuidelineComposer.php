@@ -84,6 +84,14 @@ class GuidelineComposer
     protected function find(): Collection
     {
         $guidelines = collect();
+
+        $userGuidelines = $this->guidelineFilesInDir(base_path($this->userGuidelineDir));
+
+        foreach ($userGuidelines as $guideline) {
+            $guidelineKey = '.ai/'.$guideline->getBasename('.blade.php');
+            $guidelines->put($guidelineKey, $this->guideline($guideline->getPathname()));
+        }
+
         $guidelines->put('foundation', $this->guideline('foundation'));
         $guidelines->put('boost', $this->guideline('boost/core'));
 
@@ -128,13 +136,6 @@ class GuidelineComposer
 
         if ($this->config->enforceTests) {
             $guidelines->put('tests', $this->guideline('enforce-tests'));
-        }
-
-        $userGuidelines = $this->guidelineFilesInDir(base_path($this->userGuidelineDir));
-
-        foreach ($userGuidelines as $guideline) {
-            $guidelineKey = '.ai/'.$guideline->getBasename('.blade.php');
-            $guidelines->put($guidelineKey, $this->guideline($guideline->getPathname()));
         }
 
         return $guidelines
