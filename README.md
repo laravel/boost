@@ -78,7 +78,6 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 | Laravel Folio | core |
 | Enforce Tests | conditional |
 
-
 ## Available Documentation
 
 | Package | Versions Supported |
@@ -91,7 +90,6 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 | Nova | 4.x, 5.x |
 | Pest | 3.x, 4.x |
 | Tailwind CSS | 3.x, 4.x |
-
 
 ## Adding Custom AI Guidelines
 
@@ -120,6 +118,22 @@ JSON Example:
         "laravel-boost": {
             "command": "php",
             "args": ["artisan", "boost:mcp"]
+        }
+    }
+}
+```
+
+If using sail, then you can use the following:
+
+```json
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "vendor/bin/sail",
+            "args": [
+                "artisan",
+                "boost:mcp"
+            ]
         }
     }
 }
