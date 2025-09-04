@@ -34,6 +34,67 @@ php artisan boost:install
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
+## Configuration
+
+### Non-Interactive Installation
+
+For a faster installation workflow when you already know your preferences, you can skip the interactive prompts using the `--no-interaction` or `-n` flag:
+
+```bash
+php artisan boost:install -n
+```
+
+### Environment Variables
+
+You can configure the installation behavior using environment variables in your `.env` file:
+
+```bash
+# Control what gets installed
+BOOST_MCP_SERVER=true          # Install MCP server (default: true)
+BOOST_AI_GUIDELINES=true       # Install AI guidelines (default: true)
+BOOST_HERD=false               # Install Herd MCP server (default: false)
+
+# Pre-select agents and editors (comma-separated)
+BOOST_AGENTS=claudecode        # Agents for AI guidelines
+BOOST_EDITORS=claudecode       # Editors for MCP installation
+
+# Test enforcement in AI guidelines
+BOOST_ENFORCE_TESTS=true       # Always create tests (default: auto-detect)
+```
+
+**Available Agents:**
+- `claudecode` - Claude Code
+- `cursor` - Cursor
+- `copilot` - GitHub Copilot (no MCP support)
+- `phpstorm` - PhpStorm/Junie
+
+**Available Editors:**
+- `claudecode` - Claude Code
+- `cursor` - Cursor
+- `phpstorm` - PhpStorm  
+- `vscode` - VS Code (MCP only)
+
+**Special Values:**
+- Set `BOOST_AI_GUIDELINES=false` to skip AI guidelines installation entirely
+- Environment variables work as **defaults** in interactive mode, or **enforced values** with `--no-interaction`
+
+### Configuration File
+
+You can also set defaults in your `config/boost.php` file:
+
+```php
+return [
+    'install' => [
+        'mcp_server' => true,
+        'ai_guidelines' => true,
+        'herd' => false,
+        'enforce_tests' => true,
+        'agents' => 'claudecode',
+        'editors' => 'claudecode',
+    ],
+];
+```
+
 ## Available MCP Tools
 
 | Name                       | Notes                                                                                                          |
