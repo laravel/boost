@@ -28,12 +28,13 @@ class GuidelineComposer
      *
      * @var array<string, string[]>
      */
-    protected array $packagePriorities = [
-        Packages::PEST->value => [Packages::PHPUNIT->value],
-    ];
+    protected array $packagePriorities;
 
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
+        $this->packagePriorities = [
+            Packages::PEST->value => [Packages::PHPUNIT->value],
+        ];
         $this->config = new GuidelineConfig;
         $this->guidelineAssist = new GuidelineAssist($roster);
     }

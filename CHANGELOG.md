@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.1.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.1.3...main)
+
+## [v1.1.3](https://github.com/laravel/boost/compare/v1.1.2...v1.1.3) - 2025-09-04
+
+### What's Changed
+
+* fix: package priorities should work on php8.1 by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/243
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.2...v1.1.3
 
 ## [v1.1.2](https://github.com/laravel/boost/compare/v1.1.1...v1.1.2) - 2025-09-04
 
