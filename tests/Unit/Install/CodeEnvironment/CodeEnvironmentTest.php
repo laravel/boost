@@ -327,9 +327,9 @@ JSON;
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
-    expect($result)->toBe(true);
-    expect($capturedPath)->toBe($environment->mcpConfigPath());
-    expect($capturedContent)->toBe($expectedContent);
+    expect($result)->toBe(true)
+        ->and($capturedPath)->toBe($environment->mcpConfigPath())
+        ->and($capturedContent)->toBe($expectedContent);
 });
 
 test('installFileMcp updates existing config file', function () {

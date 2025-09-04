@@ -26,8 +26,8 @@ test('it creates directory when it does not exist', function () {
     $writer = new GuidelineWriter($agent);
     $writer->write('test guidelines');
 
-    expect(is_dir(dirname($filePath)))->toBeTrue();
-    expect(file_exists($filePath))->toBeTrue();
+    expect(is_dir(dirname($filePath)))->toBeTrue()
+        ->and(file_exists($filePath))->toBeTrue();
 
     // Cleanup
     unlink($filePath);
@@ -238,14 +238,14 @@ test('it preserves user content after guidelines when replacing', function () {
     $content = file_get_contents($tempFile);
 
     // Verify guidelines were replaced in-place
-    expect($content)->toContain('<laravel-boost-guidelines>');
-    expect($content)->toContain('updated guidelines from boost');
+    expect($content)->toContain('<laravel-boost-guidelines>')
+        ->and($content)->toContain('updated guidelines from boost');
 
     // Verify user content after guidelines is preserved
-    expect($content)->toContain('# User Added Section');
-    expect($content)->toContain('This content was added by the user after the guidelines.');
-    expect($content)->toContain('## Another user section');
-    expect($content)->toContain('More content here.');
+    expect($content)->toContain('# User Added Section')
+        ->and($content)->toContain('This content was added by the user after the guidelines.')
+        ->and($content)->toContain('## Another user section')
+        ->and($content)->toContain('More content here.');
 
     // Verify exact structure
     expect($content)->toBe("# My Project\n\n<laravel-boost-guidelines>\nupdated guidelines from boost\n</laravel-boost-guidelines>\n\n# User Added Section\nThis content was added by the user after the guidelines.\n\n## Another user section\nMore content here.");

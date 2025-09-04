@@ -225,10 +225,10 @@ test('discoverProjectInstalledCodeEnvironments handles multiple detections', fun
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
-    expect($detected)->toContain('vscode');
-    expect($detected)->toContain('cursor');
-    expect($detected)->toContain('claudecode');
-    expect(count($detected))->toBeGreaterThanOrEqual(3);
+    expect($detected)->toContain('vscode')
+        ->and($detected)->toContain('cursor')
+        ->and($detected)->toContain('claudecode')
+        ->and(count($detected))->toBeGreaterThanOrEqual(3);
 
     // Cleanup
     rmdir($tempDir.'/.vscode');

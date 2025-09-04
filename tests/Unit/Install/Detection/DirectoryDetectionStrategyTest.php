@@ -185,13 +185,13 @@ test('identifies absolute paths correctly', function () {
     expect($isAbsolutePathMethod->invoke($this->strategy, '/usr/local/bin'))->toBeTrue();
 
     // Windows absolute paths
-    expect($isAbsolutePathMethod->invoke($this->strategy, 'C:\\Program Files'))->toBeTrue();
-    expect($isAbsolutePathMethod->invoke($this->strategy, 'D:\\test'))->toBeTrue();
+    expect($isAbsolutePathMethod->invoke($this->strategy, 'C:\\Program Files'))->toBeTrue()
+        ->and($isAbsolutePathMethod->invoke($this->strategy, 'D:\\test'))->toBeTrue();
 
     // Relative paths
-    expect($isAbsolutePathMethod->invoke($this->strategy, 'relative/path'))->toBeFalse();
-    expect($isAbsolutePathMethod->invoke($this->strategy, './relative'))->toBeFalse();
-    expect($isAbsolutePathMethod->invoke($this->strategy, '../relative'))->toBeFalse();
+    expect($isAbsolutePathMethod->invoke($this->strategy, 'relative/path'))->toBeFalse()
+        ->and($isAbsolutePathMethod->invoke($this->strategy, './relative'))->toBeFalse()
+        ->and($isAbsolutePathMethod->invoke($this->strategy, '../relative'))->toBeFalse();
 });
 
 function removeDirectory(string $dir): void

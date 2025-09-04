@@ -372,11 +372,11 @@ test('preserves trailing commas when injecting into existing servers', function 
         ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
         ->save();
 
-    expect($result)->toBeTrue();
-    expect($writtenContent)->toContain('"boost"'); // New server added
-    expect($writtenContent)->toContain('existing-server'); // Existing server preserved
-    expect($writtenContent)->toContain('// Trailing comma here'); // Comments preserved
-    expect($writtenContent)->toContain('arg1'); // Existing args preserved
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"boost"') // New server added
+        ->and($writtenContent)->toContain('existing-server') // Existing server preserved
+        ->and($writtenContent)->toContain('// Trailing comma here') // Comments preserved
+        ->and($writtenContent)->toContain('arg1'); // Existing args preserved
 });
 
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description) {
