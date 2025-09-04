@@ -76,6 +76,7 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 | Tailwind CSS | core, 3.x, 4.x |
 | Livewire Volt | core |
 | Laravel Folio | core |
+| Laravel Modules (nwidart) | core, 12.x |
 | Enforce Tests | conditional |
 
 
