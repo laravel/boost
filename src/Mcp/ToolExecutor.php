@@ -23,14 +23,10 @@ class ToolExecutor
             return ToolResult::error("Tool not registered or not allowed: {$toolClass}");
         }
 
-        if ($this->shouldUseProcessIsolation()) {
-            return $this->executeInProcess($toolClass, $arguments);
-        }
-
-        return $this->executeInline($toolClass, $arguments);
+        return $this->executeInSubprocess($toolClass, $arguments);
     }
 
-    protected function executeInProcess(string $toolClass, array $arguments): ToolResult
+    protected function executeInSubprocess(string $toolClass, array $arguments): ToolResult
     {
         $command = $this->buildCommand($toolClass, $arguments);
 
@@ -45,7 +41,7 @@ class ToolExecutor
         $process = new Process(
             command: $command,
             env: $cleanEnv,
-            timeout: $this->getTimeout()
+            timeout: $this->getTimeout($arguments)
         );
 
         try {
@@ -62,7 +58,7 @@ class ToolExecutor
         } catch (ProcessTimedOutException $e) {
             $process->stop();
 
-            return ToolResult::error("Tool execution timed out after {$this->getTimeout()} seconds");
+            return ToolResult::error("Tool execution timed out after {$this->getTimeout($arguments)} seconds");
 
         } catch (ProcessFailedException $e) {
             $errorOutput = $process->getErrorOutput().$process->getOutput();
@@ -71,30 +67,11 @@ class ToolExecutor
         }
     }
 
-    protected function executeInline(string $toolClass, array $arguments): ToolResult
+    protected function getTimeout(array $arguments): int
     {
-        try {
-            /** @var \Laravel\Mcp\Server\Tool $tool */
-            $tool = app($toolClass);
+        $timeout = (int) ($arguments['timeout'] ?? 180);
 
-            return $tool->handle($arguments);
-        } catch (\Throwable $e) {
-            return ToolResult::error("Inline tool execution failed: {$e->getMessage()}");
-        }
-    }
-
-    protected function shouldUseProcessIsolation(): bool
-    {
-        if (app()->environment('testing')) {
-            return false;
-        }
-
-        return config('boost.process_isolation.enabled', true);
-    }
-
-    protected function getTimeout(): int
-    {
-        return config('boost.process_isolation.timeout', 180);
+        return max(1, min(600, $timeout));
     }
 
     /**
