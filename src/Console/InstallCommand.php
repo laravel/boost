@@ -239,6 +239,7 @@ class InstallCommand extends Command
 
         if ($this->herd->isMcpAvailable()) {
             $installOptions['herd_mcp'] = 'Herd MCP Server';
+            $defaultInstallOptions[] = 'herd_mcp';
 
             return collect(multiselect(
                 label: 'What do you want to install?',
