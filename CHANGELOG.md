@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.1.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.1.4...main)
+
+## [v1.1.4](https://github.com/laravel/boost/compare/v1.1.3...v1.1.4) - 2025-09-04
+
+### What's Changed
+
+* feat: add windows to tests CI check by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/244
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.3...v1.1.4
 
 ## [v1.1.3](https://github.com/laravel/boost/compare/v1.1.2...v1.1.3) - 2025-09-04
 

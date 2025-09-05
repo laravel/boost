@@ -47,7 +47,7 @@ test('it throws exception when directory creation fails', function () {
 
     expect(fn () => $writer->write('test guidelines'))
         ->toThrow(RuntimeException::class, 'Failed to create directory: /root/boost_test');
-});
+})->skipOnWindows();
 
 test('it writes guidelines to new file', function () {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
@@ -150,7 +150,7 @@ test('it throws exception when file cannot be opened', function () {
 
     expect(fn () => $writer->write('test guidelines'))
         ->toThrow(RuntimeException::class, "Failed to open file: {$dirPath}");
-});
+})->skipOnWindows();
 
 test('it preserves file content structure with proper spacing', function () {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
