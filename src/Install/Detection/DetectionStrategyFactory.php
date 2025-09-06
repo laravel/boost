@@ -41,7 +41,7 @@ class DetectionStrategyFactory
         return $this->make($type, $config);
     }
 
-    private function inferTypeFromConfig(array $config): string|array
+    protected function inferTypeFromConfig(array $config): string|array
     {
         $typeMap = [
             'files' => self::TYPE_FILE,

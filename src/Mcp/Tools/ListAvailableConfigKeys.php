@@ -41,7 +41,7 @@ class ListAvailableConfigKeys extends Tool
      * @param array<int|string, string|array<int|string, string>> $array
      * @return array<int|string, int|string>
      */
-    private function flattenToDotNotation(array $array, string $prefix = ''): array
+    protected function flattenToDotNotation(array $array, string $prefix = ''): array
     {
         $results = [];
 

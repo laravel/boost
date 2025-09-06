@@ -76,7 +76,7 @@ class BoostServiceProvider extends ServiceProvider
         }
     }
 
-    private function registerPublishing(): void
+    protected function registerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -85,7 +85,7 @@ class BoostServiceProvider extends ServiceProvider
         }
     }
 
-    private function registerCommands(): void
+    protected function registerCommands(): void
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -96,7 +96,7 @@ class BoostServiceProvider extends ServiceProvider
         }
     }
 
-    private function registerRoutes(): void
+    protected function registerRoutes(): void
     {
         Route::post('/_boost/browser-logs', function (Request $request) {
             $logs = $request->input('logs', []);
@@ -151,7 +151,7 @@ class BoostServiceProvider extends ServiceProvider
         return implode(' ', $messages);
     }
 
-    private function registerBrowserLogger(): void
+    protected function registerBrowserLogger(): void
     {
         config([
             'logging.channels.browser' => [
@@ -163,7 +163,7 @@ class BoostServiceProvider extends ServiceProvider
         ]);
     }
 
-    private function registerBladeDirectives(BladeCompiler $bladeCompiler): void
+    protected function registerBladeDirectives(BladeCompiler $bladeCompiler): void
     {
         $bladeCompiler->directive('boostJs', fn () => '<?php echo \\Laravel\\Boost\\Services\\BrowserLogger::getScript(); ?>');
     }
@@ -178,14 +178,14 @@ class BoostServiceProvider extends ServiceProvider
         };
     }
 
-    private function hookIntoResponses(Router $router): void
+    protected function hookIntoResponses(Router $router): void
     {
         $this->app->booted(function () use ($router) {
             $router->pushMiddlewareToGroup('web', InjectBoost::class);
         });
     }
 
-    private function shouldRun(): bool
+    protected function shouldRun(): bool
     {
         if (! config('boost.enabled', true)) {
             return false;
