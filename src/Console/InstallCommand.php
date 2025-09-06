@@ -76,7 +76,7 @@ class InstallCommand extends Command
         $this->outro();
     }
 
-    private function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
+    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
     {
         $this->codeEnvironmentsDetector = $codeEnvironmentsDetector;
         $this->herd = $herd;
@@ -92,14 +92,14 @@ class InstallCommand extends Command
         $this->projectName = config('app.name');
     }
 
-    private function displayBoostHeader(): void
+    protected function displayBoostHeader(): void
     {
         note($this->boostLogo());
         intro('✦ Laravel Boost :: Install :: We Must Ship ✦');
         note("Let's give {$this->bgYellow($this->black($this->bold($this->projectName)))} a Boost");
     }
 
-    private function boostLogo(): string
+    protected function boostLogo(): string
     {
         return
          <<<'HEADER'
@@ -112,13 +112,13 @@ class InstallCommand extends Command
         HEADER;
     }
 
-    private function discoverEnvironment(): void
+    protected function discoverEnvironment(): void
     {
         $this->systemInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverSystemInstalledCodeEnvironments();
         $this->projectInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverProjectInstalledCodeEnvironments(base_path());
     }
 
-    private function collectInstallationPreferences(): void
+    protected function collectInstallationPreferences(): void
     {
         $this->selectedBoostFeatures = $this->selectBoostFeatures();
         $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
@@ -126,7 +126,7 @@ class InstallCommand extends Command
         $this->enforceTests = $this->determineTestEnforcement(ask: false);
     }
 
-    private function performInstallation(): void
+    protected function performInstallation(): void
     {
         $this->installGuidelines();
 
@@ -137,7 +137,7 @@ class InstallCommand extends Command
         }
     }
 
-    private function discoverTools(): array
+    protected function discoverTools(): array
     {
         $tools = [];
         $toolDir = implode(DIRECTORY_SEPARATOR, [__DIR__, '..', 'Mcp', 'Tools']);
@@ -158,7 +158,7 @@ class InstallCommand extends Command
         return $tools;
     }
 
-    private function outro(): void
+    protected function outro(): void
     {
         $label = 'https://boost.laravel.com/installed';
 
@@ -188,7 +188,7 @@ class InstallCommand extends Command
         echo $this->black($this->bold($text.$link)).$this->reset(PHP_EOL).$this->reset(PHP_EOL);
     }
 
-    private function hyperlink(string $label, string $url): string
+    protected function hyperlink(string $label, string $url): string
     {
         return "\033]8;;{$url}\007{$label}\033]8;;\033\\";
     }
@@ -229,7 +229,7 @@ class InstallCommand extends Command
     /**
      * @return Collection<int, string>
      */
-    private function selectBoostFeatures(): Collection
+    protected function selectBoostFeatures(): Collection
     {
         $defaultInstallOptions = ['mcp_server', 'ai_guidelines'];
         $installOptions = [
@@ -271,7 +271,7 @@ class InstallCommand extends Command
     /**
      * @return Collection<int, CodeEnvironment>
      */
-    private function selectTargetMcpClients(): Collection
+    protected function selectTargetMcpClients(): Collection
     {
         if (! $this->shouldInstallMcp() && ! $this->shouldInstallHerdMcp()) {
             return collect();
@@ -286,7 +286,7 @@ class InstallCommand extends Command
     /**
      * @return Collection<int, CodeEnvironment>
      */
-    private function selectTargetAgents(): Collection
+    protected function selectTargetAgents(): Collection
     {
         if (! $this->shouldInstallAiGuidelines()) {
             return collect();
@@ -303,7 +303,7 @@ class InstallCommand extends Command
      *
      * @return array{scroll: int, required: bool, displayMethod: string}
      */
-    private function getSelectionConfig(string $contractClass): array
+    protected function getSelectionConfig(string $contractClass): array
     {
         return match ($contractClass) {
             Agent::class => ['scroll' => 4, 'required' => false, 'displayMethod' => 'agentName'],
@@ -315,7 +315,7 @@ class InstallCommand extends Command
     /**
      * @return Collection<int, CodeEnvironment>
      */
-    private function selectCodeEnvironments(string $contractClass, string $label): Collection
+    protected function selectCodeEnvironments(string $contractClass, string $label): Collection
     {
         $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
         $config = $this->getSelectionConfig($contractClass);
@@ -367,7 +367,7 @@ class InstallCommand extends Command
         return $selectedClasses->map(fn ($className) => $availableEnvironments->first(fn ($env) => get_class($env) === $className));
     }
 
-    private function installGuidelines(): void
+    protected function installGuidelines(): void
     {
         if (! $this->shouldInstallAiGuidelines()) {
             return;
@@ -435,27 +435,27 @@ class InstallCommand extends Command
         }
     }
 
-    private function shouldInstallAiGuidelines(): bool
+    protected function shouldInstallAiGuidelines(): bool
     {
         return $this->selectedBoostFeatures->contains('ai_guidelines');
     }
 
-    private function shouldInstallStyleGuidelines(): bool
+    protected function shouldInstallStyleGuidelines(): bool
     {
         return false;
     }
 
-    private function shouldInstallMcp(): bool
+    protected function shouldInstallMcp(): bool
     {
         return $this->selectedBoostFeatures->contains('mcp_server');
     }
 
-    private function shouldInstallHerdMcp(): bool
+    protected function shouldInstallHerdMcp(): bool
     {
         return $this->selectedBoostFeatures->contains('herd_mcp');
     }
 
-    private function installMcpServerConfig(): void
+    protected function installMcpServerConfig(): void
     {
         if (! $this->shouldInstallMcp() && ! $this->shouldInstallHerdMcp()) {
             return;
@@ -545,7 +545,7 @@ class InstallCommand extends Command
     /**
      * Is the project actually using localization for their new features?
      */
-    private function detectLocalization(): bool
+    protected function detectLocalization(): bool
     {
         $actuallyUsing = false;
 

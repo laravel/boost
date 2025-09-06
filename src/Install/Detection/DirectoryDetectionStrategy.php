@@ -38,7 +38,7 @@ class DirectoryDetectionStrategy implements DetectionStrategy
         return false;
     }
 
-    private function expandPath(string $path, ?Platform $platform = null): string
+    protected function expandPath(string $path, ?Platform $platform = null): string
     {
         if ($platform === Platform::Windows) {
             return preg_replace_callback('/%([^%]+)%/', function ($matches) {
@@ -56,7 +56,7 @@ class DirectoryDetectionStrategy implements DetectionStrategy
         return $path;
     }
 
-    private function isAbsolutePath(string $path): bool
+    protected function isAbsolutePath(string $path): bool
     {
         return str_starts_with($path, '/') ||
                str_starts_with($path, '\\') ||

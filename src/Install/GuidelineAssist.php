@@ -59,7 +59,7 @@ class GuidelineAssist
      *
      * @return array<string, string>
      */
-    private function discover(callable $cb): array
+    protected function discover(callable $cb): array
     {
         $classes = [];
         $appPath = app_path();

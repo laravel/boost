@@ -88,7 +88,7 @@ class GuidelineWriter
         return $replaced ? self::REPLACED : self::NEW;
     }
 
-    private function acquireLockWithRetry(mixed $handle, string $filePath, int $maxRetries = 3): void
+    protected function acquireLockWithRetry(mixed $handle, string $filePath, int $maxRetries = 3): void
     {
         $attempts = 0;
         $delay = 100000; // Start with 100ms in microseconds
