@@ -1,4 +1,7 @@
-<p align="center"><img src="/art/boost.svg" alt="Logo Laravel Boost"></p>
+<p align="center">
+    <img alt="Boost Logo Dark Mode" src="/art/boost-light-mode.svg#gh-light-mode-only"/>
+    <img alt="Boost Logo Dark Mode" src="/art/boost-dark-mode.svg#gh-dark-mode-only"/>
+</p>
 
 <p align="center">
 <a href="https://github.com/laravel/boost/actions"><img src="https://github.com/laravel/boost/workflows/tests/badge.svg" alt="Build Status"></a>
