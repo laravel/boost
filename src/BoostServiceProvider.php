@@ -26,6 +26,10 @@ class BoostServiceProvider extends ServiceProvider
             'boost'
         );
 
+        if (! $this->shouldRun()) {
+            return;
+        }
+
         $this->app->singleton(Roster::class, function () {
             $lockFiles = [
                 base_path('composer.lock'),
@@ -55,12 +59,7 @@ class BoostServiceProvider extends ServiceProvider
 
     public function boot(Router $router): void
     {
-        if (! config('boost.enabled', true)) {
-            return;
-        }
-
-        // Only enable Boost on local environments
-        if (! app()->environment(['local', 'testing']) && config('app.debug', false) !== true) {
+        if (! $this->shouldRun()) {
             return;
         }
 
@@ -69,9 +68,12 @@ class BoostServiceProvider extends ServiceProvider
         $this->registerPublishing();
         $this->registerCommands();
         $this->registerRoutes();
-        $this->registerBrowserLogger();
-        $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
-        $this->hookIntoResponses($router);
+
+        if (config('boost.browser_logs_watcher', true)) {
+            $this->registerBrowserLogger();
+            $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
+            $this->hookIntoResponses($router);
+        }
     }
 
     private function registerPublishing(): void
@@ -178,10 +180,26 @@ class BoostServiceProvider extends ServiceProvider
 
     private function hookIntoResponses(Router $router): void
     {
-        if (! config('boost.browser_logs_watcher', true)) {
-            return;
+        $this->app->booted(function () use ($router) {
+            $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        });
+    }
+
+    private function shouldRun(): bool
+    {
+        if (! config('boost.enabled', true)) {
+            return false;
         }
 
-        $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        if (app()->runningUnitTests()) {
+            return false;
+        }
+
+        // Only enable Boost on local environments or when debug is true
+        if (! app()->environment('local') && config('app.debug', false) !== true) {
+            return false;
+        }
+
+        return true;
     }
 }
