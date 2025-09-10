@@ -89,3 +89,33 @@ it('injects script in html responses', function ($html) {
     'with head and body tags' => '<html><head><title>Test</title></head><body></body></html>',
     'without head/body tags' => '<html>Test</html>',
 ]);
+
+it('does not inject script inside javascript template literals', function () {
+    $html = '<html><head><title>Test</title></head><body><script>
+    let html = `
+      <html>
+        <head><title>Dynamic Title</title></head>
+        <body>
+          <h1>Hello World</h1>
+        </body>
+      </html>
+     `;
+     document.body.innerHTML = html;
+    </script></body></html>';
+
+    $response = new Response($html);
+    $response->headers->set('content-type', 'text/html');
+
+    $result = createMiddlewareResponse($response);
+    $content = $result->getContent();
+
+    expect($content)->toContain('<script id="browser-logger-active">')
+        ->and($content)->toContain('let html = `')
+        ->and($content)->toContain('document.body.innerHTML = html;');
+
+    $originalScriptStart = strpos($content, 'let html = `');
+    $originalScriptEnd = strpos($content, 'document.body.innerHTML = html;') + strlen('document.body.innerHTML = html;');
+    $originalScript = substr($content, $originalScriptStart, $originalScriptEnd - $originalScriptStart);
+
+    expect($originalScript)->not->toContain('browser-logger-active');
+});
