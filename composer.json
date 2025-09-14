@@ -61,9 +61,6 @@
         "check": [
             "@composer lint",
             "@composer test"
-        ],
-        "mcp": [
-            "php artisan boost:mcp"
         ]
     },
     "config": {
