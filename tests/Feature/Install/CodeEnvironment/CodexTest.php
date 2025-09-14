@@ -21,4 +21,3 @@ test('Codex paths and frontmatter are configured', function () {
         ->and($codex->guidelinesPath())->toBe('.codex/guidelines.md')
         ->and($codex->frontmatter())->toBeTrue();
 });
-
