@@ -10,6 +10,7 @@ use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironment\Copilot;
 use Laravel\Boost\Install\CodeEnvironment\Cursor;
+use Laravel\Boost\Install\CodeEnvironment\Codex;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
 use Laravel\Boost\Install\Enums\Platform;
@@ -22,6 +23,7 @@ class CodeEnvironmentsDetector
         'vscode' => VSCode::class,
         'cursor' => Cursor::class,
         'claudecode' => ClaudeCode::class,
+        'codex' => Codex::class,
         'copilot' => Copilot::class,
     ];
 

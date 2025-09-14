@@ -37,6 +37,10 @@ php artisan boost:install
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
+### Codex
+
+During `php artisan boost:install`, select Codex to auto-write `.codex/mcp.json` and `.codex/guidelines.md`. Codex also respects env overrides `CODEX_HOME` or `CODEX_CONFIG_DIR` for config discovery when present.
+
 ## Available MCP Tools
 
 | Name                       | Notes                                                                                                          |
@@ -127,6 +131,22 @@ JSON Example:
     }
 }
 ```
+
+### Codex CLI
+
+If you use Codex CLI, add a project-level file at `.codex/mcp.json` with the same server configuration:
+
+```json
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "php",
+      "args": ["artisan", "boost:mcp"]
+    }
+  }
+}
+```
+Then run Codex in this project; it will connect to Boost over stdio.
 
 ## Contributing
 
