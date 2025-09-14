@@ -12,6 +12,7 @@ use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
+use Laravel\Boost\Install\Mcp\FileWriter;
 
 abstract class CodeEnvironment
 {
@@ -47,8 +48,7 @@ abstract class CodeEnvironment
 
     public function getArtisanPath(): string
     {
-        return $this->useAbsolutePathForMcp() ? base_path('artisan') : './artisan';
-
+        return $this->useAbsolutePathForMcp() ? base_path('artisan') : 'artisan';
     }
 
     /**
@@ -81,7 +81,7 @@ abstract class CodeEnvironment
         return $strategy->detect($config);
     }
 
-    public function IsAgent(): bool
+    public function isAgent(): bool
     {
         return $this->agentName() && $this instanceof Agent;
     }
@@ -186,21 +186,9 @@ abstract class CodeEnvironment
             return false;
         }
 
-        File::ensureDirectoryExists(dirname($path));
-
-        $config = File::exists($path)
-            ? json_decode(File::get($path), true) ?: []
-            : [];
-
-        $mcpKey = $this->mcpConfigKey();
-        data_set($config, "{$mcpKey}.{$key}", collect([
-            'command' => $command,
-            'args' => $args,
-            'env' => $env,
-        ])->filter()->toArray());
-
-        $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-        return $json && File::put($path, $json);
+        return (new FileWriter($path))
+            ->configKey($this->mcpConfigKey())
+            ->addServer($key, $command, $args, $env)
+            ->save();
     }
 }

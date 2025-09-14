@@ -1,0 +1,14 @@
+{
+    // No mcpServers key at all
+    "servers": {
+        "existing": {
+            "command": "existing-cmd"
+        }
+    },
+    "inputs": [
+        {
+            "id": "test_input",
+            "type": "promptString"
+        }
+    ]
+}
