@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     config()->set('database.default', 'mysql');
@@ -15,9 +16,9 @@ beforeEach(function () {
 
 test('it returns database connections', function () {
     $tool = new DatabaseConnections;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'default_connection' => 'mysql',
@@ -29,9 +30,9 @@ test('it returns empty connections when none configured', function () {
     config()->set('database.connections', []);
 
     $tool = new DatabaseConnections;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'default_connection' => 'mysql',

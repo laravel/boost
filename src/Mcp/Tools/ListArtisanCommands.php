@@ -5,29 +5,35 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Tools;
 
 use Illuminate\Console\Command;
+use Illuminate\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Artisan;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 
 #[IsReadOnly]
 class ListArtisanCommands extends Tool
 {
-    public function description(): string
-    {
-        return 'List all available Artisan commands registered in this application.';
-    }
+    /**
+     * The tool's description.
+     */
+    protected string $description = 'List all available Artisan commands registered in this application.';
 
-    public function schema(ToolInputSchema $schema): ToolInputSchema
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        return $schema;
+        return [];
     }
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
         $commands = Artisan::all();
 
@@ -43,6 +49,6 @@ class ListArtisanCommands extends Tool
         // Sort alphabetically by name for determinism.
         usort($commandList, fn ($firstCommand, $secondCommand) => strcmp($firstCommand['name'], $secondCommand['name']));
 
-        return ToolResult::json($commandList);
+        return Response::json($commandList);
     }
 }

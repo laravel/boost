@@ -6,7 +6,7 @@ namespace Laravel\Boost\Mcp;
 
 use Dotenv\Dotenv;
 use Illuminate\Support\Env;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Response;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
@@ -17,16 +17,16 @@ class ToolExecutor
     {
     }
 
-    public function execute(string $toolClass, array $arguments = []): ToolResult
+    public function execute(string $toolClass, array $arguments = []): Response
     {
         if (! ToolRegistry::isToolAllowed($toolClass)) {
-            return ToolResult::error("Tool not registered or not allowed: {$toolClass}");
+            return Response::error("Tool not registered or not allowed: {$toolClass}");
         }
 
         return $this->executeInSubprocess($toolClass, $arguments);
     }
 
-    protected function executeInSubprocess(string $toolClass, array $arguments): ToolResult
+    protected function executeInSubprocess(string $toolClass, array $arguments): Response
     {
         $command = $this->buildCommand($toolClass, $arguments);
 
@@ -36,6 +36,7 @@ class ToolExecutor
             app()->environmentPath(),
             app()->environmentFile()
         ))->safeLoad();
+
         $cleanEnv = array_fill_keys(array_keys($env), false);
 
         $process = new Process(
@@ -51,19 +52,19 @@ class ToolExecutor
             $decoded = json_decode($output, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return ToolResult::error('Invalid JSON output from tool process: '.json_last_error_msg());
+                return Response::error('Invalid JSON output from tool process: '.json_last_error_msg());
             }
 
             return $this->reconstructToolResult($decoded);
         } catch (ProcessTimedOutException $e) {
             $process->stop();
 
-            return ToolResult::error("Tool execution timed out after {$this->getTimeout($arguments)} seconds");
+            return Response::error("Tool execution timed out after {$this->getTimeout($arguments)} seconds");
 
         } catch (ProcessFailedException $e) {
             $errorOutput = $process->getErrorOutput().$process->getOutput();
 
-            return ToolResult::error("Process tool execution failed: {$errorOutput}");
+            return Response::error("Process tool execution failed: {$errorOutput}");
         }
     }
 
@@ -75,17 +76,22 @@ class ToolExecutor
     }
 
     /**
-     * Reconstruct a ToolResult from JSON data.
+     * Reconstruct a Response from JSON data.
      *
      * @param array<string, mixed> $data
      */
-    protected function reconstructToolResult(array $data): ToolResult
+    protected function reconstructToolResult(array $data): Response
     {
         if (! isset($data['isError']) || ! isset($data['content'])) {
-            return ToolResult::error('Invalid tool result format');
+            return Response::error('Invalid tool result format');
         }
 
         if ($data['isError']) {
+            // Content can be either a string or array format
+            if (is_string($data['content'])) {
+                return Response::error($data['content']);
+            }
+
             // Extract the actual text content from the content array
             $errorText = 'Unknown error';
             if (is_array($data['content']) && ! empty($data['content'])) {
@@ -95,27 +101,32 @@ class ToolExecutor
                 }
             }
 
-            return ToolResult::error($errorText);
+            return Response::error($errorText);
         }
 
-        // Handle successful responses - extract text content
+        // Handle successful responses
+        // Content can be either a string (from ExecuteToolCommand) or array format
+        if (is_string($data['content'])) {
+            return Response::text($data['content']);
+        }
+
+        // Handle array format - extract text content
         if (is_array($data['content']) && ! empty($data['content'])) {
             $firstContent = $data['content'][0] ?? [];
 
             if (is_array($firstContent)) {
                 $text = $firstContent['text'] ?? '';
 
-                // Try to detect if it's JSON
                 $decoded = json_decode($text, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    return ToolResult::json($decoded);
+                    return Response::json($decoded);
                 }
 
-                return ToolResult::text($text);
+                return Response::text($text);
             }
         }
 
-        return ToolResult::text('');
+        return Response::text('');
     }
 
     /**

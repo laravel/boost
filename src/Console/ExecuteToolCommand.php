@@ -6,7 +6,8 @@ namespace Laravel\Boost\Console;
 
 use Illuminate\Console\Command;
 use Laravel\Boost\Mcp\ToolRegistry;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 
 class ExecuteToolCommand extends Command
 {
@@ -39,17 +40,25 @@ class ExecuteToolCommand extends Command
         try {
             // Execute the tool
             $tool = app($toolClass);
-            $result = $tool->handle($arguments ?? []);
+
+            $request = new Request($arguments ?? []);
+            $response = $tool->handle($request);
 
             // Output the result as JSON for the parent process
-            echo json_encode($result->toArray());
+            echo json_encode([
+                'isError' => $response->isError(),
+                'content' => (string) $response->content(),
+            ]);
 
             return 0;
 
         } catch (\Throwable $e) {
             // Output error result
-            $errorResult = ToolResult::error("Tool execution failed (E_THROWABLE): {$e->getMessage()}");
-            $this->error(json_encode($errorResult->toArray()));
+            $errorResult = Response::error("Tool execution failed (E_THROWABLE): {$e->getMessage()}");
+            $this->error(json_encode([
+                'isError' => true,
+                'content' => (string) $errorResult->content(),
+            ]));
 
             return 1;
         }

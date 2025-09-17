@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Request;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Services\BrowserLogger;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     // Clean up any existing browser.log file before each test
@@ -33,38 +34,38 @@ LOG;
     File::put($logFile, $logContent);
 
     $tool = new BrowserLogs;
-    $result = $tool->handle(['entries' => 2]);
+    $response = $tool->handle(new Request(['entries' => 2]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('browser.WARNING: Warning message', 'browser.ERROR: JavaScript error occurred')
         ->toolTextDoesNotContain('browser.DEBUG: console log message');
 
-    $data = $result->toArray();
-    expect($data['content'][0]['type'])->toBe('text');
+    // Response objects don't have toArray(), just verify the text content
+    expect($response)->isToolResult();
 });
 
 test('it returns error when entries argument is invalid', function () {
     $tool = new BrowserLogs;
 
     // Test with zero
-    $result = $tool->handle(['entries' => 0]);
-    expect($result)->isToolResult()
+    $response = $tool->handle(new Request(['entries' => 0]));
+    expect($response)->isToolResult()
         ->toolHasError()
         ->toolTextContains('The "entries" argument must be greater than 0.');
 
     // Test with negative
-    $result = $tool->handle(['entries' => -5]);
-    expect($result)->isToolResult()
+    $response = $tool->handle(new Request(['entries' => -5]));
+    expect($response)->isToolResult()
         ->toolHasError()
         ->toolTextContains('The "entries" argument must be greater than 0.');
 });
 
 test('it returns error when log file does not exist', function () {
     $tool = new BrowserLogs;
-    $result = $tool->handle(['entries' => 10]);
+    $response = $tool->handle(new Request(['entries' => 10]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasError()
         ->toolTextContains('No log file found, probably means no logs yet.');
 });
@@ -76,9 +77,9 @@ test('it returns error when log file is empty', function () {
     File::put($logFile, '');
 
     $tool = new BrowserLogs;
-    $result = $tool->handle(['entries' => 5]);
+    $response = $tool->handle(new Request(['entries' => 5]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('Unable to retrieve log entries, or no logs');
 });
@@ -195,7 +196,7 @@ test('InjectBoost middleware injects script into HTML response', function () {
 </html>
 HTML;
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($html, 200, ['Content-Type' => 'text/html']);
 
     $result = $middleware->handle($request, function ($req) use ($response) {
@@ -214,7 +215,7 @@ test('InjectBoost middleware does not inject into non-HTML responses', function 
 
     $json = json_encode(['status' => 'ok']);
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($json);
 
     $result = $middleware->handle($request, function ($req) use ($response) {
@@ -242,7 +243,7 @@ test('InjectBoost middleware does not inject script twice', function () {
 </html>
 HTML;
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($html);
 
     $result = $middleware->handle($request, function ($req) use ($response) {
@@ -265,7 +266,7 @@ test('InjectBoost middleware injects before body tag when no head tag', function
 </html>
 HTML;
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($html, 200, ['Content-Type' => 'text/html']);
 
     $result = $middleware->handle($request, function ($req) use ($response) {

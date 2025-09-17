@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Illuminate\JsonSchema\JsonSchema;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Boost\Concerns\ReadsLogs;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 
 #[IsReadOnly]
 class LastError extends Tool
@@ -42,20 +43,25 @@ class LastError extends Tool
         }
     }
 
-    public function description(): string
-    {
-        return 'Get details of the last error/exception created in this application on the backend. Use browser-log tool for browser errors.';
-    }
+    /**
+     * The tool's description.
+     */
+    protected string $description = 'Get details of the last error/exception created in this application on the backend. Use browser-log tool for browser errors.';
 
-    public function schema(ToolInputSchema $schema): ToolInputSchema
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        return $schema;
+        return [];
     }
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
         // First, attempt to retrieve the cached last error captured during runtime.
         // This works even if the log driver isn't a file driver, so is the preferred approach
@@ -66,22 +72,22 @@ class LastError extends Tool
                 $entry .= ' '.json_encode($cached['context']);
             }
 
-            return ToolResult::text($entry);
+            return Response::text($entry);
         }
 
         // Locate the correct log file using the shared helper.
         $logFile = $this->resolveLogFilePath();
 
         if (! file_exists($logFile)) {
-            return ToolResult::error("Log file not found at {$logFile}");
+            return Response::error("Log file not found at {$logFile}");
         }
 
         $entry = $this->readLastErrorEntry($logFile);
 
         if ($entry !== null) {
-            return ToolResult::text($entry);
+            return Response::text($entry);
         }
 
-        return ToolResult::error('Unable to find an ERROR entry in the inspected portion of the log file.');
+        return Response::error('Unable to find an ERROR entry in the inspected portion of the log file.');
     }
 }

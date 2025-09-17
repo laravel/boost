@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\Tinker;
+use Laravel\Mcp\Request;
 
 test('executes simple php code', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => 'return 2 + 2;']);
+    $response = $tool->handle(new Request(['code' => 'return 2 + 2;']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'result' => 4,
             'type' => 'integer',
@@ -17,9 +18,9 @@ test('executes simple php code', function () {
 
 test('executes code with output', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => 'echo "Hello World"; return "test";']);
+    $response = $tool->handle(new Request(['code' => 'echo "Hello World"; return "test";']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'result' => 'test',
             'output' => 'Hello World',
@@ -29,9 +30,9 @@ test('executes code with output', function () {
 
 test('accesses laravel facades', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => 'return config("app.name");']);
+    $response = $tool->handle(new Request(['code' => 'return config("app.name");']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'result' => config('app.name'),
             'type' => 'string',
@@ -40,9 +41,9 @@ test('accesses laravel facades', function () {
 
 test('creates objects', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => 'return new stdClass();']);
+    $response = $tool->handle(new Request(['code' => 'return new stdClass();']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'type' => 'object',
             'class' => 'stdClass',
@@ -51,9 +52,9 @@ test('creates objects', function () {
 
 test('handles syntax errors', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => 'invalid syntax here']);
+    $response = $tool->handle(new Request(['code' => 'invalid syntax here']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'type' => 'ParseError',
@@ -65,9 +66,9 @@ test('handles syntax errors', function () {
 
 test('handles runtime errors', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => 'throw new Exception("Test error");']);
+    $response = $tool->handle(new Request(['code' => 'throw new Exception("Test error");']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'type' => 'Exception',
@@ -80,9 +81,9 @@ test('handles runtime errors', function () {
 
 test('captures multiple outputs', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => 'echo "First"; echo "Second"; return "done";']);
+    $response = $tool->handle(new Request(['code' => 'echo "First"; echo "Second"; return "done";']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'result' => 'done',
             'output' => 'FirstSecond',
@@ -91,9 +92,9 @@ test('captures multiple outputs', function () {
 
 test('executes code with different return types', function (string $code, mixed $expectedResult, string $expectedType) {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => $code]);
+    $response = $tool->handle(new Request(['code' => $code]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'result' => $expectedResult,
             'type' => $expectedType,
@@ -110,9 +111,9 @@ test('executes code with different return types', function (string $code, mixed 
 
 test('handles empty code', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => '']);
+    $response = $tool->handle(new Request(['code' => '']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'result' => false,
             'type' => 'boolean',
@@ -121,9 +122,9 @@ test('handles empty code', function () {
 
 test('handles code with no return statement', function () {
     $tool = new Tinker;
-    $result = $tool->handle(['code' => '$x = 5;']);
+    $response = $tool->handle(new Request(['code' => '$x = 5;']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
             'result' => null,
             'type' => 'NULL',
@@ -133,10 +134,9 @@ test('handles code with no return statement', function () {
 test('should register only in local environment', function () {
     $tool = new Tinker;
 
-    // Test in local environment
     app()->detectEnvironment(function () {
         return 'local';
     });
 
-    expect($tool->shouldRegister())->toBeTrue();
+    expect($tool->eligibleForRegistration(Mockery::mock(Request::class)))->toBeTrue();
 });
