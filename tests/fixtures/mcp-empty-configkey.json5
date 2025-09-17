@@ -1,0 +1,11 @@
+{
+    // Empty mcpServers object
+    "mcpServers": {
+    },
+    "inputs": [
+        {
+            "id": "test_input",
+            "type": "promptString"
+        }
+    ]
+}

@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Laravel\Boost\Install\Detection\FileDetectionStrategy;
 
 beforeEach(function () {
-    $this->strategy = new FileDetectionStrategy();
+    $this->strategy = new FileDetectionStrategy;
     $this->tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($this->tempDir);
 });
 
 afterEach(function () {
-    if (is_dir($this->tempDir)) {
+    if (is_dir($this->tempDir) && str_contains($this->tempDir, sys_get_temp_dir())) {
         removeDirectoryForFileTests($this->tempDir);
     }
 });

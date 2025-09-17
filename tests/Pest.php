@@ -13,19 +13,61 @@ declare(strict_types=1);
 |
 */
 
+use Laravel\Mcp\Server\Tools\ToolResult;
+
 uses(Tests\TestCase::class)->in('Feature');
 
-/*
-|--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
-*/
-
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+expect()->extend('isToolResult', function () {
+    return $this->toBeInstanceOf(ToolResult::class);
 });
+
+expect()->extend('toolTextContains', function (mixed ...$needles) {
+    /** @var ToolResult $this->value */
+    $output = implode('', array_column($this->value->toArray()['content'], 'text'));
+    expect($output)->toContain(...func_get_args());
+
+    return $this;
+});
+
+expect()->extend('toolTextDoesNotContain', function (mixed ...$needles) {
+    /** @var ToolResult $this->value */
+    $output = implode('', array_column($this->value->toArray()['content'], 'text'));
+    expect($output)->not->toContain(...func_get_args());
+
+    return $this;
+});
+
+expect()->extend('toolHasError', function () {
+    expect($this->value->toArray()['isError'])->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toolHasNoError', function () {
+    expect($this->value->toArray()['isError'])->toBeFalse();
+
+    return $this;
+});
+
+expect()->extend('toolJsonContent', function (callable $callback) {
+    /** @var ToolResult $this->value */
+    $data = $this->value->toArray();
+    $content = json_decode($data['content'][0]['text'], true);
+    $callback($content);
+
+    return $this;
+});
+
+expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray) {
+    /** @var ToolResult $this->value */
+    $data = $this->value->toArray();
+    $content = json_decode($data['content'][0]['text'], true);
+    expect($content)->toMatchArray($expectedArray);
+
+    return $this;
+});
+
+function fixture(string $name): string
+{
+    return file_get_contents(\Pest\testDirectory('fixtures/'.$name));
+}
