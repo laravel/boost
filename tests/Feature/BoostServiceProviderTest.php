@@ -30,8 +30,8 @@ describe('boost.enabled configuration', function () {
         $provider->register();
         $provider->boot(app('router'));
 
-        expect(app()->bound(Laravel\Roster\Roster::class))->toBeTrue();
-        expect(config('logging.channels.browser'))->not->toBeNull();
+        expect(app()->bound(Laravel\Roster\Roster::class))->toBeTrue()
+            ->and(config('logging.channels.browser'))->not->toBeNull();
     });
 });
 

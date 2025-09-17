@@ -11,8 +11,8 @@ test('can discover available tools', function () {
 });
 
 test('can check if tool is allowed', function () {
-    expect(ToolRegistry::isToolAllowed(ApplicationInfo::class))->toBeTrue();
-    expect(ToolRegistry::isToolAllowed('NonExistentTool'))->toBeFalse();
+    expect(ToolRegistry::isToolAllowed(ApplicationInfo::class))->toBeTrue()
+        ->and(ToolRegistry::isToolAllowed('NonExistentTool'))->toBeFalse();
 });
 
 test('can get tool names', function () {
