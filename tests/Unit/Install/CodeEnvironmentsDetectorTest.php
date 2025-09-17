@@ -160,6 +160,40 @@ test('discoverProjectInstalledCodeEnvironments detects copilot with nested file 
     rmdir($tempDir);
 });
 
+test('discoverProjectInstalledCodeEnvironments detects Codex by directory', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir.'/.codex');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('codex');
+
+    // Cleanup
+    rmdir($tempDir.'/.codex');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects Codex via CODEX_CONFIG_DIR', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    $configDir = $tempDir.'/.codex-config';
+    mkdir($configDir);
+    file_put_contents($configDir.'/mcp.json', '{"mcpServers":{}}');
+
+    putenv('CODEX_CONFIG_DIR='.$configDir);
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('codex');
+
+    // Cleanup
+    putenv('CODEX_CONFIG_DIR');
+    unlink($configDir.'/mcp.json');
+    rmdir($configDir);
+    rmdir($tempDir);
+});
+
 test('discoverProjectInstalledCodeEnvironments detects claude code with directory', function () {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
