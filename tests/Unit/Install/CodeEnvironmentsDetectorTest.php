@@ -41,6 +41,7 @@ test('discoverSystemInstalledCodeEnvironments returns detected programs', functi
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program3);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Warp::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -65,6 +66,7 @@ test('discoverSystemInstalledCodeEnvironments returns empty array when no progra
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Warp::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -141,6 +143,20 @@ test('discoverProjectInstalledCodeEnvironments detects applications with mixed t
 
     // Cleanup
     unlink($tempDir.'/CLAUDE.md');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects warp with WARP.md file', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    file_put_contents($tempDir.'/WARP.md', 'test');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('warp');
+
+    // Cleanup
+    unlink($tempDir.'/WARP.md');
     rmdir($tempDir);
 });
 
@@ -222,17 +238,20 @@ test('discoverProjectInstalledCodeEnvironments handles multiple detections', fun
     mkdir($tempDir.'/.vscode');
     mkdir($tempDir.'/.cursor');
     file_put_contents($tempDir.'/CLAUDE.md', 'test');
+    file_put_contents($tempDir.'/WARP.md', 'test');
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
     expect($detected)->toContain('vscode');
     expect($detected)->toContain('cursor');
     expect($detected)->toContain('claudecode');
-    expect(count($detected))->toBeGreaterThanOrEqual(3);
+    expect($detected)->toContain('warp');
+    expect(count($detected))->toBeGreaterThanOrEqual(4);
 
     // Cleanup
     rmdir($tempDir.'/.vscode');
     rmdir($tempDir.'/.cursor');
     unlink($tempDir.'/CLAUDE.md');
+    unlink($tempDir.'/WARP.md');
     rmdir($tempDir);
 });
