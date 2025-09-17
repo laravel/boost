@@ -1,6 +1,62 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.0.20...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.1.4...main)
+
+## [v1.1.4](https://github.com/laravel/boost/compare/v1.1.3...v1.1.4) - 2025-09-04
+
+### What's Changed
+
+* feat: add windows to tests CI check by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/244
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.3...v1.1.4
+
+## [v1.1.3](https://github.com/laravel/boost/compare/v1.1.2...v1.1.3) - 2025-09-04
+
+### What's Changed
+
+* fix: package priorities should work on php8.1 by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/243
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.2...v1.1.3
+
+## [v1.1.2](https://github.com/laravel/boost/compare/v1.1.1...v1.1.2) - 2025-09-04
+
+### What's Changed
+
+* feat: add package priority guideline inclusion by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/242
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.1...v1.1.2
+
+## [v1.1.1](https://github.com/laravel/boost/compare/v1.1.0...v1.1.1) - 2025-09-04
+
+### What's Changed
+
+* Add strict types declaration in Inertia.php by [@felipeArnold](https://github.com/felipeArnold) in https://github.com/laravel/boost/pull/229
+* feat: update roster requirement, fixes #237 now phpunit will be detected by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/239
+
+### New Contributors
+
+* [@felipeArnold](https://github.com/felipeArnold) made their first contribution in https://github.com/laravel/boost/pull/229
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.0...v1.1.1
+
+## [v1.1.0](https://github.com/laravel/boost/compare/v1.0.21...v1.1.0) - 2025-09-04
+
+### What's Changed
+
+* Always-on process isolation: eliminate conditional complexity by [@andreilungeanu](https://github.com/andreilungeanu) in https://github.com/laravel/boost/pull/184
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.21...v1.1.0
+
+## [v1.0.21](https://github.com/laravel/boost/compare/v1.0.20...v1.0.21) - 2025-09-03
+
+### What's Changed
+
+* Fix random 'parse error' when running test suite by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/223
+* Clarify ListRoutes name parameter description for better tool calling by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/182
+* Streamline ToolResult assertions in tests  by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/225
+* Allow guideline overriding by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/219
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.20...v1.0.21
 
 ## [v1.0.20](https://github.com/laravel/boost/compare/v1.0.19...v1.0.20) - 2025-08-28
 

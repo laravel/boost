@@ -1,25 +1,11 @@
 <?php
 
 use Laravel\Boost\Mcp\ToolExecutor;
-use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\GetConfig;
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Server\Tools\ToolResult;
 
-test('can execute tool inline', function () {
-    // Disable process isolation for this test
-    config(['boost.process_isolation.enabled' => false]);
-
-    $executor = app(ToolExecutor::class);
-    $result = $executor->execute(ApplicationInfo::class, []);
-
-    expect($result)->toBeInstanceOf(ToolResult::class);
-});
-
-test('can execute tool with process isolation', function () {
-    // Enable process isolation for this test
-    config(['boost.process_isolation.enabled' => true]);
-
+test('can execute tool in subprocess', function () {
     // Create a mock that overrides buildCommand to work with testbench
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
@@ -54,8 +40,6 @@ test('rejects unregistered tools', function () {
 });
 
 test('subprocess proves fresh process isolation', function () {
-    config(['boost.process_isolation.enabled' => true]);
-
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
@@ -76,8 +60,6 @@ test('subprocess proves fresh process isolation', function () {
 });
 
 test('subprocess sees modified autoloaded code changes', function () {
-    config(['boost.process_isolation.enabled' => true]);
-
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
@@ -149,3 +131,40 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
 
     return [PHP_BINARY, '-r', $testScript];
 }
+
+test('respects custom timeout parameter', function () {
+    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+
+    $executor->shouldReceive('buildCommand')
+        ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
+
+    // Test with custom timeout - should succeed with fast code
+    $result = $executor->execute(Tinker::class, [
+        'code' => 'return "timeout test";',
+        'timeout' => 30,
+    ]);
+
+    expect($result->isError)->toBeFalse();
+});
+
+test('clamps timeout values correctly', function () {
+    $executor = new ToolExecutor();
+
+    // Test timeout clamping using reflection to access protected method
+    $reflection = new ReflectionClass($executor);
+    $method = $reflection->getMethod('getTimeout');
+    $method->setAccessible(true);
+
+    // Test default
+    expect($method->invoke($executor, []))->toBe(180);
+
+    // Test custom value
+    expect($method->invoke($executor, ['timeout' => 60]))->toBe(60);
+
+    // Test minimum clamp
+    expect($method->invoke($executor, ['timeout' => 0]))->toBe(1);
+
+    // Test maximum clamp
+    expect($method->invoke($executor, ['timeout' => 1000]))->toBe(600);
+});

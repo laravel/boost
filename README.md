@@ -1,4 +1,7 @@
-<p align="center"><img src="/art/boost.svg" alt="Logo Laravel Boost"></p>
+<p align="center">
+    <img alt="Boost Logo Dark Mode" src="/art/boost-light-mode.svg#gh-light-mode-only"/>
+    <img alt="Boost Logo Dark Mode" src="/art/boost-dark-mode.svg#gh-dark-mode-only"/>
+</p>
 
 <p align="center">
 <a href="https://github.com/laravel/boost/actions"><img src="https://github.com/laravel/boost/workflows/tests/badge.svg" alt="Build Status"></a>
@@ -96,6 +99,12 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 ## Adding Custom AI Guidelines
 
 To augment Laravel Boost with your own custom AI guidelines, add `.blade.php` files to your application's `.ai/guidelines/*` directory. These files will automatically be included with Laravel Boost's guidelines when you run `boost:install`.
+
+### Overriding Boost AI Guidelines
+
+You can override Boost's built-in AI guidelines by creating your own custom guidelines with matching file paths. When you create a custom guideline that matches an existing Boost guideline path, Boost will use your custom version instead of the built-in one.
+
+For example, to override Boost's "Inertia React v2 Form Guidance" guidelines, create a file at `.ai/guidelines/inertia-react/2/forms.blade.php`. When you run `boost:install`, Boost will include your custom guideline instead of the default one.
 
 ## Manually Registering the Boost MCP Server
 

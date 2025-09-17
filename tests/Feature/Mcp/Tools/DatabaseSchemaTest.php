@@ -22,6 +22,7 @@ beforeEach(function () {
     }
 
     // Build a throw-away table that we expect in the dump.
+    Schema::dropIfExists('examples');
     Schema::create('examples', function (Blueprint $table) {
         $table->id();
         $table->string('name');
