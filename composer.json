@@ -1,6 +1,6 @@
 {
     "name": "laravel/boost",
-    "description": "Laravel Boost accelerates AI-assisted development to generate high-quality, Laravel-specific code.",
+    "description": "Laravel Boost accelerates AI-assisted development by providing the essential context and structure that AI needs to generate high-quality, Laravel-specific code.",
     "keywords": [
         "dev",
         "laravel",
