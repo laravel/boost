@@ -40,6 +40,7 @@ test('discoverSystemInstalledCodeEnvironments returns detected programs', functi
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program2);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program3);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Codex::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
@@ -64,6 +65,7 @@ test('discoverSystemInstalledCodeEnvironments returns empty array when no progra
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
+    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Codex::class, fn () => $otherProgram);
     $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
 
     $detector = new CodeEnvironmentsDetector($container);
@@ -139,7 +141,6 @@ test('discoverProjectInstalledCodeEnvironments detects applications with mixed t
 
     expect($detected)->toContain('claudecode');
 
-    // Cleanup
     unlink($tempDir.'/CLAUDE.md');
     rmdir($tempDir);
 });
@@ -169,7 +170,6 @@ test('discoverProjectInstalledCodeEnvironments detects claude code with director
 
     expect($detected)->toContain('claudecode');
 
-    // Cleanup
     rmdir($tempDir.'/.claude');
     rmdir($tempDir);
 });
@@ -216,6 +216,32 @@ test('discoverProjectInstalledCodeEnvironments detects cursor with cursor direct
     rmdir($tempDir);
 });
 
+test('discoverProjectInstalledCodeEnvironments detects codex with codex directory', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir.'/.codex');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('codex');
+
+    rmdir($tempDir.'/.codex');
+    rmdir($tempDir);
+});
+
+test('discoverProjectInstalledCodeEnvironments detects codex with AGENTS.md file', function () {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    mkdir($tempDir);
+    file_put_contents($tempDir.'/AGENTS.md', 'test');
+
+    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
+
+    expect($detected)->toContain('codex');
+
+    unlink($tempDir.'/AGENTS.md');
+    rmdir($tempDir);
+});
+
 test('discoverProjectInstalledCodeEnvironments handles multiple detections', function () {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
@@ -225,10 +251,10 @@ test('discoverProjectInstalledCodeEnvironments handles multiple detections', fun
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
-    expect($detected)->toContain('vscode');
-    expect($detected)->toContain('cursor');
-    expect($detected)->toContain('claudecode');
-    expect(count($detected))->toBeGreaterThanOrEqual(3);
+    expect($detected)->toContain('vscode')
+        ->and($detected)->toContain('cursor')
+        ->and($detected)->toContain('claudecode')
+        ->and(count($detected))->toBeGreaterThanOrEqual(3);
 
     // Cleanup
     rmdir($tempDir.'/.vscode');

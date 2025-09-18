@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Roster;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
+use Throwable;
 
 class GuidelineAssist
 {
@@ -19,7 +23,7 @@ class GuidelineAssist
 
     protected static array $classes = [];
 
-    public function __construct()
+    public function __construct(public Roster $roster)
     {
         $this->modelPaths = $this->discover(fn ($reflection) => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection) => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
@@ -86,10 +90,10 @@ class GuidelineAssist
                         continue;
                     }
 
-                    if (class_exists($className)) {
+                    if (class_exists($className, false)) {
                         self::$classes[$className] = $path;
                     }
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     // Ignore exceptions and errors from class loading/reflection
                 }
             }
@@ -155,5 +159,15 @@ class GuidelineAssist
         }
 
         return file_get_contents(current($this->enumPaths));
+    }
+
+    public function packageGte(Packages $package, string $version): bool
+    {
+        return $this->roster->usesVersion($package, $version, '>=');
+    }
+
+    public function inertia(): Inertia
+    {
+        return new Inertia($this->roster);
     }
 }

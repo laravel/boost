@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
+use Dotenv\Dotenv;
+use Illuminate\Support\Env;
 use Laravel\Mcp\Server\Tools\ToolResult;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -13,44 +15,34 @@ class ToolExecutor
 {
     public function __construct()
     {
-        //
     }
 
-    /**
-     * Execute a tool with the given arguments.
-     *
-     * @param array<string, mixed> $arguments
-     */
     public function execute(string $toolClass, array $arguments = []): ToolResult
     {
         if (! ToolRegistry::isToolAllowed($toolClass)) {
             return ToolResult::error("Tool not registered or not allowed: {$toolClass}");
         }
 
-        if ($this->shouldUseProcessIsolation()) {
-            return $this->executeInProcess($toolClass, $arguments);
-        }
-
-        return $this->executeInline($toolClass, $arguments);
+        return $this->executeInSubprocess($toolClass, $arguments);
     }
 
-    /**
-     * Execute tool in a separate process for isolation.
-     *
-     * @param array<string, mixed> $arguments
-     */
-    protected function executeInProcess(string $toolClass, array $arguments): ToolResult
+    protected function executeInSubprocess(string $toolClass, array $arguments): ToolResult
     {
-        $command = [
-            PHP_BINARY,
-            base_path('artisan'),
-            'boost:execute-tool',
-            $toolClass,
-            base64_encode(json_encode($arguments)),
-        ];
+        $command = $this->buildCommand($toolClass, $arguments);
 
-        $process = new Process($command);
-        $process->setTimeout($this->getTimeout());
+        // We need to 'unset' env vars that will be passed from the parent process to the child process, stopping the child process from reading .env and getting updated values
+        $env = (Dotenv::create(
+            Env::getRepository(),
+            app()->environmentPath(),
+            app()->environmentFile()
+        ))->safeLoad();
+        $cleanEnv = array_fill_keys(array_keys($env), false);
+
+        $process = new Process(
+            command: $command,
+            env: $cleanEnv,
+            timeout: $this->getTimeout($arguments)
+        );
 
         try {
             $process->mustRun();
@@ -62,13 +54,11 @@ class ToolExecutor
                 return ToolResult::error('Invalid JSON output from tool process: '.json_last_error_msg());
             }
 
-            // Reconstruct ToolResult from the JSON output
             return $this->reconstructToolResult($decoded);
-
         } catch (ProcessTimedOutException $e) {
             $process->stop();
 
-            return ToolResult::error("Tool execution timed out after {$this->getTimeout()} seconds");
+            return ToolResult::error("Tool execution timed out after {$this->getTimeout($arguments)} seconds");
 
         } catch (ProcessFailedException $e) {
             $errorOutput = $process->getErrorOutput().$process->getOutput();
@@ -77,41 +67,11 @@ class ToolExecutor
         }
     }
 
-    /**
-     * Execute tool inline (current process).
-     *
-     * @param array<string, mixed> $arguments
-     */
-    protected function executeInline(string $toolClass, array $arguments): ToolResult
+    protected function getTimeout(array $arguments): int
     {
-        try {
-            $tool = app($toolClass);
+        $timeout = (int) ($arguments['timeout'] ?? 180);
 
-            return $tool->handle($arguments);
-        } catch (\Throwable $e) {
-            return ToolResult::error("Inline tool execution failed: {$e->getMessage()}");
-        }
-    }
-
-    /**
-     * Check if process isolation should be used.
-     */
-    protected function shouldUseProcessIsolation(): bool
-    {
-        // Never use process isolation in testing environment
-        if (app()->environment('testing')) {
-            return false;
-        }
-
-        return config('boost.process_isolation.enabled', false);
-    }
-
-    /**
-     * Get the execution timeout.
-     */
-    protected function getTimeout(): int
-    {
-        return config('boost.process_isolation.timeout', 180);
+        return max(1, min(600, $timeout));
     }
 
     /**
@@ -156,5 +116,23 @@ class ToolExecutor
         }
 
         return ToolResult::text('');
+    }
+
+    /**
+     * Build the command array for executing a tool in a subprocess.
+     *
+     * @param string $toolClass
+     * @param array<string, mixed> $arguments
+     * @return array<string>
+     */
+    protected function buildCommand(string $toolClass, array $arguments): array
+    {
+        return [
+            PHP_BINARY,
+            base_path('artisan'),
+            'boost:execute-tool',
+            $toolClass,
+            base64_encode(json_encode($arguments)),
+        ];
     }
 }

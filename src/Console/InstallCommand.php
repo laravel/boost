@@ -148,7 +148,7 @@ class InstallCommand extends Command
 
         foreach ($finder as $toolFile) {
             $fullyClassifiedClassName = 'Laravel\\Boost\\Mcp\\Tools\\'.$toolFile->getBasename('.php');
-            if (class_exists($fullyClassifiedClassName)) {
+            if (class_exists($fullyClassifiedClassName, false)) {
                 $tools[$fullyClassifiedClassName] = Str::headline($toolFile->getBasename('.php'));
             }
         }
@@ -390,7 +390,14 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
-        DisplayHelper::grid($guidelines->keys()->sort()->toArray(), $this->terminal->cols());
+        DisplayHelper::grid(
+            $guidelines
+                ->map(fn ($guideline, string $key) => $key.($guideline['custom'] ? '*' : ''))
+                ->values()
+                ->sort()
+                ->toArray(),
+            $this->terminal->cols()
+        );
         $this->newLine();
         usleep(750000);
 
