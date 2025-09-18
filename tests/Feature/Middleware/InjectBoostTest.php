@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Vite;
+use Illuminate\Testing\TestResponse;
 use Laravel\Boost\Middleware\InjectBoost;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -88,4 +90,31 @@ it('injects script in html responses', function ($html) {
 })->with([
     'with head and body tags' => '<html><head><title>Test</title></head><body></body></html>',
     'without head/body tags' => '<html>Test</html>',
+]);
+
+it('handles CSP nonce attribute correctly', function ($nonce, $assertions) {
+    if ($nonce) {
+        Vite::useCspNonce($nonce);
+    }
+
+    Route::get('injection-test', fn () => view('test::injection-test'))
+        ->middleware(InjectBoost::class);
+
+    $response = $this->get('injection-test')->assertViewIs('test::injection-test');
+
+    $assertions($response);
+})->with([
+    'with CSP nonce configured' => [
+        'test-nonce',
+        fn (TestResponse $response) => $response
+            ->assertSee('nonce="test-nonce"', false)
+            ->assertSee('id="browser-logger-active"', false),
+    ],
+    'without CSP nonce configured' => [
+        null,
+        fn (TestResponse $response) => $response
+            ->assertSee('<script id="browser-logger-active">', false)
+            ->assertDontSee('nonce=', false)
+            ->assertDontSee('test-nonce', false),
+    ],
 ]);
