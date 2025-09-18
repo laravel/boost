@@ -26,7 +26,12 @@ class GetConfig extends Tool
      */
     public function schema(JsonSchema $schema): array
     {
-        return [];
+        return [
+            $schema
+                ->string('key')
+                ->description('The config key in dot notation (e.g., "app.name", "database.default")')
+                ->required(),
+        ];
     }
 
     /**
