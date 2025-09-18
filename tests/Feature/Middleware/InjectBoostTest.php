@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Testing\TestResponse;
 use Laravel\Boost\Middleware\InjectBoost;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -105,13 +106,13 @@ it('handles CSP nonce attribute correctly', function ($nonce, $assertions) {
 })->with([
     'with CSP nonce configured' => [
         'test-nonce',
-        fn ($response) => $response
+        fn (TestResponse $response) => $response
             ->assertSee('nonce="test-nonce"', false)
             ->assertSee('id="browser-logger-active"', false),
     ],
     'without CSP nonce configured' => [
         null,
-        fn ($response) => $response
+        fn (TestResponse $response) => $response
             ->assertSee('<script id="browser-logger-active">', false)
             ->assertDontSee('nonce=', false)
             ->assertDontSee('test-nonce', false),
