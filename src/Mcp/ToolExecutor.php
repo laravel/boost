@@ -55,7 +55,7 @@ class ToolExecutor
                 return Response::error('Invalid JSON output from tool process: '.json_last_error_msg());
             }
 
-            return $this->reconstructToolResult($decoded);
+            return $this->reconstructResponse($decoded);
         } catch (ProcessTimedOutException $e) {
             $process->stop();
 
@@ -80,20 +80,15 @@ class ToolExecutor
      *
      * @param array<string, mixed> $data
      */
-    protected function reconstructToolResult(array $data): Response
+    protected function reconstructResponse(array $data): Response
     {
         if (! isset($data['isError']) || ! isset($data['content'])) {
-            return Response::error('Invalid tool result format');
+            return Response::error('Invalid tool response format.');
         }
 
         if ($data['isError']) {
-            // Content can be either a string or array format
-            if (is_string($data['content'])) {
-                return Response::error($data['content']);
-            }
-
-            // Extract the actual text content from the content array
             $errorText = 'Unknown error';
+
             if (is_array($data['content']) && ! empty($data['content'])) {
                 $firstContent = $data['content'][0] ?? [];
                 if (is_array($firstContent)) {

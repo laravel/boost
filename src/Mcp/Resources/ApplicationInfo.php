@@ -34,7 +34,7 @@ class ApplicationInfo extends Resource
     /**
      * Handle the resource request.
      */
-    public function handle(Request $request): Response
+    public function handle(): Response
     {
         $response = $this->toolExecutor->execute(ApplicationInfoTool::class);
 
