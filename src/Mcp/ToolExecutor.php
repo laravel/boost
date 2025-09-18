@@ -99,12 +99,6 @@ class ToolExecutor
             return Response::error($errorText);
         }
 
-        // Handle successful responses
-        // Content can be either a string (from ExecuteToolCommand) or array format
-        if (is_string($data['content'])) {
-            return Response::text($data['content']);
-        }
-
         // Handle array format - extract text content
         if (is_array($data['content']) && ! empty($data['content'])) {
             $firstContent = $data['content'][0] ?? [];
