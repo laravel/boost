@@ -101,5 +101,5 @@ it('adds a nonce attribute', function (){
     $response = $this->get('injection-test');
 
     $response->assertViewIs('test::injection-test')
-        ->assertSeeHtml('script id="browser-logger-active" nonce="test-nonce"');
+        ->assertSee('script id="browser-logger-active" nonce="test-nonce"', false);
 });
