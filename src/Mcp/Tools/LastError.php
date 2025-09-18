@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Illuminate\JsonSchema\JsonSchema;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -47,7 +46,6 @@ class LastError extends Tool
      * The tool's description.
      */
     protected string $description = 'Get details of the last error/exception created in this application on the backend. Use browser-log tool for browser errors.';
-
 
     /**
      * Handle the tool request.

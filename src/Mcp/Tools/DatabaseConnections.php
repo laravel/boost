@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -17,7 +16,6 @@ class DatabaseConnections extends Tool
      * The tool's description.
      */
     protected string $description = 'List the configured database connection names for this application.';
-
 
     /**
      * Handle the tool request.

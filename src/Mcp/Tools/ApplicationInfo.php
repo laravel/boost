@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -24,7 +23,6 @@ class ApplicationInfo extends Tool
      * The tool's description.
      */
     protected string $description = 'Get comprehensive application information including PHP version, Laravel version, database engine, all installed packages with their versions, and all Eloquent models in the application. You should use this tool on each new chat, and use the package & version data to write version specific code for the packages that exist.';
-
 
     /**
      * Handle the tool request.
