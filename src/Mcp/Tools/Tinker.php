@@ -27,7 +27,10 @@ class Tinker extends Tool
     {
         return [
             'code' => $schema->string()
-                ->description('PHP code to execute')
+                ->description('PHP code to execute (without opening <?php tags)')
+                ->required(),
+            'timeout' => $schema->integer()
+                ->description('Maximum execution time in seconds (default: 180)')
                 ->required(),
         ];
     }
@@ -39,7 +42,7 @@ class Tinker extends Tool
      */
     public function handle(Request $request): Response
     {
-        $code = str_replace(['<?php', '?>'], '', (string) $request->string('code'));
+        $code = str_replace(['<?php', '?>'], '', (string) $request->get('code'));
 
         ini_set('memory_limit', '256M');
 
