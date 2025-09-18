@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Methods;
 
 use Laravel\Boost\Mcp\ToolExecutor;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Contracts\Errable;
 use Laravel\Mcp\Server\Contracts\Method;
 use Laravel\Mcp\Server\Exceptions\JsonRpcException;
@@ -12,10 +13,16 @@ use Laravel\Mcp\Server\Methods\Concerns\InteractsWithResponses;
 use Laravel\Mcp\Server\ServerContext;
 use Laravel\Mcp\Server\Transport\JsonRpcRequest;
 use Laravel\Mcp\Server\Transport\JsonRpcResponse;
+use Throwable;
 
 class CallToolWithExecutor implements Method, Errable
 {
     use InteractsWithResponses;
+
+    public function __construct(protected ToolExecutor $executor)
+    {
+        //
+    }
 
     /**
      * Handle the JSON-RPC tool/call request with process isolation.
@@ -40,14 +47,16 @@ class CallToolWithExecutor implements Method, Errable
                     $request->id,
                 ));
 
-        $executor = app(ToolExecutor::class);
-
         $arguments = [];
         if (isset($request->params['arguments']) && is_array($request->params['arguments'])) {
             $arguments = $request->params['arguments'];
         }
 
-        $response = $executor->execute(get_class($tool), $arguments);
+        try {
+            $response = $this->executor->execute(get_class($tool), $arguments);
+        } catch (Throwable $e) {
+            $response = Response::error('Tool execution error: '.$e->getMessage());
+        }
 
         return $this->toJsonRpcResponse($request, $response, fn ($responses) => [
             'content' => $responses->map(fn ($response) => $response->content()->toTool($tool))->all(),
