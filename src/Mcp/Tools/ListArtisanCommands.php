@@ -20,15 +20,6 @@ class ListArtisanCommands extends Tool
      */
     protected string $description = 'List all available Artisan commands registered in this application.';
 
-    /**
-     * Get the tool's input schema.
-     *
-     * @return array<string, JsonSchema>
-     */
-    public function schema(JsonSchema $schema): array
-    {
-        return [];
-    }
 
     /**
      * Handle the tool request.

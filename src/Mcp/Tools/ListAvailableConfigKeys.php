@@ -19,15 +19,6 @@ class ListAvailableConfigKeys extends Tool
      */
     protected string $description = 'List all available Laravel configuration keys (from config/*.php) in dot notation.';
 
-    /**
-     * Get the tool's input schema.
-     *
-     * @return array<string, JsonSchema>
-     */
-    public function schema(JsonSchema $schema): array
-    {
-        return [];
-    }
 
     /**
      * Handle the tool request.

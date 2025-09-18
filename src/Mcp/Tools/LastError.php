@@ -48,15 +48,6 @@ class LastError extends Tool
      */
     protected string $description = 'Get details of the last error/exception created in this application on the backend. Use browser-log tool for browser errors.';
 
-    /**
-     * Get the tool's input schema.
-     *
-     * @return array<string, JsonSchema>
-     */
-    public function schema(JsonSchema $schema): array
-    {
-        return [];
-    }
 
     /**
      * Handle the tool request.

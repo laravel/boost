@@ -25,15 +25,6 @@ class ApplicationInfo extends Tool
      */
     protected string $description = 'Get comprehensive application information including PHP version, Laravel version, database engine, all installed packages with their versions, and all Eloquent models in the application. You should use this tool on each new chat, and use the package & version data to write version specific code for the packages that exist.';
 
-    /**
-     * Get the tool's input schema.
-     *
-     * @return array<string, JsonSchema>
-     */
-    public function schema(JsonSchema $schema): array
-    {
-        return [];
-    }
 
     /**
      * Handle the tool request.

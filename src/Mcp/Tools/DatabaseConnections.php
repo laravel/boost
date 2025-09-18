@@ -18,15 +18,6 @@ class DatabaseConnections extends Tool
      */
     protected string $description = 'List the configured database connection names for this application.';
 
-    /**
-     * Get the tool's input schema.
-     *
-     * @return array<string, JsonSchema>
-     */
-    public function schema(JsonSchema $schema): array
-    {
-        return [];
-    }
 
     /**
      * Handle the tool request.
