@@ -36,7 +36,7 @@ class GetConfig extends Tool
      */
     public function handle(Request $request): Response
     {
-        $key = $request->get('key')->value();
+        $key = $request->get('key');
 
         if (! Config::has($key)) {
             return Response::error("Config key '{$key}' not found.");
