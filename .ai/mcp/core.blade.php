@@ -3,3 +3,4 @@
 - MCP servers need to be registered with a route or handle in `routes/ai.php`. Typically you should start with `Mcp::web()` to register a HTTP streaming MCP server.
 - Servers are very testable - use the `search-docs` tool to find testing instructions.
 - Do not run `mcp:start`. This command hangs waiting for JSON RPC MCP requests.
+- Some MCP clients use node which has its own certificate store. If a user tries to connect to their web MCP server locally on https:// it could fail due to this reason and they'll need to switch to http:// during development only.
