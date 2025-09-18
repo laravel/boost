@@ -26,6 +26,11 @@ class Boost extends Server
     protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, Artisan commands, error logs, Tinker execution, semantic documentation search and more. Boost helps with code generation.';
 
     /**
+     * The default pagination length for resources that support pagination.
+     */
+    public int $defaultPaginationLength = 50;
+
+    /**
      * The tools registered with this MCP server.
      *
      * @var array<int, class-string<\Laravel\Mcp\Server\Tool>>
