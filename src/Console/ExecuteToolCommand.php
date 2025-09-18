@@ -6,7 +6,10 @@ namespace Laravel\Boost\Console;
 
 use Illuminate\Console\Command;
 use Laravel\Boost\Mcp\ToolRegistry;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
+use Laravel\Mcp\Server\Tool;
+use Throwable;
 
 class ExecuteToolCommand extends Command
 {
@@ -36,22 +39,34 @@ class ExecuteToolCommand extends Command
             return 1;
         }
 
+        /** @var Tool $tool */
+        $tool = app($toolClass);
+
+        $request = new Request($arguments ?? []);
+
         try {
-            // Execute the tool
-            $tool = app($toolClass);
-            $result = $tool->handle($arguments ?? []);
+            /** @var Response $response */
+            $response = $tool->handle($request); // @phpstan-ignore-line
+        } catch (Throwable $e) {
+            $errorResult = Response::error("Tool execution failed (E_THROWABLE): {$e->getMessage()}");
 
-            // Output the result as JSON for the parent process
-            echo json_encode($result->toArray());
+            $this->error(json_encode([
+                'isError' => true,
+                'content' => [
+                    $errorResult->content()->toTool($tool),
+                ],
+            ]));
 
-            return 0;
-
-        } catch (\Throwable $e) {
-            // Output error result
-            $errorResult = ToolResult::error("Tool execution failed (E_THROWABLE): {$e->getMessage()}");
-            $this->error(json_encode($errorResult->toArray()));
-
-            return 1;
+            return static::FAILURE;
         }
+
+        echo json_encode([
+            'isError' => $response->isError(),
+            'content' => [
+                $response->content()->toTool($tool),
+            ],
+        ]);
+
+        return static::SUCCESS;
     }
 }

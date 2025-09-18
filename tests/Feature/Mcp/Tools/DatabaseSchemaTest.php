@@ -6,6 +6,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     // Switch the default connection to a file-backed SQLite DB.
@@ -38,7 +39,7 @@ afterEach(function () {
 
 test('it returns structured database schema', function () {
     $tool = new DatabaseSchema;
-    $response = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
     expect($response)->isToolResult()
         ->toolHasNoError()
@@ -70,7 +71,7 @@ test('it filters tables by name', function () {
     $tool = new DatabaseSchema;
 
     // Test filtering for 'example'
-    $response = $tool->handle(['filter' => 'example']);
+    $response = $tool->handle(new Request(['filter' => 'example']));
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function ($schemaArray) {
@@ -79,7 +80,7 @@ test('it filters tables by name', function () {
         });
 
     // Test filtering for 'user'
-    $response = $tool->handle(['filter' => 'user']);
+    $response = $tool->handle(new Request(['filter' => 'user']));
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function ($schemaArray) {

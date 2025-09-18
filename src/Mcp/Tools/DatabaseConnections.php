@@ -4,32 +4,29 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Illuminate\JsonSchema\JsonSchema;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 
 #[IsReadOnly]
 class DatabaseConnections extends Tool
 {
-    public function description(): string
-    {
-        return 'List the configured database connection names for this application.';
-    }
+    /**
+     * The tool's description.
+     */
+    protected string $description = 'List the configured database connection names for this application.';
 
-    public function schema(ToolInputSchema $schema): ToolInputSchema
-    {
-        return $schema;
-    }
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
         $connections = array_keys(config('database.connections', []));
 
-        return ToolResult::json([
+        return Response::json([
             'default_connection' => config('database.default'),
             'connections' => $connections,
         ]);

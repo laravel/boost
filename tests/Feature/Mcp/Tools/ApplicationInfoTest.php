@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
+use Laravel\Mcp\Request;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -25,9 +26,9 @@ test('it returns application info with packages', function () {
     ]);
 
     $tool = new ApplicationInfo($roster, $guidelineAssist);
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'php_version' => PHP_VERSION,
@@ -60,9 +61,9 @@ test('it returns application info with no packages', function () {
     $guidelineAssist->shouldReceive('models')->andReturn([]);
 
     $tool = new ApplicationInfo($roster, $guidelineAssist);
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'php_version' => PHP_VERSION,

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\ListAvailableConfigKeys;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     config()->set('test.simple', 'value');
@@ -12,9 +13,9 @@ beforeEach(function () {
 
 test('it returns list of config keys in dot notation', function () {
     $tool = new ListAvailableConfigKeys;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function ($content) {
             expect($content)->toBeArray()
@@ -41,9 +42,9 @@ test('it handles empty config gracefully', function () {
     config()->set('test', null);
 
     $tool = new ListAvailableConfigKeys;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function ($content) {
             expect($content)->toBeArray()
