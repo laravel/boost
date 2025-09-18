@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Vite;
 use Laravel\Boost\Middleware\InjectBoost;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -84,8 +85,21 @@ it('injects script in html responses', function ($html) {
 
     $result = createMiddlewareResponse($response);
 
-    expect($result->getContent())->toContain('<script id="browser-logger-active">');
+    expect($result->getContent())->toContain('script id="browser-logger-active"');
 })->with([
     'with head and body tags' => '<html><head><title>Test</title></head><body></body></html>',
     'without head/body tags' => '<html>Test</html>',
 ]);
+
+it('adds a nonce attribute', function (){
+    Vite::useCspNonce('test-nonce');
+
+    Route::get('injection-test', function () {
+        return view('test::injection-test');
+    })->middleware(InjectBoost::class);
+
+    $response = $this->get('injection-test');
+
+    $response->assertViewIs('test::injection-test')
+        ->assertSeeHtml('script id="browser-logger-active" nonce="test-nonce"');
+});
