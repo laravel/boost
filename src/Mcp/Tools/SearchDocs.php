@@ -52,7 +52,7 @@ class SearchDocs extends Tool
     public function handle(Request $request): Response|Generator
     {
         $apiUrl = config('boost.hosted.api_url', 'https://boost.laravel.com').'/api/docs';
-        $packagesFilter = $request->has('packages') ? $request->get('packages') : null;
+        $packagesFilter = $request->get('packages');
 
         $queries = array_filter(
             array_map('trim', $request->get('queries')),

@@ -73,7 +73,7 @@ class DatabaseQuery extends Tool
             return Response::error('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
         }
 
-        $connectionName = $request->has('database') ? (string) $request->string('database') : null;
+        $connectionName = $request->get('database');
 
         try {
             return Response::json(

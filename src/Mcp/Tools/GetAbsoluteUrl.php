@@ -38,9 +38,8 @@ class GetAbsoluteUrl extends Tool
      */
     public function handle(Request $request): Response
     {
-        // Get the values and cast to string or null
-        $path = $request->has('path') ? (string) $request->string('path') : null;
-        $routeName = $request->has('route') ? (string) $request->string('route') : null;
+        $path = $request->get('path');
+        $routeName = $request->get('route');
 
         if ($path) {
             return Response::text(url($path));

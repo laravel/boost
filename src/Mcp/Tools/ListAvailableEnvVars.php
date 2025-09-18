@@ -36,10 +36,7 @@ class ListAvailableEnvVars extends Tool
      */
     public function handle(Request $request): Response
     {
-        $filename = $request->has('filename') ? (string) $request->string('filename') : '.env';
-        if (empty($filename)) {
-            $filename = '.env';
-        }
+        $filename = $request->get('filename', '.env');
 
         $filePath = base_path($filename);
 
