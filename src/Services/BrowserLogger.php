@@ -6,6 +6,7 @@ namespace Laravel\Boost\Services;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\View\ComponentAttributeBag;
 
 class BrowserLogger
 {
@@ -15,18 +16,16 @@ class BrowserLogger
             ? route('boost.browser-logs')
             : '/_boost/browser-logs';
 
-        $attributes = ['id' => 'browser-logger-active'];
+        $attributes = new ComponentAttributeBag([
+            'id' => 'browser-logger-active',
+        ]);
 
         if ($nonce = Vite::cspNonce()) {
-            $attributes['nonce'] = $nonce;
+            $attributes = $attributes->merge(['nonce' => $nonce]);
         }
 
-        $scriptAttributes = collect($attributes)
-            ->map(fn ($value, $key) => sprintf('%s="%s"', $key, $value))
-            ->implode(' ');
-
         return <<<HTML
-<script {$scriptAttributes}>
+<script {$attributes->toHtml()}>
 (function() {
     const ENDPOINT = '{$endpoint}';
     const logQueue = [];
