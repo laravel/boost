@@ -14,10 +14,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class GetConfig extends Tool
 {
-    public function description(): string
-    {
-        return 'Get the value of a specific config variable using dot notation (e.g., "app.name", "database.default")';
-    }
+    protected string $description = 'Get the value of a specific config variable using dot notation (e.g., "app.name", "database.default")';
 
     /**
      * Get the tool's input schema.
@@ -27,8 +24,8 @@ class GetConfig extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            $schema
-                ->string('key')
+            'key' => $schema
+                ->string()
                 ->description('The config key in dot notation (e.g., "app.name", "database.default")')
                 ->required(),
         ];
@@ -39,7 +36,7 @@ class GetConfig extends Tool
      */
     public function handle(Request $request): Response
     {
-        $key = $request->get('key');
+        $key = $request->get('key')->value();
 
         if (! Config::has($key)) {
             return Response::error("Config key '{$key}' not found.");
