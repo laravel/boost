@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Request;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Services\BrowserLogger;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     // Clean up any existing browser.log file before each test
@@ -34,49 +34,40 @@ LOG;
     File::put($logFile, $logContent);
 
     $tool = new BrowserLogs;
-    $result = $tool->handle(['entries' => 2]);
+    $response = $tool->handle(new Request(['entries' => 2]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('browser.WARNING: Warning message', 'browser.ERROR: JavaScript error occurred')
+        ->toolTextDoesNotContain('browser.DEBUG: console log message');
 
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse();
-    expect($data['content'][0]['type'])->toBe('text');
-
-    $text = $data['content'][0]['text'];
-    expect($text)->toContain('browser.WARNING: Warning message');
-    expect($text)->toContain('browser.ERROR: JavaScript error occurred');
-    expect($text)->not->toContain('browser.DEBUG: console log message');
+    // Response objects don't have toArray(), just verify the text content
+    expect($response)->isToolResult();
 });
 
 test('it returns error when entries argument is invalid', function () {
     $tool = new BrowserLogs;
 
     // Test with zero
-    $result = $tool->handle(['entries' => 0]);
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeTrue();
-    expect($data['content'][0]['text'])->toBe('The "entries" argument must be greater than 0.');
+    $response = $tool->handle(new Request(['entries' => 0]));
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('The "entries" argument must be greater than 0.');
 
     // Test with negative
-    $result = $tool->handle(['entries' => -5]);
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeTrue();
-    expect($data['content'][0]['text'])->toBe('The "entries" argument must be greater than 0.');
+    $response = $tool->handle(new Request(['entries' => -5]));
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('The "entries" argument must be greater than 0.');
 });
 
 test('it returns error when log file does not exist', function () {
     $tool = new BrowserLogs;
-    $result = $tool->handle(['entries' => 10]);
+    $response = $tool->handle(new Request(['entries' => 10]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeTrue();
-    expect($data['content'][0]['text'])->toBe('No log file found, probably means no logs yet.');
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('No log file found, probably means no logs yet.');
 });
 
 test('it returns error when log file is empty', function () {
@@ -86,13 +77,11 @@ test('it returns error when log file is empty', function () {
     File::put($logFile, '');
 
     $tool = new BrowserLogs;
-    $result = $tool->handle(['entries' => 5]);
+    $response = $tool->handle(new Request(['entries' => 5]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse();
-    expect($data['content'][0]['text'])->toBe('Unable to retrieve log entries, or no logs');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Unable to retrieve log entries, or no logs');
 });
 
 test('@boostJs blade directive renders browser logger script', function () {
@@ -106,11 +95,11 @@ test('@boostJs blade directive renders browser logger script', function () {
 
     // Test that the script contains expected content
     $script = BrowserLogger::getScript();
-    expect($script)->toContain('browser-logger-active');
-    expect($script)->toContain('/_boost/browser-logs');
-    expect($script)->toContain('console.log');
-    expect($script)->toContain('console.error');
-    expect($script)->toContain('window.onerror');
+    expect($script)->toContain('browser-logger-active')
+        ->and($script)->toContain('/_boost/browser-logs')
+        ->and($script)->toContain('console.log')
+        ->and($script)->toContain('console.error')
+        ->and($script)->toContain('window.onerror');
 });
 
 test('browser logs endpoint processes logs correctly', function () {
@@ -207,7 +196,7 @@ test('InjectBoost middleware injects script into HTML response', function () {
 </html>
 HTML;
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($html, 200, ['Content-Type' => 'text/html']);
 
     $result = $middleware->handle($request, function ($req) use ($response) {
@@ -215,9 +204,10 @@ HTML;
     });
 
     $content = $result->getContent();
-    expect($content)->toContain('browser-logger-active');
-    expect($content)->toContain('</head>');
-    expect(substr_count($content, 'browser-logger-active'))->toBe(1); // Should not inject twice
+    expect($content)->toContain('browser-logger-active')
+        ->and($content)->toContain('</head>')
+        // Should not inject twice
+        ->and(substr_count($content, 'browser-logger-active'))->toBe(1);
 });
 
 test('InjectBoost middleware does not inject into non-HTML responses', function () {
@@ -225,7 +215,7 @@ test('InjectBoost middleware does not inject into non-HTML responses', function 
 
     $json = json_encode(['status' => 'ok']);
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($json);
 
     $result = $middleware->handle($request, function ($req) use ($response) {
@@ -233,8 +223,8 @@ test('InjectBoost middleware does not inject into non-HTML responses', function 
     });
 
     $content = $result->getContent();
-    expect($content)->toBe($json);
-    expect($content)->not->toContain('browser-logger-active');
+    expect($content)->toBe($json)
+        ->and($content)->not->toContain('browser-logger-active');
 });
 
 test('InjectBoost middleware does not inject script twice', function () {
@@ -253,7 +243,7 @@ test('InjectBoost middleware does not inject script twice', function () {
 </html>
 HTML;
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($html);
 
     $result = $middleware->handle($request, function ($req) use ($response) {
@@ -276,7 +266,7 @@ test('InjectBoost middleware injects before body tag when no head tag', function
 </html>
 HTML;
 
-    $request = Request::create('/');
+    $request = HttpRequest::create('/');
     $response = new \Illuminate\Http\Response($html, 200, ['Content-Type' => 'text/html']);
 
     $result = $middleware->handle($request, function ($req) use ($response) {
@@ -284,6 +274,6 @@ HTML;
     });
 
     $content = $result->getContent();
-    expect($content)->toContain('browser-logger-active');
-    expect($content)->toMatch('/<script[^>]*browser-logger-active[^>]*>.*<\/script>\s*<\/body>/s');
+    expect($content)->toContain('browser-logger-active')
+        ->and($content)->toMatch('/<script[^>]*browser-logger-active[^>]*>.*<\/script>\s*<\/body>/s');
 });

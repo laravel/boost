@@ -306,7 +306,7 @@ class InstallCommand extends Command
     private function getSelectionConfig(string $contractClass): array
     {
         return match ($contractClass) {
-            Agent::class => ['scroll' => 4, 'required' => false, 'displayMethod' => 'agentName'],
+            Agent::class => ['scroll' => 5, 'required' => false, 'displayMethod' => 'agentName'],
             McpClient::class => ['scroll' => 5, 'required' => true, 'displayMethod' => 'displayName'],
             default => throw new InvalidArgumentException("Unsupported contract class: {$contractClass}"),
         };
@@ -390,7 +390,14 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
-        DisplayHelper::grid($guidelines->keys()->sort()->toArray(), $this->terminal->cols());
+        DisplayHelper::grid(
+            $guidelines
+                ->map(fn ($guideline, string $key) => $key.($guideline['custom'] ? '*' : ''))
+                ->values()
+                ->sort()
+                ->toArray(),
+            $this->terminal->cols()
+        );
         $this->newLine();
         usleep(750000);
 

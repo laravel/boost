@@ -6,6 +6,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     // Switch the default connection to a file-backed SQLite DB.
@@ -22,6 +23,7 @@ beforeEach(function () {
     }
 
     // Build a throw-away table that we expect in the dump.
+    Schema::dropIfExists('examples');
     Schema::create('examples', function (Blueprint $table) {
         $table->id();
         $table->string('name');
@@ -37,37 +39,26 @@ afterEach(function () {
 
 test('it returns structured database schema', function () {
     $tool = new DatabaseSchema;
-    $response = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    $responseArray = $response->toArray();
-    expect($responseArray['isError'])->toBeFalse();
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContentToMatchArray([
+            'engine' => 'sqlite',
+        ])
+        ->toolJsonContent(function ($schemaArray) {
+            expect($schemaArray)->toHaveKey('tables')
+                ->and($schemaArray['tables'])->toHaveKey('examples');
 
-    $schemaArray = json_decode($responseArray['content'][0]['text'], true);
+            $exampleTable = $schemaArray['tables']['examples'];
+            expect($exampleTable)->toHaveKeys(['columns', 'indexes', 'foreign_keys', 'triggers', 'check_constraints'])
+                ->and($exampleTable['columns'])->toHaveKeys(['id', 'name'])
+                ->and($exampleTable['columns']['id']['type'])->toBe('integer')
+                ->and($exampleTable['columns']['name']['type'])->toBe('varchar')
+                ->and($schemaArray)->toHaveKey('global')
+                ->and($schemaArray['global'])->toHaveKeys(['views', 'stored_procedures', 'functions', 'sequences']);
 
-    expect($schemaArray)->toHaveKey('engine');
-    expect($schemaArray['engine'])->toBe('sqlite');
-
-    expect($schemaArray)->toHaveKey('tables');
-    expect($schemaArray['tables'])->toHaveKey('examples');
-
-    $exampleTable = $schemaArray['tables']['examples'];
-    expect($exampleTable)->toHaveKey('columns');
-    expect($exampleTable['columns'])->toHaveKey('id');
-    expect($exampleTable['columns'])->toHaveKey('name');
-
-    expect($exampleTable['columns']['id']['type'])->toBe('integer');
-    expect($exampleTable['columns']['name']['type'])->toBe('varchar');
-
-    expect($exampleTable)->toHaveKey('indexes');
-    expect($exampleTable)->toHaveKey('foreign_keys');
-    expect($exampleTable)->toHaveKey('triggers');
-    expect($exampleTable)->toHaveKey('check_constraints');
-
-    expect($schemaArray)->toHaveKey('global');
-    expect($schemaArray['global'])->toHaveKey('views');
-    expect($schemaArray['global'])->toHaveKey('stored_procedures');
-    expect($schemaArray['global'])->toHaveKey('functions');
-    expect($schemaArray['global'])->toHaveKey('sequences');
+        });
 });
 
 test('it filters tables by name', function () {
@@ -80,18 +71,20 @@ test('it filters tables by name', function () {
     $tool = new DatabaseSchema;
 
     // Test filtering for 'example'
-    $response = $tool->handle(['filter' => 'example']);
-    $responseArray = $response->toArray();
-    $schemaArray = json_decode($responseArray['content'][0]['text'], true);
-
-    expect($schemaArray['tables'])->toHaveKey('examples');
-    expect($schemaArray['tables'])->not->toHaveKey('users');
+    $response = $tool->handle(new Request(['filter' => 'example']));
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function ($schemaArray) {
+            expect($schemaArray['tables'])->toHaveKey('examples')
+                ->and($schemaArray['tables'])->not->toHaveKey('users');
+        });
 
     // Test filtering for 'user'
-    $response = $tool->handle(['filter' => 'user']);
-    $responseArray = $response->toArray();
-    $schemaArray = json_decode($responseArray['content'][0]['text'], true);
-
-    expect($schemaArray['tables'])->toHaveKey('users');
-    expect($schemaArray['tables'])->not->toHaveKey('examples');
+    $response = $tool->handle(new Request(['filter' => 'user']));
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function ($schemaArray) {
+            expect($schemaArray['tables'])->toHaveKey('users')
+                ->and($schemaArray['tables'])->not->toHaveKey('examples');
+        });
 });

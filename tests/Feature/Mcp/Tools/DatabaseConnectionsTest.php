@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     config()->set('database.default', 'mysql');
@@ -16,31 +16,26 @@ beforeEach(function () {
 
 test('it returns database connections', function () {
     $tool = new DatabaseConnections;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-
-    $content = json_decode($data['content'][0]['text'], true);
-    expect($content['default_connection'])->toBe('mysql');
-    expect($content['connections'])->toHaveCount(3);
-    expect($content['connections'])->toContain('mysql');
-    expect($content['connections'])->toContain('pgsql');
-    expect($content['connections'])->toContain('sqlite');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContentToMatchArray([
+            'default_connection' => 'mysql',
+            'connections' => ['mysql', 'pgsql', 'sqlite'],
+        ]);
 });
 
 test('it returns empty connections when none configured', function () {
     config()->set('database.connections', []);
 
     $tool = new DatabaseConnections;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-
-    $content = json_decode($data['content'][0]['text'], true);
-    expect($content['default_connection'])->toBe('mysql');
-    expect($content['connections'])->toHaveCount(0);
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContentToMatchArray([
+            'default_connection' => 'mysql',
+            'connections' => [],
+        ]);
 });

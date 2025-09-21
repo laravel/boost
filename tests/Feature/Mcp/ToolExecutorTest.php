@@ -1,25 +1,11 @@
 <?php
 
 use Laravel\Boost\Mcp\ToolExecutor;
-use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\GetConfig;
 use Laravel\Boost\Mcp\Tools\Tinker;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Response;
 
-test('can execute tool inline', function () {
-    // Disable process isolation for this test
-    config(['boost.process_isolation.enabled' => false]);
-
-    $executor = app(ToolExecutor::class);
-    $result = $executor->execute(ApplicationInfo::class, []);
-
-    expect($result)->toBeInstanceOf(ToolResult::class);
-});
-
-test('can execute tool with process isolation', function () {
-    // Enable process isolation for this test
-    config(['boost.process_isolation.enabled' => true]);
-
+test('can execute tool in subprocess', function () {
     // Create a mock that overrides buildCommand to work with testbench
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
@@ -27,57 +13,52 @@ test('can execute tool with process isolation', function () {
         ->once()
         ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
 
-    $result = $executor->execute(GetConfig::class, ['key' => 'app.name']);
+    $response = $executor->execute(GetConfig::class, ['key' => 'app.name']);
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($response)->toBeInstanceOf(Response::class);
 
-    // If there's an error, extract the text content properly
-    if ($result->isError) {
-        $errorText = $result->content[0]->text ?? 'Unknown error';
+    // If there's an error, show the error message
+    if ($response->isError()) {
+        $errorText = (string) $response->content();
         expect(false)->toBeTrue("Tool execution failed with error: {$errorText}");
     }
 
-    expect($result->isError)->toBeFalse();
-    expect($result->content)->toBeArray();
+    expect($response->isError())->toBeFalse();
 
     // The content should contain the app name (which should be "Laravel" in testbench)
-    $textContent = $result->content[0]->text ?? '';
+    $textContent = (string) $response->content();
     expect($textContent)->toContain('Laravel');
 });
 
 test('rejects unregistered tools', function () {
     $executor = app(ToolExecutor::class);
-    $result = $executor->execute('NonExistentToolClass');
+    $response = $executor->execute('NonExistentToolClass');
 
-    expect($result)->toBeInstanceOf(ToolResult::class)
-        ->and($result->isError)->toBeTrue();
+    expect($response)->toBeInstanceOf(Response::class)
+        ->and($response->isError())->toBeTrue();
 });
 
 test('subprocess proves fresh process isolation', function () {
-    config(['boost.process_isolation.enabled' => true]);
-
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
 
-    $result1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
-    $result2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
+    $response1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
+    $response2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
 
-    expect($result1->isError)->toBeFalse();
-    expect($result2->isError)->toBeFalse();
+    expect($response1->isError())->toBeFalse()
+        ->and($response2->isError())->toBeFalse();
 
-    $pid1 = json_decode($result1->content[0]->text, true)['result'];
-    $pid2 = json_decode($result2->content[0]->text, true)['result'];
+    $pid1 = json_decode((string) $response1->content(), true)['result'];
+    $pid2 = json_decode((string) $response2->content(), true)['result'];
 
-    expect($pid1)->toBeInt()->not->toBe(getmypid());
-    expect($pid2)->toBeInt()->not->toBe(getmypid());
-    expect($pid1)->not()->toBe($pid2);
+    expect($pid1)->toBeInt()->not->toBe(getmypid())
+        ->and($pid2)->toBeInt()->not->toBe(getmypid())
+        ->and($pid1)->not()->toBe($pid2);
 });
 
 test('subprocess sees modified autoloaded code changes', function () {
-    config(['boost.process_isolation.enabled' => true]);
-
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
@@ -93,11 +74,11 @@ test('subprocess sees modified autoloaded code changes', function () {
     };
 
     try {
-        $result1 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
+        $response1 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
 
-        expect($result1->isError)->toBeFalse();
-        $response1 = json_decode($result1->content[0]->text, true);
-        expect($response1['value'])->toBe('Laravel'); // Normal testbench app name
+        expect($response1->isError())->toBeFalse();
+        $responseData1 = json_decode((string) $response1->content(), true);
+        expect($responseData1['value'])->toBe('Laravel'); // Normal testbench app name
 
         // Modify GetConfig.php to return a different hardcoded value
         $modifiedContent = str_replace(
@@ -107,11 +88,11 @@ test('subprocess sees modified autoloaded code changes', function () {
         );
         file_put_contents($toolPath, $modifiedContent);
 
-        $result2 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
-        $response2 = json_decode($result2->content[0]->text, true);
+        $response2 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
+        $responseData2 = json_decode((string) $response2->content(), true);
 
-        expect($result2->isError)->toBeFalse();
-        expect($response2['value'])->toBe('MODIFIED_BY_TEST'); // Using updated code, not cached
+        expect($response2->isError())->toBeFalse()
+            ->and($responseData2['value'])->toBe('MODIFIED_BY_TEST'); // Using updated code, not cached
     } finally {
         $cleanup();
     }
@@ -149,3 +130,40 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
 
     return [PHP_BINARY, '-r', $testScript];
 }
+
+test('respects custom timeout parameter', function () {
+    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+
+    $executor->shouldReceive('buildCommand')
+        ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
+
+    // Test with custom timeout - should succeed with fast code
+    $response = $executor->execute(Tinker::class, [
+        'code' => 'return "timeout test";',
+        'timeout' => 30,
+    ]);
+
+    expect($response->isError())->toBeFalse();
+});
+
+test('clamps timeout values correctly', function () {
+    $executor = new ToolExecutor();
+
+    // Test timeout clamping using reflection to access protected method
+    $reflection = new ReflectionClass($executor);
+    $method = $reflection->getMethod('getTimeout');
+    $method->setAccessible(true);
+
+    // Test default
+    expect($method->invoke($executor, []))->toBe(180);
+
+    // Test custom value
+    expect($method->invoke($executor, ['timeout' => 60]))->toBe(60);
+
+    // Test minimum clamp
+    expect($method->invoke($executor, ['timeout' => 0]))->toBe(1);
+
+    // Test maximum clamp
+    expect($method->invoke($executor, ['timeout' => 1000]))->toBe(600);
+});

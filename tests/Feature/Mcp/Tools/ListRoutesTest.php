@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Laravel\Boost\Mcp\Tools\ListRoutes;
+use Laravel\Mcp\Request;
 
 beforeEach(function () {
     Route::get('/admin/dashboard', function () {
@@ -33,9 +34,9 @@ beforeEach(function () {
 
 test('it returns list of routes without filters', function () {
     $tool = new ListRoutes;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('GET|HEAD', 'admin.dashboard', 'user.profile');
 });
@@ -43,90 +44,90 @@ test('it returns list of routes without filters', function () {
 test('it sanitizes name parameter wildcards and filters correctly', function () {
     $tool = new ListRoutes;
 
-    $result = $tool->handle(['name' => '*admin*']);
+    $response = $tool->handle(new Request(['name' => '*admin*']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('admin.dashboard', 'admin.users.store')
-        ->and($result)->not->toolTextContains('user.profile', 'two-factor.enable');
+        ->and($response)->not->toolTextContains('user.profile', 'two-factor.enable');
 
-    $result = $tool->handle(['name' => '*two-factor*']);
+    $response = $tool->handle(new Request(['name' => '*two-factor*']));
 
-    expect($result)->toolTextContains('two-factor.enable')
-        ->and($result)->not->toolTextContains('admin.dashboard', 'user.profile');
+    expect($response)->toolTextContains('two-factor.enable')
+        ->and($response)->not->toolTextContains('admin.dashboard', 'user.profile');
 
-    $result = $tool->handle(['name' => '*api*']);
+    $response = $tool->handle(new Request(['name' => '*api*']));
 
-    expect($result)->toolTextContains('api.posts.index', 'api.posts.update')
-        ->and($result)->not->toolTextContains('admin.dashboard', 'user.profile');
+    expect($response)->toolTextContains('api.posts.index', 'api.posts.update')
+        ->and($response)->not->toolTextContains('admin.dashboard', 'user.profile');
 
 });
 
 test('it sanitizes method parameter wildcards and filters correctly', function () {
     $tool = new ListRoutes;
 
-    $result = $tool->handle(['method' => 'GET*POST']);
+    $response = $tool->handle(new Request(['method' => 'GET*POST']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('ERROR  Your application doesn\'t have any routes matching the given criteria.');
 
-    $result = $tool->handle(['method' => '*GET*']);
+    $response = $tool->handle(new Request(['method' => '*GET*']));
 
-    expect($result)->toolTextContains('admin.dashboard', 'user.profile', 'api.posts.index')
-        ->and($result)->not->toolTextContains('admin.users.store');
+    expect($response)->toolTextContains('admin.dashboard', 'user.profile', 'api.posts.index')
+        ->and($response)->not->toolTextContains('admin.users.store');
 
-    $result = $tool->handle(['method' => '*POST*']);
+    $response = $tool->handle(new Request(['method' => '*POST*']));
 
-    expect($result)->toolTextContains('admin.users.store')
-        ->and($result)->not->toolTextContains('admin.dashboard');
+    expect($response)->toolTextContains('admin.users.store')
+        ->and($response)->not->toolTextContains('admin.dashboard');
 });
 
 test('it handles edge cases and empty results correctly', function () {
     $tool = new ListRoutes;
 
-    $result = $tool->handle(['name' => '*']);
+    $response = $tool->handle(new Request(['name' => '*']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('admin.dashboard', 'user.profile', 'two-factor.enable');
 
-    $result = $tool->handle(['name' => '*nonexistent*']);
+    $response = $tool->handle(new Request(['name' => '*nonexistent*']));
 
-    expect($result)->toolTextContains('ERROR  Your application doesn\'t have any routes matching the given criteria.');
+    expect($response)->toolTextContains('ERROR  Your application doesn\'t have any routes matching the given criteria.');
 
-    $result = $tool->handle(['name' => '']);
+    $response = $tool->handle(new Request(['name' => '']));
 
-    expect($result)->toolTextContains('admin.dashboard', 'user.profile');
+    expect($response)->toolTextContains('admin.dashboard', 'user.profile');
 });
 
 test('it handles multiple parameters with wildcard sanitization', function () {
     $tool = new ListRoutes;
 
-    $result = $tool->handle([
+    $response = $tool->handle(new Request([
         'name' => '*admin*',
         'method' => '*GET*',
-    ]);
+    ]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('admin.dashboard')
-        ->and($result)->not->toolTextContains('admin.users.store', 'user.profile');
+        ->and($response)->not->toolTextContains('admin.users.store', 'user.profile');
 
-    $result = $tool->handle([
+    $response = $tool->handle(new Request([
         'name' => '*user*',
         'method' => '*POST*',
-    ]);
+    ]));
 
-    expect($result)->toolTextContains('admin.users.store');
+    expect($response)->toolTextContains('admin.users.store');
 });
 
 test('it handles the original problematic wildcard case', function () {
     $tool = new ListRoutes;
 
-    $result = $tool->handle(['name' => '*two-factor*']);
+    $response = $tool->handle(new Request(['name' => '*two-factor*']));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('two-factor.enable');
 });
