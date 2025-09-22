@@ -34,7 +34,7 @@ class InjectBoost
         return $response;
     }
 
-    private function shouldInject(Response $response): bool
+    protected function shouldInject(Response $response): bool
     {
         $responseTypes = [
             StreamedResponse::class,
@@ -62,7 +62,7 @@ class InjectBoost
         return ! str_contains($content, 'browser-logger-active');
     }
 
-    private function injectScript(string $content): string
+    protected function injectScript(string $content): string
     {
         $script = BrowserLogger::getScript();
 

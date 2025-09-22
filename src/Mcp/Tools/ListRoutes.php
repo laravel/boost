@@ -89,7 +89,7 @@ class ListRoutes extends Tool
     /**
      * @param  array<string|bool>  $options
      */
-    private function artisan(string $command, array $options = []): string
+    protected function artisan(string $command, array $options = []): string
     {
         $output = new BufferedOutput;
         $response = Artisan::call($command, $options, $output);

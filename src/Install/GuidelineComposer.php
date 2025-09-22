@@ -247,7 +247,7 @@ class GuidelineComposer
 
     private array $storedSnippets = [];
 
-    private function processBoostSnippets(string $content): string
+    protected function processBoostSnippets(string $content): string
     {
         return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function ($matches): string {
             $name = $matches['name'];
