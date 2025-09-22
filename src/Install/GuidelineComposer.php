@@ -35,7 +35,7 @@ class GuidelineComposer
      * Only include guidelines for these package names, if they're a direct requirement.
      * This fixes every Boost user getting the MCP guidelines due to indirect import.
      *
-     * @var array<int, class-string<Packages>>
+     * @var array<int, Packages>
      * */
     protected array $mustBeDirect;
 
