@@ -22,12 +22,12 @@ interface McpClient
     /**
      * Get the PHP executable path for this MCP client.
      */
-    public function getPhpPath(): string;
+    public function getPhpPath(bool $forceAbsolutePath = false): string;
 
     /**
      * Get the artisan path for this MCP client.
      */
-    public function getArtisanPath(): string;
+    public function getArtisanPath(bool $forceAbsolutePath = false): string;
 
     /**
      * Install an MCP server configuration in this IDE.
