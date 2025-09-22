@@ -32,7 +32,7 @@ class GuidelineComposer
     protected array $packagePriorities;
 
     /**
-     * Only include guidelines for these package names, if they're a direct requirement.
+     * Only include guidelines for these package names if they're a direct requirement.
      * This fixes every Boost user getting the MCP guidelines due to indirect import.
      *
      * @var array<int, Packages>
@@ -46,7 +46,6 @@ class GuidelineComposer
         $this->packagePriorities = [
             Packages::PEST->value => [Packages::PHPUNIT->value],
         ];
-
         $this->config = new GuidelineConfig;
         $this->guidelineAssist = new GuidelineAssist($roster);
     }
