@@ -60,7 +60,7 @@ test('it writes guidelines to new file', function (): void {
     $writer->write('test guidelines content');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("<laravel-boost-guidelines>\ntest guidelines content\n</laravel-boost-guidelines>");
+    expect($content)->toBe("<laravel-boost-guidelines>\ntest guidelines content\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
@@ -77,7 +77,7 @@ test('it writes guidelines to existing file without existing guidelines', functi
     $writer->write('new guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>");
+    expect($content)->toBe("# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
@@ -95,7 +95,30 @@ test('it replaces existing guidelines in-place', function (): void {
     $writer->write('updated guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("# Header\n\n<laravel-boost-guidelines>\nupdated guidelines\n</laravel-boost-guidelines>\n\n# Footer");
+    expect($content)->toBe("# Header\n\n<laravel-boost-guidelines>\nupdated guidelines\n</laravel-boost-guidelines>\n\n# Footer\n");
+
+    unlink($tempFile);
+});
+
+test('it avoids adding extra newline if one already exists', function () {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+    $initialContent = "# Header\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n\n# Footer\n";
+    file_put_contents($tempFile, $initialContent);
+
+    $agent = Mockery::mock(Agent::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+
+    $writer = new GuidelineWriter($agent);
+    $writer->write('updated guidelines');
+
+    $content = file_get_contents($tempFile);
+    expect($content)->toBe("# Header\n\n<laravel-boost-guidelines>\nupdated guidelines\n</laravel-boost-guidelines>\n\n# Footer\n");
+
+    // Assert no double newline at the end
+    expect(substr($content, -2))->not->toBe("\n\n");
+    // Assert still ends with exactly one newline
+    expect(substr($content, -1))->toBe("\n");
 
     unlink($tempFile);
 });
@@ -114,7 +137,7 @@ test('it handles multiline existing guidelines', function (): void {
 
     $content = file_get_contents($tempFile);
     // Should replace in-place, preserving structure
-    expect($content)->toBe("Start\n<laravel-boost-guidelines>\nsingle line\n</laravel-boost-guidelines>\nEnd");
+    expect($content)->toBe("Start\n<laravel-boost-guidelines>\nsingle line\n</laravel-boost-guidelines>\nEnd\n");
 
     unlink($tempFile);
 });
@@ -133,7 +156,7 @@ test('it handles multiple guideline blocks', function (): void {
 
     $content = file_get_contents($tempFile);
     // Should replace first occurrence, second block remains untouched due to non-greedy matching
-    expect($content)->toBe("Start\n<laravel-boost-guidelines>\nreplacement\n</laravel-boost-guidelines>\nMiddle\n<laravel-boost-guidelines>\nsecond\n</laravel-boost-guidelines>\nEnd");
+    expect($content)->toBe("Start\n<laravel-boost-guidelines>\nreplacement\n</laravel-boost-guidelines>\nMiddle\n<laravel-boost-guidelines>\nsecond\n</laravel-boost-guidelines>\nEnd\n");
 
     unlink($tempFile);
 });
@@ -165,7 +188,7 @@ test('it preserves file content structure with proper spacing', function (): voi
     $writer->write('my guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("# Title\n\nParagraph 1\n\nParagraph 2\n\n===\n\n<laravel-boost-guidelines>\nmy guidelines\n</laravel-boost-guidelines>");
+    expect($content)->toBe("# Title\n\nParagraph 1\n\nParagraph 2\n\n===\n\n<laravel-boost-guidelines>\nmy guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
@@ -182,7 +205,7 @@ test('it handles empty file', function (): void {
     $writer->write('first guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("<laravel-boost-guidelines>\nfirst guidelines\n</laravel-boost-guidelines>");
+    expect($content)->toBe("<laravel-boost-guidelines>\nfirst guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
@@ -199,7 +222,7 @@ test('it handles file with only whitespace', function (): void {
     $writer->write('clean guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("<laravel-boost-guidelines>\nclean guidelines\n</laravel-boost-guidelines>");
+    expect($content)->toBe("<laravel-boost-guidelines>\nclean guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
@@ -218,7 +241,7 @@ test('it does not interfere with other XML-like tags', function (): void {
 
     expect($result)->toBe(GuidelineWriter::REPLACED);
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("# Title\n\n<other-rules>\nShould not be touched\n</other-rules>\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n\n<custom-config>\nAlso untouched\n</custom-config>");
+    expect($content)->toBe("# Title\n\n<other-rules>\nShould not be touched\n</other-rules>\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n\n<custom-config>\nAlso untouched\n</custom-config>\n");
 
     unlink($tempFile);
 });
@@ -248,7 +271,7 @@ test('it preserves user content after guidelines when replacing', function (): v
         ->and($content)->toContain('More content here.');
 
     // Verify exact structure
-    expect($content)->toBe("# My Project\n\n<laravel-boost-guidelines>\nupdated guidelines from boost\n</laravel-boost-guidelines>\n\n# User Added Section\nThis content was added by the user after the guidelines.\n\n## Another user section\nMore content here.");
+    expect($content)->toBe("# My Project\n\n<laravel-boost-guidelines>\nupdated guidelines from boost\n</laravel-boost-guidelines>\n\n# User Added Section\nThis content was added by the user after the guidelines.\n\n## Another user section\nMore content here.\n");
 
     unlink($tempFile);
 });
@@ -269,7 +292,7 @@ test('it adds frontmatter when agent supports it and file has no existing frontm
     $writer->write('new guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("---\nalwaysApply: true\n---\n# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>");
+    expect($content)->toBe("---\nalwaysApply: true\n---\n# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
@@ -286,7 +309,7 @@ test('it does not add frontmatter when agent supports it but file already has fr
     $writer->write('new guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("---\ncustomOption: true\n---\n# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>");
+    expect($content)->toBe("---\ncustomOption: true\n---\n# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
@@ -304,7 +327,7 @@ test('it does not add frontmatter when agent does not support it', function (): 
 
     expect($result)->toBe(GuidelineWriter::NEW);
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>");
+    expect($content)->toBe("# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
