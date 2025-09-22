@@ -30,10 +30,9 @@ class FileWriter
     }
 
     /**
-     * @param string $key MCP Server Name
-     * @param string $command
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  string  $key  MCP Server Name
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      */
     public function addServer(string $key, string $command, array $args = [], array $env = []): self
     {
@@ -276,7 +275,7 @@ class FileWriter
             $char = $content[$i];
 
             // Skip whitespace and newlines
-            if (in_array($char, [' ', "\t", "\n", "\r"])) {
+            if (in_array($char, [' ', "\t", "\n", "\r"], true)) {
                 continue;
             }
 
@@ -285,6 +284,7 @@ class FileWriter
                 // Find start of this line
                 $lineStart = strrpos($content, "\n", $i - strlen($content)) ?: 0;
                 $i = $lineStart;
+
                 continue;
             }
 

@@ -20,8 +20,8 @@ beforeEach(function () {
 
 function createMiddlewareResponse($response): SymfonyResponse
 {
-    $middleware = new InjectBoost();
-    $request = new Request();
+    $middleware = new InjectBoost;
+    $request = new Request;
     $next = fn ($request) => $response;
 
     return $middleware->handle($request, $next);
@@ -45,7 +45,7 @@ it('does not inject for special response types', function ($responseType, $respo
 
     expect($result)->toBeInstanceOf($responseType);
 })->with([
-    'streamed' => [StreamedResponse::class, fn () => new StreamedResponse()],
+    'streamed' => [StreamedResponse::class, fn () => new StreamedResponse],
     'json' => [JsonResponse::class, fn () => new JsonResponse(['data' => 'test'])],
     'redirect' => [RedirectResponse::class, fn () => new RedirectResponse('http://example.com')],
     'binary' => [BinaryFileResponse::class, function () {

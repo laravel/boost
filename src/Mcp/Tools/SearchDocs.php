@@ -12,14 +12,13 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
+use Throwable;
 
 class SearchDocs extends Tool
 {
     use MakesHttpRequests;
 
-    public function __construct(protected Roster $roster)
-    {
-    }
+    public function __construct(protected Roster $roster) {}
 
     /**
      * The tool's description.
@@ -64,7 +63,7 @@ class SearchDocs extends Tool
 
             // Only search in specific packages
             if ($packagesFilter) {
-                $packagesCollection = $packagesCollection->filter(fn (Package $package) => in_array($package->rawName(), $packagesFilter));
+                $packagesCollection = $packagesCollection->filter(fn (Package $package) => in_array($package->rawName(), $packagesFilter, true));
             }
 
             $packages = $packagesCollection->map(function (Package $package) {
@@ -78,7 +77,7 @@ class SearchDocs extends Tool
             });
 
             $packages = $packages->values()->toArray();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return Response::error('Failed to get packages: '.$e->getMessage());
         }
 
@@ -98,7 +97,7 @@ class SearchDocs extends Tool
             if (! $response->successful()) {
                 return Response::error('Failed to search documentation: '.$response->body());
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return Response::error('HTTP request failed: '.$e->getMessage());
         }
 

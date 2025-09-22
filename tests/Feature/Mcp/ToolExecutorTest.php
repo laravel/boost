@@ -148,7 +148,7 @@ test('respects custom timeout parameter', function () {
 });
 
 test('clamps timeout values correctly', function () {
-    $executor = new ToolExecutor();
+    $executor = new ToolExecutor;
 
     // Test timeout clamping using reflection to access protected method
     $reflection = new ReflectionClass($executor);

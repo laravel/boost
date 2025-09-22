@@ -6,7 +6,7 @@ use Laravel\Boost\Install\Detection\DirectoryDetectionStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
 beforeEach(function () {
-    $this->strategy = new DirectoryDetectionStrategy();
+    $this->strategy = new DirectoryDetectionStrategy;
     $this->tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($this->tempDir);
 });

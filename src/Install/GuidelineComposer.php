@@ -63,7 +63,7 @@ class GuidelineComposer
      * Static method to compose guidelines from a collection.
      * Can be used without Laravel dependencies.
      *
-     * @param Collection<string, array{content: string, name: string, path: ?string, custom: bool}> $guidelines
+     * @param  Collection<string, array{content: string, name: string, path: ?string, custom: bool}>  $guidelines
      */
     public static function composeGuidelines(Collection $guidelines): string
     {
@@ -143,7 +143,7 @@ class GuidelineComposer
             ); // Always add package core
             $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
             foreach ($packageGuidelines as $guideline) {
-                $suffix = $guideline['name'] == 'core' ? '' : '/'.$guideline['name'];
+                $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
                 $guidelines->put(
                     $guidelineDir.'/v'.$package->majorVersion().$suffix,
                     $guideline
@@ -175,7 +175,7 @@ class GuidelineComposer
     protected function shouldExcludePackage(string $packageName): bool
     {
         foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
-            if (in_array($packageName, $excludedPackages)) {
+            if (in_array($packageName, $excludedPackages, true)) {
                 $priorityEnum = Packages::from($priorityPackage);
                 if ($this->roster->uses($priorityEnum)) {
                     return true;
@@ -187,7 +187,6 @@ class GuidelineComposer
     }
 
     /**
-     * @param string $dirPath
      * @return array<array{content: string, name: string, path: ?string, custom: bool}>
      */
     protected function guidelinesDir(string $dirPath): array
@@ -209,7 +208,6 @@ class GuidelineComposer
     }
 
     /**
-     * @param string $path
      * @return array{content: string, name: string, path: ?string, custom: bool}
      */
     protected function guideline(string $path): array

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
+use DirectoryIterator;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\Resources\ApplicationInfo;
 use Laravel\Mcp\Server;
@@ -71,7 +72,7 @@ class Boost extends Server
         $tools = [];
 
         $excludedTools = config('boost.mcp.tools.exclude', []);
-        $toolDir = new \DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Tools');
+        $toolDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Tools');
 
         foreach ($toolDir as $toolFile) {
             if ($toolFile->isFile() && $toolFile->getExtension() === 'php') {
@@ -100,7 +101,7 @@ class Boost extends Server
         $resources = [];
 
         $excludedResources = config('boost.mcp.resources.exclude', []);
-        $resourceDir = new \DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Resources');
+        $resourceDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Resources');
 
         foreach ($resourceDir as $resourceFile) {
             if ($resourceFile->isFile() && $resourceFile->getExtension() === 'php') {
@@ -129,7 +130,7 @@ class Boost extends Server
         $prompts = [];
 
         $excludedPrompts = config('boost.mcp.prompts.exclude', []);
-        $promptDir = new \DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Prompts');
+        $promptDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Prompts');
 
         foreach ($promptDir as $promptFile) {
             if ($promptFile->isFile() && $promptFile->getExtension() === 'php') {

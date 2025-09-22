@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Mcp\FileWriter;
 use Mockery;
+use ReflectionClass;
 
 beforeEach(function () {
     Mockery::close();
@@ -170,7 +171,7 @@ test('detects plain JSON with comments inside strings as safe', function () {
 
 test('hasUnquotedComments detects comments correctly', function (string $content, bool $expected, string $description) {
     $writer = new FileWriter('/tmp/test.json');
-    $reflection = new \ReflectionClass($writer);
+    $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('hasUnquotedComments');
     $method->setAccessible(true);
 
@@ -181,7 +182,7 @@ test('hasUnquotedComments detects comments correctly', function (string $content
 
 test('trailing comma detection works across newlines', function (string $content, bool $expected, string $description) {
     $writer = new FileWriter('/tmp/test.json');
-    $reflection = new \ReflectionClass($writer);
+    $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('isPlainJson');
     $method->setAccessible(true);
 
@@ -192,7 +193,7 @@ test('trailing comma detection works across newlines', function (string $content
 
 test('generateServerJson creates correct JSON snippet', function () {
     $writer = new FileWriter('/tmp/test.json');
-    $reflection = new \ReflectionClass($writer);
+    $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('generateServerJson');
     $method->setAccessible(true);
 
@@ -222,7 +223,7 @@ test('generateServerJson creates correct JSON snippet', function () {
 test('fixture mcp-no-configkey.json5 is detected as JSON5 and will use injectNewConfigKey', function () {
     $content = fixture('mcp-no-configkey.json5');
     $writer = new FileWriter('/tmp/test.json');
-    $reflection = new \ReflectionClass($writer);
+    $reflection = new ReflectionClass($writer);
 
     // Verify it's detected as JSON5 (not plain JSON)
     $isPlainJsonMethod = $reflection->getMethod('isPlainJson');

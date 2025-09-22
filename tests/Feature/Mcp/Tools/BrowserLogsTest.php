@@ -86,8 +86,7 @@ test('it returns error when log file is empty', function () {
 
 test('@boostJs blade directive renders browser logger script', function () {
     // Ensure route exists
-    Route::post('/_boost/browser-logs', function () {
-    })->name('boost.browser-logs');
+    Route::post('/_boost/browser-logs', function () {})->name('boost.browser-logs');
 
     $blade = Blade::compileString('@boostJs');
 

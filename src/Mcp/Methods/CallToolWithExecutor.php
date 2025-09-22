@@ -15,7 +15,7 @@ use Laravel\Mcp\Server\Transport\JsonRpcRequest;
 use Laravel\Mcp\Server\Transport\JsonRpcResponse;
 use Throwable;
 
-class CallToolWithExecutor implements Method, Errable
+class CallToolWithExecutor implements Errable, Method
 {
     use InteractsWithResponses;
 

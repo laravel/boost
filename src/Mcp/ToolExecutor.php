@@ -13,9 +13,7 @@ use Symfony\Component\Process\Process;
 
 class ToolExecutor
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function execute(string $toolClass, array $arguments = []): Response
     {
@@ -78,7 +76,7 @@ class ToolExecutor
     /**
      * Reconstruct a Response from JSON data.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     protected function reconstructResponse(array $data): Response
     {
@@ -121,8 +119,7 @@ class ToolExecutor
     /**
      * Build the command array for executing a tool in a subprocess.
      *
-     * @param string $toolClass
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $arguments
      * @return array<string>
      */
     protected function buildCommand(string $toolClass, array $arguments): array

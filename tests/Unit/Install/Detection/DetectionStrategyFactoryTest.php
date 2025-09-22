@@ -10,7 +10,7 @@ use Laravel\Boost\Install\Detection\DirectoryDetectionStrategy;
 use Laravel\Boost\Install\Detection\FileDetectionStrategy;
 
 beforeEach(function () {
-    $this->container = new Container();
+    $this->container = new Container;
     $this->factory = new DetectionStrategyFactory($this->container);
 });
 

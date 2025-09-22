@@ -18,9 +18,7 @@ abstract class CodeEnvironment
 {
     public bool $useAbsolutePathForMcp = false;
 
-    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory)
-    {
-    }
+    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory) {}
 
     abstract public function name(): string;
 
@@ -119,8 +117,8 @@ abstract class CodeEnvironment
     /**
      * Install MCP server using the appropriate strategy.
      *
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      *
      * @throws FileNotFoundException
      */
@@ -136,8 +134,8 @@ abstract class CodeEnvironment
     /**
      * Install MCP server using a shell command strategy.
      *
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      */
     protected function installShellMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
@@ -174,8 +172,8 @@ abstract class CodeEnvironment
     /**
      * Install MCP server using a file-based configuration strategy.
      *
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      *
      * @throws FileNotFoundException
      */

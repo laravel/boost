@@ -32,7 +32,7 @@ $mockRoster = new class extends Roster
             $packageName = basename($dir);
 
             // Skip special directories handled elsewhere in GuidelineComposer
-            if (in_array($packageName, ['boost', 'herd'])) {
+            if (in_array($packageName, ['boost', 'herd'], true)) {
                 continue;
             }
 
@@ -88,10 +88,10 @@ $mockRoster = new class extends Roster
     }
 };
 
-$herd = new Herd();
+$herd = new Herd;
 
 // Create GuidelineComposer with all config options enabled to get ALL guidelines
-$config = new GuidelineConfig();
+$config = new GuidelineConfig;
 $config->laravelStyle = true;
 $config->hasAnApi = true;
 $config->caresAboutLocalization = true;

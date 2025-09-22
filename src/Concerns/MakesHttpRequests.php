@@ -30,7 +30,7 @@ trait MakesHttpRequests
     }
 
     /**
-     * @param array<string, mixed> $json
+     * @param  array<string, mixed>  $json
      */
     public function json(string $url, array $json): Response
     {

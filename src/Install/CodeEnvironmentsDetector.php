@@ -29,8 +29,7 @@ class CodeEnvironmentsDetector
 
     public function __construct(
         private readonly Container $container
-    ) {
-    }
+    ) {}
 
     /**
      * Detect installed applications on the current platform.

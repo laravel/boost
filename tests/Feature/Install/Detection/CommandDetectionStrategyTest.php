@@ -7,7 +7,7 @@ use Laravel\Boost\Install\Detection\CommandDetectionStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
 beforeEach(function () {
-    $this->strategy = new CommandDetectionStrategy();
+    $this->strategy = new CommandDetectionStrategy;
 });
 
 test('detects command with successful exit code', function () {
