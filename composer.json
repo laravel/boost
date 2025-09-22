@@ -1,6 +1,6 @@
 {
     "name": "laravel/boost",
-    "description": "Laravel Boost accelerates AI-assisted development to generate high-quality, Laravel-specific code.",
+    "description": "Laravel Boost accelerates AI-assisted development by providing the essential context and structure that AI needs to generate high-quality, Laravel-specific code.",
     "keywords": [
         "dev",
         "laravel",
@@ -14,21 +14,22 @@
     },
     "require": {
         "php": "^8.1",
-        "guzzlehttp/guzzle": "^7.9",
-        "illuminate/console": "^10.0|^11.0|^12.0",
-        "illuminate/contracts": "^10.0|^11.0|^12.0",
-        "illuminate/routing": "^10.0|^11.0|^12.0",
-        "illuminate/support": "^10.0|^11.0|^12.0",
-        "laravel/mcp": "^0.1.1",
-        "laravel/prompts": "^0.1.9|^0.3",
-        "laravel/roster": "^0.2.5"
+        "guzzlehttp/guzzle": "^7.10",
+        "illuminate/console": "^10.49.0|^11.45.3|^12.28.1",
+        "illuminate/contracts": "^10.49.0|^11.45.3|^12.28.1",
+        "illuminate/routing": "^10.49.0|^11.45.3|^12.28.1",
+        "illuminate/support": "^10.49.0|^11.45.3|^12.28.1",
+        "laravel/mcp": "^0.2.0",
+        "laravel/prompts": "0.1.25|^0.3.6",
+        "laravel/roster": "^0.2.7"
     },
     "require-dev": {
-        "laravel/pint": "^1.14",
-        "mockery/mockery": "^1.6",
-        "orchestra/testbench": "^8.22.0|^9.0|^10.0",
-        "pestphp/pest": "^2.0|^3.0",
-        "phpstan/phpstan": "^2.0"
+        "laravel/pint": "1.20",
+        "mockery/mockery": "^1.6.12",
+        "orchestra/testbench": "^8.36.0|^9.15.0|^10.6",
+        "pestphp/pest": "^2.36.0|^3.8.4",
+        "phpstan/phpstan": "^2.1.27",
+        "rector/rector": "^2.1"
     },
     "autoload": {
         "psr-4": {
@@ -52,12 +53,16 @@
     },
     "scripts": {
         "lint": [
-            "vendor/bin/pint",
-            "vendor/bin/phpstan"
+            "pint",
+            "phpstan --memory-limit=-1",
+            "rector"
         ],
-        "test": [
-            "vendor/bin/pest"
+        "test": "pest",
+        "test:lint": [
+            "pint --test",
+            "rector --dry-run"
         ],
+        "test:types": "phpstan",
         "check": [
             "@composer lint",
             "@composer test"

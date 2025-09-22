@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
+use Laravel\Mcp\Request;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 
-test('it returns application info with packages', function () {
+test('it returns application info with packages', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '2.0.0'),
@@ -25,9 +26,9 @@ test('it returns application info with packages', function () {
     ]);
 
     $tool = new ApplicationInfo($roster, $guidelineAssist);
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'php_version' => PHP_VERSION,
@@ -52,7 +53,7 @@ test('it returns application info with packages', function () {
         ]);
 });
 
-test('it returns application info with no packages', function () {
+test('it returns application info with no packages', function (): void {
     $roster = Mockery::mock(Roster::class);
     $roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
 
@@ -60,9 +61,9 @@ test('it returns application info with no packages', function () {
     $guidelineAssist->shouldReceive('models')->andReturn([]);
 
     $tool = new ApplicationInfo($roster, $guidelineAssist);
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->isToolResult()
+    expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
             'php_version' => PHP_VERSION,

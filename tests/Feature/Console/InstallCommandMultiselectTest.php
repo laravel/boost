@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 
-test('multiselect returns keys for associative array', function () {
+test('multiselect returns keys for associative array', function (): void {
     // Mock the prompt to simulate user selecting options
     // Note: mcp_server is already selected by default, so we don't toggle it
     Prompt::fake([
@@ -33,7 +33,7 @@ test('multiselect returns keys for associative array', function () {
     expect($result)->not->toContain('Package AI Guidelines');
 })->skipOnWindows();
 
-test('multiselect returns values for indexed array', function () {
+test('multiselect returns values for indexed array', function (): void {
     Prompt::fake([
         Key::SPACE,      // Select first option
         Key::DOWN,       // Move to second option
@@ -53,7 +53,7 @@ test('multiselect returns values for indexed array', function () {
     expect($result)->toContain('Option 2');
 })->skipOnWindows();
 
-test('multiselect behavior matches install command expectations', function () {
+test('multiselect behavior matches install command expectations', function (): void {
     // Test the exact same structure used in InstallCommand::selectBoostFeatures()
     // Note: mcp_server and ai_guidelines are already selected by default
     Prompt::fake([

@@ -4,62 +4,66 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Illuminate\Support\Arr;
+use Illuminate\JsonSchema\JsonSchema;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 
 #[IsReadOnly]
 class ListAvailableEnvVars extends Tool
 {
-    public function description(): string
-    {
-        return '🔧 List all available environment variable names from a given .env file (default .env).';
-    }
+    /**
+     * The tool's description.
+     */
+    protected string $description = '🔧 List all available environment variable names from a given .env file (default .env).';
 
-    public function schema(ToolInputSchema $schema): ToolInputSchema
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        $schema->string('filename')
-            ->description('The name of the .env file to read (e.g. .env, .env.example). Defaults to .env if not provided.')
-            ->required(false);
-
-        return $schema;
+        return [
+            'filename' => $schema->string()
+                ->description('The name of the .env file to read (e.g. .env, .env.example). Defaults to .env if not provided.'),
+        ];
     }
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
-        $filename = Arr::get($arguments, 'filename', '.env');
+        $filename = $request->get('filename', '.env');
 
         $filePath = base_path($filename);
 
         if (! str_contains($filePath, '.env')) {
-            return ToolResult::error('This tool can only read .env files');
+            return Response::error('This tool can only read .env files');
         }
 
         if (! file_exists($filePath)) {
-            return ToolResult::error("File not found at '{$filePath}'");
+            return Response::error("File not found at '{$filePath}'");
         }
 
         $envLines = file_get_contents($filePath);
 
         if (! $envLines) {
-            return ToolResult::error('Failed to read .env file.');
+            return Response::error('Failed to read .env file.');
         }
 
         $count = preg_match_all('/^(?!\s*#)\s*([^=\s]+)=/m', $envLines, $matches);
 
         if (! $count) {
-            return ToolResult::error('Failed to parse .env file');
+            return Response::error('Failed to parse .env file');
         }
 
         $envVars = array_map('trim', $matches[1]);
 
         sort($envVars);
 
-        return ToolResult::json($envVars);
+        return Response::json($envVars);
     }
 }

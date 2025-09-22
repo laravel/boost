@@ -41,9 +41,7 @@ class DirectoryDetectionStrategy implements DetectionStrategy
     protected function expandPath(string $path, ?Platform $platform = null): string
     {
         if ($platform === Platform::Windows) {
-            return preg_replace_callback('/%([^%]+)%/', function ($matches) {
-                return getenv($matches[1]) ?: $matches[0];
-            }, $path);
+            return preg_replace_callback('/%([^%]+)%/', fn (array $matches) => getenv($matches[1]) ?: $matches[0], $path);
         }
 
         if (str_starts_with($path, '~')) {

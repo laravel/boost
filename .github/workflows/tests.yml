@@ -35,7 +35,7 @@ jobs:
           git config --global core.eol lf
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -45,13 +45,6 @@ jobs:
           ini-values: error_reporting=E_ALL
           tools: composer:v2.8
           coverage: none
-
-      - name: Setup SSH Keys
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.MCP_DEPLOY_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - name: Install dependencies
         run: |
@@ -81,7 +74,7 @@ jobs:
           git config --global core.eol lf
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -92,13 +85,6 @@ jobs:
           tools: composer:v2.8
           coverage: none
 
-      - name: Setup SSH Keys
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.MCP_DEPLOY_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          
       - name: Install dependencies
         run: |
           composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts:^${{ matrix.laravel }}.0"

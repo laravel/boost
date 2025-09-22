@@ -1,6 +1,31 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.1.4...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.1.5...main)
+
+## [v1.2.0](https://github.com/laravel/boost/compare/v1.1.5...v1.2.0) - 2025-09-18
+
+* uses latest version of laravel mcp
+
+## [v1.1.5](https://github.com/laravel/boost/compare/v1.1.4...v1.1.5) - 2025-09-18
+
+### What's Changed
+
+* docs: README: light/dark mode logo by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/148
+* ci: remove unneeded SSH keys now MCP package is public by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/255
+* fix: remove stray parenthesis in lifecycle hook guidance in livewire guidelines by [@mohammedyh](https://github.com/mohammedyh) in https://github.com/laravel/boost/pull/261
+* fix: correct syntax in Tailwind v4 import code snippet by [@mr-chetan](https://github.com/mr-chetan) in https://github.com/laravel/boost/pull/221
+* tests: convert multiple expectations into chain by [@felipeArnold](https://github.com/felipeArnold) in https://github.com/laravel/boost/pull/232
+* Add Codex Guideline Support by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/258
+* Update scroll value for Agent selection box by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/262
+* Add support for Vite CSP nonce by [@nckrtl](https://github.com/nckrtl) in https://github.com/laravel/boost/pull/142
+
+### New Contributors
+
+* [@mohammedyh](https://github.com/mohammedyh) made their first contribution in https://github.com/laravel/boost/pull/261
+* [@mr-chetan](https://github.com/mr-chetan) made their first contribution in https://github.com/laravel/boost/pull/221
+* [@nckrtl](https://github.com/nckrtl) made their first contribution in https://github.com/laravel/boost/pull/142
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.4...v1.1.5
 
 ## [v1.1.4](https://github.com/laravel/boost/compare/v1.1.3...v1.1.4) - 2025-09-04
 

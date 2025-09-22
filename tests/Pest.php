@@ -13,55 +13,51 @@ declare(strict_types=1);
 |
 */
 
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Response;
 
 uses(Tests\TestCase::class)->in('Feature');
 
-expect()->extend('isToolResult', function () {
-    return $this->toBeInstanceOf(ToolResult::class);
-});
+expect()->extend('isToolResult', fn () => $this->toBeInstanceOf(Response::class));
 
 expect()->extend('toolTextContains', function (mixed ...$needles) {
-    /** @var ToolResult $this->value */
-    $output = implode('', array_column($this->value->toArray()['content'], 'text'));
+    /** @var Response $this->value */
+    $output = (string) $this->value->content();
     expect($output)->toContain(...func_get_args());
 
     return $this;
 });
 
 expect()->extend('toolTextDoesNotContain', function (mixed ...$needles) {
-    /** @var ToolResult $this->value */
-    $output = implode('', array_column($this->value->toArray()['content'], 'text'));
+    /** @var Response $this->value */
+    $output = (string) $this->value->content();
     expect($output)->not->toContain(...func_get_args());
 
     return $this;
 });
 
 expect()->extend('toolHasError', function () {
-    expect($this->value->toArray()['isError'])->toBeTrue();
+    expect($this->value->isError())->toBeTrue();
 
     return $this;
 });
 
 expect()->extend('toolHasNoError', function () {
-    expect($this->value->toArray()['isError'])->toBeFalse();
+    expect($this->value->isError())->toBeFalse();
 
     return $this;
 });
 
 expect()->extend('toolJsonContent', function (callable $callback) {
-    /** @var ToolResult $this->value */
-    $data = $this->value->toArray();
-    $content = json_decode($data['content'][0]['text'], true);
+    /** @var Response $this->value */
+    $content = json_decode((string) $this->value->content(), true);
     $callback($content);
 
     return $this;
 });
 
 expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray) {
-    /** @var ToolResult $this->value */
-    $data = $this->value->toArray();
-    $content = json_decode($data['content'][0]['text'], true);
+    /** @var Response $this->value */
+    $content = json_decode((string) $this->value->content(), true);
     expect($content)->toMatchArray($expectedArray);
 
     return $this;

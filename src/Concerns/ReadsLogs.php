@@ -34,7 +34,7 @@ trait ReadsLogs
 
     protected function getChunkSizeMax(): int
     {
-        return 1 * 1024 * 1024; // 1 MB
+        return 1024 * 1024; // 1 MB
     }
 
     /**
@@ -96,7 +96,7 @@ trait ReadsLogs
 
             for ($i = count($entries) - 1; $i >= 0; $i--) {
                 if ($this->isErrorEntry($entries[$i])) {
-                    return trim($entries[$i]);
+                    return trim((string) $entries[$i]);
                 }
             }
 

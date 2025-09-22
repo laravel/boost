@@ -5,42 +5,44 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Tools;
 
 use Exception;
-use Illuminate\Support\Arr;
+use Illuminate\JsonSchema\JsonSchema;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 use Throwable;
 
 class Tinker extends Tool
 {
-    public function description(): string
-    {
-        return <<<'DESCRIPTION'
-Execute PHP code in the Laravel application context, like artisan tinker.
-Use this for debugging issues, checking if functions exist, and testing code snippets.
-You should not create models directly without explicit user approval. Prefer Unit/Feature tests using factories for functionality testing. Prefer existing artisan commands over custom tinker code.
-Returns the output of the code, as well as whatever is "returned" using "return".
-DESCRIPTION;
-    }
+    /**
+     * The tool's description.
+     */
+    protected string $description = 'Execute PHP code in the Laravel application context, like artisan tinker. Use this for debugging issues, checking if functions exist, and testing code snippets. You should not create models directly without explicit user approval. Prefer Unit/Feature tests using factories for functionality testing. Prefer existing artisan commands over custom tinker code. Returns the output of the code, as well as whatever is "returned" using "return".';
 
-    public function schema(ToolInputSchema $schema): ToolInputSchema
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        return $schema
-            ->string('code')
-            ->description('PHP code to execute (without opening <?php tags)')
-            ->required()
-            ->integer('timeout')
-            ->description('Maximum execution time in seconds (default: 180)');
+        return [
+            'code' => $schema->string()
+                ->description('PHP code to execute (without opening <?php tags)')
+                ->required(),
+            'timeout' => $schema->integer()
+                ->description('Maximum execution time in seconds (default: 180)')
+                ->required(),
+        ];
     }
 
     /**
-     * @param array<string|int> $arguments
+     * Handle the tool request.
      *
      * @throws Exception
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
-        $code = str_replace(['<?php', '?>'], '', (string) Arr::get($arguments, 'code'));
+        $code = str_replace(['<?php', '?>'], '', (string) $request->get('code'));
 
         ini_set('memory_limit', '256M');
 
@@ -59,16 +61,16 @@ DESCRIPTION;
 
             // If a result is an object, include the class name
             if (is_object($result)) {
-                $response['class'] = get_class($result);
+                $response['class'] = $result::class;
             }
 
-            return ToolResult::json($response);
-        } catch (Throwable $e) {
-            return ToolResult::json([
-                'error' => $e->getMessage(),
-                'type' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+            return Response::json($response);
+        } catch (Throwable $throwable) {
+            return Response::json([
+                'error' => $throwable->getMessage(),
+                'type' => $throwable::class,
+                'file' => $throwable->getFile(),
+                'line' => $throwable->getLine(),
             ]);
 
         } finally {
