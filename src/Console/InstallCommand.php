@@ -559,19 +559,12 @@ class InstallCommand extends Command
     }
 
     /**
-     * Checks if the current script is running inside a Windows Subsystem for Linux (WSL) environment.
-     *
-     * This is more specific as it differentiates between a native Linux installation and WSL.
-     *
-     * @return bool True if the environment is WSL, false otherwise.
+     * Are we running inside a Windows Subsystem for Linux (WSL) environment?
+     * This differentiates between a regular Linux installation and a WSL.
      */
     private function isRunningInWsl(): bool
     {
         // Check for WSL-specific environment variables.
-        if (! empty(getenv('WSL_DISTRO_NAME')) || ! empty(getenv('IS_WSL'))) {
-            return true;
-        }
-
-        return false;
+        return ! empty(getenv('WSL_DISTRO_NAME')) || ! empty(getenv('IS_WSL'));
     }
 }
