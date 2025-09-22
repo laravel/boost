@@ -8,35 +8,15 @@ use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
 use Laravel\Roster\Roster;
-use Orchestra\Testbench\Concerns\CreatesApplication;
+use Orchestra\Testbench\Foundation\Application as Testbench;
+use Orchestra\Testbench\Foundation\Config as TestbenchConfig;
 
-// Create a simple class that uses Orchestra Testbench to bootstrap Laravel
-$testbench = new class
-{
-    use CreatesApplication;
-
-    protected function getPackageProviders($app)
-    {
-        // No need to register Laravel Boost since we're just using Blade
-        return [];
-    }
-
-    protected function defineEnvironment($app)
-    {
-        // Set a .test URL to enable Herd guidelines if needed
-        $app['config']->set('app.url', 'http://localhost.test');
-    }
-
-    public function bootstrap()
-    {
-        $app = $this->createApplication();
-
-        return $app;
-    }
-};
-
-// Bootstrap the Laravel application
-$app = $testbench->bootstrap();
+// Bootstrap the Laravel application using Testbench
+$app = Testbench::createFromConfig(new TestbenchConfig([
+    'env' => [
+        'APP_URL=http://localhost.test',
+    ],
+]), options: ['enables_package_discoveries' => false]);
 
 // Create a mock Roster that returns ALL packages from .ai/ directory
 $mockRoster = new class extends Roster
@@ -52,7 +32,7 @@ $mockRoster = new class extends Roster
             $packageName = basename($dir);
 
             // Skip special directories handled elsewhere in GuidelineComposer
-            if (in_array($packageName, ['boost', 'herd'])) {
+            if (in_array($packageName, ['boost', 'herd'], true)) {
                 continue;
             }
 
@@ -108,10 +88,10 @@ $mockRoster = new class extends Roster
     }
 };
 
-$herd = new Herd();
+$herd = new Herd;
 
 // Create GuidelineComposer with all config options enabled to get ALL guidelines
-$config = new GuidelineConfig();
+$config = new GuidelineConfig;
 $config->laravelStyle = true;
 $config->hasAnApi = true;
 $config->caresAboutLocalization = true;

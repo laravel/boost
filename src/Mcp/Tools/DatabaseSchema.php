@@ -5,52 +5,53 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Tools;
 
 use Exception;
+use Illuminate\JsonSchema\JsonSchema;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema\SchemaDriverFactory;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 
 #[IsReadOnly]
 class DatabaseSchema extends Tool
 {
-    public function description(): string
+    /**
+     * The tool's description.
+     */
+    protected string $description = 'Read the database schema for this application, including table names, columns, data types, indexes, foreign keys, and more.';
+
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        return 'Read the database schema for this application, including table names, columns, data types, indexes, foreign keys, and more.';
-    }
-
-    public function schema(ToolInputSchema $schema): ToolInputSchema
-    {
-        $schema->string('database')
-            ->description('Name of the database connection to dump (defaults to app\'s default connection, often not needed)')
-            ->required(false);
-
-        $schema->string('filter')
-            ->description('Filter the tables by name')
-            ->required(false);
-
-        return $schema;
+        return [
+            'database' => $schema->string()
+                ->description("Name of the database connection to dump (defaults to app's default connection, often not needed)"),
+            'filter' => $schema->string()
+                ->description('Filter the tables by name'),
+        ];
     }
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
-        $connection = $arguments['database'] ?? config('database.default');
-        $filter = $arguments['filter'] ?? '';
+        $connection = $request->get('database') ?? config('database.default');
+        $filter = $request->get('filter') ?? '';
         $cacheKey = "boost:mcp:database-schema:{$connection}:{$filter}";
 
-        $schema = Cache::remember($cacheKey, 20, function () use ($connection, $filter) {
-            return $this->getDatabaseStructure($connection, $filter);
-        });
+        $schema = Cache::remember($cacheKey, 20, fn (): array => $this->getDatabaseStructure($connection, $filter));
 
-        return ToolResult::json($schema);
+        return Response::json($schema);
     }
 
     protected function getDatabaseStructure(?string $connection, string $filter = ''): array
@@ -69,7 +70,7 @@ class DatabaseSchema extends Tool
         foreach ($this->getAllTables($connection) as $table) {
             $tableName = $table['name'];
 
-            if ($filter && ! str_contains(strtolower($tableName), strtolower($filter))) {
+            if ($filter && ! str_contains(strtolower((string) $tableName), strtolower($filter))) {
                 continue;
             }
 
@@ -102,14 +103,14 @@ class DatabaseSchema extends Tool
                 'triggers' => $triggers,
                 'check_constraints' => $checkConstraints,
             ];
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('Failed to get table structure for: '.$tableName, [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
             ]);
 
             return [
-                'error' => 'Failed to get structure: '.$e->getMessage(),
+                'error' => 'Failed to get structure: '.$exception->getMessage(),
             ];
         }
     }

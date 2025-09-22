@@ -11,8 +11,6 @@ interface Agent
 {
     /**
      * Get the display name of the Agent.
-     *
-     * @return string|null
      */
     public function agentName(): ?string;
 
@@ -25,8 +23,6 @@ interface Agent
 
     /**
      * Determine if the guideline file requires frontmatter.
-     *
-     * @return bool
      */
     public function frontmatter(): bool;
 }
