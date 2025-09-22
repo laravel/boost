@@ -83,6 +83,7 @@ class InstallCommand extends Command
         $this->terminal = $terminal;
 
         $this->terminal->initDimensions();
+
         $this->greenTick = $this->green('✓');
         $this->redCross = $this->red('✗');
 
@@ -162,10 +163,10 @@ class InstallCommand extends Command
     {
         $label = 'https://boost.laravel.com/installed';
 
-        $ideNames = $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient) => 'i:'.$mcpClient->mcpClientName())
+        $ideNames = $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => 'i:'.$mcpClient->mcpClientName())
             ->toArray();
-        $agentNames = $this->selectedTargetAgents->map(fn (Agent $agent) => 'a:'.$agent->agentName())->toArray();
-        $boostFeatures = $this->selectedBoostFeatures->map(fn ($feature) => 'b:'.$feature)->toArray();
+        $agentNames = $this->selectedTargetAgents->map(fn (Agent $agent): string => 'a:'.$agent->agentName())->toArray();
+        $boostFeatures = $this->selectedBoostFeatures->map(fn ($feature): string => 'b:'.$feature)->toArray();
 
         $guidelines = [];
         if ($this->shouldInstallAiGuidelines()) {
@@ -211,12 +212,12 @@ class InstallCommand extends Command
             $hasMinimumTests = Str::of($process->getOutput())
                 ->trim()
                 ->explode("\n")
-                ->filter(fn ($line) => str_contains($line, '::'))
+                ->filter(fn ($line): bool => str_contains($line, '::'))
                 ->count() >= self::MIN_TEST_COUNT;
         }
 
         if (! $hasMinimumTests && $ask) {
-            $hasMinimumTests = select(
+            return select(
                 label: 'Should AI always create tests?',
                 options: ['Yes', 'No'],
                 default: 'Yes'
@@ -320,19 +321,17 @@ class InstallCommand extends Command
         $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
         $config = $this->getSelectionConfig($contractClass);
 
-        $availableEnvironments = $allEnvironments->filter(function (CodeEnvironment $environment) use ($contractClass) {
-            return $environment instanceof $contractClass;
-        });
+        $availableEnvironments = $allEnvironments->filter(fn (CodeEnvironment $environment): bool => $environment instanceof $contractClass);
 
         if ($availableEnvironments->isEmpty()) {
             return collect();
         }
 
-        $options = $availableEnvironments->mapWithKeys(function (CodeEnvironment $environment) use ($config) {
+        $options = $availableEnvironments->mapWithKeys(function (CodeEnvironment $environment) use ($config): array {
             $displayMethod = $config['displayMethod'];
             $displayText = $environment->{$displayMethod}();
 
-            return [get_class($environment) => $displayText];
+            return [$environment::class => $displayText];
         })->sort();
 
         $detectedClasses = [];
@@ -342,9 +341,9 @@ class InstallCommand extends Command
         ));
 
         foreach ($installedEnvNames as $envKey) {
-            $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env) => strtolower($envKey) === strtolower($env->name()));
+            $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
             if ($matchingEnv) {
-                $detectedClasses[] = get_class($matchingEnv);
+                $detectedClasses[] = $matchingEnv::class;
             }
         }
 
@@ -354,9 +353,9 @@ class InstallCommand extends Command
             default: array_unique($detectedClasses),
             scroll: $config['scroll'],
             required: $config['required'],
-            hint: empty($detectedClasses) ? '' : sprintf('Auto-detected %s for you',
+            hint: $detectedClasses === [] ? '' : sprintf('Auto-detected %s for you',
                 Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
-                    $env = $availableEnvironments->first(fn ($env) => get_class($env) === $className);
+                    $env = $availableEnvironments->first(fn ($env): bool => $env::class === $className);
                     $displayMethod = $config['displayMethod'];
 
                     return $env->{$displayMethod}();
@@ -364,7 +363,7 @@ class InstallCommand extends Command
             )
         ))->sort();
 
-        return $selectedClasses->map(fn ($className) => $availableEnvironments->first(fn ($env) => get_class($env) === $className));
+        return $selectedClasses->map(fn ($className) => $availableEnvironments->first(fn ($env): bool => $env::class === $className));
     }
 
     private function installGuidelines(): void
@@ -392,7 +391,7 @@ class InstallCommand extends Command
         $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
         DisplayHelper::grid(
             $guidelines
-                ->map(fn ($guideline, string $key) => $key.($guideline['custom'] ? '*' : ''))
+                ->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))
                 ->values()
                 ->sort()
                 ->toArray(),
@@ -408,7 +407,7 @@ class InstallCommand extends Command
         /** @var CodeEnvironment $agent */
         foreach ($this->selectedTargetAgents as $agent) {
             $agentName = $agent->agentName();
-            $displayAgentName = str_pad($agentName, $longestAgentName);
+            $displayAgentName = str_pad((string) $agentName, $longestAgentName);
             $this->output->write("  {$displayAgentName}... ");
             /** @var Agent $agent */
             try {
@@ -424,7 +423,7 @@ class InstallCommand extends Command
 
         $this->newLine();
 
-        if (count($failed) > 0) {
+        if ($failed !== []) {
             $this->error(sprintf('✗ Failed to install guidelines to %d agent%s:',
                 count($failed),
                 count($failed) === 1 ? '' : 's'
@@ -466,6 +465,7 @@ class InstallCommand extends Command
 
             return;
         }
+
         $this->newLine();
         $this->info(' Installing MCP servers to your selected IDEs');
         $this->newLine();
@@ -483,7 +483,7 @@ class InstallCommand extends Command
         /** @var McpClient $mcpClient */
         foreach ($this->selectedTargetMcpClient as $mcpClient) {
             $ideName = $mcpClient->mcpClientName();
-            $ideDisplay = str_pad($ideName, $longestIdeName);
+            $ideDisplay = str_pad((string) $ideName, $longestIdeName);
             $this->output->write("  {$ideDisplay}... ");
             $results = [];
 
@@ -532,7 +532,7 @@ class InstallCommand extends Command
 
         $this->newLine();
 
-        if (count($failed) > 0) {
+        if ($failed !== []) {
             $this->error(sprintf('%s Some MCP servers failed to install:', $this->redCross));
             foreach ($failed as $ideName => $errors) {
                 foreach ($errors as $server => $error) {

@@ -10,23 +10,23 @@ use Laravel\Boost\Install\Mcp\FileWriter;
 use Mockery;
 use ReflectionClass;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Mockery::close();
 });
 
-test('constructor sets file path', function () {
+test('constructor sets file path', function (): void {
     $writer = new FileWriter('/path/to/mcp.json');
     expect($writer)->toBeInstanceOf(FileWriter::class);
 });
 
-test('configKey method returns self for chaining', function () {
+test('configKey method returns self for chaining', function (): void {
     $writer = new FileWriter('/path/to/mcp.json');
     $result = $writer->configKey('customKey');
 
     expect($result)->toBe($writer);
 });
 
-test('addServer method returns self for chaining', function () {
+test('addServer method returns self for chaining', function (): void {
     $writer = new FileWriter('/path/to/mcp.json');
     $result = $writer
         ->configKey('servers')
@@ -35,7 +35,7 @@ test('addServer method returns self for chaining', function () {
     expect($result)->toBe($writer);
 });
 
-test('save method returns boolean', function () {
+test('save method returns boolean', function (): void {
     mockFileOperations();
     $writer = new FileWriter('/path/to/mcp.json');
     $result = $writer->save();
@@ -43,7 +43,7 @@ test('save method returns boolean', function () {
     expect($result)->toBe(true);
 });
 
-test('written data is correct for brand new file', function (string $configKey, array $servers, string $expectedJson) {
+test('written data is correct for brand new file', function (string $configKey, array $servers, string $expectedJson): void {
     $writtenPath = '';
     $writtenContent = '';
     mockFileOperations(capturedPath: $writtenPath, capturedContent: $writtenContent);
@@ -67,7 +67,7 @@ test('written data is correct for brand new file', function (string $configKey, 
     expect($simpleContents)->toEqual($expectedJson);
 })->with(newFileServerConfigurations());
 
-test('updates existing plain JSON file using simple method', function () {
+test('updates existing plain JSON file using simple method', function (): void {
     $writtenPath = '';
     $writtenContent = '';
 
@@ -88,7 +88,7 @@ test('updates existing plain JSON file using simple method', function () {
 
     expect($result)->toBeTrue();
 
-    $decoded = json_decode($writtenContent, true);
+    $decoded = json_decode((string) $writtenContent, true);
     expect($decoded)->toHaveKey('existing');
     expect($decoded)->toHaveKey('other');
     expect($decoded)->toHaveKey('nested.key'); // From fixture
@@ -96,7 +96,7 @@ test('updates existing plain JSON file using simple method', function () {
     expect($decoded['servers']['new-server']['command'])->toBe('npm');
 });
 
-test('adds to existing mcpServers in plain JSON', function () {
+test('adds to existing mcpServers in plain JSON', function (): void {
     $writtenPath = '';
     $writtenContent = '';
 
@@ -115,14 +115,14 @@ test('adds to existing mcpServers in plain JSON', function () {
 
     expect($result)->toBeTrue();
 
-    $decoded = json_decode($writtenContent, true);
+    $decoded = json_decode((string) $writtenContent, true);
 
     expect($decoded)->toHaveKey('mcpServers.existing-server'); // Original preserved
     expect($decoded)->toHaveKey('mcpServers.boost'); // New server added
     expect($decoded['mcpServers']['boost']['command'])->toBe('php');
 });
 
-test('preserves complex JSON5 features that VS Code supports', function () {
+test('preserves complex JSON5 features that VS Code supports', function (): void {
     $writtenContent = '';
 
     mockFileOperations(
@@ -146,7 +146,7 @@ test('preserves complex JSON5 features that VS Code supports', function () {
     expect($writtenContent)->toContain('MYSQL_HOST'); // Preserve complex nested structure
 });
 
-test('detects plain JSON with comments inside strings as safe', function () {
+test('detects plain JSON with comments inside strings as safe', function (): void {
     $writtenContent = '';
 
     mockFileOperations(
@@ -163,39 +163,36 @@ test('detects plain JSON with comments inside strings as safe', function () {
 
     expect($result)->toBeTrue();
 
-    $decoded = json_decode($writtenContent, true);
+    $decoded = json_decode((string) $writtenContent, true);
     expect($decoded)->toHaveKey('exampleCode'); // Original preserved
     expect($decoded)->toHaveKey('mcpServers.new-server'); // New server added
     expect($decoded['exampleCode'])->toContain('// here is the example code'); // Comment in string preserved
 });
 
-test('hasUnquotedComments detects comments correctly', function (string $content, bool $expected, string $description) {
+test('hasUnquotedComments detects comments correctly', function (string $content, bool $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('hasUnquotedComments');
-    $method->setAccessible(true);
 
     $result = $method->invokeArgs($writer, [$content]);
 
     expect($result)->toBe($expected, $description);
 })->with(commentDetectionCases());
 
-test('trailing comma detection works across newlines', function (string $content, bool $expected, string $description) {
+test('trailing comma detection works across newlines', function (string $content, bool $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('isPlainJson');
-    $method->setAccessible(true);
 
     $result = $method->invokeArgs($writer, [$content]);
 
     expect($result)->toBe($expected, $description);
 })->with(trailingCommaCases());
 
-test('generateServerJson creates correct JSON snippet', function () {
+test('generateServerJson creates correct JSON snippet', function (): void {
     $writer = new FileWriter('/tmp/test.json');
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('generateServerJson');
-    $method->setAccessible(true);
 
     // Test with simple server
     $result = $method->invokeArgs($writer, ['boost', ['command' => 'php']]);
@@ -220,14 +217,14 @@ test('generateServerJson creates correct JSON snippet', function () {
 }');
 });
 
-test('fixture mcp-no-configkey.json5 is detected as JSON5 and will use injectNewConfigKey', function () {
+test('fixture mcp-no-configkey.json5 is detected as JSON5 and will use injectNewConfigKey', function (): void {
     $content = fixture('mcp-no-configkey.json5');
     $writer = new FileWriter('/tmp/test.json');
     $reflection = new ReflectionClass($writer);
 
     // Verify it's detected as JSON5 (not plain JSON)
     $isPlainJsonMethod = $reflection->getMethod('isPlainJson');
-    $isPlainJsonMethod->setAccessible(true);
+
     $isPlainJson = $isPlainJsonMethod->invokeArgs($writer, [$content]);
     expect($isPlainJson)->toBeFalse('Should be detected as JSON5 due to comments');
 
@@ -237,7 +234,7 @@ test('fixture mcp-no-configkey.json5 is detected as JSON5 and will use injectNew
     expect($hasConfigKey)->toBe(0, 'Should not have mcpServers key, triggering injectNewConfigKey');
 });
 
-test('injects new configKey when it does not exist', function () {
+test('injects new configKey when it does not exist', function (): void {
     $writtenContent = '';
 
     mockFileOperations(
@@ -259,7 +256,7 @@ test('injects new configKey when it does not exist', function () {
     expect($writtenContent)->toContain('// No mcpServers key at all'); // Preserve existing comments
 });
 
-test('injects into existing configKey preserving JSON5 features', function () {
+test('injects into existing configKey preserving JSON5 features', function (): void {
     $writtenContent = '';
 
     mockFileOperations(
@@ -283,7 +280,7 @@ test('injects into existing configKey preserving JSON5 features', function () {
     expect($writtenContent)->toContain('// Ooo, pretty cool'); // Inline comments preserved
 });
 
-test('injecting twice into existing JSON 5 doesn\'t cause duplicates', function () {
+test("injecting twice into existing JSON 5 doesn't cause duplicates", function (): void {
     $capturedContent = '';
 
     File::clearResolvedInstances();
@@ -337,7 +334,7 @@ test('injecting twice into existing JSON 5 doesn\'t cause duplicates', function 
     expect($boostCounts)->toBe(1);
 });
 
-test('injects into empty configKey object', function () {
+test('injects into empty configKey object', function (): void {
     $writtenContent = '';
 
     mockFileOperations(
@@ -358,7 +355,7 @@ test('injects into empty configKey object', function () {
     expect($writtenContent)->toContain('test_input'); // Existing content preserved
 });
 
-test('preserves trailing commas when injecting into existing servers', function () {
+test('preserves trailing commas when injecting into existing servers', function (): void {
     $writtenContent = '';
 
     mockFileOperations(
@@ -380,7 +377,7 @@ test('preserves trailing commas when injecting into existing servers', function 
         ->and($writtenContent)->toContain('arg1'); // Existing args preserved
 });
 
-test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description) {
+test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
 
     $result = $writer->detectIndentation($content, $position);

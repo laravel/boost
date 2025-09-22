@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Install\Detection\CommandDetectionStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->strategy = new CommandDetectionStrategy;
 });
 
-test('detects command with successful exit code', function () {
+test('detects command with successful exit code', function (): void {
     Process::fake([
         'which php' => Process::result(exitCode: 0),
     ]);
@@ -22,7 +22,7 @@ test('detects command with successful exit code', function () {
     expect($result)->toBeTrue();
 });
 
-test('fails for command with non zero exit code', function () {
+test('fails for command with non zero exit code', function (): void {
     Process::fake([
         'which nonexistent' => Process::result(exitCode: 1),
     ]);
@@ -34,7 +34,7 @@ test('fails for command with non zero exit code', function () {
     expect($result)->toBeFalse();
 });
 
-test('returns false when no command config', function () {
+test('returns false when no command config', function (): void {
     $result = $this->strategy->detect([
         'other_config' => 'value',
     ]);
@@ -42,7 +42,7 @@ test('returns false when no command config', function () {
     expect($result)->toBeFalse();
 });
 
-test('handles command with output', function () {
+test('handles command with output', function (): void {
     Process::fake([
         'echo test' => Process::result(output: 'test', exitCode: 0),
     ]);
@@ -54,7 +54,7 @@ test('handles command with output', function () {
     expect($result)->toBeTrue();
 });
 
-test('handles command with error output', function () {
+test('handles command with error output', function (): void {
     Process::fake([
         'invalid-command' => Process::result(errorOutput: 'command not found', exitCode: 127),
     ]);
@@ -66,7 +66,7 @@ test('handles command with error output', function () {
     expect($result)->toBeFalse();
 });
 
-test('works with different platforms parameter', function () {
+test('works with different platforms parameter', function (): void {
     Process::fake([
         'where code' => Process::result(exitCode: 0),
     ]);

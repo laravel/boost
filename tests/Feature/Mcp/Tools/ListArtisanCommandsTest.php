@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Laravel\Boost\Mcp\Tools\ListArtisanCommands;
 use Laravel\Mcp\Request;
 
-test('it returns list of artisan commands', function () {
+test('it returns list of artisan commands', function (): void {
     $tool = new ListArtisanCommands;
     $response = $tool->handle(new Request([]));
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolJsonContent(function ($content) {
+        ->toolJsonContent(function ($content): void {
             expect($content)->toBeArray()
                 ->and($content)->not->toBeEmpty();
 

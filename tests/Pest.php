@@ -17,9 +17,7 @@ use Laravel\Mcp\Response;
 
 uses(Tests\TestCase::class)->in('Feature');
 
-expect()->extend('isToolResult', function () {
-    return $this->toBeInstanceOf(Response::class);
-});
+expect()->extend('isToolResult', fn () => $this->toBeInstanceOf(Response::class));
 
 expect()->extend('toolTextContains', function (mixed ...$needles) {
     /** @var Response $this->value */

@@ -34,7 +34,7 @@ class DatabaseSchema extends Tool
     {
         return [
             'database' => $schema->string()
-                ->description('Name of the database connection to dump (defaults to app\'s default connection, often not needed)'),
+                ->description("Name of the database connection to dump (defaults to app's default connection, often not needed)"),
             'filter' => $schema->string()
                 ->description('Filter the tables by name'),
         ];
@@ -49,9 +49,7 @@ class DatabaseSchema extends Tool
         $filter = $request->get('filter') ?? '';
         $cacheKey = "boost:mcp:database-schema:{$connection}:{$filter}";
 
-        $schema = Cache::remember($cacheKey, 20, function () use ($connection, $filter) {
-            return $this->getDatabaseStructure($connection, $filter);
-        });
+        $schema = Cache::remember($cacheKey, 20, fn (): array => $this->getDatabaseStructure($connection, $filter));
 
         return Response::json($schema);
     }
@@ -72,7 +70,7 @@ class DatabaseSchema extends Tool
         foreach ($this->getAllTables($connection) as $table) {
             $tableName = $table['name'];
 
-            if ($filter && ! str_contains(strtolower($tableName), strtolower($filter))) {
+            if ($filter && ! str_contains(strtolower((string) $tableName), strtolower($filter))) {
                 continue;
             }
 
@@ -105,14 +103,14 @@ class DatabaseSchema extends Tool
                 'triggers' => $triggers,
                 'check_constraints' => $checkConstraints,
             ];
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('Failed to get table structure for: '.$tableName, [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
             ]);
 
             return [
-                'error' => 'Failed to get structure: '.$e->getMessage(),
+                'error' => 'Failed to get structure: '.$exception->getMessage(),
             ];
         }
     }

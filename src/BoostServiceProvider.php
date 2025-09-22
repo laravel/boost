@@ -40,7 +40,7 @@ class BoostServiceProvider extends ServiceProvider
             ];
 
             $cacheKey = 'boost.roster.scan';
-            $lastModified = max(array_map(fn ($path) => file_exists($path) ? filemtime($path) : 0, $lockFiles));
+            $lastModified = max(array_map(fn (string $path): int|false => file_exists($path) ? filemtime($path) : 0, $lockFiles));
 
             $cached = cache()->get($cacheKey);
             if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
@@ -113,7 +113,12 @@ class BoostServiceProvider extends ServiceProvider
              *  } $log */
             foreach ($logs as $log) {
                 $logger->write(
-                    level: self::mapJsTypeToPsr3Level($log['type']),
+                    level: match ($log['type']) {
+                        'warn' => 'warning',
+                        'log', 'table' => 'debug',
+                        'window_error', 'uncaught_error', 'unhandled_rejection' => 'error',
+                        default => $log['type']
+                    },
                     message: self::buildLogMessageFromData($log['data']),
                     context: [
                         'url' => $log['url'],
@@ -165,22 +170,12 @@ class BoostServiceProvider extends ServiceProvider
 
     private function registerBladeDirectives(BladeCompiler $bladeCompiler): void
     {
-        $bladeCompiler->directive('boostJs', fn () => '<?php echo \\Laravel\\Boost\\Services\\BrowserLogger::getScript(); ?>');
-    }
-
-    private static function mapJsTypeToPsr3Level(string $type): string
-    {
-        return match ($type) {
-            'warn' => 'warning',
-            'log', 'table' => 'debug',
-            'window_error', 'uncaught_error', 'unhandled_rejection' => 'error',
-            default => $type
-        };
+        $bladeCompiler->directive('boostJs', fn (): string => '<?php echo '.\Laravel\Boost\Services\BrowserLogger::class.'::getScript(); ?>');
     }
 
     private function hookIntoResponses(Router $router): void
     {
-        $this->app->booted(function () use ($router) {
+        $this->app->booted(function () use ($router): void {
             $router->pushMiddlewareToGroup('web', InjectBoost::class);
         });
     }

@@ -25,8 +25,8 @@ class GuidelineAssist
 
     public function __construct(public Roster $roster)
     {
-        $this->modelPaths = $this->discover(fn ($reflection) => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
-        $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection) => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
+        $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
+        $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
     }
 
@@ -68,7 +68,7 @@ class GuidelineAssist
             return ['app-path-isnt-a-directory' => $appPath];
         }
 
-        if (empty(self::$classes)) {
+        if (self::$classes === []) {
             $finder = Finder::create()
                 ->in($appPath)
                 ->files()
@@ -130,10 +130,8 @@ class GuidelineAssist
 
         $tokens = token_get_all($code);
         foreach ($tokens as $token) {
-            if (is_array($token)) {
-                if (in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
-                    return $cache[$path] = true;
-                }
+            if (is_array($token) && in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
+                return $cache[$path] = true;
             }
         }
 
@@ -142,7 +140,7 @@ class GuidelineAssist
 
     public function shouldEnforceStrictTypes(): bool
     {
-        if (empty($this->modelPaths)) {
+        if ($this->modelPaths === []) {
             return false;
         }
 
@@ -154,7 +152,7 @@ class GuidelineAssist
 
     public function enumContents(): string
     {
-        if (empty($this->enumPaths)) {
+        if ($this->enumPaths === []) {
             return '';
         }
 

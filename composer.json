@@ -28,7 +28,8 @@
         "mockery/mockery": "^1.6.12",
         "orchestra/testbench": "^8.36.0|^9.15.0|^10.6",
         "pestphp/pest": "^2.36.0|^3.8.4",
-        "phpstan/phpstan": "^2.1.27"
+        "phpstan/phpstan": "^2.1.27",
+        "rector/rector": "^2.1"
     },
     "autoload": {
         "psr-4": {
@@ -52,13 +53,15 @@
     },
     "scripts": {
         "lint": [
-            "vendor/bin/pint",
-            "vendor/bin/phpstan --memory-limit=-1"
+            "pint",
+            "phpstan --memory-limit=-1",
+            "rector"
         ],
-        "test": [
-            "vendor/bin/pest"
+        "test": "pest",
+        "test:lint": [
+            "pint --test",
+            "rector --dry-run"
         ],
-        "test:lint": "pint --test",
         "test:types": "phpstan",
         "check": [
             "@composer lint",

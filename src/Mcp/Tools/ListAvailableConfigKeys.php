@@ -50,6 +50,7 @@ class ListAvailableConfigKeys extends Tool
                 if ($prefix === '' && is_numeric($key)) {
                     continue;
                 }
+
                 $results[] = $currentKey;
             }
         }

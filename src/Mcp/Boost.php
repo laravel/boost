@@ -54,11 +54,11 @@ class Boost extends Server
      */
     protected array $prompts = [];
 
-    public function boot(): void
+    protected function boot(): void
     {
-        collect($this->discoverTools())->each(fn (string $tool) => $this->tools[] = $tool);
-        collect($this->discoverResources())->each(fn (string $resource) => $this->resources[] = $resource);
-        collect($this->discoverPrompts())->each(fn (string $prompt) => $this->prompts[] = $prompt);
+        collect($this->discoverTools())->each(fn (string $tool): string => $this->tools[] = $tool);
+        collect($this->discoverResources())->each(fn (string $resource): string => $this->resources[] = $resource);
+        collect($this->discoverPrompts())->each(fn (string $prompt): string => $this->prompts[] = $prompt);
 
         // Override the tools/call method to use our ToolExecutor
         $this->methods['tools/call'] = CallToolWithExecutor::class;

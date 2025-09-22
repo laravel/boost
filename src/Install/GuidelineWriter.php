@@ -31,10 +31,8 @@ class GuidelineWriter
         $filePath = $this->agent->guidelinesPath();
 
         $directory = dirname($filePath);
-        if (! is_dir($directory)) {
-            if (! mkdir($directory, 0755, true)) {
-                throw new RuntimeException("Failed to create directory: {$directory}");
-            }
+        if (! is_dir($directory) && ! mkdir($directory, 0755, true)) {
+            throw new RuntimeException("Failed to create directory: {$directory}");
         }
 
         $handle = fopen($filePath, 'c+');
@@ -74,7 +72,7 @@ class GuidelineWriter
                 throw new RuntimeException("Failed to reset file pointer: {$filePath}");
             }
 
-            if (fwrite($handle, $newContent) === false) {
+            if (fwrite($handle, (string) $newContent) === false) {
                 throw new RuntimeException("Failed to write to file: {$filePath}");
             }
 
@@ -103,7 +101,7 @@ class GuidelineWriter
             }
 
             // Exponential backoff with jitter
-            $jitter = rand(0, (int) ($delay * 0.1));
+            $jitter = random_int(0, (int) ($delay * 0.1));
             usleep($delay + $jitter);
             $delay *= 2;
         }
