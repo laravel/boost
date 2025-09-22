@@ -195,6 +195,7 @@ class GuidelineComposer
                 }
             }
         }
+
         return $package->indirect() && in_array($package->package(), $this->mustBeDirect, true);
     }
 
