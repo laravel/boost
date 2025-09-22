@@ -4,53 +4,42 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Dotenv\Dotenv;
+use Illuminate\Support\Env;
+use Laravel\Mcp\Response;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 class ToolExecutor
 {
-    public function __construct()
-    {
-        //
-    }
-
-    /**
-     * Execute a tool with the given arguments.
-     *
-     * @param array<string, mixed> $arguments
-     */
-    public function execute(string $toolClass, array $arguments = []): ToolResult
+    public function execute(string $toolClass, array $arguments = []): Response
     {
         if (! ToolRegistry::isToolAllowed($toolClass)) {
-            return ToolResult::error("Tool not registered or not allowed: {$toolClass}");
+            return Response::error("Tool not registered or not allowed: {$toolClass}");
         }
 
-        if ($this->shouldUseProcessIsolation()) {
-            return $this->executeInProcess($toolClass, $arguments);
-        }
-
-        return $this->executeInline($toolClass, $arguments);
+        return $this->executeInSubprocess($toolClass, $arguments);
     }
 
-    /**
-     * Execute tool in a separate process for isolation.
-     *
-     * @param array<string, mixed> $arguments
-     */
-    protected function executeInProcess(string $toolClass, array $arguments): ToolResult
+    protected function executeInSubprocess(string $toolClass, array $arguments): Response
     {
-        $command = [
-            PHP_BINARY,
-            base_path('artisan'),
-            'boost:execute-tool',
-            $toolClass,
-            base64_encode(json_encode($arguments)),
-        ];
+        $command = $this->buildCommand($toolClass, $arguments);
 
-        $process = new Process($command);
-        $process->setTimeout($this->getTimeout());
+        // We need to 'unset' env vars that will be passed from the parent process to the child process, stopping the child process from reading .env and getting updated values
+        $env = (Dotenv::create(
+            Env::getRepository(),
+            app()->environmentPath(),
+            app()->environmentFile()
+        ))->safeLoad();
+
+        $cleanEnv = array_fill_keys(array_keys($env), false);
+
+        $process = new Process(
+            command: $command,
+            env: $cleanEnv,
+            timeout: $this->getTimeout($arguments)
+        );
 
         try {
             $process->mustRun();
@@ -59,75 +48,43 @@ class ToolExecutor
             $decoded = json_decode($output, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return ToolResult::error('Invalid JSON output from tool process: '.json_last_error_msg());
+                return Response::error('Invalid JSON output from tool process: '.json_last_error_msg());
             }
 
-            // Reconstruct ToolResult from the JSON output
-            return $this->reconstructToolResult($decoded);
-
-        } catch (ProcessTimedOutException $e) {
+            return $this->reconstructResponse($decoded);
+        } catch (ProcessTimedOutException) {
             $process->stop();
 
-            return ToolResult::error("Tool execution timed out after {$this->getTimeout()} seconds");
+            return Response::error("Tool execution timed out after {$this->getTimeout($arguments)} seconds");
 
-        } catch (ProcessFailedException $e) {
+        } catch (ProcessFailedException) {
             $errorOutput = $process->getErrorOutput().$process->getOutput();
 
-            return ToolResult::error("Process tool execution failed: {$errorOutput}");
+            return Response::error("Process tool execution failed: {$errorOutput}");
         }
     }
 
+    protected function getTimeout(array $arguments): int
+    {
+        $timeout = (int) ($arguments['timeout'] ?? 180);
+
+        return max(1, min(600, $timeout));
+    }
+
     /**
-     * Execute tool inline (current process).
+     * Reconstruct a Response from JSON data.
      *
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $data
      */
-    protected function executeInline(string $toolClass, array $arguments): ToolResult
-    {
-        try {
-            $tool = app($toolClass);
-
-            return $tool->handle($arguments);
-        } catch (\Throwable $e) {
-            return ToolResult::error("Inline tool execution failed: {$e->getMessage()}");
-        }
-    }
-
-    /**
-     * Check if process isolation should be used.
-     */
-    protected function shouldUseProcessIsolation(): bool
-    {
-        // Never use process isolation in testing environment
-        if (app()->environment('testing')) {
-            return false;
-        }
-
-        return config('boost.process_isolation.enabled', false);
-    }
-
-    /**
-     * Get the execution timeout.
-     */
-    protected function getTimeout(): int
-    {
-        return config('boost.process_isolation.timeout', 180);
-    }
-
-    /**
-     * Reconstruct a ToolResult from JSON data.
-     *
-     * @param array<string, mixed> $data
-     */
-    protected function reconstructToolResult(array $data): ToolResult
+    protected function reconstructResponse(array $data): Response
     {
         if (! isset($data['isError']) || ! isset($data['content'])) {
-            return ToolResult::error('Invalid tool result format');
+            return Response::error('Invalid tool response format.');
         }
 
         if ($data['isError']) {
-            // Extract the actual text content from the content array
             $errorText = 'Unknown error';
+
             if (is_array($data['content']) && ! empty($data['content'])) {
                 $firstContent = $data['content'][0] ?? [];
                 if (is_array($firstContent)) {
@@ -135,26 +92,42 @@ class ToolExecutor
                 }
             }
 
-            return ToolResult::error($errorText);
+            return Response::error($errorText);
         }
 
-        // Handle successful responses - extract text content
+        // Handle array format - extract text content
         if (is_array($data['content']) && ! empty($data['content'])) {
             $firstContent = $data['content'][0] ?? [];
 
             if (is_array($firstContent)) {
                 $text = $firstContent['text'] ?? '';
 
-                // Try to detect if it's JSON
-                $decoded = json_decode($text, true);
+                $decoded = json_decode((string) $text, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    return ToolResult::json($decoded);
+                    return Response::json($decoded);
                 }
 
-                return ToolResult::text($text);
+                return Response::text($text);
             }
         }
 
-        return ToolResult::text('');
+        return Response::text('');
+    }
+
+    /**
+     * Build the command array for executing a tool in a subprocess.
+     *
+     * @param  array<string, mixed>  $arguments
+     * @return array<string>
+     */
+    protected function buildCommand(string $toolClass, array $arguments): array
+    {
+        return [
+            PHP_BINARY,
+            base_path('artisan'),
+            'boost:execute-tool',
+            $toolClass,
+            base64_encode(json_encode($arguments)),
+        ];
     }
 }

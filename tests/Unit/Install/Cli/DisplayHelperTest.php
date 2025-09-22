@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\Cli\DisplayHelper;
 
-describe('DisplayHelper tests', function () {
-    describe('datatable tests', function () {
-        it('returns early for empty data', function () {
+describe('DisplayHelper tests', function (): void {
+    describe('datatable tests', function (): void {
+        it('returns early for empty data', function (): void {
             ob_start();
             DisplayHelper::datatable([]);
             $output = ob_get_clean();
@@ -14,7 +14,7 @@ describe('DisplayHelper tests', function () {
             expect($output)->toBe('');
         });
 
-        it('displays a simple single row table', function () {
+        it('displays a simple single row table', function (): void {
             ob_start();
             DisplayHelper::datatable([
                 ['Name', 'Age'],
@@ -29,7 +29,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('╯');
         });
 
-        it('displays a multi-row table', function () {
+        it('displays a multi-row table', function (): void {
             ob_start();
             DisplayHelper::datatable([
                 ['Name', 'Age', 'City'],
@@ -46,7 +46,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('┼');
         });
 
-        it('handles different data types in cells', function () {
+        it('handles different data types in cells', function (): void {
             ob_start();
             DisplayHelper::datatable([
                 ['String', 'Number', 'Boolean'],
@@ -62,7 +62,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('456');
         });
 
-        it('applies bold formatting to first column', function () {
+        it('applies bold formatting to first column', function (): void {
             ob_start();
             DisplayHelper::datatable([
                 ['Header1', 'Header2'],
@@ -75,7 +75,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->not->toContain("\e[1mHeader2\e[0m");
         });
 
-        it('handles unicode characters properly', function () {
+        it('handles unicode characters properly', function (): void {
             ob_start();
             DisplayHelper::datatable([
                 ['名前', 'Émile'],
@@ -90,8 +90,8 @@ describe('DisplayHelper tests', function () {
         });
     });
 
-    describe('grid test', function () {
-        it('returns early for empty items', function () {
+    describe('grid test', function (): void {
+        it('returns early for empty items', function (): void {
             ob_start();
             DisplayHelper::grid([]);
             $output = ob_get_clean();
@@ -99,7 +99,7 @@ describe('DisplayHelper tests', function () {
             expect($output)->toBe('');
         });
 
-        it('displays single item grid', function () {
+        it('displays single item grid', function (): void {
             ob_start();
             DisplayHelper::grid(['Item1']);
             $output = ob_get_clean();
@@ -111,7 +111,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('╯');
         });
 
-        it('displays multiple items in grid', function () {
+        it('displays multiple items in grid', function (): void {
             ob_start();
             DisplayHelper::grid(['Item1', 'Item2', 'Item3', 'Item4']);
             $output = ob_get_clean();
@@ -122,7 +122,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('Item4');
         });
 
-        it('handles items of different lengths', function () {
+        it('handles items of different lengths', function (): void {
             ob_start();
             DisplayHelper::grid(['Short', 'Very Long Item Name', 'Med']);
             $output = ob_get_clean();
@@ -132,7 +132,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('Med');
         });
 
-        it('respects column width parameter', function () {
+        it('respects column width parameter', function (): void {
             ob_start();
             DisplayHelper::grid(['Item1', 'Item2'], 40);
             $output = ob_get_clean();
@@ -141,7 +141,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('Item2');
         });
 
-        it('handles unicode characters in grid', function () {
+        it('handles unicode characters in grid', function (): void {
             ob_start();
             DisplayHelper::grid(['測試', 'café', '🚀']);
             $output = ob_get_clean();
@@ -151,7 +151,7 @@ describe('DisplayHelper tests', function () {
                 ->and($output)->toContain('🚀');
         });
 
-        it('fills empty cells when items do not fill complete rows', function () {
+        it('fills empty cells when items do not fill complete rows', function (): void {
             ob_start();
             DisplayHelper::grid(['Item1', 'Item2', 'Item3']);
             $output = ob_get_clean();

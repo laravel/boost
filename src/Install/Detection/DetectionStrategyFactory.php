@@ -11,18 +11,18 @@ use Laravel\Boost\Install\Contracts\DetectionStrategy;
 class DetectionStrategyFactory
 {
     private const TYPE_DIRECTORY = 'directory';
+
     private const TYPE_COMMAND = 'command';
+
     private const TYPE_FILE = 'file';
 
-    public function __construct(private readonly Container $container)
-    {
-    }
+    public function __construct(private readonly Container $container) {}
 
     public function make(string|array $type, array $config = []): DetectionStrategy
     {
         if (is_array($type)) {
             return new CompositeDetectionStrategy(
-                array_map(fn ($singleType) => $this->make($singleType, $config), $type)
+                array_map(fn ($singleType): \Laravel\Boost\Install\Contracts\DetectionStrategy => $this->make($singleType, $config), $type)
             );
         }
 
@@ -41,7 +41,7 @@ class DetectionStrategyFactory
         return $this->make($type, $config);
     }
 
-    private function inferTypeFromConfig(array $config): string|array
+    protected function inferTypeFromConfig(array $config): string|array
     {
         $typeMap = [
             'files' => self::TYPE_FILE,

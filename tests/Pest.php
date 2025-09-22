@@ -13,19 +13,57 @@ declare(strict_types=1);
 |
 */
 
+use Laravel\Mcp\Response;
+
 uses(Tests\TestCase::class)->in('Feature');
 
-/*
-|--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
-*/
+expect()->extend('isToolResult', fn () => $this->toBeInstanceOf(Response::class));
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+expect()->extend('toolTextContains', function (mixed ...$needles) {
+    /** @var Response $this->value */
+    $output = (string) $this->value->content();
+    expect($output)->toContain(...func_get_args());
+
+    return $this;
 });
+
+expect()->extend('toolTextDoesNotContain', function (mixed ...$needles) {
+    /** @var Response $this->value */
+    $output = (string) $this->value->content();
+    expect($output)->not->toContain(...func_get_args());
+
+    return $this;
+});
+
+expect()->extend('toolHasError', function () {
+    expect($this->value->isError())->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toolHasNoError', function () {
+    expect($this->value->isError())->toBeFalse();
+
+    return $this;
+});
+
+expect()->extend('toolJsonContent', function (callable $callback) {
+    /** @var Response $this->value */
+    $content = json_decode((string) $this->value->content(), true);
+    $callback($content);
+
+    return $this;
+});
+
+expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray) {
+    /** @var Response $this->value */
+    $content = json_decode((string) $this->value->content(), true);
+    expect($content)->toMatchArray($expectedArray);
+
+    return $this;
+});
+
+function fixture(string $name): string
+{
+    return file_get_contents(\Pest\testDirectory('fixtures/'.$name));
+}

@@ -6,9 +6,11 @@
 - Fallback to standard Blade components if Flux is unavailable.
 - If available, use Laravel Boost's `search-docs` tool to get the exact documentation and code snippets available for this project.
 - Flux UI components look like this:
+@verbatim
 <code-snippet name="Flux UI component usage example" lang="blade">
     <flux:button variant="primary"/>
 </code-snippet>
+@endverbatim
 
 ### Available Components
 This is correct as of Boost installation, but there may be additional components within the codebase.

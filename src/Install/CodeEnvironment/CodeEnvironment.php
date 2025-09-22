@@ -5,21 +5,19 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
+use Laravel\Boost\Install\Mcp\FileWriter;
 
 abstract class CodeEnvironment
 {
     public bool $useAbsolutePathForMcp = false;
 
-    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory)
-    {
-    }
+    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory) {}
 
     abstract public function name(): string;
 
@@ -33,6 +31,21 @@ abstract class CodeEnvironment
     public function mcpClientName(): ?string
     {
         return $this->displayName();
+    }
+
+    public function useAbsolutePathForMcp(): bool
+    {
+        return $this->useAbsolutePathForMcp;
+    }
+
+    public function getPhpPath(bool $forceAbsolutePath = false): string
+    {
+        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
+    }
+
+    public function getArtisanPath(bool $forceAbsolutePath = false): string
+    {
+        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? base_path('artisan') : 'artisan';
     }
 
     /**
@@ -65,7 +78,7 @@ abstract class CodeEnvironment
         return $strategy->detect($config);
     }
 
-    public function IsAgent(): bool
+    public function isAgent(): bool
     {
         return $this->agentName() && $this instanceof Agent;
     }
@@ -103,8 +116,8 @@ abstract class CodeEnvironment
     /**
      * Install MCP server using the appropriate strategy.
      *
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      *
      * @throws FileNotFoundException
      */
@@ -120,8 +133,8 @@ abstract class CodeEnvironment
     /**
      * Install MCP server using a shell command strategy.
      *
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      */
     protected function installShellMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
@@ -146,20 +159,23 @@ abstract class CodeEnvironment
         ], [
             $key,
             $command,
-            implode(' ', array_map(fn ($arg) => '"'.$arg.'"', $args)),
+            implode(' ', array_map(fn (string $arg): string => '"'.$arg.'"', $args)),
             trim($envString),
         ], $shellCommand);
 
         $result = Process::run($command);
+        if ($result->successful()) {
+            return true;
+        }
 
-        return $result->successful() || str_contains($result->errorOutput(), 'already exists');
+        return str_contains($result->errorOutput(), 'already exists');
     }
 
     /**
      * Install MCP server using a file-based configuration strategy.
      *
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      *
      * @throws FileNotFoundException
      */
@@ -170,21 +186,9 @@ abstract class CodeEnvironment
             return false;
         }
 
-        File::ensureDirectoryExists(dirname($path));
-
-        $config = File::exists($path)
-            ? json_decode(File::get($path), true) ?: []
-            : [];
-
-        $mcpKey = $this->mcpConfigKey();
-        data_set($config, "{$mcpKey}.{$key}", collect([
-            'command' => $command,
-            'args' => $args,
-            'env' => $env,
-        ])->filter()->toArray());
-
-        $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-        return $json && File::put($path, $json);
+        return (new FileWriter($path))
+            ->configKey($this->mcpConfigKey())
+            ->addServer($key, $command, $args, $env)
+            ->save();
     }
 }

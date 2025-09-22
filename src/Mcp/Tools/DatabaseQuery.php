@@ -4,50 +4,49 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Illuminate\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\DB;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 use Throwable;
 
 #[IsReadOnly]
 class DatabaseQuery extends Tool
 {
     /**
-     * Get a short, human-readable description of what the tool does.
+     * The tool's description.
      */
-    public function description(): string
+    protected string $description = 'Execute a read-only SQL query against the configured database.';
+
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        return 'Execute a read-only SQL query against the configured database.';
+        return [
+            'query' => $schema->string()
+                ->description('The SQL query to execute. Only read-only queries are allowed (i.e. SELECT, SHOW, EXPLAIN, DESCRIBE).')
+                ->required(),
+            'database' => $schema->string()
+                ->description("Optional database connection name to use. Defaults to the application's default connection."),
+        ];
     }
 
     /**
-     * Define the input schema for the tool.
+     * Handle the tool request.
      */
-    public function schema(ToolInputSchema $schema): ToolInputSchema
+    public function handle(Request $request): Response
     {
-        $schema->string('query')
-            ->description('The SQL query to execute. Only read-only queries are allowed (i.e. SELECT, SHOW, EXPLAIN, DESCRIBE).')
-            ->required();
-
-        $schema->string('database')
-            ->description("Optional database connection name to use. Defaults to the application's default connection.")
-            ->required(false);
-
-        return $schema;
-    }
-
-    /**
-     * @param array<string> $arguments
-     */
-    public function handle(array $arguments): ToolResult
-    {
-        $query = trim($arguments['query']);
+        $query = trim((string) $request->string('query'));
         $token = strtok(ltrim($query), " \t\n\r");
         if (! $token) {
-            return ToolResult::error('Please pass a valid query');
+            return Response::error('Please pass a valid query');
         }
+
         $firstWord = strtoupper($token);
 
         // Allowed read-only commands.
@@ -65,24 +64,22 @@ class DatabaseQuery extends Tool
         $isReadOnly = in_array($firstWord, $allowList, true);
 
         // Additional validation for WITH … SELECT.
-        if ($firstWord === 'WITH') {
-            if (! preg_match('/with\s+.*select\b/i', $query)) {
-                $isReadOnly = false;
-            }
+        if ($firstWord === 'WITH' && ! preg_match('/with\s+.*select\b/i', $query)) {
+            $isReadOnly = false;
         }
 
         if (! $isReadOnly) {
-            return ToolResult::error('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
+            return Response::error('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
         }
 
-        $connectionName = $arguments['database'] ?? null;
+        $connectionName = $request->get('database');
 
         try {
-            return ToolResult::json(
+            return Response::json(
                 DB::connection($connectionName)->select($query)
             );
-        } catch (Throwable $e) {
-            return ToolResult::error('Query failed: '.$e->getMessage());
+        } catch (Throwable $throwable) {
+            return Response::error('Query failed: '.$throwable->getMessage());
         }
     }
 }

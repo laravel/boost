@@ -17,9 +17,7 @@ class GuidelineWriter
 
     public const NOOP = 3;
 
-    public function __construct(protected Agent $agent)
-    {
-    }
+    public function __construct(protected Agent $agent) {}
 
     /**
      * @return \Laravel\Boost\Install\GuidelineWriter::NEW|\Laravel\Boost\Install\GuidelineWriter::REPLACED|\Laravel\Boost\Install\GuidelineWriter::FAILED|\Laravel\Boost\Install\GuidelineWriter::NOOP
@@ -33,10 +31,8 @@ class GuidelineWriter
         $filePath = $this->agent->guidelinesPath();
 
         $directory = dirname($filePath);
-        if (! is_dir($directory)) {
-            if (! mkdir($directory, 0755, true)) {
-                throw new RuntimeException("Failed to create directory: {$directory}");
-            }
+        if (! is_dir($directory) && ! mkdir($directory, 0755, true)) {
+            throw new RuntimeException("Failed to create directory: {$directory}");
         }
 
         $handle = fopen($filePath, 'c+');
@@ -81,7 +77,7 @@ class GuidelineWriter
                 throw new RuntimeException("Failed to reset file pointer: {$filePath}");
             }
 
-            if (fwrite($handle, $newContent) === false) {
+            if (fwrite($handle, (string) $newContent) === false) {
                 throw new RuntimeException("Failed to write to file: {$filePath}");
             }
 
@@ -93,7 +89,7 @@ class GuidelineWriter
         return $replaced ? self::REPLACED : self::NEW;
     }
 
-    private function acquireLockWithRetry(mixed $handle, string $filePath, int $maxRetries = 3): void
+    protected function acquireLockWithRetry(mixed $handle, string $filePath, int $maxRetries = 3): void
     {
         $attempts = 0;
         $delay = 100000; // Start with 100ms in microseconds
@@ -110,7 +106,7 @@ class GuidelineWriter
             }
 
             // Exponential backoff with jitter
-            $jitter = rand(0, (int) ($delay * 0.1));
+            $jitter = random_int(0, (int) ($delay * 0.1));
             usleep($delay + $jitter);
             $delay *= 2;
         }

@@ -14,7 +14,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
-use Laravel\Mcp\Server\Facades\Mcp;
+use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\Roster;
 
 class BoostServiceProvider extends ServiceProvider
@@ -26,6 +26,10 @@ class BoostServiceProvider extends ServiceProvider
             'boost'
         );
 
+        if (! $this->shouldRun()) {
+            return;
+        }
+
         $this->app->singleton(Roster::class, function () {
             $lockFiles = [
                 base_path('composer.lock'),
@@ -36,7 +40,7 @@ class BoostServiceProvider extends ServiceProvider
             ];
 
             $cacheKey = 'boost.roster.scan';
-            $lastModified = max(array_map(fn ($path) => file_exists($path) ? filemtime($path) : 0, $lockFiles));
+            $lastModified = max(array_map(fn (string $path): int|false => file_exists($path) ? filemtime($path) : 0, $lockFiles));
 
             $cached = cache()->get($cacheKey);
             if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
@@ -55,22 +59,24 @@ class BoostServiceProvider extends ServiceProvider
 
     public function boot(Router $router): void
     {
-        if (config('app.debug', false) !== true) {
+        if (! $this->shouldRun()) {
             return;
         }
 
-        // @phpstan-ignore-next-line
         Mcp::local('laravel-boost', Boost::class);
 
         $this->registerPublishing();
         $this->registerCommands();
         $this->registerRoutes();
-        $this->registerBrowserLogger();
-        $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
-        $this->hookIntoResponses($router);
+
+        if (config('boost.browser_logs_watcher', true)) {
+            $this->registerBrowserLogger();
+            $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
+            $this->hookIntoResponses($router);
+        }
     }
 
-    private function registerPublishing(): void
+    protected function registerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -79,7 +85,7 @@ class BoostServiceProvider extends ServiceProvider
         }
     }
 
-    private function registerCommands(): void
+    protected function registerCommands(): void
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -90,7 +96,7 @@ class BoostServiceProvider extends ServiceProvider
         }
     }
 
-    private function registerRoutes(): void
+    protected function registerRoutes(): void
     {
         Route::post('/_boost/browser-logs', function (Request $request) {
             $logs = $request->input('logs', []);
@@ -107,7 +113,12 @@ class BoostServiceProvider extends ServiceProvider
              *  } $log */
             foreach ($logs as $log) {
                 $logger->write(
-                    level: self::mapJsTypeToPsr3Level($log['type']),
+                    level: match ($log['type']) {
+                        'warn' => 'warning',
+                        'log', 'table' => 'debug',
+                        'window_error', 'uncaught_error', 'unhandled_rejection' => 'error',
+                        default => $log['type']
+                    },
                     message: self::buildLogMessageFromData($log['data']),
                     context: [
                         'url' => $log['url'],
@@ -145,7 +156,7 @@ class BoostServiceProvider extends ServiceProvider
         return implode(' ', $messages);
     }
 
-    private function registerBrowserLogger(): void
+    protected function registerBrowserLogger(): void
     {
         config([
             'logging.channels.browser' => [
@@ -157,27 +168,33 @@ class BoostServiceProvider extends ServiceProvider
         ]);
     }
 
-    private function registerBladeDirectives(BladeCompiler $bladeCompiler): void
+    protected function registerBladeDirectives(BladeCompiler $bladeCompiler): void
     {
-        $bladeCompiler->directive('boostJs', fn () => '<?php echo \\Laravel\\Boost\\Services\\BrowserLogger::getScript(); ?>');
+        $bladeCompiler->directive('boostJs', fn (): string => '<?php echo '.\Laravel\Boost\Services\BrowserLogger::class.'::getScript(); ?>');
     }
 
-    private static function mapJsTypeToPsr3Level(string $type): string
+    protected function hookIntoResponses(Router $router): void
     {
-        return match ($type) {
-            'warn' => 'warning',
-            'log', 'table' => 'debug',
-            'window_error', 'uncaught_error', 'unhandled_rejection' => 'error',
-            default => $type
-        };
+        $this->app->booted(function () use ($router): void {
+            $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        });
     }
 
-    private function hookIntoResponses(Router $router): void
+    protected function shouldRun(): bool
     {
-        if (! config('boost.browser_logs_watcher', true)) {
-            return;
+        if (! config('boost.enabled', true)) {
+            return false;
         }
 
-        $router->pushMiddlewareToGroup('web', InjectBoost::class);
+        if (app()->runningUnitTests()) {
+            return false;
+        }
+
+        // Only enable Boost on local environments or when debug is true
+        if (! app()->environment('local') && config('app.debug', false) !== true) {
+            return false;
+        }
+
+        return true;
     }
 }
