@@ -488,14 +488,20 @@ class InstallCommand extends Command
             $results = [];
 
             if ($this->shouldInstallMcp()) {
-                $php = $mcpClient->getPhpPath($this->isRunningInWsl());
-                $artisan = $mcpClient->getArtisanPath($this->isRunningInWsl());
+                $inWsl = $this->isRunningInWsl();
+                $mcp = array_filter([
+                    'laravel-boost',
+                    $inWsl ? 'wsl' : false,
+                    $mcpClient->getPhpPath($inWsl),
+                    $mcpClient->getArtisanPath($inWsl),
+                    'boost:mcp',
+                ]);
                 try {
-                    if ($this->isRunningInWsl()) {
-                        $result = $mcpClient->installMcp('laravel-boost', 'wsl', [$php, $artisan, 'boost:mcp']);
-                    } else {
-                        $result = $mcpClient->installMcp('laravel-boost', $php, [$artisan, 'boost:mcp']);
-                    }
+                    $result = $mcpClient->installMcp(
+                        array_shift($mcp),
+                        array_shift($mcp),
+                        $mcp
+                    );
 
                     if ($result) {
                         $results[] = $this->greenTick.' Boost';
