@@ -21,7 +21,7 @@
         "illuminate/support": "^10.49.0|^11.45.3|^12.28.1",
         "laravel/mcp": "^0.2.0",
         "laravel/prompts": "0.1.25|^0.3.6",
-        "laravel/roster": "^0.2.7"
+        "laravel/roster": "^0.2.8"
     },
     "require-dev": {
         "laravel/pint": "1.20",
