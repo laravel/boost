@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Testing\TestResponse;
 use Laravel\Boost\Middleware\InjectBoost;
+use Pest\Expectation;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -63,18 +64,18 @@ it('does not inject when conditions are not met', function ($scenario, $response
     'non-html content type' => [
         'scenario',
         fn () => (new Response('test'))->withHeaders(['content-type' => 'application/json']),
-        fn ($result): \Pest\Mixins\Expectation => expect($result->getContent())->toBe('test'),
+        fn ($result): Expectation => expect($result->getContent())->toBe('test'),
     ],
     'missing html skeleton' => [
         'scenario',
         fn () => (new Response('test'))->withHeaders(['content-type' => 'text/html']),
-        fn ($result): \Pest\Mixins\Expectation => expect($result->getContent())->toBe('test'),
+        fn ($result): Expectation => expect($result->getContent())->toBe('test'),
     ],
     'already injected' => [
         'scenario',
         fn () => (new Response('<html><head><title>Test</title></head><body><div class="browser-logger-active"></div></body></html>'))
             ->withHeaders(['content-type' => 'text/html']),
-        fn ($result): \Pest\Mixins\Expectation => expect($result->getContent())->toContain('browser-logger-active'),
+        fn ($result): Expectation => expect($result->getContent())->toContain('browser-logger-active'),
     ],
 ]);
 
