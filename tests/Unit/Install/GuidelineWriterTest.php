@@ -100,7 +100,7 @@ test('it replaces existing guidelines in-place', function (): void {
     unlink($tempFile);
 });
 
-test('it avoids adding extra newline if one already exists', function () {
+test('it avoids adding extra newline if one already exists', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     $initialContent = "# Header\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n\n# Footer\n";
     file_put_contents($tempFile, $initialContent);
