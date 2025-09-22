@@ -40,7 +40,7 @@ class ReportFeedback extends Tool
         $apiUrl = config('boost.hosted.api_url', 'https://boost.laravel.com').'/api/feedback';
 
         $feedback = $request->get('feedback');
-        if (empty($feedback) || strlen($feedback) < 10) {
+        if (empty($feedback) || strlen((string) $feedback) < 10) {
             return Response::error('Feedback too short');
         }
 

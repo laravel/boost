@@ -3,19 +3,19 @@
 use Laravel\Boost\Mcp\ToolRegistry;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 
-test('can discover available tools', function () {
+test('can discover available tools', function (): void {
     $tools = ToolRegistry::getAvailableTools();
 
     expect($tools)->toBeArray()
         ->and($tools)->toContain(ApplicationInfo::class);
 });
 
-test('can check if tool is allowed', function () {
+test('can check if tool is allowed', function (): void {
     expect(ToolRegistry::isToolAllowed(ApplicationInfo::class))->toBeTrue()
         ->and(ToolRegistry::isToolAllowed('NonExistentTool'))->toBeFalse();
 });
 
-test('can get tool names', function () {
+test('can get tool names', function (): void {
     $tools = ToolRegistry::getToolNames();
 
     expect($tools)->toBeArray()
@@ -23,7 +23,7 @@ test('can get tool names', function () {
         ->and($tools['ApplicationInfo'])->toBe(ApplicationInfo::class);
 });
 
-test('can clear cache', function () {
+test('can clear cache', function (): void {
     // First call caches the results
     $tools1 = ToolRegistry::getAvailableTools();
 

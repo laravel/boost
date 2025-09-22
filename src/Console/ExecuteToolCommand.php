@@ -32,7 +32,7 @@ class ExecuteToolCommand extends Command
         }
 
         // Decode arguments
-        $arguments = json_decode(base64_decode($argumentsEncoded), true);
+        $arguments = json_decode(base64_decode($argumentsEncoded, true), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->error('Invalid arguments format: '.json_last_error_msg());
 
@@ -47,8 +47,8 @@ class ExecuteToolCommand extends Command
         try {
             /** @var Response $response */
             $response = $tool->handle($request); // @phpstan-ignore-line
-        } catch (Throwable $e) {
-            $errorResult = Response::error("Tool execution failed (E_THROWABLE): {$e->getMessage()}");
+        } catch (Throwable $throwable) {
+            $errorResult = Response::error("Tool execution failed (E_THROWABLE): {$throwable->getMessage()}");
 
             $this->error(json_encode([
                 'isError' => true,

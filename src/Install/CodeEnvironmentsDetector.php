@@ -29,8 +29,7 @@ class CodeEnvironmentsDetector
 
     public function __construct(
         private readonly Container $container
-    ) {
-    }
+    ) {}
 
     /**
      * Detect installed applications on the current platform.
@@ -42,8 +41,8 @@ class CodeEnvironmentsDetector
         $platform = Platform::current();
 
         return $this->getCodeEnvironments()
-            ->filter(fn (CodeEnvironment $program) => $program->detectOnSystem($platform))
-            ->map(fn (CodeEnvironment $program) => $program->name())
+            ->filter(fn (CodeEnvironment $program): bool => $program->detectOnSystem($platform))
+            ->map(fn (CodeEnvironment $program): string => $program->name())
             ->values()
             ->toArray();
     }
@@ -56,8 +55,8 @@ class CodeEnvironmentsDetector
     public function discoverProjectInstalledCodeEnvironments(string $basePath): array
     {
         return $this->getCodeEnvironments()
-            ->filter(fn ($program) => $program->detectInProject($basePath))
-            ->map(fn ($program) => $program->name())
+            ->filter(fn ($program): bool => $program->detectInProject($basePath))
+            ->map(fn ($program): string => $program->name())
             ->values()
             ->toArray();
     }

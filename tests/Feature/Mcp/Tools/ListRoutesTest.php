@@ -6,33 +6,21 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Boost\Mcp\Tools\ListRoutes;
 use Laravel\Mcp\Request;
 
-beforeEach(function () {
-    Route::get('/admin/dashboard', function () {
-        return 'admin dashboard';
-    })->name('admin.dashboard');
+beforeEach(function (): void {
+    Route::get('/admin/dashboard', fn (): string => 'admin dashboard')->name('admin.dashboard');
 
-    Route::post('/admin/users', function () {
-        return 'admin users';
-    })->name('admin.users.store');
+    Route::post('/admin/users', fn (): string => 'admin users')->name('admin.users.store');
 
-    Route::get('/user/profile', function () {
-        return 'user profile';
-    })->name('user.profile');
+    Route::get('/user/profile', fn (): string => 'user profile')->name('user.profile');
 
-    Route::get('/api/two-factor/enable', function () {
-        return 'two-factor enable';
-    })->name('two-factor.enable');
+    Route::get('/api/two-factor/enable', fn (): string => 'two-factor enable')->name('two-factor.enable');
 
-    Route::get('/api/v1/posts', function () {
-        return 'posts';
-    })->name('api.posts.index');
+    Route::get('/api/v1/posts', fn (): string => 'posts')->name('api.posts.index');
 
-    Route::put('/api/v1/posts/{id}', function ($id) {
-        return 'update post';
-    })->name('api.posts.update');
+    Route::put('/api/v1/posts/{id}', fn ($id): string => 'update post')->name('api.posts.update');
 });
 
-test('it returns list of routes without filters', function () {
+test('it returns list of routes without filters', function (): void {
     $tool = new ListRoutes;
     $response = $tool->handle(new Request([]));
 
@@ -41,7 +29,7 @@ test('it returns list of routes without filters', function () {
         ->toolTextContains('GET|HEAD', 'admin.dashboard', 'user.profile');
 });
 
-test('it sanitizes name parameter wildcards and filters correctly', function () {
+test('it sanitizes name parameter wildcards and filters correctly', function (): void {
     $tool = new ListRoutes;
 
     $response = $tool->handle(new Request(['name' => '*admin*']));
@@ -63,14 +51,14 @@ test('it sanitizes name parameter wildcards and filters correctly', function () 
 
 });
 
-test('it sanitizes method parameter wildcards and filters correctly', function () {
+test('it sanitizes method parameter wildcards and filters correctly', function (): void {
     $tool = new ListRoutes;
 
     $response = $tool->handle(new Request(['method' => 'GET*POST']));
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolTextContains('ERROR  Your application doesn\'t have any routes matching the given criteria.');
+        ->toolTextContains("ERROR  Your application doesn't have any routes matching the given criteria.");
 
     $response = $tool->handle(new Request(['method' => '*GET*']));
 
@@ -83,7 +71,7 @@ test('it sanitizes method parameter wildcards and filters correctly', function (
         ->and($response)->not->toolTextContains('admin.dashboard');
 });
 
-test('it handles edge cases and empty results correctly', function () {
+test('it handles edge cases and empty results correctly', function (): void {
     $tool = new ListRoutes;
 
     $response = $tool->handle(new Request(['name' => '*']));
@@ -94,14 +82,14 @@ test('it handles edge cases and empty results correctly', function () {
 
     $response = $tool->handle(new Request(['name' => '*nonexistent*']));
 
-    expect($response)->toolTextContains('ERROR  Your application doesn\'t have any routes matching the given criteria.');
+    expect($response)->toolTextContains("ERROR  Your application doesn't have any routes matching the given criteria.");
 
     $response = $tool->handle(new Request(['name' => '']));
 
     expect($response)->toolTextContains('admin.dashboard', 'user.profile');
 });
 
-test('it handles multiple parameters with wildcard sanitization', function () {
+test('it handles multiple parameters with wildcard sanitization', function (): void {
     $tool = new ListRoutes;
 
     $response = $tool->handle(new Request([
@@ -122,7 +110,7 @@ test('it handles multiple parameters with wildcard sanitization', function () {
     expect($response)->toolTextContains('admin.users.store');
 });
 
-test('it handles the original problematic wildcard case', function () {
+test('it handles the original problematic wildcard case', function (): void {
     $tool = new ListRoutes;
 
     $response = $tool->handle(new Request(['name' => '*two-factor*']));

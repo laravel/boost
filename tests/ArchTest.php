@@ -12,14 +12,14 @@ arch('no debugging')
 
 arch('commands')
     ->expect('Laravel\Boost\Commands')
-    ->toExtend('Illuminate\Console\Command')
+    ->toExtend(\Illuminate\Console\Command::class)
     ->toHaveSuffix('Command');
 
 arch('no direct env calls')
     ->expect('env')
     ->not->toBeUsedIn('Laravel\Boost')
     ->ignoring([
-        'Laravel\Boost\BoostServiceProvider',
+        \Laravel\Boost\BoostServiceProvider::class,
     ]);
 
 arch('tests')

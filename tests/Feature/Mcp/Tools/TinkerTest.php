@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Request;
 
-test('executes simple php code', function () {
+test('executes simple php code', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'return 2 + 2;']));
 
@@ -16,7 +16,7 @@ test('executes simple php code', function () {
         ]);
 });
 
-test('executes code with output', function () {
+test('executes code with output', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'echo "Hello World"; return "test";']));
 
@@ -28,7 +28,7 @@ test('executes code with output', function () {
         ]);
 });
 
-test('accesses laravel facades', function () {
+test('accesses laravel facades', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'return config("app.name");']));
 
@@ -39,7 +39,7 @@ test('accesses laravel facades', function () {
         ]);
 });
 
-test('creates objects', function () {
+test('creates objects', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'return new stdClass();']));
 
@@ -50,7 +50,7 @@ test('creates objects', function () {
         ]);
 });
 
-test('handles syntax errors', function () {
+test('handles syntax errors', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'invalid syntax here']));
 
@@ -59,12 +59,12 @@ test('handles syntax errors', function () {
         ->toolJsonContentToMatchArray([
             'type' => 'ParseError',
         ])
-        ->toolJsonContent(function ($data) {
+        ->toolJsonContent(function ($data): void {
             expect($data)->toHaveKey('error');
         });
 });
 
-test('handles runtime errors', function () {
+test('handles runtime errors', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'throw new Exception("Test error");']));
 
@@ -74,12 +74,12 @@ test('handles runtime errors', function () {
             'type' => 'Exception',
             'error' => 'Test error',
         ])
-        ->toolJsonContent(function ($data) {
+        ->toolJsonContent(function ($data): void {
             expect($data)->toHaveKey('error');
         });
 });
 
-test('captures multiple outputs', function () {
+test('captures multiple outputs', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'echo "First"; echo "Second"; return "done";']));
 
@@ -90,7 +90,7 @@ test('captures multiple outputs', function () {
         ]);
 });
 
-test('executes code with different return types', function (string $code, mixed $expectedResult, string $expectedType) {
+test('executes code with different return types', function (string $code, mixed $expectedResult, string $expectedType): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => $code]));
 
@@ -109,7 +109,7 @@ test('executes code with different return types', function (string $code, mixed 
     'float' => ['return 3.14;', 3.14, 'double'],
 ]);
 
-test('handles empty code', function () {
+test('handles empty code', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => '']));
 
@@ -120,7 +120,7 @@ test('handles empty code', function () {
         ]);
 });
 
-test('handles code with no return statement', function () {
+test('handles code with no return statement', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => '$x = 5;']));
 
@@ -131,12 +131,10 @@ test('handles code with no return statement', function () {
         ]);
 });
 
-test('should register only in local environment', function () {
+test('should register only in local environment', function (): void {
     $tool = new Tinker;
 
-    app()->detectEnvironment(function () {
-        return 'local';
-    });
+    app()->detectEnvironment(fn (): string => 'local');
 
     expect($tool->eligibleForRegistration(Mockery::mock(Request::class)))->toBeTrue();
 });

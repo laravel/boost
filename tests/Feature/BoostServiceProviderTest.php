@@ -5,15 +5,15 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Config;
 use Laravel\Boost\BoostServiceProvider;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->refreshApplication();
     Config::set('logging.channels.browser', null);
 });
 
-describe('boost.enabled configuration', function () {
-    it('does not boot boost when disabled', function () {
+describe('boost.enabled configuration', function (): void {
+    it('does not boot boost when disabled', function (): void {
         Config::set('boost.enabled', false);
-        app()->detectEnvironment(fn () => 'local');
+        app()->detectEnvironment(fn (): string => 'local');
 
         $provider = new BoostServiceProvider(app());
         $provider->register();
@@ -22,9 +22,9 @@ describe('boost.enabled configuration', function () {
         $this->artisan('list')->expectsOutputToContain('boost:install');
     });
 
-    it('boots boost when enabled in local environment', function () {
+    it('boots boost when enabled in local environment', function (): void {
         Config::set('boost.enabled', true);
-        app()->detectEnvironment(fn () => 'local');
+        app()->detectEnvironment(fn (): string => 'local');
 
         $provider = new BoostServiceProvider(app());
         $provider->register();
@@ -35,11 +35,11 @@ describe('boost.enabled configuration', function () {
     });
 });
 
-describe('environment restrictions', function () {
-    it('does not boot boost in production even when enabled', function () {
+describe('environment restrictions', function (): void {
+    it('does not boot boost in production even when enabled', function (): void {
         Config::set('boost.enabled', true);
         Config::set('app.debug', false);
-        app()->detectEnvironment(fn () => 'production');
+        app()->detectEnvironment(fn (): string => 'production');
 
         $provider = new BoostServiceProvider(app());
         $provider->register();
@@ -48,11 +48,11 @@ describe('environment restrictions', function () {
         expect(config('logging.channels.browser'))->toBeNull();
     });
 
-    describe('testing environment', function () {
-        it('does not boot boost when debug is false', function () {
+    describe('testing environment', function (): void {
+        it('does not boot boost when debug is false', function (): void {
             Config::set('boost.enabled', true);
             Config::set('app.debug', false);
-            app()->detectEnvironment(fn () => 'testing');
+            app()->detectEnvironment(fn (): string => 'testing');
 
             $provider = new BoostServiceProvider(app());
             $provider->register();
@@ -61,10 +61,10 @@ describe('environment restrictions', function () {
             expect(config('logging.channels.browser'))->toBeNull();
         });
 
-        it('does not boot boost when debug is true', function () {
+        it('does not boot boost when debug is true', function (): void {
             Config::set('boost.enabled', true);
             Config::set('app.debug', true);
-            app()->detectEnvironment(fn () => 'testing');
+            app()->detectEnvironment(fn (): string => 'testing');
 
             $provider = new BoostServiceProvider(app());
             $provider->register();

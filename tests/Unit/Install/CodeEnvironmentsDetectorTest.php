@@ -6,16 +6,16 @@ use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
 use Laravel\Boost\Install\Enums\Platform;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->container = new \Illuminate\Container\Container;
     $this->detector = new CodeEnvironmentsDetector($this->container);
 });
 
-afterEach(function () {
+afterEach(function (): void {
     Mockery::close();
 });
 
-test('discoverSystemInstalledCodeEnvironments returns detected programs', function () {
+test('discoverSystemInstalledCodeEnvironments returns detected programs', function (): void {
     // Create mock programs
     $program1 = Mockery::mock(CodeEnvironment::class);
     $program1->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
@@ -49,7 +49,7 @@ test('discoverSystemInstalledCodeEnvironments returns detected programs', functi
     expect($detected)->toBe(['phpstorm', 'cursor']);
 });
 
-test('discoverSystemInstalledCodeEnvironments returns empty array when no programs detected', function () {
+test('discoverSystemInstalledCodeEnvironments returns empty array when no programs detected', function (): void {
     $program1 = Mockery::mock(CodeEnvironment::class);
     $program1->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
     $program1->shouldReceive('name')->andReturn('phpstorm');
@@ -74,7 +74,7 @@ test('discoverSystemInstalledCodeEnvironments returns empty array when no progra
     expect($detected)->toBeEmpty();
 });
 
-test('discoverProjectInstalledCodeEnvironments detects programs in project', function () {
+test('discoverProjectInstalledCodeEnvironments detects programs in project', function (): void {
     $basePath = '/path/to/project';
 
     $program1 = Mockery::mock(CodeEnvironment::class);
@@ -101,7 +101,7 @@ test('discoverProjectInstalledCodeEnvironments detects programs in project', fun
     expect($detected)->toBe(['vscode', 'claudecode']);
 });
 
-test('discoverProjectInstalledCodeEnvironments returns empty array when no programs detected in project', function () {
+test('discoverProjectInstalledCodeEnvironments returns empty array when no programs detected in project', function (): void {
     $basePath = '/path/to/project';
 
     $program1 = Mockery::mock(CodeEnvironment::class);
@@ -118,7 +118,7 @@ test('discoverProjectInstalledCodeEnvironments returns empty array when no progr
     expect($detected)->toBeEmpty();
 });
 
-test('discoverProjectInstalledCodeEnvironments detects applications by directory', function () {
+test('discoverProjectInstalledCodeEnvironments detects applications by directory', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.vscode');
@@ -132,7 +132,7 @@ test('discoverProjectInstalledCodeEnvironments detects applications by directory
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects applications with mixed type', function () {
+test('discoverProjectInstalledCodeEnvironments detects applications with mixed type', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     file_put_contents($tempDir.'/CLAUDE.md', 'test');
@@ -145,7 +145,7 @@ test('discoverProjectInstalledCodeEnvironments detects applications with mixed t
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects copilot with nested file path', function () {
+test('discoverProjectInstalledCodeEnvironments detects copilot with nested file path', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.github');
@@ -161,7 +161,7 @@ test('discoverProjectInstalledCodeEnvironments detects copilot with nested file 
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects claude code with directory', function () {
+test('discoverProjectInstalledCodeEnvironments detects claude code with directory', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.claude');
@@ -174,7 +174,7 @@ test('discoverProjectInstalledCodeEnvironments detects claude code with director
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects phpstorm with idea directory', function () {
+test('discoverProjectInstalledCodeEnvironments detects phpstorm with idea directory', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.idea');
@@ -188,7 +188,7 @@ test('discoverProjectInstalledCodeEnvironments detects phpstorm with idea direct
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects phpstorm with junie directory', function () {
+test('discoverProjectInstalledCodeEnvironments detects phpstorm with junie directory', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.junie');
@@ -202,7 +202,7 @@ test('discoverProjectInstalledCodeEnvironments detects phpstorm with junie direc
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects cursor with cursor directory', function () {
+test('discoverProjectInstalledCodeEnvironments detects cursor with cursor directory', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.cursor');
@@ -216,7 +216,7 @@ test('discoverProjectInstalledCodeEnvironments detects cursor with cursor direct
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects codex with codex directory', function () {
+test('discoverProjectInstalledCodeEnvironments detects codex with codex directory', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.codex');
@@ -229,7 +229,7 @@ test('discoverProjectInstalledCodeEnvironments detects codex with codex director
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects codex with AGENTS.md file', function () {
+test('discoverProjectInstalledCodeEnvironments detects codex with AGENTS.md file', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     file_put_contents($tempDir.'/AGENTS.md', 'test');
@@ -242,7 +242,7 @@ test('discoverProjectInstalledCodeEnvironments detects codex with AGENTS.md file
     rmdir($tempDir);
 });
 
-test('discoverProjectInstalledCodeEnvironments handles multiple detections', function () {
+test('discoverProjectInstalledCodeEnvironments handles multiple detections', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.vscode');

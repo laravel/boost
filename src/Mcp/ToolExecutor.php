@@ -13,10 +13,6 @@ use Symfony\Component\Process\Process;
 
 class ToolExecutor
 {
-    public function __construct()
-    {
-    }
-
     public function execute(string $toolClass, array $arguments = []): Response
     {
         if (! ToolRegistry::isToolAllowed($toolClass)) {
@@ -56,12 +52,12 @@ class ToolExecutor
             }
 
             return $this->reconstructResponse($decoded);
-        } catch (ProcessTimedOutException $e) {
+        } catch (ProcessTimedOutException) {
             $process->stop();
 
             return Response::error("Tool execution timed out after {$this->getTimeout($arguments)} seconds");
 
-        } catch (ProcessFailedException $e) {
+        } catch (ProcessFailedException) {
             $errorOutput = $process->getErrorOutput().$process->getOutput();
 
             return Response::error("Process tool execution failed: {$errorOutput}");
@@ -78,7 +74,7 @@ class ToolExecutor
     /**
      * Reconstruct a Response from JSON data.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     protected function reconstructResponse(array $data): Response
     {
@@ -106,7 +102,7 @@ class ToolExecutor
             if (is_array($firstContent)) {
                 $text = $firstContent['text'] ?? '';
 
-                $decoded = json_decode($text, true);
+                $decoded = json_decode((string) $text, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                     return Response::json($decoded);
                 }
@@ -121,8 +117,7 @@ class ToolExecutor
     /**
      * Build the command array for executing a tool in a subprocess.
      *
-     * @param string $toolClass
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $arguments
      * @return array<string>
      */
     protected function buildCommand(string $toolClass, array $arguments): array

@@ -33,7 +33,7 @@ class ListAvailableConfigKeys extends Tool
     /**
      * Flatten a multi-dimensional config array into dot notation keys.
      *
-     * @param array<int|string, string|array<int|string, string>> $array
+     * @param  array<int|string, string|array<int|string, string>>  $array
      * @return array<int|string, int|string>
      */
     private function flattenToDotNotation(array $array, string $prefix = ''): array
@@ -50,6 +50,7 @@ class ListAvailableConfigKeys extends Tool
                 if ($prefix === '' && is_numeric($key)) {
                     continue;
                 }
+
                 $results[] = $currentKey;
             }
         }

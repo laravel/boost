@@ -6,14 +6,12 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
 use Laravel\Mcp\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('app.url', 'http://localhost');
-    Route::get('/test', function () {
-        return 'test';
-    })->name('test.route');
+    Route::get('/test', fn (): string => 'test')->name('test.route');
 });
 
-test('it returns absolute url for root path by default', function () {
+test('it returns absolute url for root path by default', function (): void {
     $tool = new GetAbsoluteUrl;
     $response = $tool->handle(new Request([]));
 
@@ -22,7 +20,7 @@ test('it returns absolute url for root path by default', function () {
         ->toolTextContains('http://localhost');
 });
 
-test('it returns absolute url for given path', function () {
+test('it returns absolute url for given path', function (): void {
     $tool = new GetAbsoluteUrl;
     $response = $tool->handle(new Request(['path' => '/dashboard']));
 
@@ -31,7 +29,7 @@ test('it returns absolute url for given path', function () {
         ->toolTextContains('http://localhost/dashboard');
 });
 
-test('it returns absolute url for named route', function () {
+test('it returns absolute url for named route', function (): void {
     $tool = new GetAbsoluteUrl;
     $response = $tool->handle(new Request(['route' => 'test.route']));
 
@@ -40,7 +38,7 @@ test('it returns absolute url for named route', function () {
         ->toolTextContains('http://localhost/test');
 });
 
-test('it prioritizes path over route when both are provided', function () {
+test('it prioritizes path over route when both are provided', function (): void {
     $tool = new GetAbsoluteUrl;
     $response = $tool->handle(new Request(['path' => '/dashboard', 'route' => 'test.route']));
 
@@ -49,7 +47,7 @@ test('it prioritizes path over route when both are provided', function () {
         ->toolTextContains('http://localhost/dashboard');
 });
 
-test('it handles empty path', function () {
+test('it handles empty path', function (): void {
     $tool = new GetAbsoluteUrl;
     $response = $tool->handle(new Request(['path' => '']));
 

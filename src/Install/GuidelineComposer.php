@@ -63,13 +63,13 @@ class GuidelineComposer
      * Static method to compose guidelines from a collection.
      * Can be used without Laravel dependencies.
      *
-     * @param Collection<string, array{content: string, name: string, path: ?string, custom: bool}> $guidelines
+     * @param  Collection<string, array{content: string, name: string, path: ?string, custom: bool}>  $guidelines
      */
     public static function composeGuidelines(Collection $guidelines): string
     {
         return str_replace("\n\n\n\n", "\n\n", trim($guidelines
-            ->filter(fn ($guideline) => ! empty(trim($guideline['content'])))
-            ->map(fn ($guideline, $key) => "\n=== {$key} rules ===\n\n".trim($guideline['content']))
+            ->filter(fn ($guideline): bool => ! empty(trim($guideline['content'])))
+            ->map(fn ($guideline, $key): string => "\n=== {$key} rules ===\n\n".trim($guideline['content']))
             ->join("\n\n"))
         );
     }
@@ -110,7 +110,7 @@ class GuidelineComposer
         // $phpMajorMinor = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
         // $guidelines->put('php/v'.$phpMajorMinor, $this->guidelinesDir('php/'.$phpMajorMinor));
 
-        if (str_contains(config('app.url'), '.test') && $this->herd->isInstalled()) {
+        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled()) {
             $guidelines->put('herd', $this->guideline('herd/core'));
         }
 
@@ -143,7 +143,7 @@ class GuidelineComposer
             ); // Always add package core
             $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
             foreach ($packageGuidelines as $guideline) {
-                $suffix = $guideline['name'] == 'core' ? '' : '/'.$guideline['name'];
+                $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
                 $guidelines->put(
                     $guidelineDir.'/v'.$package->majorVersion().$suffix,
                     $guideline
@@ -162,11 +162,12 @@ class GuidelineComposer
             if ($pathsUsed->contains($guideline['path'])) {
                 continue; // Don't include this twice if it's an override
             }
+
             $guidelines->put('.ai/'.$guideline['name'], $guideline);
         }
 
         return $guidelines
-            ->where(fn (array $guideline) => ! empty(trim($guideline['content'])));
+            ->where(fn (array $guideline): bool => ! empty(trim((string) $guideline['content'])));
     }
 
     /**
@@ -175,7 +176,7 @@ class GuidelineComposer
     protected function shouldExcludePackage(string $packageName): bool
     {
         foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
-            if (in_array($packageName, $excludedPackages)) {
+            if (in_array($packageName, $excludedPackages, true)) {
                 $priorityEnum = Packages::from($priorityPackage);
                 if ($this->roster->uses($priorityEnum)) {
                     return true;
@@ -187,7 +188,6 @@ class GuidelineComposer
     }
 
     /**
-     * @param string $dirPath
      * @return array<array{content: string, name: string, path: ?string, custom: bool}>
      */
     protected function guidelinesDir(string $dirPath): array
@@ -201,15 +201,14 @@ class GuidelineComposer
                 ->files()
                 ->in($dirPath)
                 ->name('*.blade.php');
-        } catch (DirectoryNotFoundException $e) {
+        } catch (DirectoryNotFoundException) {
             return [];
         }
 
-        return array_map(fn ($file) => $this->guideline($file->getRealPath()), iterator_to_array($finder));
+        return array_map(fn (\Symfony\Component\Finder\SplFileInfo $file): array => $this->guideline($file->getRealPath()), iterator_to_array($finder));
     }
 
     /**
-     * @param string $path
      * @return array{content: string, name: string, path: ?string, custom: bool}
      */
     protected function guideline(string $path): array
@@ -235,6 +234,7 @@ class GuidelineComposer
         ]);
         $rendered = str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
+
         $this->storedSnippets = []; // Clear for next use
 
         return [
@@ -249,9 +249,9 @@ class GuidelineComposer
 
     private function processBoostSnippets(string $content): string
     {
-        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function ($matches) {
+        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function ($matches): string {
             $name = $matches['name'];
-            $lang = ! empty($matches['lang']) ? $matches['lang'] : 'html';
+            $lang = empty($matches['lang']) ? 'html' : $matches['lang'];
             $snippetContent = $matches['content'];
 
             $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
@@ -265,17 +265,15 @@ class GuidelineComposer
     protected function prependPackageGuidelinePath(string $path): string
     {
         $path = preg_replace('/\.blade\.php$/', '', $path);
-        $path = str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../.ai/'.$path.'.blade.php');
 
-        return $path;
+        return str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../.ai/'.$path.'.blade.php');
     }
 
     protected function prependUserGuidelinePath(string $path): string
     {
         $path = preg_replace('/\.blade\.php$/', '', $path);
-        $path = str_replace('/', DIRECTORY_SEPARATOR, $this->customGuidelinePath($path.'.blade.php'));
 
-        return $path;
+        return str_replace('/', DIRECTORY_SEPARATOR, $this->customGuidelinePath($path.'.blade.php'));
     }
 
     protected function guidelinePath(string $path): ?string

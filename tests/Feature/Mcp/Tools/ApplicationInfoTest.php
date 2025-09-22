@@ -10,7 +10,7 @@ use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 
-test('it returns application info with packages', function () {
+test('it returns application info with packages', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '2.0.0'),
@@ -53,7 +53,7 @@ test('it returns application info with packages', function () {
         ]);
 });
 
-test('it returns application info with no packages', function () {
+test('it returns application info with no packages', function (): void {
     $roster = Mockery::mock(Roster::class);
     $roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
 
