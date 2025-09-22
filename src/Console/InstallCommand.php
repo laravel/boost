@@ -567,7 +567,6 @@ class InstallCommand extends Command
      */
     private function isRunningInWsl(): bool
     {
-
         // Check for WSL-specific environment variables.
         if (! empty(getenv('WSL_DISTRO_NAME')) || ! empty(getenv('IS_WSL'))) {
             return true;

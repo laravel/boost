@@ -38,12 +38,12 @@ abstract class CodeEnvironment
         return $this->useAbsolutePathForMcp;
     }
 
-    public function getPhpPath($forceAbsolutePath = false): string
+    public function getPhpPath(bool $forceAbsolutePath = false): string
     {
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
     }
 
-    public function getArtisanPath($forceAbsolutePath = false): string
+    public function getArtisanPath(bool $forceAbsolutePath = false): string
     {
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? base_path('artisan') : 'artisan';
     }

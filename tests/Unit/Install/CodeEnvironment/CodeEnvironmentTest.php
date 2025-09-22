@@ -409,3 +409,13 @@ test('installFileMcp works with existing config file using JSON 5', function ():
         ->and($capturedPath)->toBe($vscode->mcpConfigPath())
         ->and($capturedContent)->toBe(fixture('mcp-expected.json5'));
 });
+
+test('getPhpPath uses absolute paths when forceAbsolutePath is true', function () {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+    expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
+});
+
+test('getPhpPath maintains default behavior when forceAbsolutePath is false', function () {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+    expect($environment->getPhpPath(false))->toBe('php');
+});
