@@ -37,16 +37,14 @@ class GuidelineComposer
      *
      * @var array<int, Packages>
      * */
-    protected array $mustBeDirect;
+    protected array $mustBeDirect = [
+        Packages::MCP,
+    ];
 
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->packagePriorities = [
             Packages::PEST->value => [Packages::PHPUNIT->value],
-        ];
-
-        $this->mustBeDirect = [
-            Packages::MCP,
         ];
 
         $this->config = new GuidelineConfig;
@@ -197,12 +195,7 @@ class GuidelineComposer
                 }
             }
         }
-
-        if ($package->indirect() && in_array($package->package(), $this->mustBeDirect, true)) {
-            return true;
-        }
-
-        return false;
+        return $package->indirect() && in_array($package->package(), $this->mustBeDirect, true);
     }
 
     /**
