@@ -38,7 +38,7 @@ test('Cursor returns relative artisan path', function (): void {
     expect($cursor->getArtisanPath())->toBe('artisan');
 });
 
-test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', function () {
+test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -47,7 +47,7 @@ test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', fu
         ->and($cursor->getArtisanPath(true))->not()->toBe('artisan');
 });
 
-test('CodeEnvironment maintains relative paths when forceAbsolutePath is false', function () {
+test('CodeEnvironment maintains relative paths when forceAbsolutePath is false', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -55,7 +55,7 @@ test('CodeEnvironment maintains relative paths when forceAbsolutePath is false',
     expect($cursor->getArtisanPath(false))->toBe('artisan');
 });
 
-test('PhpStorm paths remain absolute regardless of forceAbsolutePath parameter', function () {
+test('PhpStorm paths remain absolute regardless of forceAbsolutePath parameter', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $phpStorm = new PhpStorm($strategyFactory);
 
