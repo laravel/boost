@@ -487,11 +487,21 @@ class InstallCommand extends Command
             $this->output->write("  {$ideDisplay}... ");
             $results = [];
 
-            $php = $mcpClient->getPhpPath();
             if ($this->shouldInstallMcp()) {
+                $inWsl = $this->isRunningInWsl();
+                $mcp = array_filter([
+                    'laravel-boost',
+                    $inWsl ? 'wsl' : false,
+                    $mcpClient->getPhpPath($inWsl),
+                    $mcpClient->getArtisanPath($inWsl),
+                    'boost:mcp',
+                ]);
                 try {
-                    $artisan = $mcpClient->getArtisanPath();
-                    $result = $mcpClient->installMcp('laravel-boost', $php, [$artisan, 'boost:mcp']);
+                    $result = $mcpClient->installMcp(
+                        array_shift($mcp),
+                        array_shift($mcp),
+                        $mcp
+                    );
 
                     if ($result) {
                         $results[] = $this->greenTick.' Boost';
@@ -507,6 +517,7 @@ class InstallCommand extends Command
 
             // Install Herd MCP if enabled
             if ($this->shouldInstallHerdMcp()) {
+                $php = $mcpClient->getPhpPath();
                 try {
                     $result = $mcpClient->installMcp(
                         key: 'herd',
@@ -551,5 +562,15 @@ class InstallCommand extends Command
 
         /** @phpstan-ignore-next-line  */
         return $actuallyUsing && is_dir(base_path('lang'));
+    }
+
+    /**
+     * Are we running inside a Windows Subsystem for Linux (WSL) environment?
+     * This differentiates between a regular Linux installation and a WSL.
+     */
+    private function isRunningInWsl(): bool
+    {
+        // Check for WSL-specific environment variables.
+        return ! empty(getenv('WSL_DISTRO_NAME')) || ! empty(getenv('IS_WSL'));
     }
 }

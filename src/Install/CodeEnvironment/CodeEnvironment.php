@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
@@ -39,14 +38,14 @@ abstract class CodeEnvironment
         return $this->useAbsolutePathForMcp;
     }
 
-    public function getPhpPath(): string
+    public function getPhpPath(bool $forceAbsolutePath = false): string
     {
-        return $this->useAbsolutePathForMcp() ? PHP_BINARY : 'php';
+        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
     }
 
-    public function getArtisanPath(): string
+    public function getArtisanPath(bool $forceAbsolutePath = false): string
     {
-        return $this->useAbsolutePathForMcp() ? base_path('artisan') : 'artisan';
+        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? base_path('artisan') : 'artisan';
     }
 
     /**
