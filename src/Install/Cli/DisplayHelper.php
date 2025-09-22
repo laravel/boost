@@ -51,12 +51,12 @@ class DisplayHelper
      */
     public static function datatable(array $data, int $maxWidth = 80): void
     {
-        if (! $data) {
+        if ($data === []) {
             return;
         }
 
         $columnWidths = self::calculateColumnWidths($data);
-        $columnWidths = array_map(fn ($width) => $width + self::CELL_PADDING, $columnWidths);
+        $columnWidths = array_map(fn (int $width): int => $width + self::CELL_PADDING, $columnWidths);
 
         [$leftChar, $rightChar, $joinChar] = self::getBorderChars(self::BORDER_TOP);
         echo self::buildBorder($columnWidths, $leftChar, $rightChar, $joinChar).PHP_EOL;
@@ -69,6 +69,7 @@ class DisplayHelper
                 [$leftChar, $rightChar, $joinChar] = self::getBorderChars(self::BORDER_MIDDLE);
                 echo self::buildBorder($columnWidths, $leftChar, $rightChar, $joinChar).PHP_EOL;
             }
+
             $rowCount++;
         }
 
@@ -81,7 +82,7 @@ class DisplayHelper
      */
     public static function grid(array $items, int $maxWidth = 80): void
     {
-        if (empty($items)) {
+        if ($items === []) {
             return;
         }
 
@@ -104,6 +105,7 @@ class DisplayHelper
                 [$leftChar, $rightChar, $joinChar] = self::getBorderChars(self::BORDER_MIDDLE);
                 echo self::SPACE.self::buildBorder($cellWidths, $leftChar, $rightChar, $joinChar).PHP_EOL;
             }
+
             $rowCount++;
         }
 
@@ -150,9 +152,8 @@ class DisplayHelper
                 $border .= $joinChar;
             }
         }
-        $border .= $rightChar;
 
-        return $border;
+        return $border.$rightChar;
     }
 
     /**
@@ -181,18 +182,16 @@ class DisplayHelper
         $line = self::UNICODE_VERTICAL;
 
         $cells = array_map(
-            fn ($index) => self::formatGridCell($row[$index] ?? '', $cellWidth),
+            fn (int $index): string => self::formatGridCell($row[$index] ?? '', $cellWidth),
             range(0, $cellsPerRow - 1)
         );
 
-        $line .= implode(self::UNICODE_VERTICAL, $cells).self::UNICODE_VERTICAL;
-
-        return $line;
+        return $line.(implode(self::UNICODE_VERTICAL, $cells).self::UNICODE_VERTICAL);
     }
 
     private static function formatGridCell(string $item, int $cellWidth): string
     {
-        if (! $item) {
+        if ($item === '' || $item === '0') {
             return str_repeat(self::SPACE, $cellWidth);
         }
 

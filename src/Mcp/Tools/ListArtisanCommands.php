@@ -36,7 +36,7 @@ class ListArtisanCommands extends Tool
         }
 
         // Sort alphabetically by name for determinism.
-        usort($commandList, fn ($firstCommand, $secondCommand) => strcmp($firstCommand['name'], $secondCommand['name']));
+        usort($commandList, fn (array $firstCommand, array $secondCommand): int => strcmp((string) $firstCommand['name'], (string) $secondCommand['name']));
 
         return Response::json($commandList);
     }

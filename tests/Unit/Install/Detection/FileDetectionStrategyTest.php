@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\Detection\FileDetectionStrategy;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->strategy = new FileDetectionStrategy;
     $this->tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($this->tempDir);
 });
 
-afterEach(function () {
+afterEach(function (): void {
     if (is_dir($this->tempDir) && str_contains($this->tempDir, sys_get_temp_dir())) {
         removeDirectoryForFileTests($this->tempDir);
     }
 });
 
-test('detects existing file', function () {
+test('detects existing file', function (): void {
     file_put_contents($this->tempDir.'/test.txt', 'test content');
 
     $result = $this->strategy->detect([
@@ -27,7 +27,7 @@ test('detects existing file', function () {
     expect($result)->toBeTrue();
 });
 
-test('fails for non existent file', function () {
+test('fails for non existent file', function (): void {
     $result = $this->strategy->detect([
         'files' => ['non_existent.txt'],
         'basePath' => $this->tempDir,
@@ -36,7 +36,7 @@ test('fails for non existent file', function () {
     expect($result)->toBeFalse();
 });
 
-test('detects multiple files first exists', function () {
+test('detects multiple files first exists', function (): void {
     file_put_contents($this->tempDir.'/first.txt', 'content');
 
     $result = $this->strategy->detect([
@@ -47,7 +47,7 @@ test('detects multiple files first exists', function () {
     expect($result)->toBeTrue();
 });
 
-test('detects multiple files second exists', function () {
+test('detects multiple files second exists', function (): void {
     file_put_contents($this->tempDir.'/second.txt', 'content');
 
     $result = $this->strategy->detect([
@@ -58,7 +58,7 @@ test('detects multiple files second exists', function () {
     expect($result)->toBeTrue();
 });
 
-test('fails when no files exist', function () {
+test('fails when no files exist', function (): void {
     $result = $this->strategy->detect([
         'files' => ['missing1.txt', 'missing2.txt'],
         'basePath' => $this->tempDir,
@@ -67,7 +67,7 @@ test('fails when no files exist', function () {
     expect($result)->toBeFalse();
 });
 
-test('returns false when no files config', function () {
+test('returns false when no files config', function (): void {
     $result = $this->strategy->detect([
         'basePath' => $this->tempDir,
     ]);
@@ -75,7 +75,7 @@ test('returns false when no files config', function () {
     expect($result)->toBeFalse();
 });
 
-test('uses current directory when no base path', function () {
+test('uses current directory when no base path', function (): void {
     // This test creates a file in the current working directory
     $currentDir = getcwd();
     $testFile = $currentDir.'/temp_test_file.txt';
@@ -92,7 +92,7 @@ test('uses current directory when no base path', function () {
     }
 });
 
-test('detects files in subdirectories', function () {
+test('detects files in subdirectories', function (): void {
     mkdir($this->tempDir.'/subdir');
     file_put_contents($this->tempDir.'/subdir/nested.txt', 'content');
 
@@ -104,7 +104,7 @@ test('detects files in subdirectories', function () {
     expect($result)->toBeTrue();
 });
 
-test('handles empty files array', function () {
+test('handles empty files array', function (): void {
     $result = $this->strategy->detect([
         'files' => [],
         'basePath' => $this->tempDir,
@@ -113,7 +113,7 @@ test('handles empty files array', function () {
     expect($result)->toBeFalse();
 });
 
-test('detects files with special characters', function () {
+test('detects files with special characters', function (): void {
     file_put_contents($this->tempDir.'/file-with_special.chars.txt', 'content');
 
     $result = $this->strategy->detect([
@@ -135,5 +135,6 @@ function removeDirectoryForFileTests(string $dir): void
         $path = $dir.DIRECTORY_SEPARATOR.$file;
         is_dir($path) ? removeDirectoryForFileTests($path) : unlink($path);
     }
+
     rmdir($dir);
 }

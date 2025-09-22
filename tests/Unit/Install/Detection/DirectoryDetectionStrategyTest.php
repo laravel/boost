@@ -5,19 +5,19 @@ declare(strict_types=1);
 use Laravel\Boost\Install\Detection\DirectoryDetectionStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->strategy = new DirectoryDetectionStrategy;
     $this->tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($this->tempDir);
 });
 
-afterEach(function () {
+afterEach(function (): void {
     if (is_dir($this->tempDir)) {
         removeDirectory($this->tempDir);
     }
 });
 
-test('detects existing directory', function () {
+test('detects existing directory', function (): void {
     $testDir = $this->tempDir.'/test_app';
     mkdir($testDir);
 
@@ -29,7 +29,7 @@ test('detects existing directory', function () {
     expect($result)->toBeTrue();
 });
 
-test('fails for non existent directory', function () {
+test('fails for non existent directory', function (): void {
     $result = $this->strategy->detect([
         'paths' => ['non_existent'],
         'basePath' => $this->tempDir,
@@ -38,7 +38,7 @@ test('fails for non existent directory', function () {
     expect($result)->toBeFalse();
 });
 
-test('detects absolute path', function () {
+test('detects absolute path', function (): void {
     $testDir = $this->tempDir.'/absolute_test';
     mkdir($testDir);
 
@@ -49,7 +49,7 @@ test('detects absolute path', function () {
     expect($result)->toBeTrue();
 });
 
-test('detects multiple paths first exists', function () {
+test('detects multiple paths first exists', function (): void {
     $testDir = $this->tempDir.'/first_exists';
     mkdir($testDir);
 
@@ -61,7 +61,7 @@ test('detects multiple paths first exists', function () {
     expect($result)->toBeTrue();
 });
 
-test('detects multiple paths second exists', function () {
+test('detects multiple paths second exists', function (): void {
     $testDir = $this->tempDir.'/second_exists';
     mkdir($testDir);
 
@@ -73,7 +73,7 @@ test('detects multiple paths second exists', function () {
     expect($result)->toBeTrue();
 });
 
-test('fails when no paths exist', function () {
+test('fails when no paths exist', function (): void {
     $result = $this->strategy->detect([
         'paths' => ['missing1', 'missing2'],
         'basePath' => $this->tempDir,
@@ -82,7 +82,7 @@ test('fails when no paths exist', function () {
     expect($result)->toBeFalse();
 });
 
-test('returns false when no paths config', function () {
+test('returns false when no paths config', function (): void {
     $result = $this->strategy->detect([
         'basePath' => $this->tempDir,
     ]);
@@ -90,7 +90,7 @@ test('returns false when no paths config', function () {
     expect($result)->toBeFalse();
 });
 
-test('uses current directory when no base path', function () {
+test('uses current directory when no base path', function (): void {
     // This test creates a directory in the current working directory
     $currentDir = getcwd();
     $testDir = $currentDir.'/temp_test_dir';
@@ -107,7 +107,7 @@ test('uses current directory when no base path', function () {
     }
 });
 
-test('detects with glob pattern', function () {
+test('detects with glob pattern', function (): void {
     // Create test directories with patterns
     mkdir($this->tempDir.'/app_v1');
     mkdir($this->tempDir.'/app_v2');
@@ -120,7 +120,7 @@ test('detects with glob pattern', function () {
     expect($result)->toBeTrue();
 });
 
-test('fails with glob pattern no matches', function () {
+test('fails with glob pattern no matches', function (): void {
     $result = $this->strategy->detect([
         'paths' => ['nonexistent_*'],
         'basePath' => $this->tempDir,
@@ -129,7 +129,7 @@ test('fails with glob pattern no matches', function () {
     expect($result)->toBeFalse();
 });
 
-test('expands tilde home directory', function () {
+test('expands tilde home directory', function (): void {
     // Mock HOME environment variable
     $originalHome = getenv('HOME');
     putenv('HOME='.$this->tempDir);
@@ -152,7 +152,7 @@ test('expands tilde home directory', function () {
     }
 });
 
-test('expands windows environment variables', function () {
+test('expands windows environment variables', function (): void {
     // Mock environment variable for Windows
     putenv('TESTVAR='.$this->tempDir);
     mkdir($this->tempDir.'/windows_test');
@@ -168,7 +168,7 @@ test('expands windows environment variables', function () {
     }
 });
 
-test('handles missing environment variable on windows', function () {
+test('handles missing environment variable on windows', function (): void {
     $result = $this->strategy->detect([
         'paths' => ['%NONEXISTENT%/test'],
     ], Platform::Windows);
@@ -176,10 +176,9 @@ test('handles missing environment variable on windows', function () {
     expect($result)->toBeFalse();
 });
 
-test('identifies absolute paths correctly', function () {
+test('identifies absolute paths correctly', function (): void {
     $reflectionClass = new \ReflectionClass($this->strategy);
     $isAbsolutePathMethod = $reflectionClass->getMethod('isAbsolutePath');
-    $isAbsolutePathMethod->setAccessible(true);
 
     // Unix absolute paths
     expect($isAbsolutePathMethod->invoke($this->strategy, '/usr/local/bin'))->toBeTrue();
@@ -205,5 +204,6 @@ function removeDirectory(string $dir): void
         $path = $dir.DIRECTORY_SEPARATOR.$file;
         is_dir($path) ? removeDirectory($path) : unlink($path);
     }
+
     rmdir($dir);
 }

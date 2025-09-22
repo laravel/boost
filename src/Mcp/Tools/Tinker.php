@@ -61,16 +61,16 @@ class Tinker extends Tool
 
             // If a result is an object, include the class name
             if (is_object($result)) {
-                $response['class'] = get_class($result);
+                $response['class'] = $result::class;
             }
 
             return Response::json($response);
-        } catch (Throwable $e) {
+        } catch (Throwable $throwable) {
             return Response::json([
-                'error' => $e->getMessage(),
-                'type' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+                'error' => $throwable->getMessage(),
+                'type' => $throwable::class,
+                'file' => $throwable->getFile(),
+                'line' => $throwable->getLine(),
             ]);
 
         } finally {

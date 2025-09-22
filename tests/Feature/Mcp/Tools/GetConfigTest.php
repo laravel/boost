@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Laravel\Boost\Mcp\Tools\GetConfig;
 use Laravel\Mcp\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('test.key', 'test_value');
     config()->set('nested.config.key', 'nested_value');
     config()->set('app.name', 'Test App');
 });
 
-test('it returns config value when key exists', function () {
+test('it returns config value when key exists', function (): void {
     $tool = new GetConfig;
     $response = $tool->handle(new Request(['key' => 'test.key']));
 
@@ -20,7 +20,7 @@ test('it returns config value when key exists', function () {
         ->toolTextContains('"key": "test.key"', '"value": "test_value"');
 });
 
-test('it returns nested config value', function () {
+test('it returns nested config value', function (): void {
     $tool = new GetConfig;
     $response = $tool->handle(new Request(['key' => 'nested.config.key']));
 
@@ -29,7 +29,7 @@ test('it returns nested config value', function () {
         ->toolTextContains('"key": "nested.config.key"', '"value": "nested_value"');
 });
 
-test('it returns error when config key does not exist', function () {
+test('it returns error when config key does not exist', function (): void {
     $tool = new GetConfig;
     $response = $tool->handle(new Request(['key' => 'nonexistent.key']));
 
@@ -38,7 +38,7 @@ test('it returns error when config key does not exist', function () {
         ->toolTextContains("Config key 'nonexistent.key' not found.");
 });
 
-test('it works with built-in Laravel config keys', function () {
+test('it works with built-in Laravel config keys', function (): void {
     $tool = new GetConfig;
     $response = $tool->handle(new Request(['key' => 'app.name']));
 

@@ -10,7 +10,7 @@ use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 
-test('it searches documentation successfully', function () {
+test('it searches documentation successfully', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '2.0.0'),
@@ -30,19 +30,17 @@ test('it searches documentation successfully', function () {
         ->toolHasNoError()
         ->toolTextContains('Documentation search results');
 
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://boost.laravel.com/api/docs' &&
-               $request->data()['queries'] === ['authentication', 'testing'] &&
-               $request->data()['packages'] === [
-                   ['name' => 'laravel/framework', 'version' => '11.x'],
-                   ['name' => 'pestphp/pest', 'version' => '2.x'],
-               ] &&
-               $request->data()['token_limit'] === 10000 &&
-               $request->data()['format'] === 'markdown';
-    });
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://boost.laravel.com/api/docs' &&
+           $request->data()['queries'] === ['authentication', 'testing'] &&
+           $request->data()['packages'] === [
+               ['name' => 'laravel/framework', 'version' => '11.x'],
+               ['name' => 'pestphp/pest', 'version' => '2.x'],
+           ] &&
+           $request->data()['token_limit'] === 10000 &&
+           $request->data()['format'] === 'markdown');
 });
 
-test('it handles API error response', function () {
+test('it handles API error response', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
@@ -62,7 +60,7 @@ test('it handles API error response', function () {
         ->toolTextContains('Failed to search documentation: API Error');
 });
 
-test('it filters empty queries', function () {
+test('it filters empty queries', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -78,15 +76,13 @@ test('it filters empty queries', function () {
     expect($response)->isToolResult()
         ->toolHasNoError();
 
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://boost.laravel.com/api/docs' &&
-               $request->data()['queries'] === ['test'] &&
-               empty($request->data()['packages']) &&
-               $request->data()['token_limit'] === 10000;
-    });
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://boost.laravel.com/api/docs' &&
+           $request->data()['queries'] === ['test'] &&
+           empty($request->data()['packages']) &&
+           $request->data()['token_limit'] === 10000);
 });
 
-test('it formats package data correctly', function () {
+test('it formats package data correctly', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.5.1'),
@@ -105,15 +101,13 @@ test('it formats package data correctly', function () {
     expect($response)->isToolResult()
         ->toolHasNoError();
 
-    Http::assertSent(function ($request) {
-        return $request->data()['packages'] === [
-            ['name' => 'laravel/framework', 'version' => '11.x'],
-            ['name' => 'livewire/livewire', 'version' => '3.x'],
-        ] && $request->data()['token_limit'] === 10000;
-    });
+    Http::assertSent(fn ($request): bool => $request->data()['packages'] === [
+        ['name' => 'laravel/framework', 'version' => '11.x'],
+        ['name' => 'livewire/livewire', 'version' => '3.x'],
+    ] && $request->data()['token_limit'] === 10000);
 });
 
-test('it handles empty results', function () {
+test('it handles empty results', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -131,7 +125,7 @@ test('it handles empty results', function () {
         ->toolTextContains('Empty response');
 });
 
-test('it uses custom token_limit when provided', function () {
+test('it uses custom token_limit when provided', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -146,12 +140,10 @@ test('it uses custom token_limit when provided', function () {
 
     expect($response)->isToolResult()->toolHasNoError();
 
-    Http::assertSent(function ($request) {
-        return $request->data()['token_limit'] === 5000;
-    });
+    Http::assertSent(fn ($request): bool => $request->data()['token_limit'] === 5000);
 });
 
-test('it caps token_limit at maximum of 1000000', function () {
+test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -166,7 +158,5 @@ test('it caps token_limit at maximum of 1000000', function () {
 
     expect($response)->isToolResult()->toolHasNoError();
 
-    Http::assertSent(function ($request) {
-        return $request->data()['token_limit'] === 1000000;
-    });
+    Http::assertSent(fn ($request): bool => $request->data()['token_limit'] === 1000000);
 });

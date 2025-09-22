@@ -5,13 +5,13 @@ use Laravel\Boost\Mcp\Tools\GetConfig;
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Response;
 
-test('can execute tool in subprocess', function () {
+test('can execute tool in subprocess', function (): void {
     // Create a mock that overrides buildCommand to work with testbench
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
         ->once()
-        ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
 
     $response = $executor->execute(GetConfig::class, ['key' => 'app.name']);
 
@@ -30,7 +30,7 @@ test('can execute tool in subprocess', function () {
     expect($textContent)->toContain('Laravel');
 });
 
-test('rejects unregistered tools', function () {
+test('rejects unregistered tools', function (): void {
     $executor = app(ToolExecutor::class);
     $response = $executor->execute('NonExistentToolClass');
 
@@ -38,11 +38,11 @@ test('rejects unregistered tools', function () {
         ->and($response->isError())->toBeTrue();
 });
 
-test('subprocess proves fresh process isolation', function () {
+test('subprocess proves fresh process isolation', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
 
     $response1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
     $response2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
@@ -58,18 +58,18 @@ test('subprocess proves fresh process isolation', function () {
         ->and($pid1)->not()->toBe($pid2);
 });
 
-test('subprocess sees modified autoloaded code changes', function () {
+test('subprocess sees modified autoloaded code changes', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
 
     // Path to the GetConfig tool that we'll temporarily modify
     // TODO: Improve for parallelisation
     $toolPath = dirname(__DIR__, 3).'/src/Mcp/Tools/GetConfig.php';
     $originalContent = file_get_contents($toolPath);
 
-    $cleanup = function () use ($toolPath, $originalContent) {
+    $cleanup = function () use ($toolPath, $originalContent): void {
         file_put_contents($toolPath, $originalContent);
     };
 
@@ -112,7 +112,7 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
         'use Symfony\Component\Console\Output\BufferedOutput; '.
         // Bootstrap testbench like all.php does
         '$app = Testbench::createFromConfig(new TestbenchConfig([]), options: ["enables_package_discoveries" => false]); '.
-        'Illuminate\Container\Container::setInstance($app); '.
+        (\Illuminate\Container\Container::class.'::setInstance($app); ').
         '$kernel = $app->make("Illuminate\Contracts\Console\Kernel"); '.
         '$kernel->bootstrap(); '.
         // Register the ExecuteToolCommand
@@ -131,12 +131,12 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
     return [PHP_BINARY, '-r', $testScript];
 }
 
-test('respects custom timeout parameter', function () {
+test('respects custom timeout parameter', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
 
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn ($toolClass, $arguments) => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
 
     // Test with custom timeout - should succeed with fast code
     $response = $executor->execute(Tinker::class, [
@@ -147,13 +147,12 @@ test('respects custom timeout parameter', function () {
     expect($response->isError())->toBeFalse();
 });
 
-test('clamps timeout values correctly', function () {
+test('clamps timeout values correctly', function (): void {
     $executor = new ToolExecutor;
 
     // Test timeout clamping using reflection to access protected method
     $reflection = new ReflectionClass($executor);
     $method = $reflection->getMethod('getTimeout');
-    $method->setAccessible(true);
 
     // Test default
     expect($method->invoke($executor, []))->toBe(180);

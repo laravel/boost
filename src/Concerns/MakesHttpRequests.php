@@ -17,8 +17,8 @@ trait MakesHttpRequests
         ]);
 
         // Disable SSL verification for local development URLs and testing
-        if (app()->environment(['local', 'testing']) || str_contains(config('boost.hosted.api_url', ''), '.test')) {
-            $client = $client->withoutVerifying();
+        if (app()->environment(['local', 'testing']) || str_contains((string) config('boost.hosted.api_url', ''), '.test')) {
+            return $client->withoutVerifying();
         }
 
         return $client;

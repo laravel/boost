@@ -23,7 +23,7 @@ class SearchDocs extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Search for up-to-date version-specific documentation related to this project and its packages. This tool will search Laravel hosted documentation based on the packages installed and is perfect for all Laravel ecosystem packages. Laravel, Inertia, Pest, Livewire, Filament, Nova, Tailwind, and more. You must use this tool to search for Laravel-ecosystem docs before using other approaches. The results provided are for this project\'s package version and does not cover all versions of the package.';
+    protected string $description = "Search for up-to-date version-specific documentation related to this project and its packages. This tool will search Laravel hosted documentation based on the packages installed and is perfect for all Laravel ecosystem packages. Laravel, Inertia, Pest, Livewire, Filament, Nova, Tailwind, and more. You must use this tool to search for Laravel-ecosystem docs before using other approaches. The results provided are for this project's package version and does not cover all versions of the package.";
 
     /**
      * Get the tool's input schema.
@@ -55,7 +55,7 @@ class SearchDocs extends Tool
 
         $queries = array_filter(
             array_map('trim', $request->get('queries')),
-            fn ($query) => $query !== '' && $query !== '*'
+            fn (string $query): bool => $query !== '' && $query !== '*'
         );
 
         try {
@@ -63,10 +63,10 @@ class SearchDocs extends Tool
 
             // Only search in specific packages
             if ($packagesFilter) {
-                $packagesCollection = $packagesCollection->filter(fn (Package $package) => in_array($package->rawName(), $packagesFilter, true));
+                $packagesCollection = $packagesCollection->filter(fn (Package $package): bool => in_array($package->rawName(), $packagesFilter, true));
             }
 
-            $packages = $packagesCollection->map(function (Package $package) {
+            $packages = $packagesCollection->map(function (Package $package): array {
                 $name = $package->rawName();
                 $version = $package->majorVersion().'.x';
 
@@ -77,8 +77,8 @@ class SearchDocs extends Tool
             });
 
             $packages = $packages->values()->toArray();
-        } catch (Throwable $e) {
-            return Response::error('Failed to get packages: '.$e->getMessage());
+        } catch (Throwable $throwable) {
+            return Response::error('Failed to get packages: '.$throwable->getMessage());
         }
 
         $tokenLimit = $request->get('token_limit') ?? 10000;
@@ -97,8 +97,8 @@ class SearchDocs extends Tool
             if (! $response->successful()) {
                 return Response::error('Failed to search documentation: '.$response->body());
             }
-        } catch (Throwable $e) {
-            return Response::error('HTTP request failed: '.$e->getMessage());
+        } catch (Throwable $throwable) {
+            return Response::error('HTTP request failed: '.$throwable->getMessage());
         }
 
         return Response::text($response->body());

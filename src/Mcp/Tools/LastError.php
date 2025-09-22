@@ -27,7 +27,7 @@ class LastError extends Tool
     {
         // Register the listener only once per PHP process.
         if (! self::$listenerRegistered) {
-            Log::listen(function (MessageLogged $event) {
+            Log::listen(function (MessageLogged $event): void {
                 if ($event->level === 'error') {
                     Cache::forever('boost:last_error', [
                         'timestamp' => now()->toDateTimeString(),

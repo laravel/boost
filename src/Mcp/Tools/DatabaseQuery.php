@@ -46,6 +46,7 @@ class DatabaseQuery extends Tool
         if (! $token) {
             return Response::error('Please pass a valid query');
         }
+
         $firstWord = strtoupper($token);
 
         // Allowed read-only commands.
@@ -63,10 +64,8 @@ class DatabaseQuery extends Tool
         $isReadOnly = in_array($firstWord, $allowList, true);
 
         // Additional validation for WITH … SELECT.
-        if ($firstWord === 'WITH') {
-            if (! preg_match('/with\s+.*select\b/i', $query)) {
-                $isReadOnly = false;
-            }
+        if ($firstWord === 'WITH' && ! preg_match('/with\s+.*select\b/i', $query)) {
+            $isReadOnly = false;
         }
 
         if (! $isReadOnly) {
@@ -79,8 +78,8 @@ class DatabaseQuery extends Tool
             return Response::json(
                 DB::connection($connectionName)->select($query)
             );
-        } catch (Throwable $e) {
-            return Response::error('Query failed: '.$e->getMessage());
+        } catch (Throwable $throwable) {
+            return Response::error('Query failed: '.$throwable->getMessage());
         }
     }
 }

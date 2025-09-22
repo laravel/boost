@@ -53,12 +53,12 @@ class CallToolWithExecutor implements Errable, Method
         }
 
         try {
-            $response = $this->executor->execute(get_class($tool), $arguments);
-        } catch (Throwable $e) {
-            $response = Response::error('Tool execution error: '.$e->getMessage());
+            $response = $this->executor->execute($tool::class, $arguments);
+        } catch (Throwable $throwable) {
+            $response = Response::error('Tool execution error: '.$throwable->getMessage());
         }
 
-        return $this->toJsonRpcResponse($request, $response, fn ($responses) => [
+        return $this->toJsonRpcResponse($request, $response, fn ($responses): array => [
             'content' => $responses->map(fn ($response) => $response->content()->toTool($tool))->all(),
             'isError' => $responses->contains(fn ($response) => $response->isError()),
         ]);

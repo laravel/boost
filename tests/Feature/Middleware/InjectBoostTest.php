@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->app['view']->addNamespace('test', __DIR__.'/../../fixtures');
 });
 
@@ -27,10 +27,8 @@ function createMiddlewareResponse($response): SymfonyResponse
     return $middleware->handle($request, $next);
 }
 
-it('preserves the original view response type', function () {
-    Route::get('injection-test', function () {
-        return view('test::injection-test');
-    })->middleware(InjectBoost::class);
+it('preserves the original view response type', function (): void {
+    Route::get('injection-test', fn (): \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory => view('test::injection-test'))->middleware(InjectBoost::class);
 
     $response = $this->get('injection-test');
 
@@ -39,16 +37,16 @@ it('preserves the original view response type', function () {
         ->assertSee('Browser logger active (MCP server detected).');
 });
 
-it('does not inject for special response types', function ($responseType, $responseFactory) {
+it('does not inject for special response types', function ($responseType, $responseFactory): void {
     $response = $responseFactory();
     $result = createMiddlewareResponse($response);
 
     expect($result)->toBeInstanceOf($responseType);
 })->with([
-    'streamed' => [StreamedResponse::class, fn () => new StreamedResponse],
-    'json' => [JsonResponse::class, fn () => new JsonResponse(['data' => 'test'])],
-    'redirect' => [RedirectResponse::class, fn () => new RedirectResponse('http://example.com')],
-    'binary' => [BinaryFileResponse::class, function () {
+    'streamed' => [StreamedResponse::class, fn (): \Symfony\Component\HttpFoundation\StreamedResponse => new StreamedResponse],
+    'json' => [JsonResponse::class, fn (): \Symfony\Component\HttpFoundation\JsonResponse => new JsonResponse(['data' => 'test'])],
+    'redirect' => [RedirectResponse::class, fn (): \Symfony\Component\HttpFoundation\RedirectResponse => new RedirectResponse('http://example.com')],
+    'binary' => [BinaryFileResponse::class, function (): \Symfony\Component\HttpFoundation\BinaryFileResponse {
         $tempFile = tempnam(sys_get_temp_dir(), 'test');
         file_put_contents($tempFile, 'test content');
 
@@ -56,7 +54,7 @@ it('does not inject for special response types', function ($responseType, $respo
     }],
 ]);
 
-it('does not inject when conditions are not met', function ($scenario, $responseFactory, $assertion) {
+it('does not inject when conditions are not met', function ($scenario, $responseFactory, $assertion): void {
     $response = $responseFactory();
     $result = createMiddlewareResponse($response);
 
@@ -65,22 +63,22 @@ it('does not inject when conditions are not met', function ($scenario, $response
     'non-html content type' => [
         'scenario',
         fn () => (new Response('test'))->withHeaders(['content-type' => 'application/json']),
-        fn ($result) => expect($result->getContent())->toBe('test'),
+        fn ($result): \Pest\Mixins\Expectation => expect($result->getContent())->toBe('test'),
     ],
     'missing html skeleton' => [
         'scenario',
         fn () => (new Response('test'))->withHeaders(['content-type' => 'text/html']),
-        fn ($result) => expect($result->getContent())->toBe('test'),
+        fn ($result): \Pest\Mixins\Expectation => expect($result->getContent())->toBe('test'),
     ],
     'already injected' => [
         'scenario',
         fn () => (new Response('<html><head><title>Test</title></head><body><div class="browser-logger-active"></div></body></html>'))
             ->withHeaders(['content-type' => 'text/html']),
-        fn ($result) => expect($result->getContent())->toContain('browser-logger-active'),
+        fn ($result): \Pest\Mixins\Expectation => expect($result->getContent())->toContain('browser-logger-active'),
     ],
 ]);
 
-it('injects script in html responses', function ($html) {
+it('injects script in html responses', function ($html): void {
     $response = new Response($html);
     $response->headers->set('content-type', 'text/html');
 
@@ -92,12 +90,12 @@ it('injects script in html responses', function ($html) {
     'without head/body tags' => '<html>Test</html>',
 ]);
 
-it('handles CSP nonce attribute correctly', function ($nonce, $assertions) {
+it('handles CSP nonce attribute correctly', function ($nonce, $assertions): void {
     if ($nonce) {
         Vite::useCspNonce($nonce);
     }
 
-    Route::get('injection-test', fn () => view('test::injection-test'))
+    Route::get('injection-test', fn (): \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory => view('test::injection-test'))
         ->middleware(InjectBoost::class);
 
     $response = $this->get('injection-test')->assertViewIs('test::injection-test');

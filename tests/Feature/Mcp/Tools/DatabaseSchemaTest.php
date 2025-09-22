@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema;
 use Laravel\Mcp\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Switch the default connection to a file-backed SQLite DB.
     config()->set('database.default', 'testing');
     config()->set('database.connections.testing', [
@@ -24,20 +24,20 @@ beforeEach(function () {
 
     // Build a throw-away table that we expect in the dump.
     Schema::dropIfExists('examples');
-    Schema::create('examples', function (Blueprint $table) {
+    Schema::create('examples', function (Blueprint $table): void {
         $table->id();
         $table->string('name');
     });
 });
 
-afterEach(function () {
+afterEach(function (): void {
     $dbFile = database_path('testing.sqlite');
     if (File::exists($dbFile)) {
         File::delete($dbFile);
     }
 });
 
-test('it returns structured database schema', function () {
+test('it returns structured database schema', function (): void {
     $tool = new DatabaseSchema;
     $response = $tool->handle(new Request([]));
 
@@ -46,7 +46,7 @@ test('it returns structured database schema', function () {
         ->toolJsonContentToMatchArray([
             'engine' => 'sqlite',
         ])
-        ->toolJsonContent(function ($schemaArray) {
+        ->toolJsonContent(function (array $schemaArray): void {
             expect($schemaArray)->toHaveKey('tables')
                 ->and($schemaArray['tables'])->toHaveKey('examples');
 
@@ -61,9 +61,9 @@ test('it returns structured database schema', function () {
         });
 });
 
-test('it filters tables by name', function () {
+test('it filters tables by name', function (): void {
     // Create another table
-    Schema::create('users', function (Blueprint $table) {
+    Schema::create('users', function (Blueprint $table): void {
         $table->id();
         $table->string('email');
     });
@@ -74,7 +74,7 @@ test('it filters tables by name', function () {
     $response = $tool->handle(new Request(['filter' => 'example']));
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolJsonContent(function ($schemaArray) {
+        ->toolJsonContent(function (array $schemaArray): void {
             expect($schemaArray['tables'])->toHaveKey('examples')
                 ->and($schemaArray['tables'])->not->toHaveKey('users');
         });
@@ -83,7 +83,7 @@ test('it filters tables by name', function () {
     $response = $tool->handle(new Request(['filter' => 'user']));
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolJsonContent(function ($schemaArray) {
+        ->toolJsonContent(function (array $schemaArray): void {
             expect($schemaArray['tables'])->toHaveKey('users')
                 ->and($schemaArray['tables'])->not->toHaveKey('examples');
         });
