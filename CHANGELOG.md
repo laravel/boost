@@ -1,10 +1,32 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.1.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.2.1...main)
 
 ## [v1.2.0](https://github.com/laravel/boost/compare/v1.1.5...v1.2.0) - 2025-09-18
 
 * uses latest version of laravel mcp
+
+## [v1.2.1](https://github.com/laravel/boost/compare/v1.1.5...v1.2.1) - 2025-09-23
+
+### What's Changed
+
+* Update roster to 0.2.7 by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/266
+* docs: guidelines: initial laravel/mcp guidelines by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/267
+* Update Pint Config by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/269
+* Update checkout action to version 5 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/271
+* Enhance MCP commands for WSL compatibility by [@HichemTab-tech](https://github.com/HichemTab-tech) in https://github.com/laravel/boost/pull/121
+* Updated access modifiers from `private` to `protected` across multiple files by [@andrey-helldar](https://github.com/andrey-helldar) in https://github.com/laravel/boost/pull/249
+* Ensure guideline file content ends with a newline by [@balu-lt](https://github.com/balu-lt) in https://github.com/laravel/boost/pull/113
+* Don't include mcp always by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/273
+* Fix test name by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/274
+
+### New Contributors
+
+* [@HichemTab-tech](https://github.com/HichemTab-tech) made their first contribution in https://github.com/laravel/boost/pull/121
+* [@andrey-helldar](https://github.com/andrey-helldar) made their first contribution in https://github.com/laravel/boost/pull/249
+* [@balu-lt](https://github.com/balu-lt) made their first contribution in https://github.com/laravel/boost/pull/113
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.2.0...v1.2.1
 
 ## [v1.1.5](https://github.com/laravel/boost/compare/v1.1.4...v1.1.5) - 2025-09-18
 
