@@ -69,7 +69,7 @@ class GuidelineWriter
             }
 
             // Ensure file content ends with a newline
-            if (! str_ends_with($newContent, "\n")) {
+            if (! str_ends_with((string) $newContent, "\n")) {
                 $newContent .= "\n";
             }
 

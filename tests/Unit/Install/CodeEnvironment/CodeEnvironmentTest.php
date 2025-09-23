@@ -122,13 +122,13 @@ test('mcpClientName returns displayName by default', function (): void {
     expect($environment->mcpClientName())->toBe('Test Environment');
 });
 
-test('IsAgent returns true when implements Agent interface and has agentName', function (): void {
+test('isAgent returns true when implements Agent interface and has agentName', function (): void {
     $agent = new TestAgent($this->strategyFactory);
 
     expect($agent->isAgent())->toBe(true);
 });
 
-test('IsAgent returns false when does not implement Agent interface', function (): void {
+test('isAgent returns false when does not implement Agent interface', function (): void {
     $environment = new TestCodeEnvironment($this->strategyFactory);
 
     expect($environment->isAgent())->toBe(false);
