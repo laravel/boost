@@ -316,6 +316,32 @@ test('excludes PHPUnit guidelines when Pest is present due to package priority',
         ->not->toContain('=== phpunit/core rules ===');
 });
 
+test('excludes laravel/mcp guidelines when indirectly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::MCP, 'laravel/mcp', '0.2.2'))->setDirect(false),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
+
+    expect($this->composer->compose())->not->toContain('Mcp::web');
+});
+
+test('includes laravel/mcp guidelines when directly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::MCP, 'laravel/mcp', '0.2.2'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
+
+    expect($this->composer->compose())->toContain('Mcp::web');
+});
+
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

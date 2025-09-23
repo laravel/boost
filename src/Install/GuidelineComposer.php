@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
@@ -29,6 +30,16 @@ class GuidelineComposer
      * @var array<string, string[]>
      */
     protected array $packagePriorities;
+
+    /**
+     * Only include guidelines for these package names if they're a direct requirement.
+     * This fixes every Boost user getting the MCP guidelines due to indirect import.
+     *
+     * @var array<int, Packages>
+     * */
+    protected array $mustBeDirect = [
+        Packages::MCP,
+    ];
 
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
@@ -131,7 +142,7 @@ class GuidelineComposer
         // We don't add guidelines for packages unsupported by Roster right now
         foreach ($this->roster->packages() as $package) {
             // Skip packages that should be excluded due to priority rules
-            if ($this->shouldExcludePackage($package->package()->value)) {
+            if ($this->shouldExcludePackage($package)) {
                 continue;
             }
 
@@ -173,10 +184,10 @@ class GuidelineComposer
     /**
      * Determines if a package should be excluded from guidelines based on priority rules.
      */
-    protected function shouldExcludePackage(string $packageName): bool
+    protected function shouldExcludePackage(Package $package): bool
     {
         foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
-            if (in_array($packageName, $excludedPackages, true)) {
+            if (in_array($package->package()->value, $excludedPackages, true)) {
                 $priorityEnum = Packages::from($priorityPackage);
                 if ($this->roster->uses($priorityEnum)) {
                     return true;
@@ -184,7 +195,7 @@ class GuidelineComposer
             }
         }
 
-        return false;
+        return $package->indirect() && in_array($package->package(), $this->mustBeDirect, true);
     }
 
     /**
