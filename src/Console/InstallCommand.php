@@ -287,7 +287,11 @@ class InstallCommand extends Command
         return collect(multiselect(
             label: 'Which AI guidelines do you want to install?',
             // @phpstan-ignore-next-line
-            options: $options->mapWithKeys(fn (array $guideline, string $name) => [$name => "{$name} (~{$guideline['tokens']} tokens) {$guideline['description']}"]),
+            options: $options->mapWithKeys(function (array $guideline, string $name) {
+                $humanName = str_replace('/core', '', $name);
+
+                return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
+            }),
             default: $defaults,
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
