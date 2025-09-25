@@ -5,43 +5,38 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Tools;
 
 use Illuminate\Support\Facades\Config;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 
 #[IsReadOnly]
 class ListAvailableConfigKeys extends Tool
 {
-    public function description(): string
-    {
-        return 'List all available Laravel configuration keys (from config/*.php) in dot notation.';
-    }
-
-    public function schema(ToolInputSchema $schema): ToolInputSchema
-    {
-        return $schema;
-    }
+    /**
+     * The tool's description.
+     */
+    protected string $description = 'List all available Laravel configuration keys (from config/*.php) in dot notation.';
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
         $configArray = Config::all();
         $dotKeys = $this->flattenToDotNotation($configArray);
         sort($dotKeys);
 
-        return ToolResult::json($dotKeys);
+        return Response::json($dotKeys);
     }
 
     /**
      * Flatten a multi-dimensional config array into dot notation keys.
      *
-     * @param array<int|string, string|array<int|string, string>> $array
+     * @param  array<int|string, string|array<int|string, string>>  $array
      * @return array<int|string, int|string>
      */
-    private function flattenToDotNotation(array $array, string $prefix = ''): array
+    protected function flattenToDotNotation(array $array, string $prefix = ''): array
     {
         $results = [];
 
@@ -55,6 +50,7 @@ class ListAvailableConfigKeys extends Tool
                 if ($prefix === '' && is_numeric($key)) {
                     continue;
                 }
+
                 $results[] = $currentKey;
             }
         }

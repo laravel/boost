@@ -9,38 +9,54 @@ use InvalidArgumentException;
 class DisplayHelper
 {
     private const UNICODE_TOP_LEFT = '╭';
+
     private const UNICODE_TOP_RIGHT = '╮';
+
     private const UNICODE_BOTTOM_LEFT = '╰';
+
     private const UNICODE_BOTTOM_RIGHT = '╯';
+
     private const UNICODE_HORIZONTAL = '─';
+
     private const UNICODE_VERTICAL = '│';
+
     private const UNICODE_CROSS = '┼';
+
     private const UNICODE_TOP_T = '┬';
+
     private const UNICODE_BOTTOM_T = '┴';
+
     private const UNICODE_LEFT_T = '├';
+
     private const UNICODE_RIGHT_T = '┤';
 
     private const BORDER_TOP = 'top';
+
     private const BORDER_MIDDLE = 'middle';
+
     private const BORDER_BOTTOM = 'bottom';
 
     private const CELL_PADDING = 2;
+
     private const GRID_CELL_PADDING = 4;
+
     private const ANSI_BOLD = "\e[1m";
+
     private const ANSI_RESET = "\e[0m";
+
     private const SPACE = ' ';
 
     /**
-     * @param array<int, array<int|string, mixed>> $data
+     * @param  array<int, array<int|string, mixed>>  $data
      */
     public static function datatable(array $data, int $maxWidth = 80): void
     {
-        if (! $data) {
+        if ($data === []) {
             return;
         }
 
         $columnWidths = self::calculateColumnWidths($data);
-        $columnWidths = array_map(fn ($width) => $width + self::CELL_PADDING, $columnWidths);
+        $columnWidths = array_map(fn (int $width): int => $width + self::CELL_PADDING, $columnWidths);
 
         [$leftChar, $rightChar, $joinChar] = self::getBorderChars(self::BORDER_TOP);
         echo self::buildBorder($columnWidths, $leftChar, $rightChar, $joinChar).PHP_EOL;
@@ -53,6 +69,7 @@ class DisplayHelper
                 [$leftChar, $rightChar, $joinChar] = self::getBorderChars(self::BORDER_MIDDLE);
                 echo self::buildBorder($columnWidths, $leftChar, $rightChar, $joinChar).PHP_EOL;
             }
+
             $rowCount++;
         }
 
@@ -61,11 +78,11 @@ class DisplayHelper
     }
 
     /**
-     * @param array<int, string> $items
+     * @param  array<int, string>  $items
      */
     public static function grid(array $items, int $maxWidth = 80): void
     {
-        if (empty($items)) {
+        if ($items === []) {
             return;
         }
 
@@ -88,6 +105,7 @@ class DisplayHelper
                 [$leftChar, $rightChar, $joinChar] = self::getBorderChars(self::BORDER_MIDDLE);
                 echo self::SPACE.self::buildBorder($cellWidths, $leftChar, $rightChar, $joinChar).PHP_EOL;
             }
+
             $rowCount++;
         }
 
@@ -95,9 +113,9 @@ class DisplayHelper
         echo self::SPACE.self::buildBorder($cellWidths, $leftChar, $rightChar, $joinChar).PHP_EOL;
     }
 
-     private static function getBorderChars(string $type): array
-     {
-        return match($type) {
+    private static function getBorderChars(string $type): array
+    {
+        return match ($type) {
             self::BORDER_TOP => [self::UNICODE_TOP_LEFT, self::UNICODE_TOP_RIGHT, self::UNICODE_TOP_T],
             self::BORDER_MIDDLE => [self::UNICODE_LEFT_T, self::UNICODE_RIGHT_T, self::UNICODE_CROSS],
             self::BORDER_BOTTOM => [self::UNICODE_BOTTOM_LEFT, self::UNICODE_BOTTOM_RIGHT, self::UNICODE_BOTTOM_T],
@@ -106,7 +124,7 @@ class DisplayHelper
     }
 
     /**
-     * @param array<int, array<int|string, mixed>> $data
+     * @param  array<int, array<int|string, mixed>>  $data
      * @return array<int, int>
      */
     private static function calculateColumnWidths(array $data): array
@@ -123,7 +141,7 @@ class DisplayHelper
     }
 
     /**
-     * @param array<int, int> $widths
+     * @param  array<int, int>  $widths
      */
     private static function buildBorder(array $widths, string $leftChar, string $rightChar, string $joinChar): string
     {
@@ -134,14 +152,13 @@ class DisplayHelper
                 $border .= $joinChar;
             }
         }
-        $border .= $rightChar;
 
-        return $border;
+        return $border.$rightChar;
     }
 
     /**
-     * @param array<int|string, mixed> $row
-     * @param array<int, int> $columnWidths
+     * @param  array<int|string, mixed>  $row
+     * @param  array<int, int>  $columnWidths
      */
     private static function buildDataRow(array $row, array $columnWidths): string
     {
@@ -158,25 +175,23 @@ class DisplayHelper
     }
 
     /**
-     * @param array<int, string> $row
+     * @param  array<int, string>  $row
      */
     private static function buildGridRow(array $row, int $cellWidth, int $cellsPerRow): string
     {
         $line = self::UNICODE_VERTICAL;
 
         $cells = array_map(
-            fn ($index) => self::formatGridCell($row[$index] ?? '', $cellWidth),
+            fn (int $index): string => self::formatGridCell($row[$index] ?? '', $cellWidth),
             range(0, $cellsPerRow - 1)
         );
 
-        $line .= implode(self::UNICODE_VERTICAL, $cells).self::UNICODE_VERTICAL;
-
-        return $line;
+        return $line.(implode(self::UNICODE_VERTICAL, $cells).self::UNICODE_VERTICAL);
     }
 
     private static function formatGridCell(string $item, int $cellWidth): string
     {
-        if (! $item) {
+        if ($item === '' || $item === '0') {
             return str_repeat(self::SPACE, $cellWidth);
         }
 

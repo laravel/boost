@@ -6,31 +6,23 @@ namespace Laravel\Boost\Mcp;
 
 use Dotenv\Dotenv;
 use Illuminate\Support\Env;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Response;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 class ToolExecutor
 {
-    public function __construct()
-    {
-    }
-
-    public function execute(string $toolClass, array $arguments = []): ToolResult
+    public function execute(string $toolClass, array $arguments = []): Response
     {
         if (! ToolRegistry::isToolAllowed($toolClass)) {
-            return ToolResult::error("Tool not registered or not allowed: {$toolClass}");
+            return Response::error("Tool not registered or not allowed: {$toolClass}");
         }
 
-        if ($this->shouldUseProcessIsolation()) {
-            return $this->executeInProcess($toolClass, $arguments);
-        }
-
-        return $this->executeInline($toolClass, $arguments);
+        return $this->executeInSubprocess($toolClass, $arguments);
     }
 
-    protected function executeInProcess(string $toolClass, array $arguments): ToolResult
+    protected function executeInSubprocess(string $toolClass, array $arguments): Response
     {
         $command = $this->buildCommand($toolClass, $arguments);
 
@@ -40,12 +32,13 @@ class ToolExecutor
             app()->environmentPath(),
             app()->environmentFile()
         ))->safeLoad();
+
         $cleanEnv = array_fill_keys(array_keys($env), false);
 
         $process = new Process(
             command: $command,
             env: $cleanEnv,
-            timeout: $this->getTimeout()
+            timeout: $this->getTimeout($arguments)
         );
 
         try {
@@ -55,62 +48,43 @@ class ToolExecutor
             $decoded = json_decode($output, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return ToolResult::error('Invalid JSON output from tool process: '.json_last_error_msg());
+                return Response::error('Invalid JSON output from tool process: '.json_last_error_msg());
             }
 
-            return $this->reconstructToolResult($decoded);
-        } catch (ProcessTimedOutException $e) {
+            return $this->reconstructResponse($decoded);
+        } catch (ProcessTimedOutException) {
             $process->stop();
 
-            return ToolResult::error("Tool execution timed out after {$this->getTimeout()} seconds");
+            return Response::error("Tool execution timed out after {$this->getTimeout($arguments)} seconds");
 
-        } catch (ProcessFailedException $e) {
+        } catch (ProcessFailedException) {
             $errorOutput = $process->getErrorOutput().$process->getOutput();
 
-            return ToolResult::error("Process tool execution failed: {$errorOutput}");
+            return Response::error("Process tool execution failed: {$errorOutput}");
         }
     }
 
-    protected function executeInline(string $toolClass, array $arguments): ToolResult
+    protected function getTimeout(array $arguments): int
     {
-        try {
-            /** @var \Laravel\Mcp\Server\Tool $tool */
-            $tool = app($toolClass);
+        $timeout = (int) ($arguments['timeout'] ?? 180);
 
-            return $tool->handle($arguments);
-        } catch (\Throwable $e) {
-            return ToolResult::error("Inline tool execution failed: {$e->getMessage()}");
-        }
-    }
-
-    protected function shouldUseProcessIsolation(): bool
-    {
-        if (app()->environment('testing')) {
-            return false;
-        }
-
-        return config('boost.process_isolation.enabled', true);
-    }
-
-    protected function getTimeout(): int
-    {
-        return config('boost.process_isolation.timeout', 180);
+        return max(1, min(600, $timeout));
     }
 
     /**
-     * Reconstruct a ToolResult from JSON data.
+     * Reconstruct a Response from JSON data.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
-    protected function reconstructToolResult(array $data): ToolResult
+    protected function reconstructResponse(array $data): Response
     {
         if (! isset($data['isError']) || ! isset($data['content'])) {
-            return ToolResult::error('Invalid tool result format');
+            return Response::error('Invalid tool response format.');
         }
 
         if ($data['isError']) {
-            // Extract the actual text content from the content array
             $errorText = 'Unknown error';
+
             if (is_array($data['content']) && ! empty($data['content'])) {
                 $firstContent = $data['content'][0] ?? [];
                 if (is_array($firstContent)) {
@@ -118,34 +92,32 @@ class ToolExecutor
                 }
             }
 
-            return ToolResult::error($errorText);
+            return Response::error($errorText);
         }
 
-        // Handle successful responses - extract text content
+        // Handle array format - extract text content
         if (is_array($data['content']) && ! empty($data['content'])) {
             $firstContent = $data['content'][0] ?? [];
 
             if (is_array($firstContent)) {
                 $text = $firstContent['text'] ?? '';
 
-                // Try to detect if it's JSON
-                $decoded = json_decode($text, true);
+                $decoded = json_decode((string) $text, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    return ToolResult::json($decoded);
+                    return Response::json($decoded);
                 }
 
-                return ToolResult::text($text);
+                return Response::text($text);
             }
         }
 
-        return ToolResult::text('');
+        return Response::text('');
     }
 
     /**
      * Build the command array for executing a tool in a subprocess.
      *
-     * @param string $toolClass
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $arguments
      * @return array<string>
      */
     protected function buildCommand(string $toolClass, array $arguments): array

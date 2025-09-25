@@ -9,18 +9,13 @@ use Illuminate\Support\Str;
 
 class FileWriter
 {
-    protected string $filePath;
-
     protected string $configKey = 'mcpServers';
 
     protected array $serversToAdd = [];
 
     protected int $defaultIndentation = 8;
 
-    public function __construct(string $filePath)
-    {
-        $this->filePath = $filePath;
-    }
+    public function __construct(protected string $filePath) {}
 
     public function configKey(string $key): self
     {
@@ -30,10 +25,9 @@ class FileWriter
     }
 
     /**
-     * @param string $key MCP Server Name
-     * @param string $command
-     * @param array<int, string> $args
-     * @param array<string, string> $env
+     * @param  string  $key  MCP Server Name
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
      */
     public function addServer(string $key, string $command, array $args = [], array $env = []): self
     {
@@ -81,9 +75,9 @@ class FileWriter
 
         if (preg_match($configKeyPattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
             return $this->injectIntoExistingConfigKey($content, $matches);
-        } else {
-            return $this->injectNewConfigKey($content);
         }
+
+        return $this->injectNewConfigKey($content);
     }
 
     protected function injectIntoExistingConfigKey(string $content, array $matches): bool
@@ -106,7 +100,7 @@ class FileWriter
         // Filter out servers that already exist
         $serversToAdd = $this->filterExistingServers($content, $openBracePos, $closeBracePos);
 
-        if (empty($serversToAdd)) {
+        if ($serversToAdd === []) {
             return true;
         }
 
@@ -117,6 +111,7 @@ class FileWriter
         foreach ($serversToAdd as $key => $serverConfig) {
             $serverJsonParts[] = $this->generateServerJson($key, $serverConfig, $indentLength);
         }
+
         $serversJson = implode(','."\n", $serverJsonParts);
 
         // Check if we need a comma and add it to the preceding content
@@ -188,6 +183,9 @@ class FileWriter
     {
         $json = json_encode($serverConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
+        // Normalize line endings to Unix style
+        $json = str_replace("\r\n", "\n", $json);
+
         // If no indentation needed, return as-is
         if (empty($baseIndent)) {
             return '"'.$key.'": '.$json;
@@ -199,7 +197,7 @@ class FileWriter
         $firstLine = array_shift($lines);
         $indentedLines = [
             "{$baseIndent}\"{$key}\": {$firstLine}",
-            ...array_map(fn ($line) => $baseIndent.$line, $lines),
+            ...array_map(fn (string $line): string => $baseIndent.$line, $lines),
         ];
 
         return "\n".implode("\n", $indentedLines);
@@ -259,11 +257,7 @@ class FileWriter
         }
 
         // If ends with comma, no additional comma needed
-        if (Str::endsWith($trimmed, ',')) {
-            return false;
-        }
-
-        return true;
+        return ! Str::endsWith($trimmed, ',');
     }
 
     protected function findCommaInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
@@ -273,7 +267,7 @@ class FileWriter
             $char = $content[$i];
 
             // Skip whitespace and newlines
-            if (in_array($char, [' ', "\t", "\n", "\r"])) {
+            if (in_array($char, [' ', "\t", "\n", "\r"], true)) {
                 continue;
             }
 
@@ -282,16 +276,17 @@ class FileWriter
                 // Find start of this line
                 $lineStart = strrpos($content, "\n", $i - strlen($content)) ?: 0;
                 $i = $lineStart;
+
                 continue;
             }
 
             // Found last meaningful character, comma goes after it
             if ($char !== ',') {
                 return $i + 1;
-            } else {
-                // Already has comma, no insertion needed
-                return -1;
             }
+
+            // Already has comma, no insertion needed
+            return -1;
         }
 
         // Fallback - insert right after opening brace
@@ -380,6 +375,11 @@ class FileWriter
     {
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
+        // Normalize line endings to Unix style
+        if ($json) {
+            $json = str_replace("\r\n", "\n", $json);
+        }
+
         return $json && $this->writeFile($json);
     }
 
@@ -395,7 +395,12 @@ class FileWriter
 
     protected function shouldWriteNew(): bool
     {
-        return ! $this->fileExists() || File::size($this->filePath) < 3; // To account for files that are just `{}`
+        if (! $this->fileExists()) {
+            return true;
+        }
+
+        return File::size($this->filePath) < 3;
+        // To account for files that are just `{}`
     }
 
     protected function readFile(): string

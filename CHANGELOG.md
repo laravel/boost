@@ -1,6 +1,109 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.0.20...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.2.1...main)
+
+## [v1.2.0](https://github.com/laravel/boost/compare/v1.1.5...v1.2.0) - 2025-09-18
+
+* uses latest version of laravel mcp
+
+## [v1.2.1](https://github.com/laravel/boost/compare/v1.1.5...v1.2.1) - 2025-09-23
+
+### What's Changed
+
+* Update roster to 0.2.7 by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/266
+* docs: guidelines: initial laravel/mcp guidelines by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/267
+* Update Pint Config by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/269
+* Update checkout action to version 5 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/271
+* Enhance MCP commands for WSL compatibility by [@HichemTab-tech](https://github.com/HichemTab-tech) in https://github.com/laravel/boost/pull/121
+* Updated access modifiers from `private` to `protected` across multiple files by [@andrey-helldar](https://github.com/andrey-helldar) in https://github.com/laravel/boost/pull/249
+* Ensure guideline file content ends with a newline by [@balu-lt](https://github.com/balu-lt) in https://github.com/laravel/boost/pull/113
+* Don't include mcp always by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/273
+* Fix test name by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/274
+
+### New Contributors
+
+* [@HichemTab-tech](https://github.com/HichemTab-tech) made their first contribution in https://github.com/laravel/boost/pull/121
+* [@andrey-helldar](https://github.com/andrey-helldar) made their first contribution in https://github.com/laravel/boost/pull/249
+* [@balu-lt](https://github.com/balu-lt) made their first contribution in https://github.com/laravel/boost/pull/113
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.2.0...v1.2.1
+
+## [v1.1.5](https://github.com/laravel/boost/compare/v1.1.4...v1.1.5) - 2025-09-18
+
+### What's Changed
+
+* docs: README: light/dark mode logo by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/148
+* ci: remove unneeded SSH keys now MCP package is public by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/255
+* fix: remove stray parenthesis in lifecycle hook guidance in livewire guidelines by [@mohammedyh](https://github.com/mohammedyh) in https://github.com/laravel/boost/pull/261
+* fix: correct syntax in Tailwind v4 import code snippet by [@mr-chetan](https://github.com/mr-chetan) in https://github.com/laravel/boost/pull/221
+* tests: convert multiple expectations into chain by [@felipeArnold](https://github.com/felipeArnold) in https://github.com/laravel/boost/pull/232
+* Add Codex Guideline Support by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/258
+* Update scroll value for Agent selection box by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/262
+* Add support for Vite CSP nonce by [@nckrtl](https://github.com/nckrtl) in https://github.com/laravel/boost/pull/142
+
+### New Contributors
+
+* [@mohammedyh](https://github.com/mohammedyh) made their first contribution in https://github.com/laravel/boost/pull/261
+* [@mr-chetan](https://github.com/mr-chetan) made their first contribution in https://github.com/laravel/boost/pull/221
+* [@nckrtl](https://github.com/nckrtl) made their first contribution in https://github.com/laravel/boost/pull/142
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.4...v1.1.5
+
+## [v1.1.4](https://github.com/laravel/boost/compare/v1.1.3...v1.1.4) - 2025-09-04
+
+### What's Changed
+
+* feat: add windows to tests CI check by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/244
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.3...v1.1.4
+
+## [v1.1.3](https://github.com/laravel/boost/compare/v1.1.2...v1.1.3) - 2025-09-04
+
+### What's Changed
+
+* fix: package priorities should work on php8.1 by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/243
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.2...v1.1.3
+
+## [v1.1.2](https://github.com/laravel/boost/compare/v1.1.1...v1.1.2) - 2025-09-04
+
+### What's Changed
+
+* feat: add package priority guideline inclusion by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/242
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.1...v1.1.2
+
+## [v1.1.1](https://github.com/laravel/boost/compare/v1.1.0...v1.1.1) - 2025-09-04
+
+### What's Changed
+
+* Add strict types declaration in Inertia.php by [@felipeArnold](https://github.com/felipeArnold) in https://github.com/laravel/boost/pull/229
+* feat: update roster requirement, fixes #237 now phpunit will be detected by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/239
+
+### New Contributors
+
+* [@felipeArnold](https://github.com/felipeArnold) made their first contribution in https://github.com/laravel/boost/pull/229
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.1.0...v1.1.1
+
+## [v1.1.0](https://github.com/laravel/boost/compare/v1.0.21...v1.1.0) - 2025-09-04
+
+### What's Changed
+
+* Always-on process isolation: eliminate conditional complexity by [@andreilungeanu](https://github.com/andreilungeanu) in https://github.com/laravel/boost/pull/184
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.21...v1.1.0
+
+## [v1.0.21](https://github.com/laravel/boost/compare/v1.0.20...v1.0.21) - 2025-09-03
+
+### What's Changed
+
+* Fix random 'parse error' when running test suite by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/223
+* Clarify ListRoutes name parameter description for better tool calling by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/182
+* Streamline ToolResult assertions in tests  by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/225
+* Allow guideline overriding by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/boost/pull/219
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.0.20...v1.0.21
 
 ## [v1.0.20](https://github.com/laravel/boost/compare/v1.0.19...v1.0.20) - 2025-08-28
 

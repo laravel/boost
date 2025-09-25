@@ -4,40 +4,45 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Illuminate\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Config;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 
 #[IsReadOnly]
 class GetConfig extends Tool
 {
-    public function description(): string
-    {
-        return 'Get the value of a specific config variable using dot notation (e.g., "app.name", "database.default")';
-    }
+    protected string $description = 'Get the value of a specific config variable using dot notation (e.g., "app.name", "database.default")';
 
-    public function schema(ToolInputSchema $schema): ToolInputSchema
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        return $schema
-            ->string('key')
-            ->description('The config key in dot notation (e.g., "app.name", "database.default")')
-            ->required();
+        return [
+            'key' => $schema
+                ->string()
+                ->description('The config key in dot notation (e.g., "app.name", "database.default")')
+                ->required(),
+        ];
     }
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
-        $key = $arguments['key'];
+        $key = $request->get('key');
 
         if (! Config::has($key)) {
-            return ToolResult::error("Config key '{$key}' not found.");
+            return Response::error("Config key '{$key}' not found.");
         }
 
-        return ToolResult::json([
+        return Response::json([
             'key' => $key,
             'value' => Config::get($key),
         ]);

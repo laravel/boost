@@ -34,7 +34,7 @@ class InjectBoost
         return $response;
     }
 
-    private function shouldInject(Response $response): bool
+    protected function shouldInject(Response $response): bool
     {
         $responseTypes = [
             StreamedResponse::class,
@@ -48,7 +48,7 @@ class InjectBoost
             }
         }
 
-        if (! str_contains($response->headers->get('content-type', ''), 'html')) {
+        if (! str_contains((string) $response->headers->get('content-type', ''), 'html')) {
             return false;
         }
 
@@ -59,14 +59,10 @@ class InjectBoost
         }
 
         // Check if already injected
-        if (str_contains($content, 'browser-logger-active')) {
-            return false;
-        }
-
-        return true;
+        return ! str_contains($content, 'browser-logger-active');
     }
 
-    private function injectScript(string $content): string
+    protected function injectScript(string $content): string
     {
         $script = BrowserLogger::getScript();
 

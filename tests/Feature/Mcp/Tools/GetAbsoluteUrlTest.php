@@ -4,61 +4,54 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('app.url', 'http://localhost');
-    Route::get('/test', function () {
-        return 'test';
-    })->name('test.route');
+    Route::get('/test', fn (): string => 'test')->name('test.route');
 });
 
-test('it returns absolute url for root path by default', function () {
+test('it returns absolute url for root path by default', function (): void {
     $tool = new GetAbsoluteUrl;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('http://localhost');
 });
 
-test('it returns absolute url for given path', function () {
+test('it returns absolute url for given path', function (): void {
     $tool = new GetAbsoluteUrl;
-    $result = $tool->handle(['path' => '/dashboard']);
+    $response = $tool->handle(new Request(['path' => '/dashboard']));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost/dashboard');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('http://localhost/dashboard');
 });
 
-test('it returns absolute url for named route', function () {
+test('it returns absolute url for named route', function (): void {
     $tool = new GetAbsoluteUrl;
-    $result = $tool->handle(['route' => 'test.route']);
+    $response = $tool->handle(new Request(['route' => 'test.route']));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost/test');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('http://localhost/test');
 });
 
-test('it prioritizes path over route when both are provided', function () {
+test('it prioritizes path over route when both are provided', function (): void {
     $tool = new GetAbsoluteUrl;
-    $result = $tool->handle(['path' => '/dashboard', 'route' => 'test.route']);
+    $response = $tool->handle(new Request(['path' => '/dashboard', 'route' => 'test.route']));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost/dashboard');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('http://localhost/dashboard');
 });
 
-test('it handles empty path', function () {
+test('it handles empty path', function (): void {
     $tool = new GetAbsoluteUrl;
-    $result = $tool->handle(['path' => '']);
+    $response = $tool->handle(new Request(['path' => '']));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-    expect($data['content'][0]['text'])->toBe('http://localhost');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('http://localhost');
 });

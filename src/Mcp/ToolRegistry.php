@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
+use DirectoryIterator;
+
 class ToolRegistry
 {
     /** @var array<int, class-string>|null */
@@ -24,7 +26,7 @@ class ToolRegistry
 
         // Discover tools from the Tools directory
         $excludedTools = config('boost.mcp.tools.exclude', []);
-        $toolDir = new \DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Tools');
+        $toolDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Tools');
 
         foreach ($toolDir as $toolFile) {
             if ($toolFile->isFile() && $toolFile->getExtension() === 'php') {

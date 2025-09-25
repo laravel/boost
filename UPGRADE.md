@@ -1,3 +1,0 @@
-# Upgrade Guide
-
-Upgrade notes will come here...

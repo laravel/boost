@@ -6,17 +6,17 @@ use Laravel\Boost\Install\Contracts\DetectionStrategy;
 use Laravel\Boost\Install\Detection\CompositeDetectionStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->firstStrategy = Mockery::mock(DetectionStrategy::class);
     $this->secondStrategy = Mockery::mock(DetectionStrategy::class);
     $this->thirdStrategy = Mockery::mock(DetectionStrategy::class);
 });
 
-afterEach(function () {
+afterEach(function (): void {
     Mockery::close();
 });
 
-test('returns true when first strategy succeeds', function () {
+test('returns true when first strategy succeeds', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
         ->once()
@@ -36,7 +36,7 @@ test('returns true when first strategy succeeds', function () {
     expect($result)->toBeTrue();
 });
 
-test('returns true when second strategy succeeds', function () {
+test('returns true when second strategy succeeds', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
         ->once()
@@ -59,7 +59,7 @@ test('returns true when second strategy succeeds', function () {
     expect($result)->toBeTrue();
 });
 
-test('returns false when all strategies fail', function () {
+test('returns false when all strategies fail', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
         ->once()
@@ -89,7 +89,7 @@ test('returns false when all strategies fail', function () {
     expect($result)->toBeFalse();
 });
 
-test('stops execution after first success', function () {
+test('stops execution after first success', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
         ->once()
@@ -116,7 +116,7 @@ test('stops execution after first success', function () {
     expect($result)->toBeTrue();
 });
 
-test('handles empty strategies array', function () {
+test('handles empty strategies array', function (): void {
     $composite = new CompositeDetectionStrategy([]);
 
     $result = $composite->detect(['config' => 'value']);
@@ -124,7 +124,7 @@ test('handles empty strategies array', function () {
     expect($result)->toBeFalse();
 });
 
-test('handles single strategy', function () {
+test('handles single strategy', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
         ->once()
@@ -140,7 +140,7 @@ test('handles single strategy', function () {
     expect($result)->toBeTrue();
 });
 
-test('passes platform parameter to all strategies', function () {
+test('passes platform parameter to all strategies', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
         ->once()
@@ -163,7 +163,7 @@ test('passes platform parameter to all strategies', function () {
     expect($result)->toBeFalse();
 });
 
-test('handles null platform parameter', function () {
+test('handles null platform parameter', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
         ->once()
@@ -179,7 +179,7 @@ test('handles null platform parameter', function () {
     expect($result)->toBeTrue();
 });
 
-test('handles mixed strategy types', function () {
+test('handles mixed strategy types', function (): void {
     // This test simulates real-world usage where different strategy types
     // might be combined (directory, file, command, etc.)
 

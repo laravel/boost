@@ -10,7 +10,7 @@ use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
@@ -21,7 +21,7 @@ beforeEach(function () {
     $this->composer = new GuidelineComposer($this->roster, $this->herd);
 });
 
-test('includes Inertia React conditional guidelines based on version', function (string $version, bool $shouldIncludeForm, bool $shouldInclude212Features) {
+test('includes Inertia React conditional guidelines based on version', function (string $version, bool $shouldIncludeForm, bool $shouldInclude212Features): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', $version),
@@ -84,7 +84,7 @@ test('includes Inertia React conditional guidelines based on version', function 
     'version 2.2.0 (all features)' => ['2.2.0', true, true],
 ]);
 
-test('includes package guidelines only for installed packages', function () {
+test('includes package guidelines only for installed packages', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
@@ -99,7 +99,7 @@ test('includes package guidelines only for installed packages', function () {
         ->not->toContain('=== inertia-react/core rules ===');
 });
 
-test('excludes conditional guidelines when config is false', function () {
+test('excludes conditional guidelines when config is false', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
@@ -123,7 +123,7 @@ test('excludes conditional guidelines when config is false', function () {
         ->not->toContain('=== tests rules ===');
 });
 
-test('includes Herd guidelines only when on .test domain and Herd is installed', function (string $appUrl, bool $herdInstalled, bool $shouldInclude) {
+test('includes Herd guidelines only when on .test domain and Herd is installed', function (string $appUrl, bool $herdInstalled, bool $shouldInclude): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
@@ -147,7 +147,7 @@ test('includes Herd guidelines only when on .test domain and Herd is installed',
     'localhost with Herd' => ['http://localhost:8000', true, false],
 ]);
 
-test('composes guidelines with proper formatting', function () {
+test('composes guidelines with proper formatting', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
@@ -166,7 +166,7 @@ test('composes guidelines with proper formatting', function () {
         ->toMatch('/=== \w+.*? rules ===/');
 });
 
-test('handles multiple package versions correctly', function () {
+test('handles multiple package versions correctly', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
@@ -206,13 +206,13 @@ test('handles multiple package versions correctly', function () {
 
     expect($guidelines)
         ->toContain('=== inertia-react/core rules ===')
-        ->toContain('=== inertia-react/v2 rules ===')
+        ->toContain('=== inertia-react/v2/forms rules ===')
         ->toContain('=== inertia-vue/core rules ===')
-        ->toContain('=== inertia-vue/v2 rules ===')
+        ->toContain('=== inertia-vue/v2/forms rules ===')
         ->toContain('=== pest/core rules ===');
 });
 
-test('filters out empty guidelines', function () {
+test('filters out empty guidelines', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
@@ -226,7 +226,7 @@ test('filters out empty guidelines', function () {
         ->not->toMatch('/=== \w+.*? rules ===\s*===/');
 });
 
-test('returns list of used guidelines', function () {
+test('returns list of used guidelines', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.1', true),
@@ -250,4 +250,110 @@ test('returns list of used guidelines', function () {
         ->toContain('laravel/core')
         ->toContain('laravel/v11')
         ->toContain('pest/core');
+});
+
+test('includes user custom guidelines from .ai/guidelines directory', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(\Pest\testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    expect($composer->compose())
+        ->toContain('=== .ai/custom-rule rules ===')
+        ->toContain('=== .ai/project-specific rules ===')
+        ->toContain('This is a custom project-specific guideline')
+        ->toContain('Project-specific coding standards')
+        ->toContain('Database tables must use `snake_case` naming')
+        ->and($composer->used())
+        ->toContain('.ai/custom-rule')
+        ->toContain('.ai/project-specific');
+});
+
+test('non-empty custom guidelines override Boost guidelines', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(\Pest\testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    $guidelines = $composer->compose();
+    $overrideStringCount = substr_count((string) $guidelines, 'Thanks though, appreciate you');
+
+    expect($overrideStringCount)->toBe(1)
+        ->and($guidelines)
+        ->toContain('Thanks though, appreciate you') // From user guidelines
+        ->not->toContain('## Laravel 11') // Heading from Boost's L11/core guideline
+        ->and($composer->used())
+        ->toContain('.ai/custom-rule')
+        ->toContain('.ai/project-specific');
+});
+
+test('excludes PHPUnit guidelines when Pest is present due to package priority', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        new Package(Packages::PHPUNIT, 'phpunit/phpunit', '10.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::PEST)->andReturn(true);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== pest/core rules ===')
+        ->not->toContain('=== phpunit/core rules ===');
+});
+
+test('excludes laravel/mcp guidelines when indirectly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::MCP, 'laravel/mcp', '0.2.2'))->setDirect(false),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
+
+    expect($this->composer->compose())->not->toContain('Mcp::web');
+});
+
+test('includes laravel/mcp guidelines when directly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::MCP, 'laravel/mcp', '0.2.2'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
+
+    expect($this->composer->compose())->toContain('Mcp::web');
+});
+
+test('includes PHPUnit guidelines when Pest is not present', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PHPUNIT, 'phpunit/phpunit', '10.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::PEST)->andReturn(false);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== phpunit/core rules ===')
+        ->not->toContain('=== pest/core rules ===');
 });

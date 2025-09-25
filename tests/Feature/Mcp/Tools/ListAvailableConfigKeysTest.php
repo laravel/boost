@@ -3,56 +3,52 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\ListAvailableConfigKeys;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('test.simple', 'value');
     config()->set('test.nested.key', 'nested_value');
     config()->set('test.array', ['item1', 'item2']);
 });
 
-test('it returns list of config keys in dot notation', function () {
+test('it returns list of config keys in dot notation', function (): void {
     $tool = new ListAvailableConfigKeys;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function ($content): void {
+            expect($content)->toBeArray()
+                ->and($content)->not->toBeEmpty()
+                // Check that it contains common Laravel config keys
+                ->and($content)->toContain('app.name')
+                ->and($content)->toContain('app.env')
+                ->and($content)->toContain('database.default')
+                // Check that it contains our test keys
+                ->and($content)->toContain('test.simple')
+                ->and($content)->toContain('test.nested.key')
+                ->and($content)->toContain('test.array.0')
+                ->and($content)->toContain('test.array.1');
 
-    $content = json_decode($data['content'][0]['text'], true);
-    expect($content)->toBeArray();
-    expect($content)->not->toBeEmpty();
-
-    // Check that it contains common Laravel config keys
-    expect($content)->toContain('app.name');
-    expect($content)->toContain('app.env');
-    expect($content)->toContain('database.default');
-
-    // Check that it contains our test keys
-    expect($content)->toContain('test.simple');
-    expect($content)->toContain('test.nested.key');
-    expect($content)->toContain('test.array.0');
-    expect($content)->toContain('test.array.1');
-
-    // Check that keys are sorted
-    $sortedContent = $content;
-    sort($sortedContent);
-    expect($content)->toBe($sortedContent);
+            // Check that keys are sorted
+            $sortedContent = $content;
+            sort($sortedContent);
+            expect($content)->toBe($sortedContent);
+        });
 });
 
-test('it handles empty config gracefully', function () {
+test('it handles empty config gracefully', function (): void {
     // Clear all config
     config()->set('test', null);
 
     $tool = new ListAvailableConfigKeys;
-    $result = $tool->handle([]);
+    $response = $tool->handle(new Request([]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-    $data = $result->toArray();
-    expect($data['isError'])->toBe(false);
-
-    $content = json_decode($data['content'][0]['text'], true);
-    expect($content)->toBeArray();
-    // Should still have Laravel default config keys
-    expect($content)->toContain('app.name');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function ($content): void {
+            expect($content)->toBeArray()
+                // Should still have Laravel default config keys
+                ->and($content)->toContain('app.name');
+        });
 });

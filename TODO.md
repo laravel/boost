@@ -1,2 +1,0 @@
-- [ ] Tests for GuidelineComposer
-- [ ] Allow triple backticks in guideline files - `.ai/pest/core.blade.php`
