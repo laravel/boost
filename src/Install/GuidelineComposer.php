@@ -6,11 +6,14 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Str;
+use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 
 class GuidelineComposer
 {
@@ -177,7 +180,37 @@ class GuidelineComposer
             $guidelines->put('.ai/'.$guideline['name'], $guideline);
         }
 
+        $pathsUsed = $guidelines->pluck('path');
+
+        foreach ($userGuidelines as $guideline) {
+            if ($pathsUsed->contains($guideline['path'])) {
+                continue; // Don't include this twice if it's an override
+            }
+
+            $guidelines->put('.ai/'.$guideline['name'], $guideline);
+        }
+
+        collect(Composer::packagesDirectoriesWithBoostGuidelines())
+            ->each(function (string $path, string $package) use ($guidelines): void {
+                $packageGuidelines = $this->guidelinesDir($path, true);
+                $pathsUsed = $guidelines->pluck('path');
+
+                foreach ($packageGuidelines as $guideline) {
+                    if ($pathsUsed->contains($guideline['path'])) {
+                        continue; // Don't include this twice if it's an override
+                    }
+
+                    $guidelines->put($package, $guideline);
+                }
+            });
+
         return $guidelines
+            ->when(
+                isset($this->config->aiGuidelines),
+                fn (Collection $collection): Collection => $collection->filter(
+                    fn (array $guideline, string $key): bool => in_array($key, $this->config->aiGuidelines, true),
+                )
+            )
             ->where(fn (array $guideline): bool => ! empty(trim((string) $guideline['content'])));
     }
 
@@ -201,7 +234,7 @@ class GuidelineComposer
     /**
      * @return array<array{content: string, name: string, path: ?string, custom: bool}>
      */
-    protected function guidelinesDir(string $dirPath): array
+    protected function guidelinesDir(string $dirPath, bool $thirdParty = false): array
     {
         if (! is_dir($dirPath)) {
             $dirPath = str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../.ai/'.$dirPath);
@@ -216,17 +249,24 @@ class GuidelineComposer
             return [];
         }
 
-        return array_map(fn (\Symfony\Component\Finder\SplFileInfo $file): array => $this->guideline($file->getRealPath()), iterator_to_array($finder));
+        return array_map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty), iterator_to_array($finder));
     }
 
     /**
-     * @return array{content: string, name: string, path: ?string, custom: bool}
+     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
      */
-    protected function guideline(string $path): array
+    protected function guideline(string $path, bool $thirdParty = false): array
     {
         $path = $this->guidelinePath($path);
         if (is_null($path)) {
-            return ['content' => '', 'name' => '', 'path' => null, 'custom' => false];
+            return [
+                'content' => '',
+                'description' => '',
+                'name' => '',
+                'path' => null,
+                'custom' => false,
+                'third_party' => $thirdParty,
+            ];
         }
 
         $content = file_get_contents($path);
@@ -248,11 +288,19 @@ class GuidelineComposer
 
         $this->storedSnippets = []; // Clear for next use
 
+        $description = Str::of($rendered)->after('# ')->before("\n")->trim()
+            ->whenEmpty(fn () => 'No description provided')
+            ->limit(50, '...')
+            ->value();
+
         return [
             'content' => trim($rendered),
             'name' => str_replace('.blade.php', '', basename($path)),
+            'description' => $description,
             'path' => $path,
             'custom' => str_contains($path, $this->customGuidelinePath()),
+            'third_party' => $thirdParty,
+            'tokens' => str_word_count($rendered) * 1.3, // Rough estimate of tokens based on word count
         ];
     }
 

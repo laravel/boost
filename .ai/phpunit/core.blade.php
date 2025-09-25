@@ -1,4 +1,4 @@
-## PHPUnit Core
+## PHPUnit
 
 - This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `php artisan make:test --phpunit <name>` to create a new test.
 - If you see a test using "Pest", convert it to PHPUnit.

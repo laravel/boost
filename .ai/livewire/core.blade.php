@@ -1,4 +1,4 @@
-## Livewire Core
+## Livewire
 - Use the `search-docs` tool to find exact version specific documentation for how to write Livewire & Livewire tests.
 - Use the `php artisan make:livewire [Posts\\CreatePost]` artisan command to create new components
 - State should live on the server, with the UI reflecting it.

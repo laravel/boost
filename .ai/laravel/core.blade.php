@@ -1,4 +1,4 @@
-## Do Things the Laravel Way
+## Laravel
 
 - Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
 - If you're creating a generic PHP class, use `artisan make:class`.

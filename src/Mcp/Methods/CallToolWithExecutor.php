@@ -38,7 +38,7 @@ class CallToolWithExecutor implements Errable, Method
         }
 
         $tool = $context
-            ->tools($request->toRequest())
+            ->tools()
             ->first(
                 fn ($tool): bool => $tool->name() === $request->params['name'],
                 fn () => throw new JsonRpcException(

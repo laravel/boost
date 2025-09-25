@@ -19,6 +19,7 @@ use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -50,6 +51,9 @@ class InstallCommand extends Command
     /** @var Collection<int, string> */
     private Collection $selectedBoostFeatures;
 
+    /** @var Collection<int, string> */
+    private Collection $selectedAiGuidelines;
+
     private string $projectName;
 
     /** @var array<non-empty-string> */
@@ -64,6 +68,11 @@ class InstallCommand extends Command
     private string $greenTick;
 
     private string $redCross;
+
+    public function __construct(protected Config $config)
+    {
+        parent::__construct();
+    }
 
     public function handle(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
     {
@@ -122,6 +131,7 @@ class InstallCommand extends Command
     protected function collectInstallationPreferences(): void
     {
         $this->selectedBoostFeatures = $this->selectBoostFeatures();
+        $this->selectedAiGuidelines = $this->selectAiGuidelines();
         $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
         $this->selectedTargetAgents = $this->selectTargetAgents();
         $this->enforceTests = $this->determineTestEnforcement(ask: false);
@@ -232,7 +242,11 @@ class InstallCommand extends Command
      */
     protected function selectBoostFeatures(): Collection
     {
-        $defaultInstallOptions = ['mcp_server', 'ai_guidelines'];
+        $defaultInstallOptions = [
+            'mcp_server',
+            ...$this->config->exists() === false || $this->config->getAiGuidelines() !== [] ? ['ai_guidelines'] : [],
+        ];
+
         $installOptions = [
             'mcp_server' => 'Boost MCP Server (with 15+ tools)',
             'ai_guidelines' => 'Boost AI Guidelines (for Laravel, Inertia, and more)',
@@ -240,16 +254,45 @@ class InstallCommand extends Command
 
         if ($this->herd->isMcpAvailable()) {
             $installOptions['herd_mcp'] = 'Herd MCP Server';
-
-            return collect(multiselect(
-                label: 'What do you want to install?',
-                options: $installOptions,
-                default: $defaultInstallOptions,
-                required: true,
-            ));
         }
 
-        return collect(['mcp_server', 'ai_guidelines']);
+        return collect(multiselect(
+            label: 'What do you want to install?',
+            options: $installOptions,
+            default: $defaultInstallOptions,
+            required: true,
+        ));
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    protected function selectAiGuidelines(): Collection
+    {
+        if (! $this->shouldInstallAiGuidelines()) {
+            return collect();
+        }
+
+        $aiGuidelines = collect($this->config->getAiGuidelines());
+
+        $options = app(GuidelineComposer::class)->guidelines();
+        $defaults = $aiGuidelines->isNotEmpty()
+            ? $aiGuidelines
+            : $options->reject(fn (array $guideline) => $guideline['third_party'])->keys();
+
+        if ($options->isEmpty()) {
+            return collect();
+        }
+
+        return collect(multiselect(
+            label: 'Which AI guidelines do you want to install?',
+            // @phpstan-ignore-next-line
+            options: $options->mapWithKeys(fn (array $guideline, string $name) => [$name => "{$name} (~{$guideline['tokens']} tokens) {$guideline['description']}"]),
+            default: $defaults,
+            scroll: 10,
+            hint: 'You can add or remove them later by running this command again',
+            required: true,
+        ));
     }
 
     /**
@@ -264,10 +307,6 @@ class InstallCommand extends Command
             hint: 'You can exclude or include them later in the config file',
         );
     }
-
-    /**
-     * @return array<int, string>
-     */
 
     /**
      * @return Collection<int, CodeEnvironment>
@@ -369,6 +408,8 @@ class InstallCommand extends Command
     protected function installGuidelines(): void
     {
         if (! $this->shouldInstallAiGuidelines()) {
+            $this->config->setAiGuidelines([]);
+
             return;
         }
 
@@ -383,6 +424,7 @@ class InstallCommand extends Command
         $guidelineConfig->laravelStyle = $this->shouldInstallStyleGuidelines();
         $guidelineConfig->caresAboutLocalization = $this->detectLocalization();
         $guidelineConfig->hasAnApi = false;
+        $guidelineConfig->aiGuidelines = $this->selectedAiGuidelines->values()->toArray();
 
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
         $guidelines = $composer->guidelines();
@@ -432,6 +474,10 @@ class InstallCommand extends Command
                 $this->line("  - {$agentName}: {$error}");
             }
         }
+
+        $this->config->setAiGuidelines(
+            $this->selectedAiGuidelines->values()->toArray()
+        );
     }
 
     protected function shouldInstallAiGuidelines(): bool

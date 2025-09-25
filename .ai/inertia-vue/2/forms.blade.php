@@ -1,7 +1,8 @@
+## Inertia + Vue Forms
+
 @php
     /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-## Inertia + Vue Forms
 
 @if($assist->inertia()->hasFormComponent())
 @boostsnippet("`<Form>` Component Example", "vue")

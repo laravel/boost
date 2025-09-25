@@ -1,4 +1,4 @@
-## Tailwind Core
+## Tailwind
 
 - Use Tailwind CSS classes to style HTML, check and use existing tailwind conventions within the project before writing your own.
 - Offer to extract repeated patterns into components that match the project's conventions (i.e. Blade, JSX, Vue, etc..)
