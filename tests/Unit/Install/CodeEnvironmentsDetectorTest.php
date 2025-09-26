@@ -11,10 +11,6 @@ beforeEach(function (): void {
     $this->detector = new CodeEnvironmentsDetector($this->container);
 });
 
-afterEach(function (): void {
-    Mockery::close();
-});
-
 test('discoverSystemInstalledCodeEnvironments returns detected programs', function (): void {
     // Create mock programs
     $program1 = Mockery::mock(CodeEnvironment::class);

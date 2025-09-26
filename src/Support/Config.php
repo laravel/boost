@@ -62,6 +62,15 @@ class Config
         return $this->get('herd_mcp', false);
     }
 
+    public function flush(): void
+    {
+        $path = base_path(self::FILE);
+
+        if (file_exists($path)) {
+            unlink($path);
+        }
+    }
+
     protected function get(string $key, mixed $default = null): mixed
     {
         $config = $this->all();

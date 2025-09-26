@@ -6,9 +6,6 @@ namespace Laravel\Boost\Support;
 
 class Composer
 {
-    /**
-     * Get all packages directories listed in composer.json (both require and require-dev).
-     */
     public static function packagesDirectories(): array
     {
         return collect(static::packages())
@@ -40,9 +37,6 @@ class Composer
             ->toArray();
     }
 
-    /**
-     * Get all packages directories that contain Boost guidelines.
-     */
     public static function packagesDirectoriesWithBoostGuidelines(): array
     {
         return collect(Composer::packagesDirectories())
