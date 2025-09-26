@@ -8,7 +8,7 @@ use Laravel\Boost\Support\Config;
 test('isRunningInWsl returns true when WSL_DISTRO_NAME is set', function (): void {
     putenv('WSL_DISTRO_NAME=Ubuntu');
 
-    $command = new InstallCommand(new Config());
+    $command = new InstallCommand(new Config);
     $reflection = new ReflectionClass($command);
     $method = $reflection->getMethod('isRunningInWsl');
 
@@ -18,7 +18,7 @@ test('isRunningInWsl returns true when WSL_DISTRO_NAME is set', function (): voi
 test('isRunningInWsl returns true when IS_WSL is set', function (): void {
     putenv('IS_WSL=1');
 
-    $command = new InstallCommand(new Config());
+    $command = new InstallCommand(new Config);
     $reflection = new ReflectionClass($command);
     $method = $reflection->getMethod('isRunningInWsl');
 
@@ -29,7 +29,7 @@ test('isRunningInWsl returns true when both WSL env vars are set', function (): 
     putenv('WSL_DISTRO_NAME=Ubuntu');
     putenv('IS_WSL=true');
 
-    $command = new InstallCommand(new Config());
+    $command = new InstallCommand(new Config);
     $reflection = new ReflectionClass($command);
     $method = $reflection->getMethod('isRunningInWsl');
 
@@ -40,7 +40,7 @@ test('isRunningInWsl returns false when no WSL env vars are set', function (): v
     putenv('WSL_DISTRO_NAME');
     putenv('IS_WSL');
 
-    $command = new InstallCommand(new Config());
+    $command = new InstallCommand(new Config);
     $reflection = new ReflectionClass($command);
     $method = $reflection->getMethod('isRunningInWsl');
 
@@ -51,7 +51,7 @@ test('isRunningInWsl returns false when WSL env vars are empty strings', functio
     putenv('WSL_DISTRO_NAME=');
     putenv('IS_WSL=');
 
-    $command = new InstallCommand(new Config());
+    $command = new InstallCommand(new Config);
     $reflection = new ReflectionClass($command);
     $method = $reflection->getMethod('isRunningInWsl');
 
