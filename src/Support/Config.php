@@ -10,15 +10,10 @@ class Config
 {
     protected const FILE = 'boost.json';
 
-    public function exists(): bool
-    {
-        return file_exists(base_path(self::FILE));
-    }
-
     /**
      * @return array<int, string>
      */
-    public function getAiGuidelines(): array
+    public function getGuidelines(): array
     {
         return $this->get('guidelines', []);
     }
@@ -26,9 +21,45 @@ class Config
     /**
      * @param  array<int, string>  $guidelines
      */
-    public function setAiGuidelines(array $guidelines): void
+    public function setGuidelines(array $guidelines): void
     {
         $this->set('guidelines', $guidelines);
+    }
+
+    public function setEditors(array $editors): void
+    {
+        $this->set('editors', $editors);
+    }
+
+    /**
+     * @param  array<int, string>  $agents
+     */
+    public function setAgents(array $agents): void
+    {
+        $this->set('agents', $agents);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getAgents(): array
+    {
+        return $this->get('agents', []);
+    }
+
+    public function getEditors(): array
+    {
+        return $this->get('editors', []);
+    }
+
+    public function setHerdMcp(bool $installed): void
+    {
+        $this->set('herd_mcp', $installed);
+    }
+
+    public function getHerdMcp(): bool
+    {
+        return $this->get('herd_mcp', false);
     }
 
     protected function get(string $key, mixed $default = null): mixed
@@ -40,7 +71,7 @@ class Config
 
     protected function set(string $key, mixed $value): void
     {
-        $config = array_filter($this->all());
+        $config = $this->all();
 
         data_set($config, $key, $value);
 

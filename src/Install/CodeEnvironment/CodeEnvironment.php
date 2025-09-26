@@ -93,6 +93,28 @@ abstract class CodeEnvironment
         return McpInstallationStrategy::FILE;
     }
 
+    final public static function fromName(string $name): ?static
+    {
+        $detectionFactory = app(DetectionStrategyFactory::class);
+
+        foreach ([
+            ClaudeCode::class,
+            Codex::class,
+            Copilot::class,
+            Cursor::class,
+            PhpStorm::class,
+            VSCode::class,
+        ] as $class) {
+            /** @var class-string<static> $class */
+            $instance = new $class($detectionFactory);
+            if ($instance->name() === $name) {
+                return $instance;
+            }
+        }
+
+        return null;
+    }
+
     public function shellMcpCommand(): ?string
     {
         return null;

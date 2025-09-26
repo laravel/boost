@@ -202,15 +202,14 @@ class GuidelineComposer
 
                     $guidelines->put($package, $guideline);
                 }
-            });
-
-        return $guidelines
-            ->when(
+            })->when(
                 isset($this->config->aiGuidelines),
                 fn (Collection $collection): Collection => $collection->filter(
-                    fn (array $guideline, string $key): bool => in_array($key, $this->config->aiGuidelines, true),
+                    fn (string $name): bool => in_array($name, $this->config->aiGuidelines, true),
                 )
-            )
+            );
+
+        return $guidelines
             ->where(fn (array $guideline): bool => ! empty(trim((string) $guideline['content'])));
     }
 

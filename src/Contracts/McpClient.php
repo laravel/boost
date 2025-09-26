@@ -9,6 +9,8 @@ namespace Laravel\Boost\Contracts;
  */
 interface McpClient
 {
+    public function name(): string;
+
     /**
      * Get the display name of the MCP (Model Context Protocol) client.
      */

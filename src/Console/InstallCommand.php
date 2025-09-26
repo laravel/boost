@@ -26,10 +26,10 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
-use function Laravel\Prompts\select;
 
 #[AsCommand('boost:install', 'Install Laravel Boost')]
 class InstallCommand extends Command
@@ -134,7 +134,7 @@ class InstallCommand extends Command
         $this->selectedAiGuidelines = $this->selectAiGuidelines();
         $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
         $this->selectedTargetAgents = $this->selectTargetAgents();
-        $this->enforceTests = $this->determineTestEnforcement(ask: false);
+        $this->enforceTests = $this->determineTestEnforcement();
     }
 
     protected function performInstallation(): void
@@ -143,7 +143,7 @@ class InstallCommand extends Command
 
         usleep(750000);
 
-        if (($this->shouldInstallMcp() || $this->shouldInstallHerdMcp()) && $this->selectedTargetMcpClient->isNotEmpty()) {
+        if ($this->selectedTargetMcpClient->isNotEmpty()) {
             $this->installMcpServerConfig();
         }
     }
@@ -179,9 +179,8 @@ class InstallCommand extends Command
         $boostFeatures = $this->selectedBoostFeatures->map(fn ($feature): string => 'b:'.$feature)->toArray();
 
         $guidelines = [];
-        if ($this->shouldInstallAiGuidelines()) {
-            $guidelines[] = 'g:ai';
-        }
+
+        $guidelines[] = 'g:ai';
 
         if ($this->shouldInstallStyleGuidelines()) {
             $guidelines[] = 'g:style';
@@ -210,7 +209,7 @@ class InstallCommand extends Command
      * won't have the CI setup to make use of them anyway, so we're just wasting their
      * tokens/money by enforcing them.
      */
-    protected function determineTestEnforcement(bool $ask = true): bool
+    protected function determineTestEnforcement(): bool
     {
         $hasMinimumTests = false;
 
@@ -226,14 +225,6 @@ class InstallCommand extends Command
                 ->count() >= self::MIN_TEST_COUNT;
         }
 
-        if (! $hasMinimumTests && $ask) {
-            return select(
-                label: 'Should AI always create tests?',
-                options: ['Yes', 'No'],
-                default: 'Yes'
-            ) === 'Yes';
-        }
-
         return $hasMinimumTests;
     }
 
@@ -242,26 +233,24 @@ class InstallCommand extends Command
      */
     protected function selectBoostFeatures(): Collection
     {
-        $defaultInstallOptions = [
+        $features = collect([
             'mcp_server',
-            ...$this->config->exists() === false || $this->config->getAiGuidelines() !== [] ? ['ai_guidelines'] : [],
-        ];
+            'ai_guidelines',
+        ]);
 
-        $installOptions = [
-            'mcp_server' => 'Boost MCP Server (with 15+ tools)',
-            'ai_guidelines' => 'Boost AI Guidelines (for Laravel, Inertia, and more)',
-        ];
-
-        if ($this->herd->isMcpAvailable()) {
-            $installOptions['herd_mcp'] = 'Herd MCP Server';
+        if ($this->herd->isMcpAvailable() === false) {
+            return $features;
         }
 
-        return collect(multiselect(
-            label: 'What do you want to install?',
-            options: $installOptions,
-            default: $defaultInstallOptions,
-            required: true,
-        ));
+        if (confirm(
+            label: 'Would you like to install Herd MCP alongside Boost MCP?',
+            default: $this->config->getHerdMcp(),
+            hint: 'Herd MCP provides additional tools like browser logs, that can help AI understand issues better',
+        )) {
+            $features->push('herd_mcp');
+        }
+
+        return $features;
     }
 
     /**
@@ -269,47 +258,25 @@ class InstallCommand extends Command
      */
     protected function selectAiGuidelines(): Collection
     {
-        if (! $this->shouldInstallAiGuidelines()) {
-            return collect();
-        }
-
-        $aiGuidelines = collect($this->config->getAiGuidelines());
-
-        $options = app(GuidelineComposer::class)->guidelines();
-        $defaults = $aiGuidelines->isNotEmpty()
-            ? $aiGuidelines
-            : $options->reject(fn (array $guideline) => $guideline['third_party'])->keys();
+        $options = app(GuidelineComposer::class)->guidelines()
+            ->reject(fn (array $guideline) => $guideline['third_party'] === false);
 
         if ($options->isEmpty()) {
             return collect();
         }
 
         return collect(multiselect(
-            label: 'Which AI guidelines do you want to install?',
+            label: 'Which Third Party AI Guidelines do you want to install?',
             // @phpstan-ignore-next-line
             options: $options->mapWithKeys(function (array $guideline, string $name) {
                 $humanName = str_replace('/core', '', $name);
 
                 return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
             }),
-            default: $defaults,
+            default: collect($this->config->getGuidelines()),
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
-            required: true,
         ));
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    protected function boostToolsToDisable(): array
-    {
-        return multiselect(
-            label: 'Do you need to disable any Boost provided tools?',
-            options: $this->discoverTools(),
-            scroll: 4,
-            hint: 'You can exclude or include them later in the config file',
-        );
     }
 
     /**
@@ -317,13 +284,10 @@ class InstallCommand extends Command
      */
     protected function selectTargetMcpClients(): Collection
     {
-        if (! $this->shouldInstallMcp() && ! $this->shouldInstallHerdMcp()) {
-            return collect();
-        }
-
         return $this->selectCodeEnvironments(
             McpClient::class,
-            sprintf('Which code editors do you use to work on %s?', $this->projectName)
+            sprintf('Which code editors do you use to work on %s?', $this->projectName),
+            $this->config->getEditors(),
         );
     }
 
@@ -332,13 +296,10 @@ class InstallCommand extends Command
      */
     protected function selectTargetAgents(): Collection
     {
-        if (! $this->shouldInstallAiGuidelines()) {
-            return collect();
-        }
-
         return $this->selectCodeEnvironments(
             Agent::class,
-            sprintf('Which agents need AI guidelines for %s?', $this->projectName)
+            sprintf('Which agents need AI guidelines for %s?', $this->projectName),
+            $this->config->getAgents(),
         );
     }
 
@@ -357,9 +318,10 @@ class InstallCommand extends Command
     }
 
     /**
+     * @param  array<int, string>  $defaults
      * @return Collection<int, CodeEnvironment>
      */
-    protected function selectCodeEnvironments(string $contractClass, string $label): Collection
+    protected function selectCodeEnvironments(string $contractClass, string $label, array $defaults): Collection
     {
         $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
         $config = $this->getSelectionConfig($contractClass);
@@ -374,49 +336,48 @@ class InstallCommand extends Command
             $displayMethod = $config['displayMethod'];
             $displayText = $environment->{$displayMethod}();
 
-            return [$environment::class => $displayText];
+            return [$environment->name() => $displayText];
         })->sort();
 
-        $detectedClasses = [];
         $installedEnvNames = array_unique(array_merge(
             $this->projectInstalledCodeEnvironments,
             $this->systemInstalledCodeEnvironments
         ));
 
-        foreach ($installedEnvNames as $envKey) {
-            $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
-            if ($matchingEnv) {
-                $detectedClasses[] = $matchingEnv::class;
+        $detectedDefaults = [];
+
+        if ($defaults === []) {
+            foreach ($installedEnvNames as $envKey) {
+                $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
+                if ($matchingEnv) {
+                    $detectedDefaults[] = $matchingEnv->name();
+                }
             }
         }
 
-        $selectedClasses = collect(multiselect(
+        $selectedCodeEnvironments = collect(multiselect(
             label: $label,
             options: $options->toArray(),
-            default: array_unique($detectedClasses),
+            default: $defaults === [] ? $detectedDefaults : $defaults,
             scroll: $config['scroll'],
             required: $config['required'],
-            hint: $detectedClasses === [] ? '' : sprintf('Auto-detected %s for you',
+            hint: $defaults === [] || $detectedDefaults === [] ? '' : sprintf('Auto-detected %s for you',
                 Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
-                    $env = $availableEnvironments->first(fn ($env): bool => $env::class === $className);
+                    $env = $availableEnvironments->first(fn ($env): bool => $env->name() === $className);
                     $displayMethod = $config['displayMethod'];
 
                     return $env->{$displayMethod}();
-                }, $detectedClasses), ', ', ' & ')
+                }, $detectedDefaults), ', ', ' & ')
             )
         ))->sort();
 
-        return $selectedClasses->map(fn ($className) => $availableEnvironments->first(fn ($env): bool => $env::class === $className));
+        return $selectedCodeEnvironments->map(
+            fn (string $name) => $availableEnvironments->first(fn ($env): bool => $env->name() === $name),
+        )->filter()->values();
     }
 
     protected function installGuidelines(): void
     {
-        if (! $this->shouldInstallAiGuidelines()) {
-            $this->config->setAiGuidelines([]);
-
-            return;
-        }
-
         if ($this->selectedTargetAgents->isEmpty()) {
             $this->info(' No agents selected for guideline installation.');
 
@@ -479,24 +440,26 @@ class InstallCommand extends Command
             }
         }
 
-        $this->config->setAiGuidelines(
+        $this->config->setHerdMcp(
+            $this->shouldInstallHerdMcp()
+        );
+
+        $this->config->setEditors(
+            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient) => $mcpClient->name())->values()->toArray()
+        );
+
+        $this->config->setAgents(
+            $this->selectedTargetAgents->map(fn (Agent $agent) => $agent->name())->values()->toArray()
+        );
+
+        $this->config->setGuidelines(
             $this->selectedAiGuidelines->values()->toArray()
         );
-    }
-
-    protected function shouldInstallAiGuidelines(): bool
-    {
-        return $this->selectedBoostFeatures->contains('ai_guidelines');
     }
 
     protected function shouldInstallStyleGuidelines(): bool
     {
         return false;
-    }
-
-    protected function shouldInstallMcp(): bool
-    {
-        return $this->selectedBoostFeatures->contains('mcp_server');
     }
 
     protected function shouldInstallHerdMcp(): bool
@@ -506,10 +469,6 @@ class InstallCommand extends Command
 
     protected function installMcpServerConfig(): void
     {
-        if (! $this->shouldInstallMcp() && ! $this->shouldInstallHerdMcp()) {
-            return;
-        }
-
         if ($this->selectedTargetMcpClient->isEmpty()) {
             $this->info('No agents selected for guideline installation.');
 
@@ -537,32 +496,30 @@ class InstallCommand extends Command
             $this->output->write("  {$ideDisplay}... ");
             $results = [];
 
-            if ($this->shouldInstallMcp()) {
-                $inWsl = $this->isRunningInWsl();
-                $mcp = array_filter([
-                    'laravel-boost',
-                    $inWsl ? 'wsl' : false,
-                    $mcpClient->getPhpPath($inWsl),
-                    $mcpClient->getArtisanPath($inWsl),
-                    'boost:mcp',
-                ]);
-                try {
-                    $result = $mcpClient->installMcp(
-                        array_shift($mcp),
-                        array_shift($mcp),
-                        $mcp
-                    );
+            $inWsl = $this->isRunningInWsl();
+            $mcp = array_filter([
+                'laravel-boost',
+                $inWsl ? 'wsl' : false,
+                $mcpClient->getPhpPath($inWsl),
+                $mcpClient->getArtisanPath($inWsl),
+                'boost:mcp',
+            ]);
+            try {
+                $result = $mcpClient->installMcp(
+                    array_shift($mcp),
+                    array_shift($mcp),
+                    $mcp
+                );
 
-                    if ($result) {
-                        $results[] = $this->greenTick.' Boost';
-                    } else {
-                        $results[] = $this->redCross.' Boost';
-                        $failed[$ideName]['boost'] = 'Failed to write configuration';
-                    }
-                } catch (Exception $e) {
+                if ($result) {
+                    $results[] = $this->greenTick.' Boost';
+                } else {
                     $results[] = $this->redCross.' Boost';
-                    $failed[$ideName]['boost'] = $e->getMessage();
+                    $failed[$ideName]['boost'] = 'Failed to write configuration';
                 }
+            } catch (Exception $e) {
+                $results[] = $this->redCross.' Boost';
+                $failed[$ideName]['boost'] = $e->getMessage();
             }
 
             // Install Herd MCP if enabled

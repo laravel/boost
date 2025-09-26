@@ -13,7 +13,7 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient
 {
     public function name(): string
     {
-        return 'claudecode';
+        return 'claude_code';
     }
 
     public function displayName(): string
