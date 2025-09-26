@@ -7,7 +7,7 @@ namespace Laravel\Boost\Console;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand('boost:update', 'Updates Laravel Boost Guidelines to the latest version.')]
+#[AsCommand('boost:update', 'Updates Laravel Boost guidelines to the latest version')]
 class UpdateCommand extends Command
 {
     public function handle(): void
@@ -16,6 +16,6 @@ class UpdateCommand extends Command
             '--no-interaction' => true,
         ]);
 
-        $this->components->info('Boost Guidelines have been updated successfully.');
+        $this->components->info('Boost guidelines updated successfully.');
     }
 }
