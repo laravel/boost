@@ -13,7 +13,6 @@ declare(strict_types=1);
 |
 */
 
-use Laravel\Boost\Support\Config;
 use Laravel\Mcp\Response;
 
 uses(Tests\TestCase::class)->in('Unit', 'Feature');
