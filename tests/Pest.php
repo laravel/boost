@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 use Laravel\Mcp\Response;
 
-uses(Tests\TestCase::class)->in('Feature');
+uses(Tests\TestCase::class)->in('Unit', 'Feature');
 
 expect()->extend('isToolResult', fn () => $this->toBeInstanceOf(Response::class));
 

@@ -21,10 +21,6 @@ beforeEach(function (): void {
     $this->strategy = Mockery::mock(DetectionStrategy::class);
 });
 
-afterEach(function (): void {
-    Mockery::close();
-});
-
 // Create a concrete test implementation for testing abstract methods
 class TestCodeEnvironment extends CodeEnvironment
 {

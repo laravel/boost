@@ -11,10 +11,6 @@ beforeEach(function (): void {
     $this->detector = new CodeEnvironmentsDetector($this->container);
 });
 
-afterEach(function (): void {
-    Mockery::close();
-});
-
 test('discoverSystemInstalledCodeEnvironments returns detected programs', function (): void {
     // Create mock programs
     $program1 = Mockery::mock(CodeEnvironment::class);
@@ -139,7 +135,7 @@ test('discoverProjectInstalledCodeEnvironments detects applications with mixed t
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
-    expect($detected)->toContain('claudecode');
+    expect($detected)->toContain('claude_code');
 
     unlink($tempDir.'/CLAUDE.md');
     rmdir($tempDir);
@@ -168,7 +164,7 @@ test('discoverProjectInstalledCodeEnvironments detects claude code with director
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
-    expect($detected)->toContain('claudecode');
+    expect($detected)->toContain('claude_code');
 
     rmdir($tempDir.'/.claude');
     rmdir($tempDir);
@@ -253,7 +249,7 @@ test('discoverProjectInstalledCodeEnvironments handles multiple detections', fun
 
     expect($detected)->toContain('vscode')
         ->and($detected)->toContain('cursor')
-        ->and($detected)->toContain('claudecode')
+        ->and($detected)->toContain('claude_code')
         ->and(count($detected))->toBeGreaterThanOrEqual(3);
 
     // Cleanup

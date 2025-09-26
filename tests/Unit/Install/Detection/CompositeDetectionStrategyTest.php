@@ -12,10 +12,6 @@ beforeEach(function (): void {
     $this->thirdStrategy = Mockery::mock(DetectionStrategy::class);
 });
 
-afterEach(function (): void {
-    Mockery::close();
-});
-
 test('returns true when first strategy succeeds', function (): void {
     $this->firstStrategy
         ->shouldReceive('detect')
