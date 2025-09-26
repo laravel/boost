@@ -1,8 +1,7 @@
-## Inertia + React Forms
-
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
+## Inertia + React Forms
 
 @if($assist->inertia()->hasFormComponent())
 @boostsnippet("`<Form>` Component Example", "react")
