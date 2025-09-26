@@ -93,7 +93,7 @@ abstract class CodeEnvironment
         return McpInstallationStrategy::FILE;
     }
 
-    final public static function fromName(string $name): ?static
+    public static function fromName(string $name): ?static
     {
         $detectionFactory = app(DetectionStrategyFactory::class);
 
