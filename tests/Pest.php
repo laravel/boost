@@ -16,10 +16,7 @@ declare(strict_types=1);
 use Laravel\Boost\Support\Config;
 use Laravel\Mcp\Response;
 
-uses(Tests\TestCase::class)->in('Unit', 'Feature')
-    ->beforeEach(function () {
-        (new Config)->flush();
-    });
+uses(Tests\TestCase::class)->in('Unit', 'Feature');
 
 expect()->extend('isToolResult', fn () => $this->toBeInstanceOf(Response::class));
 
