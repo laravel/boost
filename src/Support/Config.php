@@ -80,9 +80,11 @@ class Config
 
     protected function set(string $key, mixed $value): void
     {
-        $config = $this->all();
+        $config = array_filter($this->all());
 
         data_set($config, $key, $value);
+
+        ksort($config);
 
         $path = base_path(self::FILE);
 

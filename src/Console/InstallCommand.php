@@ -194,8 +194,10 @@ class InstallCommand extends Command
         $text = 'Enjoy the boost 🚀 Next steps: ';
         $paddingLength = (int) (floor(($this->terminal->cols() - mb_strlen($text.$label)) / 2)) - 2;
 
-        echo "\033[42m\033[2K".str_repeat(' ', max(0, $paddingLength)); // Make the entire line have a green background
-        echo $this->black($this->bold($text.$link)).$this->reset(PHP_EOL).$this->reset(PHP_EOL);
+        $this->output->write([
+            "\033[42m\033[2K".str_repeat(' ', max(0, $paddingLength)),
+            $this->black($this->bold($text.$link)).$this->reset(PHP_EOL).$this->reset(PHP_EOL),
+        ]);
     }
 
     protected function hyperlink(string $label, string $url): string

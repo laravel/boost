@@ -299,7 +299,7 @@ class GuidelineComposer
             'path' => $path,
             'custom' => str_contains($path, $this->customGuidelinePath()),
             'third_party' => $thirdParty,
-            'tokens' => str_word_count($rendered) * 1.3, // Rough estimate of tokens based on word count
+            'tokens' => round(str_word_count($rendered) * 1.3),
         ];
     }
 
