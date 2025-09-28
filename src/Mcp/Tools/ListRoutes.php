@@ -64,9 +64,15 @@ class ListRoutes extends Tool
         foreach ($optionMap as $argKey => $cliOption) {
             $value = $request->get($argKey);
             if (! empty($value)) {
-                $sanitizedValue = str_replace(['*', '?'], '', $value);
-                if (filled($sanitizedValue)) {
-                    $options['--'.$cliOption] = $sanitizedValue;
+                if (is_bool($value)) {
+                    if ($value === true) {
+                        $options['--'.$cliOption] = true;
+                    }
+                } else {
+                    $sanitizedValue = str_replace(['*', '?'], '', $value);
+                    if (filled($sanitizedValue)) {
+                        $options['--'.$cliOption] = $sanitizedValue;
+                    }
                 }
             }
         }
