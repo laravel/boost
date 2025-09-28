@@ -65,9 +65,7 @@ class ListRoutes extends Tool
             $value = $request->get($argKey);
             if (! empty($value)) {
                 if (is_bool($value)) {
-                    if ($value === true) {
-                        $options['--'.$cliOption] = true;
-                    }
+                    $options['--'.$cliOption] = true;
                 } else {
                     $sanitizedValue = str_replace(['*', '?'], '', $value);
                     if (filled($sanitizedValue)) {
