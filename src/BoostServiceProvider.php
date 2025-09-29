@@ -26,6 +26,8 @@ class BoostServiceProvider extends ServiceProvider
             'boost'
         );
 
+        $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
+
         if (! $this->shouldRun()) {
             return;
         }

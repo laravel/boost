@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\CodeEnvironment;
 
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
@@ -118,8 +117,6 @@ abstract class CodeEnvironment
      *
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
-     *
-     * @throws FileNotFoundException
      */
     public function installMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
@@ -176,8 +173,6 @@ abstract class CodeEnvironment
      *
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
-     *
-     * @throws FileNotFoundException
      */
     protected function installFileMcp(string $key, string $command, array $args = [], array $env = []): bool
     {

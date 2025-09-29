@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Config;
+use Laravel\Boost\Boost;
+use Laravel\Boost\BoostManager;
 use Laravel\Boost\BoostServiceProvider;
 
 beforeEach(function (): void {
@@ -72,5 +74,26 @@ describe('environment restrictions', function (): void {
 
             expect(config('logging.channels.browser'))->toBeNull();
         });
+    });
+});
+
+describe('BoostManager registration', function (): void {
+    it('registers BoostManager in the container', function (): void {
+        expect(app()->bound(BoostManager::class))->toBeTrue()
+            ->and(app(BoostManager::class))->toBeInstanceOf(BoostManager::class);
+    });
+
+    it('registers BoostManager as a singleton', function (): void {
+        $instance1 = app(BoostManager::class);
+        $instance2 = app(BoostManager::class);
+
+        expect($instance1)->toBe($instance2);
+    });
+
+    it('binds Boost facade to the same BoostManager instance', function (): void {
+        $containerInstance = app(BoostManager::class);
+        $facadeInstance = Boost::getFacadeRoot();
+
+        expect($facadeInstance)->toBe($containerInstance);
     });
 });
