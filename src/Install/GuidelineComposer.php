@@ -292,7 +292,7 @@ class GuidelineComposer
             ->before("\n")
             ->trim()
             ->limit(50, '...')
-            ->whenEmpty(fn () => 'No description provided')
+            ->whenEmpty(fn () => Str::of('No description provided'))
             ->value();
 
         return [
