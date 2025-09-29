@@ -247,7 +247,7 @@ class InstallCommand extends Command
         if (confirm(
             label: 'Would you like to install Herd MCP alongside Boost MCP?',
             default: $this->config->getHerdMcp(),
-            hint: 'Herd MCP provides additional tools like browser logs, that can help AI understand issues better',
+            hint: 'The Herd MCP provides additional tools like browser logs, which can help AI understand issues better',
         )) {
             $features->push('herd_mcp');
         }
