@@ -78,12 +78,21 @@ describe('environment restrictions', function (): void {
 });
 
 describe('BoostManager registration', function (): void {
+    beforeEach(function (): void {
+        Config::set('boost.enabled', true);
+        app()->detectEnvironment(fn (): string => 'local');
+        $provider = new BoostServiceProvider(app());
+        $provider->register();
+        $provider->boot(app('router'));
+    });
+
     it('registers BoostManager in the container', function (): void {
         expect(app()->bound(BoostManager::class))->toBeTrue()
             ->and(app(BoostManager::class))->toBeInstanceOf(BoostManager::class);
     });
 
     it('registers BoostManager as a singleton', function (): void {
+        Config::set('boost.enabled', true);
         $instance1 = app(BoostManager::class);
         $instance2 = app(BoostManager::class);
 
@@ -91,6 +100,7 @@ describe('BoostManager registration', function (): void {
     });
 
     it('binds Boost facade to the same BoostManager instance', function (): void {
+        Config::set('boost.enabled', true);
         $containerInstance = app(BoostManager::class);
         $facadeInstance = Boost::getFacadeRoot();
 
