@@ -41,8 +41,8 @@ class CodeEnvironmentsDetector
     public function discoverProjectInstalledCodeEnvironments(string $basePath): array
     {
         return $this->getCodeEnvironments()
-            ->filter(fn ($program): bool => $program->detectInProject($basePath))
-            ->map(fn ($program): string => $program->name())
+            ->filter(fn (CodeEnvironment $program): bool => $program->detectInProject($basePath))
+            ->map(fn (CodeEnvironment $program): string => $program->name())
             ->values()
             ->toArray();
     }

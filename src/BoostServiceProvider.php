@@ -26,11 +26,11 @@ class BoostServiceProvider extends ServiceProvider
             'boost'
         );
 
-        $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
-
         if (! $this->shouldRun()) {
             return;
         }
+
+        $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
 
         $this->app->singleton(Roster::class, function () {
             $lockFiles = [
