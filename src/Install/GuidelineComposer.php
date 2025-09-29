@@ -287,9 +287,12 @@ class GuidelineComposer
 
         $this->storedSnippets = []; // Clear for next use
 
-        $description = Str::of($rendered)->after('# ')->before("\n")->trim()
-            ->whenEmpty(fn () => 'No description provided')
+        $description = Str::of($rendered)
+            ->after('# ')
+            ->before("\n")
+            ->trim()
             ->limit(50, '...')
+            ->whenEmpty(fn () => 'No description provided')
             ->value();
 
         return [
