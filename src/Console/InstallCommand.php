@@ -268,7 +268,7 @@ class InstallCommand extends Command
         }
 
         return collect(multiselect(
-            label: 'Which third-party AI Guidelines do you want to install?',
+            label: 'Which third-party AI guidelines do you want to install?',
             // @phpstan-ignore-next-line
             options: $options->mapWithKeys(function (array $guideline, string $name) {
                 $humanName = str_replace('/core', '', $name);
