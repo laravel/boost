@@ -302,13 +302,13 @@ class InstallCommand extends Command
     /**
      * Get configuration settings for contract-specific selection behavior.
      *
-     * @return array{scroll: int, required: bool, displayMethod: string}
+     * @return array{required: bool, displayMethod: string}
      */
     protected function getSelectionConfig(string $contractClass): array
     {
         return match ($contractClass) {
-            Agent::class => ['scroll' => 5, 'required' => false, 'displayMethod' => 'agentName'],
-            McpClient::class => ['scroll' => 5, 'required' => true, 'displayMethod' => 'displayName'],
+            Agent::class => ['required' => false, 'displayMethod' => 'agentName'],
+            McpClient::class => ['required' => true, 'displayMethod' => 'displayName'],
             default => throw new InvalidArgumentException("Unsupported contract class: {$contractClass}"),
         };
     }
@@ -351,7 +351,7 @@ class InstallCommand extends Command
             label: $label,
             options: $options->toArray(),
             default: array_unique($detectedClasses),
-            scroll: $config['scroll'],
+            scroll: count($options->toArray()),
             required: $config['required'],
             hint: $detectedClasses === [] ? '' : sprintf('Auto-detected %s for you',
                 Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
