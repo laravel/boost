@@ -155,7 +155,7 @@ class OpenCode extends CodeEnvironment implements Agent, McpClient
 {
     // Your implementation goes here
 }
-````
+```
 
 ### Registering the Custom Code Environment
 

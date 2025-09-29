@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost;
 
+use InvalidArgumentException;
 use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironment\Codex;
@@ -30,7 +31,7 @@ class BoostManager
     public function registerCodeEnvironment(string $key, string $className): void
     {
         if (array_key_exists($key, $this->codeEnvironments)) {
-            return;
+            throw new InvalidArgumentException("Code environment '{$key}' is already registered");
         }
 
         $this->codeEnvironments[$key] = $className;

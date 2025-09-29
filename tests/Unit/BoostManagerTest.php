@@ -11,7 +11,7 @@ use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
 use Tests\Unit\Install\ExampleCodeEnvironment;
 
-it('return default code environments', function (): void {
+it('returns default code environments', function (): void {
     $manager = new BoostManager;
     $registered = $manager->getCodeEnvironments();
 
@@ -49,14 +49,17 @@ it('can register multiple code environments', function (): void {
         ->and($registered)->toHaveKey('phpstorm');
 });
 
-it('does not overwrite default code environments', function (): void {
+it('throws an exception when registering a duplicate key', function (): void {
     $manager = new BoostManager;
-    $manager->registerCodeEnvironment('phpstorm', PHPStorm::class);
-    $manager->registerCodeEnvironment('phpstorm', ExampleCodeEnvironment::class);
 
-    $registered = $manager->getCodeEnvironments();
+    expect(fn () => $manager->registerCodeEnvironment('phpstorm', ExampleCodeEnvironment::class))
+        ->toThrow(InvalidArgumentException::class, "Code environment 'phpstorm' is already registered");
+});
 
-    expect($registered)->toHaveKey('phpstorm')
-        ->and($registered['phpstorm'])->toBe(PHPStorm::class)
-        ->and($registered['phpstorm'])->not()->toBe(ExampleCodeEnvironment::class);
+it('throws exception when registering custom environment with a duplicate key', function (): void {
+    $manager = new BoostManager;
+    $manager->registerCodeEnvironment('custom', ExampleCodeEnvironment::class);
+
+    expect(fn () => $manager->registerCodeEnvironment('custom', ExampleCodeEnvironment::class))
+        ->toThrow(InvalidArgumentException::class, "Code environment 'custom' is already registered");
 });
