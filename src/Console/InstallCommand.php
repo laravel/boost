@@ -351,7 +351,7 @@ class InstallCommand extends Command
             label: $label,
             options: $options->toArray(),
             default: array_unique($detectedClasses),
-            scroll: count($options->toArray()),
+            scroll: $options->count(),
             required: $config['required'],
             hint: $detectedClasses === [] ? '' : sprintf('Auto-detected %s for you',
                 Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
