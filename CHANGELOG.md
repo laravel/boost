@@ -2,10 +2,6 @@
 
 ## [Unreleased](https://github.com/laravel/boost/compare/v1.3.0...main)
 
-## [v1.2.0](https://github.com/laravel/boost/compare/v1.1.5...v1.2.0) - 2025-09-18
-
-* uses latest version of laravel mcp
-
 ## [v1.3.0](https://github.com/laravel/boost/compare/v1.2.1...v1.3.0) - 2025-09-30
 
 ### What's Changed
@@ -35,6 +31,10 @@
 * [@balu-lt](https://github.com/balu-lt) made their first contribution in https://github.com/laravel/boost/pull/113
 
 **Full Changelog**: https://github.com/laravel/boost/compare/v1.2.0...v1.2.1
+
+## [v1.2.0](https://github.com/laravel/boost/compare/v1.1.5...v1.2.0) - 2025-09-18
+
+* uses latest version of laravel mcp
 
 ## [v1.1.5](https://github.com/laravel/boost/compare/v1.1.4...v1.1.5) - 2025-09-18
 
