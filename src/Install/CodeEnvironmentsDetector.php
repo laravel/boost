@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
+use Laravel\Boost\Install\CodeEnvironment\AugmentCode;
 use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironment\Codex;
@@ -25,6 +26,7 @@ class CodeEnvironmentsDetector
         'claudecode' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
+        'augment' => AugmentCode::class,
     ];
 
     public function __construct(

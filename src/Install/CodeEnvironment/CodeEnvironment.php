@@ -98,6 +98,7 @@ abstract class CodeEnvironment
         $detectionFactory = app(DetectionStrategyFactory::class);
 
         foreach ([
+            AugmentCode::class,
             ClaudeCode::class,
             Codex::class,
             Copilot::class,
