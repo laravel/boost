@@ -9,6 +9,8 @@ namespace Laravel\Boost\Contracts;
  */
 interface Agent
 {
+    public function name(): string;
+
     /**
      * Get the display name of the Agent.
      */
