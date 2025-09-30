@@ -31,11 +31,11 @@ class GuidelineWriter
         $filePath = $this->agent->guidelinesPath();
 
         $directory = dirname($filePath);
-        if (! is_dir($directory) && ! mkdir($directory, 0755, true)) {
+        if (! is_dir($directory) && ! @mkdir($directory, 0755, true)) {
             throw new RuntimeException("Failed to create directory: {$directory}");
         }
 
-        $handle = fopen($filePath, 'c+');
+        $handle = @fopen($filePath, 'c+');
         if (! $handle) {
             throw new RuntimeException("Failed to open file: {$filePath}");
         }
