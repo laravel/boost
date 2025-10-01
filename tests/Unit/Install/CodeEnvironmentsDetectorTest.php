@@ -145,14 +145,16 @@ test('discoverProjectInstalledCodeEnvironments detects copilot with nested file 
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
     mkdir($tempDir.'/.github');
-    file_put_contents($tempDir.'/.github/copilot-instructions.md', 'test');
+    mkdir ($tempDir.'/.github/instructions');
+    file_put_contents($tempDir.'/.github/instructions/copilot-instructions.md', 'test');
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
     expect($detected)->toContain('copilot');
 
     // Cleanup
-    unlink($tempDir.'/.github/copilot-instructions.md');
+    unlink($tempDir.'/.github/instructions/copilot-instructions.md');
+    rmdir($tempDir.'/.github/instructions');
     rmdir($tempDir.'/.github');
     rmdir($tempDir);
 });
