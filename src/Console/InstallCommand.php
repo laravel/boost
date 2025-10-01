@@ -261,7 +261,7 @@ class InstallCommand extends Command
     protected function selectAiGuidelines(): Collection
     {
         $options = app(GuidelineComposer::class)->guidelines()
-            ->reject(fn (array $guideline) => $guideline['third_party'] === false);
+            ->reject(fn (array $guideline): bool => $guideline['third_party'] === false);
 
         if ($options->isEmpty()) {
             return collect();
@@ -270,7 +270,7 @@ class InstallCommand extends Command
         return collect(multiselect(
             label: 'Which third-party AI guidelines do you want to install?',
             // @phpstan-ignore-next-line
-            options: $options->mapWithKeys(function (array $guideline, string $name) {
+            options: $options->mapWithKeys(function (array $guideline, string $name): array {
                 $humanName = str_replace('/core', '', $name);
 
                 return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
@@ -360,8 +360,8 @@ class InstallCommand extends Command
         $selectedCodeEnvironments = collect(multiselect(
             label: $label,
             options: $options->toArray(),
-            scroll: $options->count(),
             default: $defaults === [] ? $detectedDefaults : $defaults,
+            scroll: $options->count(),
             required: $config['required'],
             hint: $defaults === [] || $detectedDefaults === [] ? '' : sprintf('Auto-detected %s for you',
                 Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
@@ -447,11 +447,11 @@ class InstallCommand extends Command
         );
 
         $this->config->setEditors(
-            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient) => $mcpClient->name())->values()->toArray()
+            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
         );
 
         $this->config->setAgents(
-            $this->selectedTargetAgents->map(fn (Agent $agent) => $agent->name())->values()->toArray()
+            $this->selectedTargetAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray()
         );
 
         $this->config->setGuidelines(

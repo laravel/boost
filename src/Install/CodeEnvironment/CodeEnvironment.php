@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Illuminate\Support\Facades\Process;
+use Laravel\Boost\BoostManager;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
@@ -92,19 +93,13 @@ abstract class CodeEnvironment
         return McpInstallationStrategy::FILE;
     }
 
-    public static function fromName(string $name): ?static
+    public static function fromName(string $name): ?CodeEnvironment
     {
         $detectionFactory = app(DetectionStrategyFactory::class);
+        $boostManager = app(BoostManager::class);
 
-        foreach ([
-            ClaudeCode::class,
-            Codex::class,
-            Copilot::class,
-            Cursor::class,
-            PhpStorm::class,
-            VSCode::class,
-        ] as $class) {
-            /** @var class-string<static> $class */
+        foreach ($boostManager->getCodeEnvironments() as $class) {
+            /** @var class-string<CodeEnvironment> $class */
             $instance = new $class($detectionFactory);
             if ($instance->name() === $name) {
                 return $instance;

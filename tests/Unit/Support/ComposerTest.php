@@ -2,12 +2,12 @@
 
 use Laravel\Boost\Support\Config;
 
-afterEach(function () {
-    (new Config(__DIR__))->flush();
+afterEach(function (): void {
+    (new Config)->flush();
 });
 
 it('may store and retrieve guidelines', function (): void {
-    $config = new Config(__DIR__);
+    $config = new Config;
 
     expect($config->getGuidelines())->toBeEmpty();
 
@@ -22,7 +22,7 @@ it('may store and retrieve guidelines', function (): void {
 });
 
 it('may store and retrieve agents', function (): void {
-    $config = new Config(__DIR__);
+    $config = new Config;
 
     expect($config->getAgents())->toBeEmpty();
 
@@ -37,7 +37,7 @@ it('may store and retrieve agents', function (): void {
 });
 
 it('may store and retrieve editors', function (): void {
-    $config = new Config(__DIR__);
+    $config = new Config;
 
     expect($config->getEditors())->toBeEmpty();
 
@@ -52,7 +52,7 @@ it('may store and retrieve editors', function (): void {
 });
 
 it('may store and retrieve herd mcp installation status', function (): void {
-    $config = new Config(__DIR__);
+    $config = new Config;
 
     expect($config->getHerdMcp())->toBeFalse();
 
