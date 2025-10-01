@@ -510,7 +510,9 @@ class InstallCommand extends Command
                 $result = $mcpClient->installMcp(
                     array_shift($mcp),
                     array_shift($mcp),
-                    $mcp
+                    $mcp,
+                    [],
+                    $mcpClient->name() === 'vscode' ? '${workspaceFolder}' : null
                 );
 
                 if ($result) {

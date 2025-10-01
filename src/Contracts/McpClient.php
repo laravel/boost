@@ -40,5 +40,5 @@ interface McpClient
      * @param  array<string, string>  $env  Environment variables
      * @return bool True if installation succeeded, false otherwise
      */
-    public function installMcp(string $key, string $command, array $args = [], array $env = []): bool;
+    public function installMcp(string $key, string $command, array $args = [], array $env = [], ?string $cwd = null): bool;
 }
