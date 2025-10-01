@@ -143,11 +143,11 @@ abstract class CodeEnvironment
      *
      * @throws FileNotFoundException
      */
-    public function installMcp(string $key, string $command, array $args = [], array $env = []): bool
+    public function installMcp(string $key, string $command, array $args = [], array $env = [], ?string $cwd = null): bool
     {
         return match ($this->mcpInstallationStrategy()) {
             McpInstallationStrategy::SHELL => $this->installShellMcp($key, $command, $args, $env),
-            McpInstallationStrategy::FILE => $this->installFileMcp($key, $command, $args, $env),
+            McpInstallationStrategy::FILE => $this->installFileMcp($key, $command, $args, $env, $cwd),
             McpInstallationStrategy::NONE => false
         };
     }
@@ -201,7 +201,7 @@ abstract class CodeEnvironment
      *
      * @throws FileNotFoundException
      */
-    protected function installFileMcp(string $key, string $command, array $args = [], array $env = []): bool
+    protected function installFileMcp(string $key, string $command, array $args = [], array $env = [], ?string $cwd = null): bool
     {
         $path = $this->mcpConfigPath();
         if (! $path) {
@@ -210,7 +210,7 @@ abstract class CodeEnvironment
 
         return (new FileWriter($path))
             ->configKey($this->mcpConfigKey())
-            ->addServer($key, $command, $args, $env)
+            ->addServer($key, $command, $args, $env, $cwd)
             ->save();
     }
 }
