@@ -71,6 +71,38 @@ class CustomGuideCommand extends Command
 
         $content .= '
 <!-- Add your custom guidelines here -->
+## Project Overview
+
+## Coding Standards
+
+### General
+
+### Laravel Specific
+
+## Architecture Patterns
+
+#### Instalación y Configuración:
+
+#### Organización:
+
+### DTOs y Value Objects
+
+### Testing
+
+## Naming Conventions
+
+## Database
+
+## Frontend
+
+## Security
+
+## Performance
+
+## Git Workflow
+
+## Comments & Documentation
+
 ';
 
         if (file_put_contents($filePath, $content) === false) {
