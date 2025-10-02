@@ -261,7 +261,7 @@ class InstallCommand extends Command
     protected function selectAiGuidelines(): Collection
     {
         $options = app(GuidelineComposer::class)->guidelines()
-            ->reject(fn (array $guideline) => $guideline['third_party'] === false);
+            ->reject(fn (array $guideline): bool => $guideline['third_party'] === false);
 
         if ($options->isEmpty()) {
             return collect();
@@ -270,7 +270,7 @@ class InstallCommand extends Command
         return collect(multiselect(
             label: 'Which third-party AI guidelines do you want to install?',
             // @phpstan-ignore-next-line
-            options: $options->mapWithKeys(function (array $guideline, string $name) {
+            options: $options->mapWithKeys(function (array $guideline, string $name): array {
                 $humanName = str_replace('/core', '', $name);
 
                 return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
@@ -308,13 +308,13 @@ class InstallCommand extends Command
     /**
      * Get configuration settings for contract-specific selection behavior.
      *
-     * @return array{scroll: int, required: bool, displayMethod: string}
+     * @return array{required: bool, displayMethod: string}
      */
     protected function getSelectionConfig(string $contractClass): array
     {
         return match ($contractClass) {
-            Agent::class => ['scroll' => 5, 'required' => false, 'displayMethod' => 'agentName'],
-            McpClient::class => ['scroll' => 5, 'required' => true, 'displayMethod' => 'displayName'],
+            Agent::class => ['required' => false, 'displayMethod' => 'agentName'],
+            McpClient::class => ['required' => true, 'displayMethod' => 'displayName'],
             default => throw new InvalidArgumentException("Unsupported contract class: {$contractClass}"),
         };
     }
@@ -361,7 +361,7 @@ class InstallCommand extends Command
             label: $label,
             options: $options->toArray(),
             default: $defaults === [] ? $detectedDefaults : $defaults,
-            scroll: $config['scroll'],
+            scroll: $options->count(),
             required: $config['required'],
             hint: $defaults === [] || $detectedDefaults === [] ? '' : sprintf('Auto-detected %s for you',
                 Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
@@ -447,11 +447,11 @@ class InstallCommand extends Command
         );
 
         $this->config->setEditors(
-            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient) => $mcpClient->name())->values()->toArray()
+            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
         );
 
         $this->config->setAgents(
-            $this->selectedTargetAgents->map(fn (Agent $agent) => $agent->name())->values()->toArray()
+            $this->selectedTargetAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray()
         );
 
         $this->config->setGuidelines(
