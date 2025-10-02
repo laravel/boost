@@ -108,8 +108,16 @@ test('creates guide without description when description is empty', function ():
     $content = file_get_contents($filePath);
 
     expect($content)->toContain('# My Guide');
-    expect($content)->not->toContain('##');
     expect($content)->toContain('<!-- Add your custom guidelines here -->');
+    expect($content)->toContain('## Project Overview');
+    // Verify no user description is added before the template sections
+    $lines = explode("\n", $content);
+    $titleIndex = array_search('# My Guide', $lines);
+    $commentIndex = array_search('<!-- Add your custom guidelines here -->', $lines);
+    // Between title and comment, there should only be blank lines (no ## description)
+    for ($i = $titleIndex + 1; $i < $commentIndex; $i++) {
+        expect(trim($lines[$i]))->toBe('');
+    }
 });
 
 test('truncates title to 200 characters', function (): void {
