@@ -144,15 +144,16 @@ test('discoverProjectInstalledCodeEnvironments detects applications with mixed t
 test('discoverProjectInstalledCodeEnvironments detects copilot with nested file path', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     mkdir($tempDir);
-    mkdir($tempDir.'/.github');
-    file_put_contents($tempDir.'/.github/copilot-instructions.md', 'test');
+    mkdir($tempDir.'/.github/instructions', recursive: true);
+    file_put_contents($tempDir.'/.github/instructions/laravel-boost.instructions.md', 'test');
 
     $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
 
     expect($detected)->toContain('copilot');
 
     // Cleanup
-    unlink($tempDir.'/.github/copilot-instructions.md');
+    unlink($tempDir.'/.github/instructions/laravel-boost.instructions.md');
+    rmdir($tempDir.'/.github/instructions');
     rmdir($tempDir.'/.github');
     rmdir($tempDir);
 });

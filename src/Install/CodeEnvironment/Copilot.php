@@ -30,7 +30,7 @@ class Copilot extends CodeEnvironment implements Agent
     public function projectDetectionConfig(): array
     {
         return [
-            'files' => ['.github/copilot-instructions.md'],
+            'files' => ['.github/instructions/laravel-boost.instructions.md'],
         ];
     }
 
@@ -46,6 +46,11 @@ class Copilot extends CodeEnvironment implements Agent
 
     public function guidelinesPath(): string
     {
-        return '.github/copilot-instructions.md';
+        return '.github/instructions/laravel-boost.instructions.md';
+    }
+
+    public function frontmatter(): bool
+    {
+        return true;
     }
 }
