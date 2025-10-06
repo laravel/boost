@@ -29,12 +29,13 @@ class FileWriter
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
      */
-    public function addServer(string $key, string $command, array $args = [], array $env = []): self
+    public function addServer(string $key, string $command, array $args = [], array $env = [], ?string $cwd = null): self
     {
         $this->serversToAdd[$key] = collect([
             'command' => $command,
             'args' => $args,
             'env' => $env,
+            'cwd' => $cwd,
         ])->filter()->toArray();
 
         return $this;
