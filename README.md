@@ -202,7 +202,7 @@ JSON Example:
 
 Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn't supported yet, you can create your own code environment and integrate it with Boost.
 
-To do this, create a class that extends `Laravel\Boost\Install\CodeEnvironment\CodeEnvironment` and implement one or both of these contracts depending on what you need:
+To do this, create a class that extends `Laravel\Boost\Install\CodeEnvironment\CodeEnvironment` and implement one or both of the following contracts depending on what you need:
 - `Laravel\Boost\Contracts\Agent` - Adds support for AI guidelines
 - `Laravel\Boost\Contracts\McpClient` - Adds support for MCP
 
@@ -240,7 +240,7 @@ public function boot(): void
 }
 ```
 
-Once registered, your code environment will be available when running `php artisan boost:install`.
+Once registered, your code environment will be available for selection when running `php artisan boost:install`.
 
 ## Contributing
 
