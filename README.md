@@ -218,8 +218,6 @@ namespace App;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
-use Laravel\Boost\Install\Enums\McpInstallationStrategy;
-use Laravel\Boost\Install\Enums\Platform;
 
 class OpenCode extends CodeEnvironment implements Agent, McpClient
 {
@@ -238,7 +236,7 @@ use Laravel\Boost\Boost;
 
 public function boot(): void
 {
-    Boost::registerCodeEnvironment('opencode', \App\Extensions\OpenCode::class);
+    Boost::registerCodeEnvironment('opencode', OpenCode::class);
 }
 ```
 
