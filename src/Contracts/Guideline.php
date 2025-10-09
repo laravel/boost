@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Laravel\Boost\Contracts;
 
 /**
- * Agent contract for AI coding assistants that receive guidelines.
+ * Contract for Agents that support guidelines.
  */
-interface Agent
+interface Guideline
 {
     public function name(): string;
 
     /**
      * Get the display name of the Agent.
      */
-    public function agentName(): ?string;
+    public function guidelineProviderName(): ?string;
 
     /**
      * Get the file path where AI guidelines should be written.

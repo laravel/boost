@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Install\CodeEnvironment;
+namespace Tests\Unit\Install\Agent;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\Guideline;
 use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
-use Laravel\Boost\Install\CodeEnvironment\VSCode;
+use Laravel\Boost\Install\Agents\Agent;
+use Laravel\Boost\Install\Agents\VSCode;
 use Laravel\Boost\Install\Contracts\DetectionStrategy;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
@@ -21,8 +21,7 @@ beforeEach(function (): void {
     $this->strategy = Mockery::mock(DetectionStrategy::class);
 });
 
-// Create a concrete test implementation for testing abstract methods
-class TestCodeEnvironment extends CodeEnvironment
+class TestAgent extends Agent
 {
     public function name(): string
     {
@@ -45,7 +44,7 @@ class TestCodeEnvironment extends CodeEnvironment
     }
 }
 
-class TestAgent extends TestCodeEnvironment implements Agent
+class TestGuideline extends TestAgent implements Guideline
 {
     public function guidelinesPath(): string
     {
@@ -53,7 +52,7 @@ class TestAgent extends TestCodeEnvironment implements Agent
     }
 }
 
-class TestMcpClient extends TestCodeEnvironment implements McpClient
+class TestMcpClient extends TestAgent implements McpClient
 {
     public function mcpConfigPath(): string
     {
@@ -77,7 +76,7 @@ test('detectOnSystem delegates to strategy factory and detection strategy', func
         ->with($config, $platform)
         ->andReturn(true);
 
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $environment = new TestAgent($this->strategyFactory);
     $result = $environment->detectOnSystem($platform);
 
     expect($result)->toBe(true);
@@ -85,7 +84,6 @@ test('detectOnSystem delegates to strategy factory and detection strategy', func
 
 test('detectInProject merges config with basePath and delegates to strategy', function (): void {
     $basePath = '/project/path';
-    $projectConfig = ['files' => ['test.config']];
     $mergedConfig = ['files' => ['test.config'], 'basePath' => $basePath];
 
     $this->strategyFactory
@@ -100,139 +98,115 @@ test('detectInProject merges config with basePath and delegates to strategy', fu
         ->with($mergedConfig)
         ->andReturn(false);
 
-    $environment = new TestCodeEnvironment($this->strategyFactory);
-    $result = $environment->detectInProject($basePath);
+    $agent = new TestAgent($this->strategyFactory);
+    $result = $agent->detectInProject($basePath);
 
     expect($result)->toBe(false);
 });
 
-test('agentName returns displayName by default', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+test('guidelineProviderName returns displayName by default', function (): void {
+    $agent = new TestAgent($this->strategyFactory);
 
-    expect($environment->agentName())->toBe('Test Environment');
+    expect($agent->guidelineProviderName())->toBe('Test Environment');
 });
 
 test('mcpClientName returns displayName by default', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
-
-    expect($environment->mcpClientName())->toBe('Test Environment');
-});
-
-test('isAgent returns true when implements Agent interface and has agentName', function (): void {
     $agent = new TestAgent($this->strategyFactory);
 
-    expect($agent->isAgent())->toBe(true);
-});
-
-test('isAgent returns false when does not implement Agent interface', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
-
-    expect($environment->isAgent())->toBe(false);
-});
-
-test('isMcpClient returns true when implements McpClient interface and has mcpClientName', function (): void {
-    $mcpClient = new TestMcpClient($this->strategyFactory);
-
-    expect($mcpClient->isMcpClient())->toBe(true);
-});
-
-test('isMcpClient returns false when does not implement McpClient interface', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
-
-    expect($environment->isMcpClient())->toBe(false);
+    expect($agent->mcpClientName())->toBe('Test Environment');
 });
 
 test('mcpInstallationStrategy returns File by default', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $agent = new TestAgent($this->strategyFactory);
 
-    expect($environment->mcpInstallationStrategy())->toBe(McpInstallationStrategy::FILE);
+    expect($agent->mcpInstallationStrategy())->toBe(McpInstallationStrategy::FILE);
 });
 
 test('shellMcpCommand returns null by default', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $agent = new TestAgent($this->strategyFactory);
 
-    expect($environment->shellMcpCommand())->toBe(null);
+    expect($agent->shellMcpCommand())->toBe(null);
 });
 
 test('mcpConfigPath returns null by default', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $agent = new TestAgent($this->strategyFactory);
 
-    expect($environment->mcpConfigPath())->toBe(null);
+    expect($agent->mcpConfigPath())->toBe(null);
 });
 
 test('frontmatter returns false by default', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $agent = new TestAgent($this->strategyFactory);
 
-    expect($environment->frontmatter())->toBe(false);
+    expect($agent->frontmatter())->toBe(false);
 });
 
 test('mcpConfigKey returns mcpServers by default', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $agent = new TestAgent($this->strategyFactory);
 
-    expect($environment->mcpConfigKey())->toBe('mcpServers');
+    expect($agent->mcpConfigKey())->toBe('mcpServers');
 });
 
 test('installMcp uses Shell strategy when configured', function (): void {
-    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $agent = Mockery::mock(TestAgent::class)->makePartial();
+    $agent->shouldAllowMockingProtectedMethods();
 
-    $environment->shouldReceive('mcpInstallationStrategy')
+    $agent->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::SHELL);
 
-    $environment->shouldReceive('installShellMcp')
+    $agent->shouldReceive('installShellMcp')
         ->once()
         ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])
         ->andReturn(true);
 
-    $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
+    $result = $agent->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
     expect($result)->toBe(true);
 });
 
 test('installMcp uses File strategy when configured', function (): void {
-    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $agent = Mockery::mock(TestAgent::class)->makePartial();
+    $agent->shouldAllowMockingProtectedMethods();
 
-    $environment->shouldReceive('mcpInstallationStrategy')
+    $agent->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::FILE);
 
-    $environment->shouldReceive('installFileMcp')
+    $agent->shouldReceive('installFileMcp')
         ->once()
         ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])
         ->andReturn(true);
 
-    $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
+    $result = $agent->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
     expect($result)->toBe(true);
 });
 
 test('installMcp returns false for None strategy', function (): void {
-    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $agent = Mockery::mock(TestAgent::class)->makePartial();
 
-    $environment->shouldReceive('mcpInstallationStrategy')
+    $agent->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::NONE);
 
-    $result = $environment->installMcp('test-key', 'test-command');
+    $result = $agent->installMcp('test-key', 'test-command');
 
     expect($result)->toBe(false);
 });
 
 test('installShellMcp returns false when shellMcpCommand is null', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $agent = new TestAgent($this->strategyFactory);
 
-    $result = $environment->installMcp('test-key', 'test-command');
+    $result = $agent->installMcp('test-key', 'test-command');
 
     expect($result)->toBe(false);
 });
 
 test('installShellMcp executes command with placeholders replaced', function (): void {
-    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $agent = Mockery::mock(TestAgent::class)->makePartial();
+    $agent->shouldAllowMockingProtectedMethods();
 
-    $environment->shouldReceive('shellMcpCommand')
+    $agent->shouldReceive('shellMcpCommand')
         ->andReturn('install {key} {command} {args} {env}');
 
-    $environment->shouldReceive('mcpInstallationStrategy')
+    $agent->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::SHELL);
 
     $mockResult = Mockery::mock();
@@ -246,19 +220,19 @@ test('installShellMcp executes command with placeholders replaced', function ():
                str_contains((string) $command, '-e ENV2="value2"')))
         ->andReturn($mockResult);
 
-    $result = $environment->installMcp('test-key', 'test-command', ['arg1', 'arg2'], ['env1' => 'value1', 'env2' => 'value2']);
+    $result = $agent->installMcp('test-key', 'test-command', ['arg1', 'arg2'], ['ENV1' => 'value1', 'ENV2' => 'value2']);
 
     expect($result)->toBe(true);
 });
 
 test('installShellMcp returns true when process fails but has already exists error', function (): void {
-    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $agent = Mockery::mock(TestAgent::class)->makePartial();
+    $agent->shouldAllowMockingProtectedMethods();
 
-    $environment->shouldReceive('shellMcpCommand')
+    $agent->shouldReceive('shellMcpCommand')
         ->andReturn('install {key}');
 
-    $environment->shouldReceive('mcpInstallationStrategy')
+    $agent->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::SHELL);
 
     $mockResult = Mockery::mock();
@@ -269,22 +243,22 @@ test('installShellMcp returns true when process fails but has already exists err
         ->once()
         ->andReturn($mockResult);
 
-    $result = $environment->installMcp('test-key', 'test-command');
+    $result = $agent->installMcp('test-key', 'test-command');
 
     expect($result)->toBe(true);
 });
 
 test('installFileMcp returns false when mcpConfigPath is null', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
+    $agent = new TestAgent($this->strategyFactory);
 
-    $result = $environment->installMcp('test-key', 'test-command');
+    $result = $agent->installMcp('test-key', 'test-command');
 
     expect($result)->toBe(false);
 });
 
 test('installFileMcp creates new config file when none exists', function (): void {
-    $environment = Mockery::mock(TestMcpClient::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $mcpClient = Mockery::mock(TestMcpClient::class)->makePartial();
+    $mcpClient->shouldAllowMockingProtectedMethods();
 
     $capturedContent = '';
     $expectedContent = <<<'JSON'
@@ -303,7 +277,7 @@ test('installFileMcp creates new config file when none exists', function (): voi
 }
 JSON;
 
-    $environment->shouldReceive('mcpInstallationStrategy')
+    $mcpClient->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
@@ -320,21 +294,21 @@ JSON;
         ->with(Mockery::capture($capturedPath), Mockery::capture($capturedContent))
         ->andReturn(true);
 
-    $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
+    $result = $mcpClient->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
     expect($result)->toBe(true)
-        ->and($capturedPath)->toBe($environment->mcpConfigPath())
+        ->and($capturedPath)->toBe($mcpClient->mcpConfigPath())
         ->and($capturedContent)->toBe($expectedContent);
 });
 
 test('installFileMcp updates existing config file', function (): void {
-    $environment = Mockery::mock(TestMcpClient::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $mcpClient = Mockery::mock(TestMcpClient::class)->makePartial();
+    $mcpClient->shouldAllowMockingProtectedMethods();
 
     $capturedPath = '';
     $capturedContent = '';
 
-    $environment->shouldReceive('mcpInstallationStrategy')
+    $mcpClient->shouldReceive('mcpInstallationStrategy')
         ->andReturn(McpInstallationStrategy::FILE);
 
     $existingConfig = json_encode(['mcpServers' => ['existing' => ['command' => 'existing-cmd']]]);
@@ -360,7 +334,7 @@ test('installFileMcp updates existing config file', function (): void {
         ->with(Mockery::capture($capturedPath), Mockery::capture($capturedContent))
         ->andReturn(true);
 
-    $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
+    $result = $mcpClient->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
     expect($result)->toBe(true)
         ->and($capturedContent)
@@ -407,11 +381,11 @@ test('installFileMcp works with existing config file using JSON 5', function ():
 });
 
 test('getPhpPath uses absolute paths when forceAbsolutePath is true', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
-    expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
+    $agent = new TestAgent($this->strategyFactory);
+    expect($agent->getPhpPath(true))->toBe(PHP_BINARY);
 });
 
-test('getPhpPath maintains default behavior when forceAbsolutePath is false', function (): void {
-    $environment = new TestCodeEnvironment($this->strategyFactory);
-    expect($environment->getPhpPath(false))->toBe('php');
+test('getPhpPath maintains the default behavior when forceAbsolutePath is false', function (): void {
+    $agent = new TestAgent($this->strategyFactory);
+    expect($agent->getPhpPath(false))->toBe('php');
 });

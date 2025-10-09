@@ -24,8 +24,7 @@ describe('boost.enabled configuration', function (): void {
         $this->artisan('list')->expectsOutputToContain('boost:install');
     });
 
-    it('boots boost when enabled in local environment', function (): void {
-        Config::set('boost.enabled', true);
+    it('boost when enabled in a local environment', function (): void {
         app()->detectEnvironment(fn (): string => 'local');
 
         $provider = new BoostServiceProvider(app());

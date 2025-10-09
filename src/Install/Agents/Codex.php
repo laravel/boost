@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\Guideline;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Codex extends CodeEnvironment implements Agent
+class Codex extends Agent implements Guideline
 {
     public function name(): string
     {

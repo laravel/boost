@@ -131,10 +131,10 @@ test('handles code with no return statement', function (): void {
         ]);
 });
 
-test('should register only in local environment', function (): void {
+test('should register only in the local environment', function (): void {
     $tool = new Tinker;
 
     app()->detectEnvironment(fn (): string => 'local');
 
-    expect($tool->eligibleForRegistration(Mockery::mock(Request::class)))->toBeTrue();
+    expect($tool->eligibleForRegistration())->toBeTrue();
 });

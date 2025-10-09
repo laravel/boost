@@ -5,43 +5,43 @@ declare(strict_types=1);
 namespace Laravel\Boost;
 
 use InvalidArgumentException;
-use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
-use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
-use Laravel\Boost\Install\CodeEnvironment\Codex;
-use Laravel\Boost\Install\CodeEnvironment\Copilot;
-use Laravel\Boost\Install\CodeEnvironment\Cursor;
-use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
-use Laravel\Boost\Install\CodeEnvironment\VSCode;
+use Laravel\Boost\Install\Agents\Agent;
+use Laravel\Boost\Install\Agents\ClaudeCode;
+use Laravel\Boost\Install\Agents\Codex;
+use Laravel\Boost\Install\Agents\Copilot;
+use Laravel\Boost\Install\Agents\Cursor;
+use Laravel\Boost\Install\Agents\PhpStorm;
+use Laravel\Boost\Install\Agents\VSCode;
 
 class BoostManager
 {
-    /** @var array<string, class-string<CodeEnvironment>> */
-    private array $codeEnvironments = [
+    /** @var array<string, class-string<Agent>> */
+    private array $agents = [
         'phpstorm' => PhpStorm::class,
         'vscode' => VSCode::class,
         'cursor' => Cursor::class,
-        'claudecode' => ClaudeCode::class,
+        'claude_code' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
     ];
 
     /**
-     * @param  class-string<CodeEnvironment>  $className
+     * @param  class-string<Agent>  $className
      */
-    public function registerCodeEnvironment(string $key, string $className): void
+    public function registerAgent(string $key, string $className): void
     {
-        if (array_key_exists($key, $this->codeEnvironments)) {
-            throw new InvalidArgumentException("Code environment '{$key}' is already registered");
+        if (array_key_exists($key, $this->agents)) {
+            throw new InvalidArgumentException("Agent '{$key}' is already registered");
         }
 
-        $this->codeEnvironments[$key] = $className;
+        $this->agents[$key] = $className;
     }
 
     /**
-     * @return array<string, class-string<CodeEnvironment>>
+     * @return array<string, class-string<Agent>>
      */
-    public function getCodeEnvironments(): array
+    public function getAgents(): array
     {
-        return $this->codeEnvironments;
+        return $this->agents;
     }
 }

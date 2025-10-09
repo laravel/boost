@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Enums\Platform;
 
-class VSCode extends CodeEnvironment implements McpClient
+class VSCode extends Agent implements McpClient
 {
     public function name(): string
     {

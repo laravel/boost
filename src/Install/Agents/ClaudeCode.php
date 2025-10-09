@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\Guideline;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class ClaudeCode extends CodeEnvironment implements Agent, McpClient
+class ClaudeCode extends Agent implements Guideline, McpClient
 {
     public function name(): string
     {

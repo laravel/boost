@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\Guideline;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Copilot extends CodeEnvironment implements Agent
+class Copilot extends Agent implements Guideline
 {
     public function name(): string
     {
@@ -37,11 +37,6 @@ class Copilot extends CodeEnvironment implements Agent
     public function detectOnSystem(Platform $platform): bool
     {
         return false;
-    }
-
-    public function mcpClientName(): ?string
-    {
-        return null;
     }
 
     public function guidelinesPath(): string

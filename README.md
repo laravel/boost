@@ -172,7 +172,11 @@ JSON Example:
 
 ## Adding Support for Custom IDE/AI Agents
 
-To create a custom code environment for an IDE, you first need to define a class that extends `\Laravel\Boost\Install\CodeEnvironment\CodeEnvironment` and implements the contracts: `Laravel\Boost\Contracts\Agent` and `Laravel\Boost\Contracts\McpClient`
+To create a custom Agent, you first need to define a class that extends `\Laravel\Boost\Install\Agents\Agent` and implements one or both of the following contracts depending on your needs:
+
+`Laravel\Boost\Contracts\Guideline` — Implement this if you want your agent to support Guidelines
+
+`Laravel\Boost\Contracts\McpCliet` — Implement this if you want your agent to support MCP 
 
 ### Example Implementation
 
@@ -183,26 +187,27 @@ declare(strict_types=1);
 
 namespace App;
 
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\Guideline;
 use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+use Laravel\Boost\Install\Agents\Agent;
 
-class OpenCode extends CodeEnvironment implements Agent, McpClient
+class OpenCode extends Agent implements Guideline, McpClient
 {
     // Your implementation goes here
 }
+
 ```
 
-### Registering the Custom Code Environment
+### Registering the Agent
 
-Once your implementation is complete, register the custom environment using the `Boost` facade’s `registerCodeEnvironment` method:
+Once your implementation is complete, register your custom agent using the Boost facade’s registerAgent method:
 
 ```php
 use Laravel\Boost\Boost;
 
 public function boot(): void
 {
-    Boost::registerCodeEnvironment('opencode', OpenCode::class);
+    Boost::registerAgent('opencode', OpenCode::class);
 }
 ```
 

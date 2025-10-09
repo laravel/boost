@@ -2,20 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
 use Illuminate\Support\Facades\Process;
 use Laravel\Boost\BoostManager;
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Laravel\Boost\Install\Mcp\FileWriter;
 
-abstract class CodeEnvironment
+abstract class Agent
 {
-    public bool $useAbsolutePathForMcp = false;
+    protected bool $useAbsolutePathForMcp = false;
 
     public function __construct(protected readonly DetectionStrategyFactory $strategyFactory) {}
 
@@ -23,7 +21,7 @@ abstract class CodeEnvironment
 
     abstract public function displayName(): string;
 
-    public function agentName(): ?string
+    public function guidelineProviderName(): ?string
     {
         return $this->displayName();
     }
@@ -78,28 +76,18 @@ abstract class CodeEnvironment
         return $strategy->detect($config);
     }
 
-    public function isAgent(): bool
-    {
-        return $this->agentName() && $this instanceof Agent;
-    }
-
-    public function isMcpClient(): bool
-    {
-        return $this->mcpClientName() && $this instanceof McpClient;
-    }
-
     public function mcpInstallationStrategy(): McpInstallationStrategy
     {
         return McpInstallationStrategy::FILE;
     }
 
-    public static function fromName(string $name): ?CodeEnvironment
+    public static function fromName(string $name): ?Agent
     {
         $detectionFactory = app(DetectionStrategyFactory::class);
         $boostManager = app(BoostManager::class);
 
-        foreach ($boostManager->getCodeEnvironments() as $class) {
-            /** @var class-string<CodeEnvironment> $class */
+        foreach ($boostManager->getAgents() as $class) {
+            /** @var class-string<Agent> $class */
             $instance = new $class($detectionFactory);
             if ($instance->name() === $name) {
                 return $instance;
@@ -173,7 +161,7 @@ abstract class CodeEnvironment
         ], [
             $key,
             $command,
-            implode(' ', array_map(fn (string $arg): string => '"'.$arg.'"', $args)),
+            implode(' ', array_map(fn (string $arg): string => '"'.addslashes($arg).'"', $args)),
             trim($envString),
         ], $shellCommand);
 

@@ -10,11 +10,11 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\Guideline;
 use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Install\Agents\Agent;
+use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Cli\DisplayHelper;
-use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
-use Laravel\Boost\Install\CodeEnvironmentsDetector;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -36,17 +36,17 @@ class InstallCommand extends Command
 {
     use Colors;
 
-    private CodeEnvironmentsDetector $codeEnvironmentsDetector;
+    private AgentsDetector $agentsDetector;
 
     private Herd $herd;
 
     private Terminal $terminal;
 
-    /** @var Collection<int, Agent> */
-    private Collection $selectedTargetAgents;
+    /** @var Collection<int, Guideline> */
+    private Collection $selectedGuidelineProviders;
 
     /** @var Collection<int, McpClient> */
-    private Collection $selectedTargetMcpClient;
+    private Collection $selectedTargetMcpClientProviders;
 
     /** @var Collection<int, string> */
     private Collection $selectedBoostFeatures;
@@ -56,10 +56,11 @@ class InstallCommand extends Command
 
     private string $projectName;
 
-    /** @var array<non-empty-string> */
-    private array $systemInstalledCodeEnvironments = [];
+    /** @var array<class-string<Agent>> */
+    private array $systemInstalledAgents = [];
 
-    private array $projectInstalledCodeEnvironments = [];
+    /** @var array<class-string<Agent>> */
+    private array $projectInstalledAgent = [];
 
     private bool $enforceTests = true;
 
@@ -74,20 +75,20 @@ class InstallCommand extends Command
         parent::__construct();
     }
 
-    public function handle(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
+    public function handle(AgentsDetector $agentsDetector, Herd $herd, Terminal $terminal): void
     {
-        $this->bootstrap($codeEnvironmentsDetector, $herd, $terminal);
+        $this->bootstrap($agentsDetector, $herd, $terminal);
 
         $this->displayBoostHeader();
-        $this->discoverEnvironment();
+        $this->discoverAgents();
         $this->collectInstallationPreferences();
         $this->performInstallation();
         $this->outro();
     }
 
-    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
+    protected function bootstrap(AgentsDetector $agentsDetector, Herd $herd, Terminal $terminal): void
     {
-        $this->codeEnvironmentsDetector = $codeEnvironmentsDetector;
+        $this->agentsDetector = $agentsDetector;
         $this->herd = $herd;
         $this->terminal = $terminal;
 
@@ -96,8 +97,8 @@ class InstallCommand extends Command
         $this->greenTick = $this->green('✓');
         $this->redCross = $this->red('✗');
 
-        $this->selectedTargetAgents = collect();
-        $this->selectedTargetMcpClient = collect();
+        $this->selectedGuidelineProviders = collect();
+        $this->selectedTargetMcpClientProviders = collect();
 
         $this->projectName = config('app.name');
     }
@@ -122,18 +123,18 @@ class InstallCommand extends Command
         HEADER;
     }
 
-    protected function discoverEnvironment(): void
+    protected function discoverAgents(): void
     {
-        $this->systemInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverSystemInstalledCodeEnvironments();
-        $this->projectInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverProjectInstalledCodeEnvironments(base_path());
+        $this->systemInstalledAgents = $this->agentsDetector->discoverSystemInstalledAgents();
+        $this->projectInstalledAgent = $this->agentsDetector->discoverProjectInstalledAgents(base_path());
     }
 
     protected function collectInstallationPreferences(): void
     {
         $this->selectedBoostFeatures = $this->selectBoostFeatures();
         $this->selectedAiGuidelines = $this->selectAiGuidelines();
-        $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
-        $this->selectedTargetAgents = $this->selectTargetAgents();
+        $this->selectedTargetMcpClientProviders = $this->selectTargetMcpClientProvider();
+        $this->selectedGuidelineProviders = $this->selectTargetAgents();
         $this->enforceTests = $this->determineTestEnforcement();
     }
 
@@ -143,7 +144,7 @@ class InstallCommand extends Command
 
         usleep(750000);
 
-        if ($this->selectedTargetMcpClient->isNotEmpty()) {
+        if ($this->selectedTargetMcpClientProviders->isNotEmpty()) {
             $this->installMcpServerConfig();
         }
     }
@@ -173,9 +174,9 @@ class InstallCommand extends Command
     {
         $label = 'https://boost.laravel.com/installed';
 
-        $ideNames = $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => 'i:'.$mcpClient->mcpClientName())
+        $ideNames = $this->selectedTargetMcpClientProviders->map(fn (McpClient $mcpClient): string => 'i:'.$mcpClient->mcpClientName())
             ->toArray();
-        $agentNames = $this->selectedTargetAgents->map(fn (Agent $agent): string => 'a:'.$agent->agentName())->toArray();
+        $agentNames = $this->selectedGuidelineProviders->map(fn (Guideline $guideline): string => 'a:'.$guideline->guidelineProviderName())->toArray();
         $boostFeatures = $this->selectedBoostFeatures->map(fn ($feature): string => 'b:'.$feature)->toArray();
 
         $guidelines = [];
@@ -282,11 +283,11 @@ class InstallCommand extends Command
     }
 
     /**
-     * @return Collection<int, CodeEnvironment>
+     * @return Collection<int, McpClient>
      */
-    protected function selectTargetMcpClients(): Collection
+    protected function selectTargetMcpClientProvider(): Collection
     {
-        return $this->selectCodeEnvironments(
+        return $this->selectAgents(
             McpClient::class,
             sprintf('Which code editors do you use to work on %s?', $this->projectName),
             $this->config->getEditors(),
@@ -294,12 +295,12 @@ class InstallCommand extends Command
     }
 
     /**
-     * @return Collection<int, CodeEnvironment>
+     * @return Collection<int, Guideline>
      */
     protected function selectTargetAgents(): Collection
     {
-        return $this->selectCodeEnvironments(
-            Agent::class,
+        return $this->selectAgents(
+            Guideline::class,
             sprintf('Which agents need AI guidelines for %s?', $this->projectName),
             $this->config->getAgents(),
         );
@@ -313,59 +314,59 @@ class InstallCommand extends Command
     protected function getSelectionConfig(string $contractClass): array
     {
         return match ($contractClass) {
-            Agent::class => ['required' => false, 'displayMethod' => 'agentName'],
-            McpClient::class => ['required' => true, 'displayMethod' => 'displayName'],
+            Guideline::class => ['required' => false, 'displayMethod' => 'guidelineProviderName'],
+            McpClient::class => ['required' => true, 'displayMethod' => 'mcpClientName'],
             default => throw new InvalidArgumentException("Unsupported contract class: {$contractClass}"),
         };
     }
 
     /**
      * @param  array<int, string>  $defaults
-     * @return Collection<int, CodeEnvironment>
+     * @return Collection<int, Agent>
      */
-    protected function selectCodeEnvironments(string $contractClass, string $label, array $defaults): Collection
+    protected function selectAgents(string $contractClass, string $label, array $defaults): Collection
     {
-        $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
+        $agents = $this->agentsDetector->getAgents();
         $config = $this->getSelectionConfig($contractClass);
 
-        $availableEnvironments = $allEnvironments->filter(fn (CodeEnvironment $environment): bool => $environment instanceof $contractClass);
+        $availableAgents = $agents->filter(fn (Agent $agent): bool => $agent instanceof $contractClass);
 
-        if ($availableEnvironments->isEmpty()) {
+        if ($availableAgents->isEmpty()) {
             return collect();
         }
 
-        $options = $availableEnvironments->mapWithKeys(function (CodeEnvironment $environment) use ($config): array {
+        $options = $availableAgents->mapWithKeys(function (Agent $agent) use ($config): array {
             $displayMethod = $config['displayMethod'];
-            $displayText = $environment->{$displayMethod}();
+            $displayText = $agent->{$displayMethod}();
 
-            return [$environment->name() => $displayText];
+            return [$agent->name() => $displayText];
         })->sort();
 
         $installedEnvNames = array_unique(array_merge(
-            $this->projectInstalledCodeEnvironments,
-            $this->systemInstalledCodeEnvironments
+            $this->projectInstalledAgent,
+            $this->systemInstalledAgents
         ));
 
         $detectedDefaults = [];
 
         if ($defaults === []) {
             foreach ($installedEnvNames as $envKey) {
-                $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
+                $matchingEnv = $availableAgents->first(fn (Agent $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
                 if ($matchingEnv) {
                     $detectedDefaults[] = $matchingEnv->name();
                 }
             }
         }
 
-        $selectedCodeEnvironments = collect(multiselect(
+        $selectedAgent = collect(multiselect(
             label: $label,
             options: $options->toArray(),
             default: $defaults === [] ? $detectedDefaults : $defaults,
-            scroll: $options->count(),
+            scroll: min(10, $options->count()),
             required: $config['required'],
             hint: $defaults === [] || $detectedDefaults === [] ? '' : sprintf('Auto-detected %s for you',
-                Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
-                    $env = $availableEnvironments->first(fn ($env): bool => $env->name() === $className);
+                Arr::join(array_map(function ($className) use ($availableAgents, $config) {
+                    $env = $availableAgents->first(fn ($env): bool => $env->name() === $className);
                     $displayMethod = $config['displayMethod'];
 
                     return $env->{$displayMethod}();
@@ -373,15 +374,15 @@ class InstallCommand extends Command
             )
         ))->sort();
 
-        return $selectedCodeEnvironments->map(
-            fn (string $name) => $availableEnvironments->first(fn ($env): bool => $env->name() === $name),
+        return $selectedAgent->map(
+            fn (string $name) => $availableAgents->first(fn ($env): bool => $env->name() === $name),
         )->filter()->values();
     }
 
     protected function installGuidelines(): void
     {
-        if ($this->selectedTargetAgents->isEmpty()) {
-            $this->info(' No agents selected for guideline installation.');
+        if ($this->selectedGuidelineProviders->isEmpty()) {
+            $this->info(' No agents are selected for guideline installation.');
 
             return;
         }
@@ -412,15 +413,14 @@ class InstallCommand extends Command
         $failed = [];
         $composedAiGuidelines = $composer->compose();
 
-        $longestAgentName = max(1, ...$this->selectedTargetAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
-        /** @var CodeEnvironment $agent */
-        foreach ($this->selectedTargetAgents as $agent) {
-            $agentName = $agent->agentName();
+        $longestAgentName = max(1, ...$this->selectedGuidelineProviders->map(fn (Guideline $guideline) => Str::length($guideline->guidelineProviderName()))->toArray());
+        foreach ($this->selectedGuidelineProviders as $guideline) {
+            $agentName = $guideline->guidelineProviderName();
             $displayAgentName = str_pad((string) $agentName, $longestAgentName);
             $this->output->write("  {$displayAgentName}... ");
-            /** @var Agent $agent */
+            /** @var Guideline $guideline */
             try {
-                (new GuidelineWriter($agent))
+                (new GuidelineWriter($guideline))
                     ->write($composedAiGuidelines);
 
                 $this->line($this->greenTick);
@@ -433,7 +433,7 @@ class InstallCommand extends Command
         $this->newLine();
 
         if ($failed !== []) {
-            $this->error(sprintf('✗ Failed to install guidelines to %d agent%s:',
+            $this->error(sprintf('✗ Failed to install guidelines to %d guideline %s:',
                 count($failed),
                 count($failed) === 1 ? '' : 's'
             ));
@@ -447,11 +447,11 @@ class InstallCommand extends Command
         );
 
         $this->config->setEditors(
-            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
+            $this->selectedTargetMcpClientProviders->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
         );
 
         $this->config->setAgents(
-            $this->selectedTargetAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray()
+            $this->selectedGuidelineProviders->map(fn (Guideline $guideline): string => $guideline->name())->values()->toArray()
         );
 
         $this->config->setGuidelines(
@@ -471,8 +471,8 @@ class InstallCommand extends Command
 
     protected function installMcpServerConfig(): void
     {
-        if ($this->selectedTargetMcpClient->isEmpty()) {
-            $this->info('No agents selected for guideline installation.');
+        if ($this->selectedTargetMcpClientProviders->isEmpty()) {
+            $this->info('No agents are selected for guideline installation.');
 
             return;
         }
@@ -486,13 +486,13 @@ class InstallCommand extends Command
         $failed = [];
         $longestIdeName = max(
             1,
-            ...$this->selectedTargetMcpClient->map(
+            ...$this->selectedTargetMcpClientProviders->map(
                 fn (McpClient $mcpClient) => Str::length($mcpClient->mcpClientName())
             )->toArray()
         );
 
         /** @var McpClient $mcpClient */
-        foreach ($this->selectedTargetMcpClient as $mcpClient) {
+        foreach ($this->selectedTargetMcpClientProviders as $mcpClient) {
             $ideName = $mcpClient->mcpClientName();
             $ideDisplay = str_pad((string) $ideName, $longestIdeName);
             $this->output->write("  {$ideDisplay}... ");

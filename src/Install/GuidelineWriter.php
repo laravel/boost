@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\Guideline;
 use RuntimeException;
 
 class GuidelineWriter
@@ -17,7 +17,7 @@ class GuidelineWriter
 
     public const NOOP = 3;
 
-    public function __construct(protected Agent $agent) {}
+    public function __construct(protected Guideline $guideline) {}
 
     /**
      * @return \Laravel\Boost\Install\GuidelineWriter::NEW|\Laravel\Boost\Install\GuidelineWriter::REPLACED|\Laravel\Boost\Install\GuidelineWriter::FAILED|\Laravel\Boost\Install\GuidelineWriter::NOOP
@@ -28,7 +28,7 @@ class GuidelineWriter
             return self::NOOP;
         }
 
-        $filePath = $this->agent->guidelinesPath();
+        $filePath = $this->guideline->guidelinesPath();
 
         $directory = dirname($filePath);
         if (! is_dir($directory) && ! @mkdir($directory, 0755, true)) {
@@ -59,7 +59,7 @@ class GuidelineWriter
             } else {
                 // No existing Boost guidelines found, append to end of existing file
                 $frontMatter = '';
-                if ($this->agent->frontmatter() && ! str_contains($content, "\n---\n")) {
+                if ($this->guideline->frontmatter() && ! str_contains($content, "\n---\n")) {
                     $frontMatter = "---\nalwaysApply: true\n---\n";
                 }
 
