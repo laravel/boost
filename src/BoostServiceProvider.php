@@ -30,6 +30,8 @@ class BoostServiceProvider extends ServiceProvider
             return;
         }
 
+        $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
+
         $this->app->singleton(Roster::class, function () {
             $lockFiles = [
                 base_path('composer.lock'),

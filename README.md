@@ -198,6 +198,49 @@ JSON Example:
 }
 ```
 
+## Adding Support for Other IDEs / AI Agents
+
+Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn't supported yet, you can create your own code environment and integrate it with Boost. To do this, create a class that extends `Laravel\Boost\Install\CodeEnvironment\CodeEnvironment` and implement one or both of the following contracts depending on what you need:
+
+- `Laravel\Boost\Contracts\Agent` - Adds support for AI guidelines.
+- `Laravel\Boost\Contracts\McpClient` - Adds support for MCP.
+
+### Writing the Code Environment
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App;
+
+use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+
+class OpenCode extends CodeEnvironment implements Agent, McpClient
+{
+    // Your implementation...
+}
+```
+
+For an example implementation, see [ClaudeCode.php](https://github.com/laravel/boost/blob/main/src/Install/CodeEnvironment/ClaudeCode.php).
+
+### Registering the Code Environment
+
+Register your custom code environment in the `boot` method of your application's `App\Providers\AppServiceProvider`:
+
+```php
+use Laravel\Boost\Boost;
+
+public function boot(): void
+{
+    Boost::registerCodeEnvironment('opencode', OpenCode::class);
+}
+```
+
+Once registered, your code environment will be available for selection when running `php artisan boost:install`.
+
 ## Contributing
 
 Thank you for considering contributing to Boost! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
