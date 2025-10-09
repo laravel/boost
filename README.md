@@ -172,13 +172,13 @@ JSON Example:
 
 ## Adding Support for Custom IDE/AI Agents
 
-Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn’t supported yet, you can create your own code environment and integrate it with Boost.
+Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn't supported yet, you can create your own code environment and integrate it with Boost.
 
-To do this, create a class that extends `Laravel\Boost\Install\CodeEnvironment\CodeEnvironment`and implement one or both of these contracts depending on what you need:
-- `Laravel\Boost\Contracts\Agent` adds support for Guidelines 
-- `Laravel\Boost\Contracts\McpClient` adds support for MCP 
+To do this, create a class that extends `Laravel\Boost\Install\CodeEnvironment\CodeEnvironment` and implement one or both of these contracts depending on what you need:
+- `Laravel\Boost\Contracts\Agent` - Adds support for AI guidelines
+- `Laravel\Boost\Contracts\McpClient` - Adds support for MCP
 
-### Example Implementation
+### Writing the Code Environment
 
 ```php
 <?php
@@ -190,6 +190,8 @@ namespace App;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+use Laravel\Boost\Install\Enums\McpInstallationStrategy;
+use Laravel\Boost\Install\Enums\Platform;
 
 class OpenCode extends CodeEnvironment implements Agent, McpClient
 {
@@ -197,17 +199,22 @@ class OpenCode extends CodeEnvironment implements Agent, McpClient
 }
 ```
 
-### Registering the Custom Code Environment
+For implementation examples, see [ClaudeCode.php](https://github.com/laravel/boost/blob/main/src/Install/CodeEnvironment/ClaudeCode.php).
 
-After implementing your class, register it using the `Boost` facade’s`registerCodeEnvironment` method.
+### Registering the Code Environment
+
+Register your custom code environment in the `boot` method of `App\Providers\AppServiceProvider`:
+
 ```php
 use Laravel\Boost\Boost;
 
 public function boot(): void
 {
-    Boost::registerCodeEnvironment('opencode', OpenCode::class);
+    Boost::registerCodeEnvironment('opencode', \App\Extensions\OpenCode::class);
 }
 ```
+
+Once registered, your code environment will be available when running `php artisan boost:install`.
 
 ## Contributing
 
