@@ -37,6 +37,34 @@ php artisan boost:install
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
+### Setup Your Code Editors
+
+#### PhpStorm
+
+1. Press `shift` twice to open the command palette
+2. Search "MCP Settings" and press `enter`
+3. Check the box next to `laravel-boost`
+4. Click "Apply" at the bottom right
+
+#### VS Code
+
+1. Open the command palette (`Cmd+Shift+P` or `Ctrl+Shift+P`)
+2. Press `enter` on "MCP: List Servers"
+3. Arrow to `laravel-boost` and press `enter`
+4. Choose "Start server"
+
+#### Cursor
+
+1. Open the command palette (`Cmd+Shift+P` or `Ctrl+Shift+P`)
+2. Press `enter` on "/open MCP Settings"
+3. Turn the toggle on for `laravel-boost`
+
+#### Claude Code
+
+1. Claude support is typically enabled automatically, but if you find it isn't
+2. Open a shell in the project's directory
+3. Run `claude mcp add -s local -t stdio laravel-boost php artisan boost:mcp`
+
 ## Available MCP Tools
 
 | Name                       | Notes                                                                                                          |
