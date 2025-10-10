@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Boost\Support\PackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
@@ -167,5 +168,10 @@ class GuidelineAssist
     public function inertia(): Inertia
     {
         return new Inertia($this->roster);
+    }
+
+    public function packageManager(): string
+    {
+        return PackageManager::detect();
     }
 }
