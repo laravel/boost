@@ -48,6 +48,7 @@ class GuidelineComposer
     {
         $this->packagePriorities = [
             Packages::PEST->value => [Packages::PHPUNIT->value],
+            Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
         ];
         $this->config = new GuidelineConfig;
         $this->guidelineAssist = new GuidelineAssist($roster);
