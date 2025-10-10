@@ -6,7 +6,6 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
-use Laravel\Boost\Support\PackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
@@ -170,8 +169,13 @@ class GuidelineAssist
         return new Inertia($this->roster);
     }
 
-    public function packageManager(): string
+    public function jsPackageManager(): string
     {
-        return PackageManager::detect();
+        return match (true) {
+            file_exists(base_path('bun.lockb')) => 'bun',
+            file_exists(base_path('pnpm-lock.yaml')) => 'pnpm',
+            file_exists(base_path('yarn.lock')) => 'yarn',
+            default => 'npm',
+        };
     }
 }
