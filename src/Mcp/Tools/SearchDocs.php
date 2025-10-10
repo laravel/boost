@@ -41,7 +41,7 @@ class SearchDocs extends Tool
                 ->items($schema->string()->description("The composer package name (e.g., 'symfony/console')"))
                 ->description('Package names to limit searching to from application-info. Useful if you know the package(s) you need. i.e. laravel/framework, inertiajs/inertia-laravel, @inertiajs/react'),
             'token_limit' => $schema->integer()
-                ->description('Maximum number of tokens to return in the response. Defaults to 10,000 tokens, maximum 1,000,000 tokens.'),
+                ->description('Maximum number of tokens to return in the response. Defaults to 3,000 tokens, maximum 1,000,000 tokens. If results are truncated, or you need more complete documentation, increase this value (e.g.5000, 10000)'),
         ];
     }
 
@@ -81,7 +81,7 @@ class SearchDocs extends Tool
             return Response::error('Failed to get packages: '.$throwable->getMessage());
         }
 
-        $tokenLimit = $request->get('token_limit') ?? 10000;
+        $tokenLimit = $request->get('token_limit') ?? 3000;
         $tokenLimit = min($tokenLimit, 1000000); // Cap at 1M tokens
 
         $payload = [

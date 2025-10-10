@@ -2,7 +2,7 @@
 
 use Laravel\Boost\Support\Config;
 
-afterEach(function () {
+afterEach(function (): void {
     (new Config(__DIR__))->flush();
 });
 
