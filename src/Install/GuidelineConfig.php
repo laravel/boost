@@ -13,4 +13,9 @@ class GuidelineConfig
     public bool $caresAboutLocalization = false;
 
     public bool $hasAnApi = false;
+
+    /**
+     * @var array<int, string>
+     */
+    public array $aiGuidelines;
 }

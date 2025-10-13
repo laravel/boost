@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Mcp;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Mcp\FileWriter;
 use Mockery;
 use ReflectionClass;
-
-beforeEach(function (): void {
-    Mockery::close();
-});
 
 test('constructor sets file path', function (): void {
     $writer = new FileWriter('/path/to/mcp.json');
@@ -283,8 +280,7 @@ test('injects into existing configKey preserving JSON5 features', function (): v
 test("injecting twice into existing JSON 5 doesn't cause duplicates", function (): void {
     $capturedContent = '';
 
-    File::clearResolvedInstances();
-    File::partialMock();
+    File::swap(Mockery::mock(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn(true);
@@ -313,8 +309,7 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
 
     $newContent = $capturedContent;
 
-    File::clearResolvedInstances();
-    File::partialMock();
+    File::swap(Mockery::mock(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn(true);
@@ -388,8 +383,7 @@ test('detectIndentation works correctly with various patterns', function (string
 function mockFileOperations(bool $fileExists = false, string $content = '{}', bool $writeSuccess = true, ?string &$capturedPath = null, ?string &$capturedContent = null): void
 {
     // Clear any existing File facade mock
-    File::clearResolvedInstances();
-    File::partialMock();
+    File::swap(Mockery::mock(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn($fileExists);
