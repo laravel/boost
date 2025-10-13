@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Install\CodeEnvironment\Copilot;
 use RuntimeException;
 
 class GuidelineWriter
@@ -60,7 +61,11 @@ class GuidelineWriter
                 // No existing Boost guidelines found, append to end of existing file
                 $frontMatter = '';
                 if ($this->agent->frontmatter() && ! str_contains($content, "\n---\n")) {
-                    $frontMatter = "---\nalwaysApply: true\n---\n";
+                    if ($this->agent instanceof Copilot) {
+                        $frontMatter = "---\napplyTo: \"**\"\n---\n";
+                    } else {
+                        $frontMatter = "---\nalwaysApply: true\n---\n";
+                    }
                 }
 
                 $existingContent = rtrim($content);
