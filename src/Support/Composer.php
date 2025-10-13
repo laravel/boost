@@ -9,11 +9,11 @@ class Composer
     public static function packagesDirectories(): array
     {
         return collect(static::packages())
-            ->mapWithKeys(fn (string $key, string $package) => [$package => implode(DIRECTORY_SEPARATOR, [
+            ->mapWithKeys(fn (string $key, string $package): array => [$package => implode(DIRECTORY_SEPARATOR, [
                 base_path('vendor'),
                 str_replace('/', DIRECTORY_SEPARATOR, $package),
             ])])
-            ->filter(fn (string $path) => is_dir($path))
+            ->filter(fn (string $path): bool => is_dir($path))
             ->toArray();
     }
 
@@ -33,19 +33,19 @@ class Composer
 
         return collect($composerData['require'] ?? [])
             ->merge($composerData['require-dev'] ?? [])
-            ->mapWithKeys(fn (string $key, string $package) => [$package => $key])
+            ->mapWithKeys(fn (string $key, string $package): array => [$package => $key])
             ->toArray();
     }
 
     public static function packagesDirectoriesWithBoostGuidelines(): array
     {
         return collect(Composer::packagesDirectories())
-            ->map(fn (string $path) => implode(DIRECTORY_SEPARATOR, [
+            ->map(fn (string $path): string => implode(DIRECTORY_SEPARATOR, [
                 $path,
                 'resources',
                 'boost',
                 'guidelines',
-            ]))->filter(fn (string $path) => is_dir($path))
+            ]))->filter(fn (string $path): bool => is_dir($path))
             ->toArray();
     }
 }

@@ -36,7 +36,7 @@ test('it searches documentation successfully', function (): void {
                ['name' => 'laravel/framework', 'version' => '11.x'],
                ['name' => 'pestphp/pest', 'version' => '2.x'],
            ] &&
-           $request->data()['token_limit'] === 10000 &&
+           $request->data()['token_limit'] === 3000 &&
            $request->data()['format'] === 'markdown');
 });
 
@@ -79,7 +79,7 @@ test('it filters empty queries', function (): void {
     Http::assertSent(fn ($request): bool => $request->url() === 'https://boost.laravel.com/api/docs' &&
            $request->data()['queries'] === ['test'] &&
            empty($request->data()['packages']) &&
-           $request->data()['token_limit'] === 10000);
+           $request->data()['token_limit'] === 3000);
 });
 
 test('it formats package data correctly', function (): void {
@@ -104,7 +104,7 @@ test('it formats package data correctly', function (): void {
     Http::assertSent(fn ($request): bool => $request->data()['packages'] === [
         ['name' => 'laravel/framework', 'version' => '11.x'],
         ['name' => 'livewire/livewire', 'version' => '3.x'],
-    ] && $request->data()['token_limit'] === 10000);
+    ] && $request->data()['token_limit'] === 3000);
 });
 
 test('it handles empty results', function (): void {
