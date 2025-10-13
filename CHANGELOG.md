@@ -1,10 +1,42 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.2.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.3.3...main)
 
-## [v1.2.0](https://github.com/laravel/boost/compare/v1.1.5...v1.2.0) - 2025-09-18
+## [v1.3.3](https://github.com/laravel/boost/compare/v1.3.2...v1.3.3) - 2025-10-13
 
-* uses latest version of laravel mcp
+### What's Changed
+
+* fix: prefer fluxui-pro guidelines over fluxui-free by [@PanchoDP](https://github.com/PanchoDP) in https://github.com/laravel/boost/pull/292
+
+### New Contributors
+
+* [@PanchoDP](https://github.com/PanchoDP) made their first contribution in https://github.com/laravel/boost/pull/292
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.3.2...v1.3.3
+
+## [v1.3.2](https://github.com/laravel/boost/compare/v1.3.1...v1.3.2) - 2025-10-13
+
+### What's Changed
+
+* [1.x] Update token limit default to 3000 tokens in SearchDocs by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/293
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.3.1...v1.3.2
+
+## [v1.3.1](https://github.com/laravel/boost/compare/v1.3.0...v1.3.1) - 2025-10-13
+
+### What's Changed
+
+* [1.x] Update laravel/mcp dependency to support 0.3.0 version by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/297
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.3.0...v1.3.1
+
+## [v1.3.0](https://github.com/laravel/boost/compare/v1.2.1...v1.3.0) - 2025-09-30
+
+### What's Changed
+
+* [1.x] Adds `boost:update` + allows package authors to publish guidelines by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/277
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.2.1...v1.3.0
 
 ## [v1.2.1](https://github.com/laravel/boost/compare/v1.1.5...v1.2.1) - 2025-09-23
 
@@ -27,6 +59,10 @@
 * [@balu-lt](https://github.com/balu-lt) made their first contribution in https://github.com/laravel/boost/pull/113
 
 **Full Changelog**: https://github.com/laravel/boost/compare/v1.2.0...v1.2.1
+
+## [v1.2.0](https://github.com/laravel/boost/compare/v1.1.5...v1.2.0) - 2025-09-18
+
+* uses latest version of laravel mcp
 
 ## [v1.1.5](https://github.com/laravel/boost/compare/v1.1.4...v1.1.5) - 2025-09-18
 
