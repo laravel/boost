@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.3.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.3.3...main)
+
+## [v1.3.3](https://github.com/laravel/boost/compare/v1.3.2...v1.3.3) - 2025-10-13
+
+### What's Changed
+
+* fix: prefer fluxui-pro guidelines over fluxui-free by [@PanchoDP](https://github.com/PanchoDP) in https://github.com/laravel/boost/pull/292
+
+### New Contributors
+
+* [@PanchoDP](https://github.com/PanchoDP) made their first contribution in https://github.com/laravel/boost/pull/292
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.3.2...v1.3.3
 
 ## [v1.3.2](https://github.com/laravel/boost/compare/v1.3.1...v1.3.2) - 2025-10-13
 
