@@ -3,7 +3,7 @@
 use Laravel\Boost\Support\Config;
 
 afterEach(function (): void {
-    (new Config)->flush();
+    (new Config(__DIR__))->flush();
 });
 
 it('may store and retrieve guidelines', function (): void {

@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.3.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.3.2...main)
+
+## [v1.3.2](https://github.com/laravel/boost/compare/v1.3.1...v1.3.2) - 2025-10-13
+
+### What's Changed
+
+* [1.x] Update token limit default to 3000 tokens in SearchDocs by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/293
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.3.1...v1.3.2
+
+## [v1.3.1](https://github.com/laravel/boost/compare/v1.3.0...v1.3.1) - 2025-10-13
+
+### What's Changed
+
+* [1.x] Update laravel/mcp dependency to support 0.3.0 version by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/297
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.3.0...v1.3.1
 
 ## [v1.3.0](https://github.com/laravel/boost/compare/v1.2.1...v1.3.0) - 2025-09-30
 

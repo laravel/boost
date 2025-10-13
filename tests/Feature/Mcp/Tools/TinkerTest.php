@@ -136,5 +136,5 @@ test('should register only in local environment', function (): void {
 
     app()->detectEnvironment(fn (): string => 'local');
 
-    expect($tool->eligibleForRegistration(Mockery::mock(Request::class)))->toBeTrue();
+    expect($tool->eligibleForRegistration())->toBeTrue();
 });
