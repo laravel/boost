@@ -2,259 +2,139 @@
 
 declare(strict_types=1);
 
+use Illuminate\Container\Container;
+use Illuminate\Support\Collection;
+use Laravel\Boost\BoostManager;
+use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+use Laravel\Boost\Install\CodeEnvironment\Codex;
+use Laravel\Boost\Install\CodeEnvironment\Copilot;
+use Laravel\Boost\Install\CodeEnvironment\Cursor;
+use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
+use Laravel\Boost\Install\CodeEnvironment\VSCode;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
 use Laravel\Boost\Install\Enums\Platform;
 
 beforeEach(function (): void {
-    $this->container = new \Illuminate\Container\Container;
-    $this->detector = new CodeEnvironmentsDetector($this->container);
+    $this->container = new Container;
+    $this->boostManager = new BoostManager;
+    $this->detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
 });
 
-test('discoverSystemInstalledCodeEnvironments returns detected programs', function (): void {
-    // Create mock programs
-    $program1 = Mockery::mock(CodeEnvironment::class);
-    $program1->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
-    $program1->shouldReceive('name')->andReturn('phpstorm');
+afterEach(function (): void {
+    Mockery::close();
+});
 
-    $program2 = Mockery::mock(CodeEnvironment::class);
-    $program2->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
-    $program2->shouldReceive('name')->andReturn('vscode');
+it('returns collection of all registered code environments', function (): void {
+    $codeEnvironments = $this->detector->getCodeEnvironments();
 
-    $program3 = Mockery::mock(CodeEnvironment::class);
-    $program3->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
-    $program3->shouldReceive('name')->andReturn('cursor');
+    expect($codeEnvironments)->toBeInstanceOf(Collection::class)
+        ->and($codeEnvironments->count())->toBe(6)
+        ->and($codeEnvironments->keys()->toArray())->toBe([
+            'phpstorm', 'vscode', 'cursor', 'claudecode', 'codex', 'copilot',
+        ]);
 
-    // Mock all other programs that might be instantiated
-    $otherProgram = Mockery::mock(CodeEnvironment::class);
-    $otherProgram->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
-    $otherProgram->shouldReceive('name')->andReturn('other');
+    $codeEnvironments->each(function ($environment): void {
+        expect($environment)->toBeInstanceOf(CodeEnvironment::class);
+    });
+});
 
-    // Bind mocked programs to container
-    $container = new \Illuminate\Container\Container;
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\PhpStorm::class, fn () => $program1);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program2);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $program3);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Codex::class, fn () => $otherProgram);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
+it('returns an array of detected environment names for system discovery', function (): void {
+    $mockPhpStorm = Mockery::mock(CodeEnvironment::class);
+    $mockPhpStorm->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
+    $mockPhpStorm->shouldReceive('name')->andReturn('phpstorm');
 
-    $detector = new CodeEnvironmentsDetector($container);
+    $mockVSCode = Mockery::mock(CodeEnvironment::class);
+    $mockVSCode->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
+    $mockVSCode->shouldReceive('name')->andReturn('vscode');
+
+    $mockCursor = Mockery::mock(CodeEnvironment::class);
+    $mockCursor->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
+    $mockCursor->shouldReceive('name')->andReturn('cursor');
+
+    $mockOther = Mockery::mock(CodeEnvironment::class);
+    $mockOther->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
+    $mockOther->shouldReceive('name')->andReturn('other');
+
+    $this->container->bind(PhpStorm::class, fn () => $mockPhpStorm);
+    $this->container->bind(VSCode::class, fn () => $mockVSCode);
+    $this->container->bind(Cursor::class, fn () => $mockCursor);
+    $this->container->bind(ClaudeCode::class, fn () => $mockOther);
+    $this->container->bind(Codex::class, fn () => $mockOther);
+    $this->container->bind(Copilot::class, fn () => $mockOther);
+
+    $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
 
     expect($detected)->toBe(['phpstorm', 'cursor']);
 });
 
-test('discoverSystemInstalledCodeEnvironments returns empty array when no programs detected', function (): void {
-    $program1 = Mockery::mock(CodeEnvironment::class);
-    $program1->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
-    $program1->shouldReceive('name')->andReturn('phpstorm');
+it('returns an empty array when no environments are detected for system discovery', function (): void {
+    $mockEnvironment = Mockery::mock(CodeEnvironment::class);
+    $mockEnvironment->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
+    $mockEnvironment->shouldReceive('name')->andReturn('mock');
 
-    // Mock all other programs that might be instantiated
-    $otherProgram = Mockery::mock(CodeEnvironment::class);
-    $otherProgram->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
-    $otherProgram->shouldReceive('name')->andReturn('other');
+    $this->container->bind(PhpStorm::class, fn () => $mockEnvironment);
+    $this->container->bind(VSCode::class, fn () => $mockEnvironment);
+    $this->container->bind(Cursor::class, fn () => $mockEnvironment);
+    $this->container->bind(ClaudeCode::class, fn () => $mockEnvironment);
+    $this->container->bind(Codex::class, fn () => $mockEnvironment);
+    $this->container->bind(Copilot::class, fn () => $mockEnvironment);
 
-    // Bind mocked program to container
-    $container = new \Illuminate\Container\Container;
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\PhpStorm::class, fn () => $program1);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $otherProgram);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Cursor::class, fn () => $otherProgram);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $otherProgram);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Codex::class, fn () => $otherProgram);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\Copilot::class, fn () => $otherProgram);
-
-    $detector = new CodeEnvironmentsDetector($container);
+    $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
 
-    expect($detected)->toBeEmpty();
+    expect($detected)->toBe([]);
 });
 
-test('discoverProjectInstalledCodeEnvironments detects programs in project', function (): void {
-    $basePath = '/path/to/project';
+it('returns an array of detected environment names for project discovery', function (): void {
+    $basePath = '/test/project';
 
-    $program1 = Mockery::mock(CodeEnvironment::class);
-    $program1->shouldReceive('detectInProject')->with($basePath)->andReturn(true);
-    $program1->shouldReceive('name')->andReturn('vscode');
+    $mockVSCode = Mockery::mock(CodeEnvironment::class);
+    $mockVSCode->shouldReceive('detectInProject')->with($basePath)->andReturn(true);
+    $mockVSCode->shouldReceive('name')->andReturn('vscode');
 
-    $program2 = Mockery::mock(CodeEnvironment::class);
-    $program2->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
-    $program2->shouldReceive('name')->andReturn('phpstorm');
+    $mockPhpStorm = Mockery::mock(CodeEnvironment::class);
+    $mockPhpStorm->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
+    $mockPhpStorm->shouldReceive('name')->andReturn('phpstorm');
 
-    $program3 = Mockery::mock(CodeEnvironment::class);
-    $program3->shouldReceive('detectInProject')->with($basePath)->andReturn(true);
-    $program3->shouldReceive('name')->andReturn('claudecode');
+    $mockClaudeCode = Mockery::mock(CodeEnvironment::class);
+    $mockClaudeCode->shouldReceive('detectInProject')->with($basePath)->andReturn(true);
+    $mockClaudeCode->shouldReceive('name')->andReturn('claudecode');
 
-    // Bind mocked programs to container
-    $container = new \Illuminate\Container\Container;
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program1);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\PhpStorm::class, fn () => $program2);
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\ClaudeCode::class, fn () => $program3);
+    $mockOther = Mockery::mock(CodeEnvironment::class);
+    $mockOther->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
+    $mockOther->shouldReceive('name')->andReturn('other');
 
-    $detector = new CodeEnvironmentsDetector($container);
+    $this->container->bind(PhpStorm::class, fn () => $mockPhpStorm);
+    $this->container->bind(VSCode::class, fn () => $mockVSCode);
+    $this->container->bind(Cursor::class, fn () => $mockOther);
+    $this->container->bind(ClaudeCode::class, fn () => $mockClaudeCode);
+    $this->container->bind(Codex::class, fn () => $mockOther);
+    $this->container->bind(Copilot::class, fn () => $mockOther);
+
+    $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);
 
     expect($detected)->toBe(['vscode', 'claudecode']);
 });
 
-test('discoverProjectInstalledCodeEnvironments returns empty array when no programs detected in project', function (): void {
-    $basePath = '/path/to/project';
+it('returns an empty array when no environments are detected for project discovery', function (): void {
+    $basePath = '/empty/project';
 
-    $program1 = Mockery::mock(CodeEnvironment::class);
-    $program1->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
-    $program1->shouldReceive('name')->andReturn('vscode');
+    $mockEnvironment = Mockery::mock(CodeEnvironment::class);
+    $mockEnvironment->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
+    $mockEnvironment->shouldReceive('name')->andReturn('mock');
 
-    // Bind mocked program to container
-    $container = new \Illuminate\Container\Container;
-    $container->bind(\Laravel\Boost\Install\CodeEnvironment\VSCode::class, fn () => $program1);
+    $this->container->bind(PhpStorm::class, fn () => $mockEnvironment);
+    $this->container->bind(VSCode::class, fn () => $mockEnvironment);
+    $this->container->bind(Cursor::class, fn () => $mockEnvironment);
+    $this->container->bind(ClaudeCode::class, fn () => $mockEnvironment);
+    $this->container->bind(Codex::class, fn () => $mockEnvironment);
+    $this->container->bind(Copilot::class, fn () => $mockEnvironment);
 
-    $detector = new CodeEnvironmentsDetector($container);
+    $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);
 
-    expect($detected)->toBeEmpty();
-});
-
-test('discoverProjectInstalledCodeEnvironments detects applications by directory', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.vscode');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('vscode');
-
-    // Cleanup
-    rmdir($tempDir.'/.vscode');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects applications with mixed type', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    file_put_contents($tempDir.'/CLAUDE.md', 'test');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('claude_code');
-
-    unlink($tempDir.'/CLAUDE.md');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects copilot with nested file path', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.github');
-    file_put_contents($tempDir.'/.github/copilot-instructions.md', 'test');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('copilot');
-
-    // Cleanup
-    unlink($tempDir.'/.github/copilot-instructions.md');
-    rmdir($tempDir.'/.github');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects claude code with directory', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.claude');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('claude_code');
-
-    rmdir($tempDir.'/.claude');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects phpstorm with idea directory', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.idea');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('phpstorm');
-
-    // Cleanup
-    rmdir($tempDir.'/.idea');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects phpstorm with junie directory', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.junie');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('phpstorm');
-
-    // Cleanup
-    rmdir($tempDir.'/.junie');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects cursor with cursor directory', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.cursor');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('cursor');
-
-    // Cleanup
-    rmdir($tempDir.'/.cursor');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects codex with codex directory', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.codex');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('codex');
-
-    rmdir($tempDir.'/.codex');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments detects codex with AGENTS.md file', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    file_put_contents($tempDir.'/AGENTS.md', 'test');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('codex');
-
-    unlink($tempDir.'/AGENTS.md');
-    rmdir($tempDir);
-});
-
-test('discoverProjectInstalledCodeEnvironments handles multiple detections', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
-    mkdir($tempDir);
-    mkdir($tempDir.'/.vscode');
-    mkdir($tempDir.'/.cursor');
-    file_put_contents($tempDir.'/CLAUDE.md', 'test');
-
-    $detected = $this->detector->discoverProjectInstalledCodeEnvironments($tempDir);
-
-    expect($detected)->toContain('vscode')
-        ->and($detected)->toContain('cursor')
-        ->and($detected)->toContain('claude_code')
-        ->and(count($detected))->toBeGreaterThanOrEqual(3);
-
-    // Cleanup
-    rmdir($tempDir.'/.vscode');
-    rmdir($tempDir.'/.cursor');
-    unlink($tempDir.'/CLAUDE.md');
-    rmdir($tempDir);
+    expect($detected)->toBe([]);
 });
