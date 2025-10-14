@@ -25,7 +25,7 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient
     {
         return match ($platform) {
             Platform::Darwin, Platform::Linux => [
-                'command' => 'which claude',
+                'command' => 'command -v claude',
             ],
             Platform::Windows => [
                 'command' => 'where claude 2>nul',

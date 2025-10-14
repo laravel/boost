@@ -129,6 +129,12 @@ abstract class CodeEnvironment
         return 'mcpServers';
     }
 
+    /** @return array<string, mixed> */
+    public function newMcpConfig(): array
+    {
+        return [];
+    }
+
     /**
      * Install MCP server using the appropriate strategy.
      *
@@ -199,6 +205,7 @@ abstract class CodeEnvironment
         }
 
         return (new FileWriter($path))
+            ->withNewConfig($this->newMcpConfig())
             ->configKey($this->mcpConfigKey())
             ->addServer($key, $command, $args, $env)
             ->save();
