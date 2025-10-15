@@ -23,11 +23,20 @@ class GuidelineAssist
 
     protected static array $classes = [];
 
+    protected string $nodePackageManager = 'npm';
+
     public function __construct(public Roster $roster)
     {
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
+        $this->nodePackageManager = match (true) {
+            file_exists(base_path('package-lock.json')) => 'npm',
+            file_exists(base_path('pnpm-lock.yaml')) => 'pnpm',
+            file_exists(base_path('yarn.lock')) => 'yarn',
+            file_exists(base_path('bun.lockb')) => 'bun',
+            default => 'npm',
+        };
     }
 
     /**
@@ -167,5 +176,10 @@ class GuidelineAssist
     public function inertia(): Inertia
     {
         return new Inertia($this->roster);
+    }
+
+    public function nodePackageManager(): string
+    {
+        return $this->nodePackageManager;
     }
 }
