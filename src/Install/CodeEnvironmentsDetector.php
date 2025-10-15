@@ -6,29 +6,16 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
-use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
+use Laravel\Boost\BoostManager;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
-use Laravel\Boost\Install\CodeEnvironment\Copilot;
-use Laravel\Boost\Install\CodeEnvironment\Cursor;
-use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
-use Laravel\Boost\Install\CodeEnvironment\VSCode;
 use Laravel\Boost\Install\Enums\Platform;
 
 class CodeEnvironmentsDetector
 {
-    /** @var array<string, class-string<CodeEnvironment>> */
-    private array $programs = [
-        'phpstorm' => PhpStorm::class,
-        'vscode' => VSCode::class,
-        'cursor' => Cursor::class,
-        'claudecode' => ClaudeCode::class,
-        'copilot' => Copilot::class,
-    ];
-
     public function __construct(
-        private readonly Container $container
-    ) {
-    }
+        private readonly Container $container,
+        private readonly BoostManager $boostManager
+    ) {}
 
     /**
      * Detect installed applications on the current platform.
@@ -40,8 +27,8 @@ class CodeEnvironmentsDetector
         $platform = Platform::current();
 
         return $this->getCodeEnvironments()
-            ->filter(fn (CodeEnvironment $program) => $program->detectOnSystem($platform))
-            ->map(fn (CodeEnvironment $program) => $program->name())
+            ->filter(fn (CodeEnvironment $program): bool => $program->detectOnSystem($platform))
+            ->map(fn (CodeEnvironment $program): string => $program->name())
             ->values()
             ->toArray();
     }
@@ -54,8 +41,8 @@ class CodeEnvironmentsDetector
     public function discoverProjectInstalledCodeEnvironments(string $basePath): array
     {
         return $this->getCodeEnvironments()
-            ->filter(fn ($program) => $program->detectInProject($basePath))
-            ->map(fn ($program) => $program->name())
+            ->filter(fn (CodeEnvironment $program): bool => $program->detectInProject($basePath))
+            ->map(fn (CodeEnvironment $program): string => $program->name())
             ->values()
             ->toArray();
     }
@@ -67,6 +54,7 @@ class CodeEnvironmentsDetector
      */
     public function getCodeEnvironments(): Collection
     {
-        return collect($this->programs)->map(fn (string $className) => $this->container->make($className));
+        return collect($this->boostManager->getCodeEnvironments())
+            ->map(fn (string $className) => $this->container->make($className));
     }
 }

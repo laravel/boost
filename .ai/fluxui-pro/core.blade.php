@@ -16,5 +16,5 @@
 This is correct as of Boost installation, but there may be additional components within the codebase.
 
 <available-flux-components>
-accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, context, date-picker, dropdown, editor, field, heading, icon, input, modal, navbar, pagination, popover, profile, radio, select, separator, switch, table, tabs, text, textarea, toast, tooltip
+accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, context, date-picker, dropdown, editor, field, heading, file upload, icon, input, modal, navbar, pagination, pillbox, popover, profile, radio, select, separator, switch, table, tabs, text, textarea, toast, tooltip
 </available-flux-components>

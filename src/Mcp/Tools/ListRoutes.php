@@ -4,42 +4,46 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Illuminate\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Artisan;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Laravel\Mcp\Server\Tools\ToolInputSchema;
-use Laravel\Mcp\Server\Tools\ToolResult;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 #[IsReadOnly]
 class ListRoutes extends Tool
 {
-    public function description(): string
-    {
-        return 'List all available routes defined in the application, including Folio routes if used';
-    }
+    /**
+     * The tool's description.
+     */
+    protected string $description = 'List all available routes defined in the application, including Folio routes if used';
 
-    public function schema(ToolInputSchema $schema): ToolInputSchema
+    /**
+     * Get the tool's input schema.
+     *
+     * @return array<string, JsonSchema>
+     */
+    public function schema(JsonSchema $schema): array
     {
-        // Mirror the most common `route:list` options. All are optional.
-        $schema->string('method')->description('Filter the routes by HTTP method.')->required(false);
-        $schema->string('action')->description('Filter the routes by action.')->required(false);
-        $schema->string('name')->description('Filter the routes by name.')->required(false);
-        $schema->string('domain')->description('Filter the routes by domain.')->required(false);
-        $schema->string('path')->description('Only show routes matching the given path pattern.')->required(false);
-        // Keys with hyphens are converted to underscores for PHP variable compatibility.
-        $schema->string('except_path')->description('Do not display the routes matching the given path pattern.')->required(false);
-        $schema->boolean('except_vendor')->description('Do not display routes defined by vendor packages.')->required(false);
-        $schema->boolean('only_vendor')->description('Only display routes defined by vendor packages.')->required(false);
-
-        return $schema;
+        return [
+            'method' => $schema->string()->description('Filter the routes by HTTP method (e.g., GET, POST, PUT, DELETE).'),
+            'action' => $schema->string()->description('Filter the routes by controller action (e.g., UserController@index, ChatController, show).'),
+            'name' => $schema->string()->description('Filter the routes by route name (no wildcards supported).'),
+            'domain' => $schema->string()->description('Filter the routes by domain.'),
+            'path' => $schema->string()->description('Only show routes matching the given path pattern.'),
+            'except_path' => $schema->string()->description('Do not display the routes matching the given path pattern.'),
+            'except_vendor' => $schema->boolean()->description('Do not display routes defined by vendor packages.'),
+            'only_vendor' => $schema->boolean()->description('Only display routes defined by vendor packages.'),
+        ];
     }
 
     /**
-     * @param array<string> $arguments
+     * Handle the tool request.
      */
-    public function handle(array $arguments): ToolResult
+    public function handle(Request $request): Response
     {
         $optionMap = [
             'method' => 'method',
@@ -58,8 +62,16 @@ class ListRoutes extends Tool
         ];
 
         foreach ($optionMap as $argKey => $cliOption) {
-            if (array_key_exists($argKey, $arguments) && ! empty($arguments[$argKey]) && $arguments[$argKey] !== '*') {
-                $options['--'.$cliOption] = $arguments[$argKey];
+            $value = $request->get($argKey);
+            if (! empty($value)) {
+                if (is_bool($value)) {
+                    $options['--'.$cliOption] = true;
+                } else {
+                    $sanitizedValue = str_replace(['*', '?'], '', $value);
+                    if (filled($sanitizedValue)) {
+                        $options['--'.$cliOption] = $sanitizedValue;
+                    }
+                }
             }
         }
 
@@ -75,17 +87,17 @@ class ListRoutes extends Tool
             $routesOutput .= $this->artisan('folio:list', $folioOptions);
         }
 
-        return ToolResult::text($routesOutput);
+        return Response::text($routesOutput);
     }
 
     /**
-     * @param array<string|bool> $options
+     * @param  array<string|bool>  $options
      */
-    private function artisan(string $command, array $options = []): string
+    protected function artisan(string $command, array $options = []): string
     {
         $output = new BufferedOutput;
-        $result = Artisan::call($command, $options, $output);
-        if ($result !== CommandAlias::SUCCESS) {
+        $response = Artisan::call($command, $options, $output);
+        if ($response !== CommandAlias::SUCCESS) {
             return 'Failed to list routes: '.$output->fetch();
         }
 

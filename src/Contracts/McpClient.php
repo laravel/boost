@@ -9,10 +9,10 @@ namespace Laravel\Boost\Contracts;
  */
 interface McpClient
 {
+    public function name(): string;
+
     /**
      * Get the display name of the MCP (Model Context Protocol) client.
-     *
-     * @return string|null
      */
     public function mcpClientName(): ?string;
 
@@ -24,20 +24,20 @@ interface McpClient
     /**
      * Get the PHP executable path for this MCP client.
      */
-    public function getPhpPath(): string;
+    public function getPhpPath(bool $forceAbsolutePath = false): string;
 
     /**
      * Get the artisan path for this MCP client.
      */
-    public function getArtisanPath(): string;
+    public function getArtisanPath(bool $forceAbsolutePath = false): string;
 
     /**
      * Install an MCP server configuration in this IDE.
      *
-     * @param string $key Server identifier/name
-     * @param string $command Executable command to run the MCP server
-     * @param array<int, string> $args Command line arguments
-     * @param array<string, string> $env Environment variables
+     * @param  string  $key  Server identifier/name
+     * @param  string  $command  Executable command to run the MCP server
+     * @param  array<int, string>  $args  Command line arguments
+     * @param  array<string, string>  $env  Environment variables
      * @return bool True if installation succeeded, false otherwise
      */
     public function installMcp(string $key, string $command, array $args = [], array $env = []): bool;

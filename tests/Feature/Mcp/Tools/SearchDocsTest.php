@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
-use Laravel\Mcp\Server\Tools\ToolResult;
+use Laravel\Mcp\Request;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 
-test('it searches documentation successfully', function () {
+test('it searches documentation successfully', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '2.0.0'),
@@ -24,27 +24,23 @@ test('it searches documentation successfully', function () {
     ]);
 
     $tool = new SearchDocs($roster);
-    $result = $tool->handle(['queries' => ['authentication', 'testing']]);
+    $response = $tool->handle(new Request(['queries' => ['authentication', 'testing']]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Documentation search results');
 
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse()
-        ->and($data['content'][0]['text'])->toBe('Documentation search results');
-
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://boost.laravel.com/api/docs' &&
-               $request->data()['queries'] === ['authentication', 'testing'] &&
-               $request->data()['packages'] === [
-                   ['name' => 'laravel/framework', 'version' => '11.x'],
-                   ['name' => 'pestphp/pest', 'version' => '2.x'],
-               ] &&
-               $request->data()['token_limit'] === 10000 &&
-               $request->data()['format'] === 'markdown';
-    });
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://boost.laravel.com/api/docs' &&
+           $request->data()['queries'] === ['authentication', 'testing'] &&
+           $request->data()['packages'] === [
+               ['name' => 'laravel/framework', 'version' => '11.x'],
+               ['name' => 'pestphp/pest', 'version' => '2.x'],
+           ] &&
+           $request->data()['token_limit'] === 3000 &&
+           $request->data()['format'] === 'markdown');
 });
 
-test('it handles API error response', function () {
+test('it handles API error response', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
@@ -57,16 +53,14 @@ test('it handles API error response', function () {
     ]);
 
     $tool = new SearchDocs($roster);
-    $result = $tool->handle(['queries' => ['authentication']]);
+    $response = $tool->handle(new Request(['queries' => ['authentication']]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeTrue()
-        ->and($data['content'][0]['text'])->toBe('Failed to search documentation: API Error');
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('Failed to search documentation: API Error');
 });
 
-test('it filters empty queries', function () {
+test('it filters empty queries', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -77,22 +71,18 @@ test('it filters empty queries', function () {
     ]);
 
     $tool = new SearchDocs($roster);
-    $result = $tool->handle(['queries' => ['test', '  ', '*', ' ']]);
+    $response = $tool->handle(new Request(['queries' => ['test', '  ', '*', ' ']]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($response)->isToolResult()
+        ->toolHasNoError();
 
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse();
-
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://boost.laravel.com/api/docs' &&
-               $request->data()['queries'] === ['test'] &&
-               empty($request->data()['packages']) &&
-               $request->data()['token_limit'] === 10000;
-    });
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://boost.laravel.com/api/docs' &&
+           $request->data()['queries'] === ['test'] &&
+           empty($request->data()['packages']) &&
+           $request->data()['token_limit'] === 3000);
 });
 
-test('it formats package data correctly', function () {
+test('it formats package data correctly', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.5.1'),
@@ -106,19 +96,18 @@ test('it formats package data correctly', function () {
     ]);
 
     $tool = new SearchDocs($roster);
-    $result = $tool->handle(['queries' => ['test']]);
+    $response = $tool->handle(new Request(['queries' => ['test']]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($response)->isToolResult()
+        ->toolHasNoError();
 
-    Http::assertSent(function ($request) {
-        return $request->data()['packages'] === [
-            ['name' => 'laravel/framework', 'version' => '11.x'],
-            ['name' => 'livewire/livewire', 'version' => '3.x'],
-        ] && $request->data()['token_limit'] === 10000;
-    });
+    Http::assertSent(fn ($request): bool => $request->data()['packages'] === [
+        ['name' => 'laravel/framework', 'version' => '11.x'],
+        ['name' => 'livewire/livewire', 'version' => '3.x'],
+    ] && $request->data()['token_limit'] === 3000);
 });
 
-test('it handles empty results', function () {
+test('it handles empty results', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -129,16 +118,14 @@ test('it handles empty results', function () {
     ]);
 
     $tool = new SearchDocs($roster);
-    $result = $tool->handle(['queries' => ['nonexistent']]);
+    $response = $tool->handle(new Request(['queries' => ['nonexistent']]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
-
-    $data = $result->toArray();
-    expect($data['isError'])->toBeFalse()
-        ->and($data['content'][0]['text'])->toBe('Empty response');
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Empty response');
 });
 
-test('it uses custom token_limit when provided', function () {
+test('it uses custom token_limit when provided', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -149,16 +136,14 @@ test('it uses custom token_limit when provided', function () {
     ]);
 
     $tool = new SearchDocs($roster);
-    $result = $tool->handle(['queries' => ['test'], 'token_limit' => 5000]);
+    $response = $tool->handle(new Request(['queries' => ['test'], 'token_limit' => 5000]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($response)->isToolResult()->toolHasNoError();
 
-    Http::assertSent(function ($request) {
-        return $request->data()['token_limit'] === 5000;
-    });
+    Http::assertSent(fn ($request): bool => $request->data()['token_limit'] === 5000);
 });
 
-test('it caps token_limit at maximum of 1000000', function () {
+test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 
     $roster = Mockery::mock(Roster::class);
@@ -169,11 +154,9 @@ test('it caps token_limit at maximum of 1000000', function () {
     ]);
 
     $tool = new SearchDocs($roster);
-    $result = $tool->handle(['queries' => ['test'], 'token_limit' => 2000000]);
+    $response = $tool->handle(new Request(['queries' => ['test'], 'token_limit' => 2000000]));
 
-    expect($result)->toBeInstanceOf(ToolResult::class);
+    expect($response)->isToolResult()->toolHasNoError();
 
-    Http::assertSent(function ($request) {
-        return $request->data()['token_limit'] === 1000000;
-    });
+    Http::assertSent(fn ($request): bool => $request->data()['token_limit'] === 1000000);
 });

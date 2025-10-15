@@ -13,7 +13,7 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient
 {
     public function name(): string
     {
-        return 'claudecode';
+        return 'claude_code';
     }
 
     public function displayName(): string
@@ -28,7 +28,7 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient
                 'command' => 'which claude',
             ],
             Platform::Windows => [
-                'command' => 'where claude 2>null',
+                'command' => 'where claude 2>nul',
             ],
         };
     }

@@ -12,29 +12,29 @@ trait ReadsLogs
      * Regular expression fragments and default chunk-window sizes used when
      * scanning log files. Declaring them once keeps every consumer in sync.
      */
-    private function getTimestampRegex(): string
+    protected function getTimestampRegex(): string
     {
         return '\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\]';
     }
 
-    private function getEntrySplitRegex(): string
+    protected function getEntrySplitRegex(): string
     {
         return '/(?='.$this->getTimestampRegex().')/';
     }
 
-    private function getErrorEntryRegex(): string
+    protected function getErrorEntryRegex(): string
     {
         return '/^'.$this->getTimestampRegex().'.*\\.ERROR:/';
     }
 
-    private function getChunkSizeStart(): int
+    protected function getChunkSizeStart(): int
     {
         return 64 * 1024; // 64 kB
     }
 
-    private function getChunkSizeMax(): int
+    protected function getChunkSizeMax(): int
     {
-        return 1 * 1024 * 1024; // 1 MB
+        return 1024 * 1024; // 1 MB
     }
 
     /**
@@ -96,7 +96,7 @@ trait ReadsLogs
 
             for ($i = count($entries) - 1; $i >= 0; $i--) {
                 if ($this->isErrorEntry($entries[$i])) {
-                    return trim($entries[$i]);
+                    return trim((string) $entries[$i]);
                 }
             }
 
@@ -114,7 +114,7 @@ trait ReadsLogs
      *
      * @return string[]
      */
-    private function scanLogChunkForEntries(string $logFile, int $chunkSize): array
+    protected function scanLogChunkForEntries(string $logFile, int $chunkSize): array
     {
         $fileSize = filesize($logFile);
         if ($fileSize === false) {

@@ -3,14 +3,15 @@
 declare(strict_types=1);
 
 return [
+
     /*
     |--------------------------------------------------------------------------
     | Boost Master Switch
     |--------------------------------------------------------------------------
     |
-    | This option may be used to disable all Boost functionality, which
-    | simply provides a single and convenient way to enable or disable
-    | Boost's AI development tools.
+    | This option may be used to disable all Boost functionality - which
+    | will prevent Boost's routes from being registered and will also
+    | disable Boost's browser logging functionality from operating.
     |
     */
 

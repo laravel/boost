@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Roster;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
+use Throwable;
 
 class GuidelineAssist
 {
@@ -21,10 +25,10 @@ class GuidelineAssist
 
     protected string $nodePackageManager = 'npm';
 
-    public function __construct()
+    public function __construct(public Roster $roster)
     {
-        $this->modelPaths = $this->discover(fn ($reflection) => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
-        $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection) => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
+        $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
+        $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
         $this->nodePackageManager = match (true) {
             file_exists(base_path('package-lock.json')) => 'npm',
@@ -64,7 +68,7 @@ class GuidelineAssist
      *
      * @return array<string, string>
      */
-    private function discover(callable $cb): array
+    protected function discover(callable $cb): array
     {
         $classes = [];
         $appPath = app_path();
@@ -73,7 +77,7 @@ class GuidelineAssist
             return ['app-path-isnt-a-directory' => $appPath];
         }
 
-        if (empty(self::$classes)) {
+        if (self::$classes === []) {
             $finder = Finder::create()
                 ->in($appPath)
                 ->files()
@@ -95,10 +99,10 @@ class GuidelineAssist
                         continue;
                     }
 
-                    if (class_exists($className)) {
+                    if (class_exists($className, false)) {
                         self::$classes[$className] = $path;
                     }
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     // Ignore exceptions and errors from class loading/reflection
                 }
             }
@@ -135,10 +139,8 @@ class GuidelineAssist
 
         $tokens = token_get_all($code);
         foreach ($tokens as $token) {
-            if (is_array($token)) {
-                if (in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
-                    return $cache[$path] = true;
-                }
+            if (is_array($token) && in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
+                return $cache[$path] = true;
             }
         }
 
@@ -147,7 +149,7 @@ class GuidelineAssist
 
     public function shouldEnforceStrictTypes(): bool
     {
-        if (empty($this->modelPaths)) {
+        if ($this->modelPaths === []) {
             return false;
         }
 
@@ -159,11 +161,21 @@ class GuidelineAssist
 
     public function enumContents(): string
     {
-        if (empty($this->enumPaths)) {
+        if ($this->enumPaths === []) {
             return '';
         }
 
         return file_get_contents(current($this->enumPaths));
+    }
+
+    public function packageGte(Packages $package, string $version): bool
+    {
+        return $this->roster->usesVersion($package, $version, '>=');
+    }
+
+    public function inertia(): Inertia
+    {
+        return new Inertia($this->roster);
     }
 
     public function nodePackageManager(): string
