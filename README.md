@@ -39,7 +39,7 @@ Once Laravel Boost has been installed, you're ready to start coding with Cursor,
 
 ### Setup Your Code Editors
 
-#### PhpStorm
+#### PhpStorm + Junie
 
 1. Press `shift` twice to open the command palette
 2. Search "MCP Settings" and press `enter`
