@@ -3,6 +3,16 @@
 declare(strict_types=1);
 
 return [
+    /*
+    |--------------------------------------------------------------------------
+    | Boost PHP Binary
+    |--------------------------------------------------------------------------
+    |
+    | This is useful if you want to expose the MCP server via HTTP
+    | because you still need the CLI version of PHP to run certain
+    | Boost commands such as log readers.
+    */
+    'php_binary' => env('BOOST_PHP_BINARY', PHP_BINARY),
 
     /*
     |--------------------------------------------------------------------------

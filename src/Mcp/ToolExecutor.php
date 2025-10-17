@@ -123,7 +123,7 @@ class ToolExecutor
     protected function buildCommand(string $toolClass, array $arguments): array
     {
         return [
-            PHP_BINARY,
+            config('boost.php_binary', PHP_BINARY),
             base_path('artisan'),
             'boost:execute-tool',
             $toolClass,
