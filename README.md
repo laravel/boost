@@ -37,6 +37,8 @@ php artisan boost:install
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
+> **Laravel Sail Users:** Boost automatically detects and configures itself for Sail projects. No additional setup required! See [Laravel Sail Support](#laravel-sail-support) for details.
+
 ### Setup Your Code Editors
 
 #### PhpStorm
@@ -197,6 +199,29 @@ JSON Example:
     }
 }
 ```
+
+### Laravel Sail Support
+
+Laravel Boost automatically detects if your project is using [Laravel Sail](https://laravel.com/docs/sail) and configures the MCP server accordingly. When both `vendor/bin/sail` and `docker-compose.yml` are present in your project, Boost will use Sail to run the MCP server.
+
+**Automatic Configuration:**
+
+When you run `php artisan boost:install` or `php artisan boost:update` in a Sail project, the MCP server will be configured as:
+
+```json
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "./vendor/bin/sail",
+            "args": ["artisan", "boost:mcp"]
+        }
+    }
+}
+```
+
+This ensures that the MCP server runs inside your Sail Docker container with the correct PHP version and environment, rather than using your host machine's PHP installation.
+
+**Note:** The detection is automatic and transparent. If Sail is not detected, Boost will use the standard `php artisan boost:mcp` configuration.
 
 ## Adding Support for Other IDEs / AI Agents
 
