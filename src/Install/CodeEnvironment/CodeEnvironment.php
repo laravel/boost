@@ -41,6 +41,11 @@ abstract class CodeEnvironment
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
         if ($this->isSailProject()) {
+            // PhpStorm doesn't support symlinks in MCP config, use real path
+            if ($this->useAbsolutePathForMcp() || $forceAbsolutePath) {
+                return base_path('vendor/laravel/sail/bin/sail');
+            }
+
             return './vendor/bin/sail';
         }
 
