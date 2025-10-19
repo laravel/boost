@@ -15,6 +15,7 @@ use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
+use ReflectionClass;
 
 beforeEach(function (): void {
     $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
@@ -414,4 +415,84 @@ test('getPhpPath uses absolute paths when forceAbsolutePath is true', function (
 test('getPhpPath maintains default behavior when forceAbsolutePath is false', function (): void {
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('php');
+});
+
+test('getPhpPath returns sail path when project uses Laravel Sail', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('isSailProject')
+        ->andReturn(true);
+
+    expect($environment->getPhpPath())->toBe('./vendor/bin/sail');
+});
+
+test('getArtisanPath returns relative artisan when project uses Laravel Sail', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('isSailProject')
+        ->andReturn(true);
+
+    expect($environment->getArtisanPath())->toBe('artisan');
+});
+
+test('isSailProject returns true when both sail and docker-compose exist', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('fileExists')
+        ->with(Mockery::on(fn ($path): bool => str_contains((string) $path, 'vendor/bin/sail')))
+        ->andReturn(true);
+
+    $environment->shouldReceive('fileExists')
+        ->with(Mockery::on(fn ($path): bool => str_contains((string) $path, 'docker-compose.yml')))
+        ->andReturn(true);
+
+    // Use reflection to call the protected method
+    $reflection = new ReflectionClass($environment);
+    $method = $reflection->getMethod('isSailProject');
+    $method->setAccessible(true);
+
+    expect($method->invoke($environment))->toBe(true);
+});
+
+test('isSailProject returns false when sail does not exist', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('fileExists')
+        ->with(Mockery::on(fn ($path): bool => str_contains((string) $path, 'vendor/bin/sail')))
+        ->andReturn(false);
+
+    $environment->shouldReceive('fileExists')
+        ->with(Mockery::on(fn ($path): bool => str_contains((string) $path, 'docker-compose.yml')))
+        ->andReturn(true);
+
+    // Use reflection to call the protected method
+    $reflection = new ReflectionClass($environment);
+    $method = $reflection->getMethod('isSailProject');
+    $method->setAccessible(true);
+
+    expect($method->invoke($environment))->toBe(false);
+});
+
+test('isSailProject returns false when docker-compose does not exist', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('fileExists')
+        ->with(Mockery::on(fn ($path): bool => str_contains((string) $path, 'vendor/bin/sail')))
+        ->andReturn(true);
+
+    $environment->shouldReceive('fileExists')
+        ->with(Mockery::on(fn ($path): bool => str_contains((string) $path, 'docker-compose.yml')))
+        ->andReturn(false);
+
+    // Use reflection to call the protected method
+    $reflection = new ReflectionClass($environment);
+    $method = $reflection->getMethod('isSailProject');
+    $method->setAccessible(true);
+
+    expect($method->invoke($environment))->toBe(false);
 });

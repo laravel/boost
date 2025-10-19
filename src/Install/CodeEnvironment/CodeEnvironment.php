@@ -40,12 +40,41 @@ abstract class CodeEnvironment
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
+        if ($this->isSailProject()) {
+            return './vendor/bin/sail';
+        }
+
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
     }
 
     public function getArtisanPath(bool $forceAbsolutePath = false): string
     {
+        if ($this->isSailProject()) {
+            return 'artisan';
+        }
+
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? base_path('artisan') : 'artisan';
+    }
+
+    /**
+     * Determine if the project is using Laravel Sail.
+     *
+     * This checks for the existence of both the sail executable
+     * and docker-compose.yml file at the project root.
+     */
+    protected function isSailProject(): bool
+    {
+        return $this->fileExists(base_path('vendor/bin/sail')) &&
+               $this->fileExists(base_path('docker-compose.yml'));
+    }
+
+    /**
+     * Check if a file exists at the given path.
+     * This method can be mocked in tests.
+     */
+    protected function fileExists(string $path): bool
+    {
+        return file_exists($path);
     }
 
     /**
