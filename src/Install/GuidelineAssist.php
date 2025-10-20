@@ -30,13 +30,6 @@ class GuidelineAssist
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
-        $this->nodePackageManager = match (true) {
-            file_exists(base_path('package-lock.json')) => 'npm',
-            file_exists(base_path('pnpm-lock.yaml')) => 'pnpm',
-            file_exists(base_path('yarn.lock')) => 'yarn',
-            file_exists(base_path('bun.lockb')) => 'bun',
-            default => 'npm',
-        };
     }
 
     /**
@@ -180,6 +173,6 @@ class GuidelineAssist
 
     public function nodePackageManager(): string
     {
-        return $this->nodePackageManager;
+        return $this->roster->nodePackageManager()?->value ?? 'npm';
     }
 }
