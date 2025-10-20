@@ -27,6 +27,6 @@ return [
     | errors within the browser's console to give Boost better context.
     */
 
-    'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
+    'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', env('APP_DEBUG', false)),
 
 ];
