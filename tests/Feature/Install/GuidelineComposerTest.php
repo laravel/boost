@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -12,9 +13,11 @@ use Laravel\Roster\Roster;
 
 beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
+    $this->roster->shouldReceive('nodePackageManager')->andReturn(NodePackageManager::NPM);
+
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
-
+    
     // Bind the mock to the service container so it's used everywhere
     $this->app->instance(Roster::class, $this->roster);
 
