@@ -205,6 +205,25 @@ Boost works with many popular IDEs and AI agents out of the box. If your coding 
 - `Laravel\Boost\Contracts\Agent` - Adds support for AI guidelines.
 - `Laravel\Boost\Contracts\McpClient` - Adds support for MCP.
 
+## Using containers (DDEV example)
+You can add this configuration to your `mcp.json` configuration file. This will use the boost:mcp running in your container.
+```json
+{
+   "servers": {
+        "laravel-boost": {
+            "type": "stdio",
+            "command": "ddev",
+            "args": [
+                "exec",
+                "php",
+                "artisan",
+                "boost:mcp"
+            ]
+        }
+   }
+}
+```
+
 ### Writing the Code Environment
 
 ```php
