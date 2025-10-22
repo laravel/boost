@@ -60,7 +60,7 @@ class GuidelineWriter
                 // No existing Boost guidelines found, append to end of existing file
                 $frontMatter = '';
                 $frontMatterData = $this->agent->frontMatterData();
-                if (! empty($frontMatterData) && ! str_contains($content, "\n---\n")) {
+                if (! empty($frontMatterData) && ! $this->hasFrontMatter($content)) {
                     $frontMatter = "---\n";
                     foreach ($frontMatterData as $key => $value) {
                         $formattedValue = match (true) {
@@ -98,6 +98,13 @@ class GuidelineWriter
         }
 
         return $replaced ? self::REPLACED : self::NEW;
+    }
+
+    protected function hasFrontMatter(string $content): bool
+    {
+        // Check for frontmatter pattern at the start of content
+        // Supports different line endings (LF, CRLF, CR)
+        return (bool) preg_match('/^---[\r\n]+.*?[\r\n]+---[\r\n]/s', $content);
     }
 
     protected function acquireLockWithRetry(mixed $handle, string $filePath, int $maxRetries = 3): void
