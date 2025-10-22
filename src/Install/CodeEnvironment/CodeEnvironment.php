@@ -119,9 +119,9 @@ abstract class CodeEnvironment
         return null;
     }
 
-    public function frontmatter(): bool
+    public function frontMatterData(): ?array
     {
-        return false;
+        return null;
     }
 
     public function mcpConfigKey(): string

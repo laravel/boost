@@ -24,7 +24,7 @@ interface Agent
     public function guidelinesPath(): string;
 
     /**
-     * Determine if the guideline file requires frontmatter.
+     * Get the front matter data for the guideline file.
      */
-    public function frontmatter(): bool;
+    public function frontMatterData(): ?array;
 }

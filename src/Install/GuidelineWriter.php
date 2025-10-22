@@ -59,8 +59,19 @@ class GuidelineWriter
             } else {
                 // No existing Boost guidelines found, append to end of existing file
                 $frontMatter = '';
-                if ($this->agent->frontmatter() && ! str_contains($content, "\n---\n")) {
-                    $frontMatter = "---\nalwaysApply: true\n---\n";
+                $frontMatterData = $this->agent->frontMatterData();
+                if (! empty($frontMatterData) && ! str_contains($content, "\n---\n")) {
+                    $frontMatter = "---\n";
+                    foreach ($frontMatterData as $key => $value) {
+                        $formattedValue = match (true) {
+                            is_bool($value) => $value ? 'true' : 'false',
+                            is_null($value) => 'null',
+                            is_string($value) => $value,
+                            default => (string) $value,
+                        };
+                        $frontMatter .= "{$key}: {$formattedValue}\n";
+                    }
+                    $frontMatter .= "---\n\n";
                 }
 
                 $existingContent = rtrim($content);
