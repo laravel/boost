@@ -299,7 +299,7 @@ test('it adds frontmatter when agent supports it and file has no existing frontm
 
 test('it does not add frontmatter when agent supports it but file already has frontmatter', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
-    file_put_contents($tempFile, "---\ncustomOption: true\n---\n# Existing content\n\nSome text here.");
+    file_put_contents($tempFile, "---\ncustomOption: true\n---\n\n# Existing content\n\nSome text here.");
 
     $agent = Mockery::mock(Agent::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
@@ -309,7 +309,7 @@ test('it does not add frontmatter when agent supports it but file already has fr
     $writer->write('new guidelines');
 
     $content = file_get_contents($tempFile);
-    expect($content)->toBe("---\ncustomOption: true\n---\n# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n");
+    expect($content)->toBe("---\ncustomOption: true\n---\n\n# Existing content\n\nSome text here.\n\n===\n\n<laravel-boost-guidelines>\nnew guidelines\n</laravel-boost-guidelines>\n");
 
     unlink($tempFile);
 });
