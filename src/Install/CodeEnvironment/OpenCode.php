@@ -8,7 +8,6 @@ use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
-use Laravel\Boost\Install\Mcp\FileWriter;
 
 class OpenCode extends CodeEnvironment implements Agent, McpClient
 {
@@ -19,7 +18,7 @@ class OpenCode extends CodeEnvironment implements Agent, McpClient
 
     public function displayName(): string
     {
-        return 'opencode'; // intentional
+        return 'OpenCode';
     }
 
     public function systemDetectionConfig(Platform $platform): array
@@ -62,30 +61,24 @@ class OpenCode extends CodeEnvironment implements Agent, McpClient
     }
 
     /** {@inheritDoc} */
-    public function newMcpConfig(): array
+    public function defaultMcpConfig(): array
     {
         return [
             '$schema' => 'https://opencode.ai/config.json',
         ];
     }
 
-    /** {@inheritDoc} */
-    protected function installFileMcp(string $key, string $command, array $args = [], array $env = []): bool
+    /**
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
+     */
+    protected function mcpServerConfig(string $command, array $args = [], array $env = []): array
     {
-        $path = $this->mcpConfigPath();
-        if (! $path) {
-            return false;
-        }
-
-        return (new FileWriter($path))
-            ->withNewConfig($this->newMcpConfig())
-            ->configKey($this->mcpConfigKey())
-            ->addRawServer($key, array_filter([
-                'type' => 'local',
-                'enabled' => true,
-                'command' => [$command, ...$args],
-                'environment' => $env,
-            ]))
-            ->save();
+        return [
+            'type' => 'local',
+            'enabled' => true,
+            'command' => [$command, ...$args],
+            'environment' => $env,
+        ];
     }
 }
