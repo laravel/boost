@@ -222,7 +222,7 @@ abstract class CodeEnvironment
 
         return (new FileWriter($path, $this->defaultMcpConfig()))
             ->configKey($this->mcpConfigKey())
-            ->addServer($key, $this->mcpServerConfig($command, $args, $env))
+            ->addServerConfig($key, $this->mcpServerConfig($command, $args, $env))
             ->save();
     }
 }
