@@ -172,6 +172,6 @@ class GuidelineAssist
 
     public function nodePackageManager(): string
     {
-        return $this->roster->nodePackageManager()->value ?? NodePackageManager::NPM->value;
+        return $this->roster->nodePackageManager()?->value ?? NodePackageManager::NPM->value;
     }
 }
