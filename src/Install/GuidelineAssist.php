@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
@@ -22,8 +23,6 @@ class GuidelineAssist
     protected array $enumPaths = [];
 
     protected static array $classes = [];
-
-    protected string $nodePackageManager = 'npm';
 
     public function __construct(public Roster $roster)
     {
@@ -173,6 +172,6 @@ class GuidelineAssist
 
     public function nodePackageManager(): string
     {
-        return $this->roster->nodePackageManager()->value ?? 'npm';
+        return $this->roster->nodePackageManager()->value ?? NodePackageManager::NPM->value;
     }
 }

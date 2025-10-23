@@ -13,11 +13,14 @@ use Laravel\Roster\Roster;
 
 beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
-    $this->roster->shouldReceive('nodePackageManager')->andReturn(NodePackageManager::NPM);
+    $this->nodePackageManager = NodePackageManager::NPM;
+    $this->roster->shouldReceive('nodePackageManager')->andReturnUsing(
+        fn (): NodePackageManager => $this->nodePackageManager
+    );
 
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
-    
+
     // Bind the mock to the service container so it's used everywhere
     $this->app->instance(Roster::class, $this->roster);
 
@@ -360,3 +363,22 @@ test('includes PHPUnit guidelines when Pest is not present', function (): void {
         ->toContain('=== phpunit/core rules ===')
         ->not->toContain('=== pest/core rules ===');
 });
+
+test('includes correct package manager commands in guidelines based on lockfile', function (NodePackageManager $packageManager, string $expectedCommand): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+    $this->nodePackageManager = $packageManager;
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain("{$expectedCommand} run build")
+        ->toContain("{$expectedCommand} run dev");
+})->with([
+    'npm' => [NodePackageManager::NPM, 'npm'],
+    'pnpm' => [NodePackageManager::PNPM, 'pnpm'],
+    'yarn' => [NodePackageManager::YARN, 'yarn'],
+    'bun' => [NodePackageManager::BUN, 'bun'],
+]);
