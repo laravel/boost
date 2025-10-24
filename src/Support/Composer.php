@@ -13,7 +13,7 @@ class Composer
                 base_path('vendor'),
                 str_replace('/', DIRECTORY_SEPARATOR, $package),
             ])])
-            ->filter(fn (string $path): bool => is_dir($path))
+            ->filter(is_dir(...))
             ->toArray();
     }
 
@@ -45,7 +45,7 @@ class Composer
                 'resources',
                 'boost',
                 'guidelines',
-            ]))->filter(fn (string $path): bool => is_dir($path))
+            ]))->filter(is_dir(...))
             ->toArray();
     }
 }

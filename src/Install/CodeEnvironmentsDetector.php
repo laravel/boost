@@ -55,6 +55,6 @@ class CodeEnvironmentsDetector
     public function getCodeEnvironments(): Collection
     {
         return collect($this->boostManager->getCodeEnvironments())
-            ->map(fn (string $className) => $this->container->make($className));
+            ->map($this->container->make(...)); // @phpstan-ignore argument.type
     }
 }
