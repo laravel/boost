@@ -27,10 +27,8 @@ class FileWriter
     /**
      * @deprecated Use addServerConfig() for array-based configuration.
      *
-     * @param  string  $key  MCP Server Name
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
-     * @return $this
      */
     public function addServer(string $key, string $command, array $args = [], array $env = []): self
     {
@@ -42,9 +40,7 @@ class FileWriter
     }
 
     /**
-     * @param  string  $key  MCP Server Name
      * @param  array<string, mixed>  $config
-     * @return $this
      */
     public function addServerConfig(string $key, array $config): self
     {
