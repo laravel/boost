@@ -36,6 +36,7 @@ class BoostServiceProvider extends ServiceProvider
             $lockFiles = [
                 base_path('composer.lock'),
                 base_path('package-lock.json'),
+                base_path('bun.lock'),
                 base_path('bun.lockb'),
                 base_path('pnpm-lock.yaml'),
                 base_path('yarn.lock'),

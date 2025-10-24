@@ -1,6 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.3.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.4.0...main)
+
+## [v1.4.0](https://github.com/laravel/boost/compare/v1.3.3...v1.4.0) - 2025-10-14
+
+### What's Changed
+
+* [1.x] Add Support for Custom Code Environments by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/280
+* Fix boolean parameter handling in ListRoutes MCP tool by [@systempath](https://github.com/systempath) in https://github.com/laravel/boost/pull/279
+* Fix Laravel 10 bootstrap/app.php Documentation Inaccuracy by [@paulschoeman](https://github.com/paulschoeman) in https://github.com/laravel/boost/pull/224
+
+### New Contributors
+
+* [@systempath](https://github.com/systempath) made their first contribution in https://github.com/laravel/boost/pull/279
+* [@paulschoeman](https://github.com/paulschoeman) made their first contribution in https://github.com/laravel/boost/pull/224
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.3.3...v1.4.0
 
 ## [v1.3.3](https://github.com/laravel/boost/compare/v1.3.2...v1.3.3) - 2025-10-13
 
