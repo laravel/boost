@@ -54,7 +54,7 @@ class SearchDocs extends Tool
         $packagesFilter = $request->get('packages');
 
         $queries = array_filter(
-            array_map('trim', $request->get('queries')),
+            array_map(trim(...), $request->get('queries')),
             fn (string $query): bool => $query !== '' && $query !== '*'
         );
 

@@ -74,7 +74,7 @@ class BoostServiceProvider extends ServiceProvider
 
         if (config('boost.browser_logs_watcher', true)) {
             $this->registerBrowserLogger();
-            $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
+            $this->callAfterResolving('blade.compiler', $this->registerBladeDirectives(...));
             $this->hookIntoResponses($router);
         }
     }

@@ -87,7 +87,7 @@ class DisplayHelper
         }
 
         $maxWidth -= 2;  // account for grid margins
-        $maxItemLength = max(array_map('mb_strlen', $items));
+        $maxItemLength = max(array_map(mb_strlen(...), $items));
         $cellWidth = $maxItemLength + self::GRID_CELL_PADDING;
         $cellsPerRow = max(1, (int) floor(($maxWidth - 1) / ($cellWidth + 1)));
         $rows = array_chunk($items, $cellsPerRow);

@@ -11,7 +11,7 @@ test('can execute tool in subprocess', function (): void {
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
         ->once()
-        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(buildSubprocessCommand(...));
 
     $response = $executor->execute(GetConfig::class, ['key' => 'app.name']);
 
@@ -42,7 +42,7 @@ test('subprocess proves fresh process isolation', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(buildSubprocessCommand(...));
 
     $response1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
     $response2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
@@ -62,7 +62,7 @@ test('subprocess sees modified autoloaded code changes', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(buildSubprocessCommand(...));
 
     // Path to the GetConfig tool that we'll temporarily modify
     // TODO: Improve for parallelisation
@@ -136,7 +136,7 @@ test('respects custom timeout parameter', function (): void {
         ->shouldAllowMockingProtectedMethods();
 
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn ($toolClass, $arguments): array => buildSubprocessCommand($toolClass, $arguments));
+        ->andReturnUsing(buildSubprocessCommand(...));
 
     // Test with custom timeout - should succeed with fast code
     $response = $executor->execute(Tinker::class, [
