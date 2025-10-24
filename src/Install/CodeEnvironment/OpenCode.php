@@ -72,7 +72,7 @@ class OpenCode extends CodeEnvironment implements Agent, McpClient
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
      */
-    protected function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
     {
         return [
             'type' => 'local',

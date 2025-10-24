@@ -157,7 +157,7 @@ abstract class CodeEnvironment
      * @param  array<string, string>  $env
      * @return array<string, mixed>
      */
-    protected function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
     {
         return [
             'command' => $command,
