@@ -27,7 +27,11 @@ test('addServer method returns self for chaining', function (): void {
     $writer = new FileWriter('/path/to/mcp.json');
     $result = $writer
         ->configKey('servers')
-        ->addServer('test', 'php', ['artisan'], ['ENV' => 'value']);
+        ->addServerConfig('test', [
+            'command' => 'php',
+            'args' => 'artisan',
+            'env' => 'value',
+        ]);
 
     expect($result)->toBe($writer);
 });
@@ -49,12 +53,7 @@ test('written data is correct for brand new file', function (string $configKey, 
         ->configKey($configKey);
 
     foreach ($servers as $serverKey => $serverConfig) {
-        $writer->addServer(
-            $serverKey,
-            $serverConfig['command'],
-            $serverConfig['args'] ?? [],
-            $serverConfig['env'] ?? []
-        );
+        $writer->addServerConfig($serverKey, $serverConfig);
     }
 
     $result = $writer->save();
@@ -80,7 +79,10 @@ test('updates existing plain JSON file using simple method', function (): void {
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers')
-        ->addServer('new-server', 'npm', ['start'])
+        ->addServerConfig('new-server', [
+            'command' => 'npm',
+            'args' => ['start'],
+        ])
         ->save();
 
     expect($result)->toBeTrue();
@@ -107,7 +109,10 @@ test('adds to existing mcpServers in plain JSON', function (): void {
     File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
-        ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
         ->save();
 
     expect($result)->toBeTrue();
@@ -132,7 +137,7 @@ test('preserves complex JSON5 features that VS Code supports', function (): void
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers') // mcp.json5 uses "servers", not "mcpServers"
-        ->addServer('test', 'cmd')
+        ->addServerConfig('test', ['command' => 'cmd'])
         ->save();
 
     expect($result)->toBeTrue();
@@ -155,7 +160,7 @@ test('detects plain JSON with comments inside strings as safe', function (): voi
     File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
-        ->addServer('new-server', 'test-cmd')
+        ->addServerConfig('new-server', ['command' => 'test-cmd'])
         ->save();
 
     expect($result)->toBeTrue();
@@ -243,7 +248,10 @@ test('injects new configKey when it does not exist', function (): void {
     File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
-        ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
         ->save();
 
     expect($result)->toBeTrue();
@@ -266,7 +274,10 @@ test('injects into existing configKey preserving JSON5 features', function (): v
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers') // mcp.json5 uses "servers" not "mcpServers"
-        ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
         ->save();
 
     expect($result)->toBeTrue();
@@ -295,7 +306,10 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers') // mcp.json5 uses "servers" not "mcpServers"
-        ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
         ->save();
 
     $boostCounts = substr_count($capturedContent, '"boost"');
@@ -318,7 +332,10 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers')
-        ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
         ->save();
 
     // Second call should return true but not modify the file since boost already exists
@@ -341,7 +358,10 @@ test('injects into empty configKey object', function (): void {
     File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
-        ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
         ->save();
 
     expect($result)->toBeTrue();
@@ -362,7 +382,10 @@ test('preserves trailing commas when injecting into existing servers', function 
     File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
-        ->addServer('boost', 'php', ['artisan', 'boost:mcp'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
         ->save();
 
     expect($result)->toBeTrue()
