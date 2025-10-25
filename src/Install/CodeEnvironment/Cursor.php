@@ -59,8 +59,10 @@ class Cursor extends CodeEnvironment implements Agent, McpClient
         return '.cursor/rules/laravel-boost.mdc';
     }
 
-    public function frontmatter(): bool
+    public function frontMatterData(): array
     {
-        return true;
+        return [
+            'alwaysApply' => true,
+        ];
     }
 }

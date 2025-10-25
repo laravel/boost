@@ -59,8 +59,19 @@ class GuidelineWriter
             } else {
                 // No existing Boost guidelines found, append to end of existing file
                 $frontMatter = '';
-                if ($this->agent->frontmatter() && ! str_contains($content, "\n---\n")) {
-                    $frontMatter = "---\nalwaysApply: true\n---\n";
+                $frontMatterData = $this->agent->frontMatterData();
+                if (! empty($frontMatterData) && ! $this->hasFrontMatter($content)) {
+                    $frontMatter = "---\n";
+                    foreach ($frontMatterData as $key => $value) {
+                        $formattedValue = match (true) {
+                            is_bool($value) => $value ? 'true' : 'false',
+                            is_null($value) => 'null',
+                            is_string($value) => $value,
+                            default => (string) $value,
+                        };
+                        $frontMatter .= "{$key}: {$formattedValue}\n";
+                    }
+                    $frontMatter .= "---\n\n";
                 }
 
                 $existingContent = rtrim($content);
@@ -87,6 +98,13 @@ class GuidelineWriter
         }
 
         return $replaced ? self::REPLACED : self::NEW;
+    }
+
+    protected function hasFrontMatter(string $content): bool
+    {
+        // Check for frontmatter pattern at the start of content
+        // Supports different line endings (LF, CRLF, CR)
+        return (bool) preg_match('/^---[\r\n]+.*?[\r\n]+---[\r\n]/s', $content);
     }
 
     protected function acquireLockWithRetry(mixed $handle, string $filePath, int $maxRetries = 3): void

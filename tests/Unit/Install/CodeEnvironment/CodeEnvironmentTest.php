@@ -160,10 +160,10 @@ test('mcpConfigPath returns null by default', function (): void {
     expect($environment->mcpConfigPath())->toBe(null);
 });
 
-test('frontmatter returns false by default', function (): void {
+test('frontMatterData returns null by default', function (): void {
     $environment = new TestCodeEnvironment($this->strategyFactory);
 
-    expect($environment->frontmatter())->toBe(false);
+    expect($environment->frontMatterData())->toBeNull();
 });
 
 test('mcpConfigKey returns mcpServers by default', function (): void {
