@@ -15,6 +15,7 @@ use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
+use ReflectionClass;
 
 beforeEach(function (): void {
     $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
@@ -414,4 +415,24 @@ test('getPhpPath uses absolute paths when forceAbsolutePath is true', function (
 test('getPhpPath maintains default behavior when forceAbsolutePath is false', function (): void {
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('php');
+});
+
+test('getPhpPath returns sail path when project uses Laravel Sail', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('isSailProject')
+        ->andReturn(true);
+
+    expect($environment->getPhpPath())->toBe('./vendor/bin/sail');
+});
+
+test('getArtisanPath returns relative artisan when project uses Laravel Sail', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('isSailProject')
+        ->andReturn(true);
+
+    expect($environment->getArtisanPath())->toBe('artisan');
 });
