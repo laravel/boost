@@ -66,4 +66,38 @@ class PhpStorm extends CodeEnvironment implements Agent, McpClient
     {
         return '.junie/guidelines.md';
     }
+
+    public function getPhpPath(bool $forceAbsolutePath = false): string
+    {
+        if ($this->isSailProject()) {
+            return 'bash';
+        }
+
+        return parent::getPhpPath($forceAbsolutePath);
+    }
+
+    public function getArtisanPath(bool $forceAbsolutePath = false): string
+    {
+        if ($this->isSailProject()) {
+            return '-lc';
+        }
+
+        return parent::getArtisanPath($forceAbsolutePath);
+    }
+
+    /**
+     * Install MCP server for PhpStorm with special handling for Sail projects.
+     *
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
+     */
+    public function installMcp(string $key, string $command, array $args = [], array $env = []): bool
+    {
+        if ($this->isSailProject()) {
+            // For Sail projects, override args to use docker exec command
+            $args = ['docker exec -i "$(docker ps -q --filter label=com.docker.compose.service=laravel.test | head -n1)" php /var/www/html/artisan boost:mcp'];
+        }
+
+        return parent::installMcp($key, $command, $args, $env);
+    }
 }

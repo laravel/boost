@@ -278,6 +278,7 @@ test('injects into existing configKey preserving JSON5 features', function (): v
 });
 
 test("injecting twice into existing JSON 5 doesn't cause duplicates", function (): void {
+    $capturedPath = '';
     $capturedContent = '';
 
     File::swap(Mockery::mock(Filesystem::class));
@@ -370,6 +371,56 @@ test('preserves trailing commas when injecting into existing servers', function 
         ->and($writtenContent)->toContain('existing-server') // Existing server preserved
         ->and($writtenContent)->toContain('// Trailing comma here') // Comments preserved
         ->and($writtenContent)->toContain('arg1'); // Existing args preserved
+});
+
+test('preserves existing custom MCP servers when adding laravel-boost with Sail config', function (): void {
+    $writtenContent = '';
+
+    // Simular archivo con un servidor MCP custom del usuario
+    $existingConfig = '{
+  "mcpServers": {
+    "my-custom-server": {
+      "command": "node",
+      "args": ["custom-server.js"]
+    },
+    "another-mcp": {
+      "command": "python",
+      "args": ["-m", "my_mcp_server"]
+    }
+  }
+}';
+
+    mockFileOperations(
+        fileExists: true,
+        content: $existingConfig,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    // Simular instalación de laravel-boost con configuración de PhpStorm + Sail
+    $result = (new FileWriter('.junie/mcp/mcp.json'))
+        ->addServer('laravel-boost', 'bash', [
+            '-lc',
+            'docker exec -i "$(docker ps -q --filter label=com.docker.compose.service=laravel.test | head -n1)" php /var/www/html/artisan boost:mcp'
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+
+    $decoded = json_decode($writtenContent, true);
+
+    // Verificar que los servidores custom se preservaron
+    expect($decoded)->toHaveKey('mcpServers.my-custom-server')
+        ->and($decoded)->toHaveKey('mcpServers.another-mcp')
+        ->and($decoded['mcpServers']['my-custom-server']['command'])->toBe('node')
+        ->and($decoded['mcpServers']['another-mcp']['command'])->toBe('python');
+
+    // Verificar que laravel-boost se agregó correctamente
+    expect($decoded)->toHaveKey('mcpServers.laravel-boost')
+        ->and($decoded['mcpServers']['laravel-boost']['command'])->toBe('bash')
+        ->and($decoded['mcpServers']['laravel-boost']['args'])->toHaveCount(2)
+        ->and($decoded['mcpServers']['laravel-boost']['args'][0])->toBe('-lc');
 });
 
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description): void {
