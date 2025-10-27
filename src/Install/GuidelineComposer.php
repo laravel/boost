@@ -253,6 +253,29 @@ class GuidelineComposer
         return array_map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty), iterator_to_array($finder));
     }
 
+    protected function renderContent(string $content, string $path): string
+    {
+        $isBladeTemplate = str_ends_with($path, '.blade.php');
+
+        if (! $isBladeTemplate) {
+            return $content;
+        }
+
+        // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
+        // This prevents Blade from trying to execute PHP code examples and supports inline code
+        $placeholders = [
+            '`' => '___SINGLE_BACKTICK___',
+            '<?php' => '___OPEN_PHP_TAG___',
+        ];
+
+        $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
+        $rendered = Blade::render($content, [
+            'assist' => $this->guidelineAssist,
+        ]);
+
+        return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
+    }
+
     /**
      * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
      */
@@ -273,27 +296,7 @@ class GuidelineComposer
         $content = file_get_contents($path);
         $content = $this->processBoostSnippets($content);
 
-        // Only process Blade templates for .blade.php files
-        // Markdown files (.md) should be used as-is without Blade rendering
-        $isBladeFile = str_ends_with($path, '.blade.php');
-
-        if ($isBladeFile) {
-            // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
-            // This prevents Blade from trying to execute PHP code examples and supports inline code
-            $placeholders = [
-                '`' => '___SINGLE_BACKTICK___',
-                '<?php' => '___OPEN_PHP_TAG___',
-            ];
-
-            $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
-            $rendered = Blade::render($content, [
-                'assist' => $this->guidelineAssist,
-            ]);
-            $rendered = str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
-        } else {
-            // For non-Blade files (like .md), use content as-is
-            $rendered = $content;
-        }
+        $rendered = $this->renderContent($content, $path);
 
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
 
@@ -344,12 +347,10 @@ class GuidelineComposer
 
     protected function prependUserGuidelinePath(string $path): string
     {
-        // If the path already has a supported extension, use it as-is
         if (str_ends_with($path, '.md') || str_ends_with($path, '.blade.php')) {
             return str_replace('/', DIRECTORY_SEPARATOR, $this->customGuidelinePath($path));
         }
 
-        // Otherwise, assume it's a blade template and add .blade.php
         return str_replace('/', DIRECTORY_SEPARATOR, $this->customGuidelinePath($path.'.blade.php'));
     }
 
