@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.5.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.5.1...main)
+
+## [v1.5.1](https://github.com/laravel/boost/compare/v1.5.0...v1.5.1) - 2025-10-25
+
+### What's Changed
+
+* bump roster by [@adrum](https://github.com/adrum) in https://github.com/laravel/boost/pull/318
+
+### New Contributors
+
+* [@adrum](https://github.com/adrum) made their first contribution in https://github.com/laravel/boost/pull/318
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.5.0...v1.5.1
 
 ## [v1.5.0](https://github.com/laravel/boost/compare/v1.4.0...v1.5.0) - 2025-10-24
 
