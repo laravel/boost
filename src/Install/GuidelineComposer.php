@@ -340,18 +340,21 @@ class GuidelineComposer
 
     protected function prependPackageGuidelinePath(string $path): string
     {
-        $path = preg_replace('/\.blade\.php$/', '', $path);
-
-        return str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../.ai/'.$path.'.blade.php');
+        return $this->prependGuidelinePath($path, __DIR__.'/../../.ai/');
     }
 
     protected function prependUserGuidelinePath(string $path): string
     {
-        if (str_ends_with($path, '.md') || str_ends_with($path, '.blade.php')) {
-            return str_replace('/', DIRECTORY_SEPARATOR, $this->customGuidelinePath($path));
+        return $this->prependGuidelinePath($path, $this->customGuidelinePath());
+    }
+
+    private function prependGuidelinePath(string $path, string $basePath): string
+    {
+        if (! str_ends_with($path, '.md') && ! str_ends_with($path, '.blade.php')) {
+            $path .= '.blade.php';
         }
 
-        return str_replace('/', DIRECTORY_SEPARATOR, $this->customGuidelinePath($path.'.blade.php'));
+        return str_replace('/', DIRECTORY_SEPARATOR, $basePath.$path);
     }
 
     protected function guidelinePath(string $path): ?string
