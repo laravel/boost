@@ -147,11 +147,6 @@ You may also automate this process by adding it to your Composer "post-update-cm
 
 To augment Laravel Boost with your own custom AI guidelines, add `.blade.php` or `.md` files to your application's `.ai/guidelines/*` directory. These files will automatically be included with Laravel Boost's guidelines when you run `boost:install`.
 
-### Choosing a Format
-
-- Use `.md` for simple, static text guidelines.
-- Use `.blade.php` when you need conditional logic or templating (for example, customizing guidelines when certain packages are installed). Blade files are rendered before inclusion.
-
 ### Overriding Boost AI Guidelines
 
 You can override Boost's built-in AI guidelines by creating your own custom guidelines with matching file paths. When you create a custom guideline that matches an existing Boost guideline path, Boost will use your custom version instead of the built-in one.
