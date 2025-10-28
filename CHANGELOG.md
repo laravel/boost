@@ -1,6 +1,32 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.4.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.5.1...main)
+
+## [v1.5.1](https://github.com/laravel/boost/compare/v1.5.0...v1.5.1) - 2025-10-25
+
+### What's Changed
+
+* bump roster by [@adrum](https://github.com/adrum) in https://github.com/laravel/boost/pull/318
+
+### New Contributors
+
+* [@adrum](https://github.com/adrum) made their first contribution in https://github.com/laravel/boost/pull/318
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.5.0...v1.5.1
+
+## [v1.5.0](https://github.com/laravel/boost/compare/v1.4.0...v1.5.0) - 2025-10-24
+
+### What's Changed
+
+* Add PhpStorm detection path for Windows by [@GoneTone](https://github.com/GoneTone) in https://github.com/laravel/boost/pull/304
+* Dynamic NPM Package Runner by [@imliam](https://github.com/imliam) in https://github.com/laravel/boost/pull/145
+
+### New Contributors
+
+* [@GoneTone](https://github.com/GoneTone) made their first contribution in https://github.com/laravel/boost/pull/304
+* [@imliam](https://github.com/imliam) made their first contribution in https://github.com/laravel/boost/pull/145
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.4.0...v1.5.0
 
 ## [v1.4.0](https://github.com/laravel/boost/compare/v1.3.3...v1.4.0) - 2025-10-14
 

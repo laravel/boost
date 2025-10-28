@@ -40,6 +40,7 @@ class PhpStorm extends CodeEnvironment implements Agent, McpClient
                 'paths' => [
                     '%ProgramFiles%\\JetBrains\\PhpStorm*',
                     '%LOCALAPPDATA%\\JetBrains\\Toolbox\\apps\\PhpStorm\\ch-*',
+                    '%LOCALAPPDATA%\\Programs\\PhpStorm',
                 ],
             ],
         };
