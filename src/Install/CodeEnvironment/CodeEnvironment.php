@@ -129,6 +129,12 @@ abstract class CodeEnvironment
         return 'mcpServers';
     }
 
+    /** @return array<string, mixed> */
+    public function defaultMcpConfig(): array
+    {
+        return [];
+    }
+
     /**
      * Install MCP server using the appropriate strategy.
      *
@@ -142,6 +148,22 @@ abstract class CodeEnvironment
             McpInstallationStrategy::FILE => $this->installFileMcp($key, $command, $args, $env),
             McpInstallationStrategy::NONE => false
         };
+    }
+
+    /**
+     * Build the MCP server configuration payload for file-based installation.
+     *
+     * @param  array<int, string>  $args
+     * @param  array<string, string>  $env
+     * @return array<string, mixed>
+     */
+    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    {
+        return [
+            'command' => $command,
+            'args' => $args,
+            'env' => $env,
+        ];
     }
 
     /**
@@ -198,9 +220,9 @@ abstract class CodeEnvironment
             return false;
         }
 
-        return (new FileWriter($path))
+        return (new FileWriter($path, $this->defaultMcpConfig()))
             ->configKey($this->mcpConfigKey())
-            ->addServer($key, $command, $args, $env)
+            ->addServerConfig($key, $this->mcpServerConfig($command, $args, $env))
             ->save();
     }
 }
