@@ -235,24 +235,37 @@ class InstallCommand extends Command
      */
     protected function selectBoostFeatures(): Collection
     {
-        $features = collect([
-            'mcp_server',
-            'ai_guidelines',
-        ]);
+        $features = collect(['mcp_server', 'ai_guidelines']);
 
-        if ($this->herd->isMcpAvailable() === false) {
-            return $features;
-        }
+        $shouldAskAboutSail = $this->isSailInstalled() && ! $this->isRunningInsideSail();
 
-        if (confirm(
-            label: 'Would you like to install Herd MCP alongside Boost MCP?',
-            default: $this->config->getHerdMcp(),
-            hint: 'The Herd MCP provides additional tools like browser logs, which can help AI understand issues better',
-        )) {
+        if ($this->herd->isMcpAvailable() && $this->askToUseHerdMcp()) {
             $features->push('herd_mcp');
         }
 
+        if ($shouldAskAboutSail && $this->askToUseSail()) {
+            $features->push('sail');
+        }
+
         return $features;
+    }
+
+    protected function askToUseSail(): bool
+    {
+        return confirm(
+            label: 'Laravel Sail detected. Configure Boost MCP to use Sail?',
+            default: $this->config->getSail() ?? true,
+            hint: 'This will configure the MCP server to run through Sail. Note: Sail must be running to use Boost MCP',
+        );
+    }
+
+    protected function askToUseHerdMcp(): bool
+    {
+        return confirm(
+            label: 'Would you like to install Herd MCP alongside Boost MCP?',
+            default: $this->config->getHerdMcp(),
+            hint: 'The Herd MCP provides additional tools like browser logs, which can help AI understand issues better',
+        );
     }
 
     /**
@@ -442,6 +455,10 @@ class InstallCommand extends Command
             }
         }
 
+        $this->config->setSail(
+            $this->shouldUseSail()
+        );
+
         $this->config->setHerdMcp(
             $this->shouldInstallHerdMcp()
         );
@@ -467,6 +484,43 @@ class InstallCommand extends Command
     protected function shouldInstallHerdMcp(): bool
     {
         return $this->selectedBoostFeatures->contains('herd_mcp');
+    }
+
+    protected function shouldUseSail(): bool
+    {
+        return $this->selectedBoostFeatures->contains('sail');
+    }
+
+    protected function isSailInstalled(): bool
+    {
+        return file_exists(base_path('vendor/bin/sail')) &&
+               (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
+    }
+
+    protected function isRunningInsideSail(): bool
+    {
+        return get_current_user() === 'sail';
+    }
+
+    protected function buildMcpCommand(McpClient $mcpClient): array
+    {
+        if ($this->shouldUseSail()) {
+            $sailPath = $mcpClient->useAbsolutePathForMcp()
+                ? base_path('vendor/laravel/sail/bin/sail')
+                : './vendor/bin/sail';
+
+            return ['laravel-boost', $sailPath, 'artisan', 'boost:mcp'];
+        }
+
+        $inWsl = $this->isRunningInWsl();
+
+        return array_filter([
+            'laravel-boost',
+            $inWsl ? 'wsl' : false,
+            $mcpClient->getPhpPath($inWsl),
+            $mcpClient->getArtisanPath($inWsl),
+            'boost:mcp',
+        ]);
     }
 
     protected function installMcpServerConfig(): void
@@ -498,14 +552,8 @@ class InstallCommand extends Command
             $this->output->write("  {$ideDisplay}... ");
             $results = [];
 
-            $inWsl = $this->isRunningInWsl();
-            $mcp = array_filter([
-                'laravel-boost',
-                $inWsl ? 'wsl' : false,
-                $mcpClient->getPhpPath($inWsl),
-                $mcpClient->getArtisanPath($inWsl),
-                'boost:mcp',
-            ]);
+            $mcp = $this->buildMcpCommand($mcpClient);
+
             try {
                 $result = $mcpClient->installMcp(
                     array_shift($mcp),

@@ -62,6 +62,16 @@ class Config
         return $this->get('herd_mcp', false);
     }
 
+    public function setSail(bool $useSail): void
+    {
+        $this->set('sail', $useSail);
+    }
+
+    public function getSail(): ?bool
+    {
+        return $this->get('sail');
+    }
+
     public function flush(): void
     {
         $path = base_path(self::FILE);

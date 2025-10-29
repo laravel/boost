@@ -37,8 +37,6 @@ php artisan boost:install
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
-> **Laravel Sail Users:** Boost automatically detects and configures itself for Sail projects. No additional setup required! See [Laravel Sail Support](#laravel-sail-support) for details.
-
 ### Setup Your Code Editors
 
 #### PhpStorm

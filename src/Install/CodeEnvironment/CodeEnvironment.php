@@ -40,39 +40,12 @@ abstract class CodeEnvironment
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
-        if ($this->isSailProject()) {
-            // PhpStorm doesn't support symlinks in MCP config, use real path
-            if ($this->useAbsolutePathForMcp()) {
-                return base_path('vendor/laravel/sail/bin/sail');
-            }
-
-            // For WSL or relative paths: use relative path to sail
-            return './vendor/bin/sail';
-        }
-
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
     }
 
     public function getArtisanPath(bool $forceAbsolutePath = false): string
     {
-        if ($this->isSailProject()) {
-            return 'artisan';
-        }
-
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? base_path('artisan') : 'artisan';
-    }
-
-    /**
-     * Determine if the project is using Laravel Sail.
-     *
-     * This checks for the existence of both the sail executable
-     * and docker compose configuration file at the project root.
-     * Supports both docker-compose.yml (legacy) and compose.yaml (current).
-     */
-    protected function isSailProject(): bool
-    {
-        return file_exists(base_path('vendor/bin/sail')) &&
-               (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
     }
 
     /**

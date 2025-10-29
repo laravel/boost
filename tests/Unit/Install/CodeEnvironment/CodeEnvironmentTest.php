@@ -417,22 +417,12 @@ test('getPhpPath maintains default behavior when forceAbsolutePath is false', fu
     expect($environment->getPhpPath(false))->toBe('php');
 });
 
-test('getPhpPath returns sail path when project uses Laravel Sail', function (): void {
-    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
-
-    $environment->shouldReceive('isSailProject')
-        ->andReturn(true);
-
-    expect($environment->getPhpPath())->toBe('./vendor/bin/sail');
+test('getArtisanPath uses absolute path when forceAbsolutePath is true', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+    expect($environment->getArtisanPath(true))->toBe(base_path('artisan'));
 });
 
-test('getArtisanPath returns relative artisan when project uses Laravel Sail', function (): void {
-    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
-
-    $environment->shouldReceive('isSailProject')
-        ->andReturn(true);
-
-    expect($environment->getArtisanPath())->toBe('artisan');
+test('getArtisanPath maintains default behavior when forceAbsolutePath is false', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+    expect($environment->getArtisanPath(false))->toBe('artisan');
 });
