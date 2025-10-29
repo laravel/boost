@@ -8,6 +8,11 @@ abstract class DatabaseSchemaDriver
 {
     public function __construct(protected $connection = null) {}
 
+    protected function isTableProvided(?string $table): bool
+    {
+        return ! in_array($table, [null, '', '0'], true);
+    }
+
     abstract public function getViews(): array;
 
     abstract public function getStoredProcedures(): array;

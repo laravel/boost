@@ -36,7 +36,7 @@ class SQLiteSchemaDriver extends DatabaseSchemaDriver
     {
         try {
             $sql = "SELECT name, sql FROM sqlite_master WHERE type = 'trigger'";
-            if (! in_array($table, [null, '', '0'], true)) {
+            if ($this->isTableProvided($table)) {
                 $sql .= ' AND tbl_name = ?';
 
                 return DB::connection($this->connection)->select($sql, [$table]);

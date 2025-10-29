@@ -60,7 +60,7 @@ class PostgreSQLSchemaDriver extends DatabaseSchemaDriver
                 FROM information_schema.triggers
                 WHERE trigger_schema = current_schema()
             ';
-            if (! in_array($table, [null, '', '0'], true)) {
+            if ($this->isTableProvided($table)) {
                 $sql .= ' AND event_object_table = ?';
 
                 return DB::connection($this->connection)->select($sql, [$table]);
