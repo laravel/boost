@@ -65,6 +65,11 @@ Once Laravel Boost has been installed, you're ready to start coding with Cursor,
 2. Open a shell in the project's directory
 3. Run `claude mcp add -s local -t stdio laravel-boost php artisan boost:mcp`
 
+#### OpenCode
+
+1. OpenCode support is typically enabled automatically via the `opencode.json` file
+2. If you don't find it, you can manually add it to the configuration `opencode.json`
+
 ## Available MCP Tools
 
 | Name                       | Notes                                                                                                          |
