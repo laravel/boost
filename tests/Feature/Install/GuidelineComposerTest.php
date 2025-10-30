@@ -426,3 +426,91 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('Run `npm install` to install dependencies')
         ->toContain('Package manager: npm');
 });
+
+test('includes wayfinder guidelines with inertia integration when both packages are present', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.2'),
+        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(false);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(false);
+
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_LARAVEL, '2.1.0', '>=')
+        ->andReturn(true);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_REACT, '2.1.0', '>=')
+        ->andReturn(true);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_VUE, '2.1.0', '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_SVELTE, '2.1.0', '>=')
+        ->andReturn(false);
+
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_LARAVEL, '2.1.2', '>=')
+        ->andReturn(true);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_REACT, '2.1.2', '>=')
+        ->andReturn(true);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_VUE, '2.1.2', '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_SVELTE, '2.1.2', '>=')
+        ->andReturn(false);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('Wayfinder + Inertia')
+        ->toContain('Wayfinder Form Component (React)')
+        ->toContain('<Form {...store.form()}>')
+        ->toContain('## Laravel Wayfinder');
+});
+
+test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(false);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(false);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(false);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(false);
+
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
+        ->andReturn(false);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('## Laravel Wayfinder')
+        ->toContain('import { show } from \'@/actions/')
+        ->not->toContain('Wayfinder + Inertia')
+        ->not->toContain('Wayfinder Form Component');
+});
+

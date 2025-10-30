@@ -54,6 +54,7 @@ $mockRoster = new class extends Roster
                 'folio' => \Laravel\Roster\Enums\Packages::FOLIO,
                 'pennant' => \Laravel\Roster\Enums\Packages::PENNANT,
                 'tailwindcss' => \Laravel\Roster\Enums\Packages::TAILWINDCSS,
+                'wayfinder' => \Laravel\Roster\Enums\Packages::WAYFINDER,
             ];
 
             if (isset($enumMapping[$packageName])) {
