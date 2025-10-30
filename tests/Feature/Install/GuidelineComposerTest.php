@@ -513,4 +513,3 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
         ->not->toContain('Wayfinder + Inertia')
         ->not->toContain('Wayfinder Form Component');
 });
-
