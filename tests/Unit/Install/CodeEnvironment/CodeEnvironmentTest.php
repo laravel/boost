@@ -15,7 +15,6 @@ use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
-use ReflectionClass;
 
 beforeEach(function (): void {
     $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);

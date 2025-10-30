@@ -67,9 +67,9 @@ class Config
         $this->set('sail', $useSail);
     }
 
-    public function getSail(): ?bool
+    public function getSail(): bool
     {
-        return $this->get('sail');
+        return $this->get('sail', false);
     }
 
     public function flush(): void

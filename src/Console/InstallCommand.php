@@ -237,14 +237,16 @@ class InstallCommand extends Command
     {
         $features = collect(['mcp_server', 'ai_guidelines']);
 
-        $shouldAskAboutSail = $this->isSailInstalled() && ! $this->isRunningInsideSail();
-
         if ($this->herd->isMcpAvailable() && $this->askToUseHerdMcp()) {
             $features->push('herd_mcp');
         }
 
-        if ($shouldAskAboutSail && $this->askToUseSail()) {
-            $features->push('sail');
+        if ($this->isSailInstalled()) {
+            $useSail = $this->isRunningInsideSail() || $this->askToUseSail();
+
+            if ($useSail) {
+                $features->push('sail');
+            }
         }
 
         return $features;
@@ -254,7 +256,7 @@ class InstallCommand extends Command
     {
         return confirm(
             label: 'Laravel Sail detected. Configure Boost MCP to use Sail?',
-            default: $this->config->getSail() ?? true,
+            default: $this->config->getSail(),
             hint: 'This will configure the MCP server to run through Sail. Note: Sail must be running to use Boost MCP',
         );
     }
