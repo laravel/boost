@@ -8,7 +8,7 @@ abstract class DatabaseSchemaDriver
 {
     public function __construct(protected $connection = null) {}
 
-    protected function isTableProvided(?string $table): bool
+    protected function hasTable(?string $table): bool
     {
         return ! in_array($table, [null, '', '0'], true);
     }

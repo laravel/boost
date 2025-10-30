@@ -43,7 +43,7 @@ class MySQLSchemaDriver extends DatabaseSchemaDriver
     public function getTriggers(?string $table = null): array
     {
         try {
-            if ($this->isTableProvided($table)) {
+            if ($this->hasTable($table)) {
                 return DB::connection($this->connection)->select('SHOW TRIGGERS WHERE `Table` = ?', [$table]);
             }
 
