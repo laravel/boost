@@ -10,6 +10,7 @@ use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironment\Codex;
 use Laravel\Boost\Install\CodeEnvironment\Copilot;
 use Laravel\Boost\Install\CodeEnvironment\Cursor;
+use Laravel\Boost\Install\CodeEnvironment\OpenCode;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
 
@@ -23,6 +24,7 @@ class BoostManager
         'claudecode' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
+        'opencode' => OpenCode::class,
     ];
 
     /**

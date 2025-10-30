@@ -26,7 +26,7 @@ class VSCode extends CodeEnvironment implements McpClient
                 'paths' => ['/Applications/Visual Studio Code.app'],
             ],
             Platform::Linux => [
-                'command' => 'which code',
+                'command' => 'command -v code',
             ],
             Platform::Windows => [
                 'paths' => [
