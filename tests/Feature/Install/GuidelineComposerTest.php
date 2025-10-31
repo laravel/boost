@@ -407,8 +407,8 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('`artisan make:model`')
         ->toContain('`php artisan migrate`')
         ->toContain('`Model::query()`')
-        ->toContain('`route(\'home\')`')
-        ->toContain('`config(\'app.name\')`')
+        ->toContain("`route('home')`")
+        ->toContain("`config('app.name')`")
         // Preserves PHP tags in blade templates
         ->toContain('=== .ai/test-blade-with-php-tags rules ===')
         ->not->toContain('=== .ai/test-blade-with-backticks.blade.php rules ===')

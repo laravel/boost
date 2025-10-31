@@ -170,7 +170,7 @@ test('handles null platform parameter', function (): void {
         $this->firstStrategy,
     ]);
 
-    $result = $composite->detect(['config' => 'test'], null);
+    $result = $composite->detect(['config' => 'test']);
 
     expect($result)->toBeTrue();
 });

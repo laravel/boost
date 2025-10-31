@@ -39,7 +39,7 @@ test('it returns list of config keys in dot notation', function (): void {
 
 test('it handles empty config gracefully', function (): void {
     // Clear all config
-    config()->set('test', null);
+    config()->set('test');
 
     $tool = new ListAvailableConfigKeys;
     $response = $tool->handle(new Request([]));
