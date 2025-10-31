@@ -507,11 +507,7 @@ class InstallCommand extends Command
     protected function buildMcpCommand(McpClient $mcpClient): array
     {
         if ($this->shouldUseSail()) {
-            $sailPath = $mcpClient->useAbsolutePathForMcp()
-                ? base_path('vendor/bin/sail')
-                : './vendor/bin/sail';
-
-            return ['laravel-boost', $sailPath, 'artisan', 'boost:mcp'];
+            return ['laravel-boost', './vendor/bin/sail', 'artisan', 'boost:mcp'];
         }
 
         $inWsl = $this->isRunningInWsl();
