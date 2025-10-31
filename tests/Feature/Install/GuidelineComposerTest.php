@@ -23,7 +23,6 @@ beforeEach(function (): void {
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
 
-    // Bind the mock to the service container so it's used everywhere
     $this->app->instance(Roster::class, $this->roster);
 
     $this->composer = new GuidelineComposer($this->roster, $this->herd);
@@ -443,29 +442,16 @@ test('includes wayfinder guidelines with inertia integration when both packages 
     $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(false);
 
     $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, '2.1.0', '>=')
+        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
         ->andReturn(true);
     $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, '2.1.0', '>=')
+        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
         ->andReturn(true);
     $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, '2.1.0', '>=')
+        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
         ->andReturn(false);
     $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, '2.1.0', '>=')
-        ->andReturn(false);
-
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, '2.1.2', '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, '2.1.2', '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, '2.1.2', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, '2.1.2', '>=')
+        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
         ->andReturn(false);
 
     $guidelines = $this->composer->compose();
@@ -474,6 +460,82 @@ test('includes wayfinder guidelines with inertia integration when both packages 
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('Wayfinder + Inertia')
         ->toContain('Wayfinder Form Component (React)')
+        ->toContain('<Form {...store.form()}>')
+        ->toContain('## Laravel Wayfinder');
+});
+
+test('includes wayfinder guidelines with inertia vue integration', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::INERTIA_VUE, 'inertiajs/inertia-vue', '2.1.2'),
+        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(false);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(false);
+
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
+        ->andReturn(true);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
+        ->andReturn(true);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
+        ->andReturn(false);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('Wayfinder + Inertia')
+        ->toContain('Wayfinder Form Component (Vue)')
+        ->toContain('<Form v-bind="store.form()">')
+        ->toContain('## Laravel Wayfinder');
+});
+
+test('includes wayfinder guidelines with inertia svelte integration', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::INERTIA_SVELTE, 'inertiajs/inertia-svelte', '2.1.2'),
+        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(true);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(false);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(false);
+    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(true);
+
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
+        ->andReturn(true);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
+        ->andReturn(false);
+    $this->roster->shouldReceive('usesVersion')
+        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
+        ->andReturn(true);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('Wayfinder + Inertia')
+        ->toContain('Wayfinder Form Component (Svelte)')
         ->toContain('<Form {...store.form()}>')
         ->toContain('## Laravel Wayfinder');
 });
