@@ -5,13 +5,21 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 
+use function Pest\testDirectory;
+
 beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
+    $this->nodePackageManager = NodePackageManager::NPM;
+    $this->roster->shouldReceive('nodePackageManager')->andReturnUsing(
+        fn (): NodePackageManager => $this->nodePackageManager
+    );
+
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
 
@@ -262,7 +270,7 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(\Pest\testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     expect($composer->compose())
         ->toContain('=== .ai/custom-rule rules ===')
@@ -285,7 +293,7 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(\Pest\testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->compose();
     $overrideStringCount = substr_count((string) $guidelines, 'Thanks though, appreciate you');
@@ -356,4 +364,65 @@ test('includes PHPUnit guidelines when Pest is not present', function (): void {
     expect($guidelines)
         ->toContain('=== phpunit/core rules ===')
         ->not->toContain('=== pest/core rules ===');
+});
+
+test('includes correct package manager commands in guidelines based on lockfile', function (NodePackageManager $packageManager, string $expectedCommand): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+    $this->nodePackageManager = $packageManager;
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain("{$expectedCommand} run build")
+        ->toContain("{$expectedCommand} run dev");
+})->with([
+    'npm' => [NodePackageManager::NPM, 'npm'],
+    'pnpm' => [NodePackageManager::PNPM, 'pnpm'],
+    'yarn' => [NodePackageManager::YARN, 'yarn'],
+    'bun' => [NodePackageManager::BUN, 'bun'],
+]);
+
+test('renderContent handles blade and markdown files correctly', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->nodePackageManager = NodePackageManager::NPM;
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)
+        // Preserves backticks in blade templates
+        ->toContain('=== .ai/test-blade-with-backticks rules ===')
+        ->not->toContain('=== .ai/test-blade-with-backticks.md rules ===')
+        ->toContain('`artisan make:model`')
+        ->toContain('`php artisan migrate`')
+        ->toContain('`Model::query()`')
+        ->toContain('`route(\'home\')`')
+        ->toContain('`config(\'app.name\')`')
+        // Preserves PHP tags in blade templates
+        ->toContain('=== .ai/test-blade-with-php-tags rules ===')
+        ->not->toContain('=== .ai/test-blade-with-backticks.blade.php rules ===')
+        ->toContain('<?php')
+        ->toContain('namespace App\Models;')
+        ->toContain('class User extends Model')
+        // Does not process markdown files with blade
+        ->toContain('=== .ai/test-markdown rules ===')
+        ->toContain('# Markdown File Test')
+        ->toContain('This is a plain markdown file')
+        ->toContain('Use `code` in backticks')
+        ->toContain('echo "Hello World";')
+        // Processes blade variables correctly
+        ->toContain('=== .ai/test-blade-with-assist rules ===')
+        ->toContain('Run `npm install` to install dependencies')
+        ->toContain('Package manager: npm');
 });

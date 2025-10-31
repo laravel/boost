@@ -10,6 +10,7 @@ use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironment\Codex;
 use Laravel\Boost\Install\CodeEnvironment\Copilot;
 use Laravel\Boost\Install\CodeEnvironment\Cursor;
+use Laravel\Boost\Install\CodeEnvironment\OpenCode;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
@@ -29,9 +30,9 @@ it('returns collection of all registered code environments', function (): void {
     $codeEnvironments = $this->detector->getCodeEnvironments();
 
     expect($codeEnvironments)->toBeInstanceOf(Collection::class)
-        ->and($codeEnvironments->count())->toBe(6)
+        ->and($codeEnvironments->count())->toBe(7)
         ->and($codeEnvironments->keys()->toArray())->toBe([
-            'phpstorm', 'vscode', 'cursor', 'claudecode', 'codex', 'copilot',
+            'phpstorm', 'vscode', 'cursor', 'claudecode', 'codex', 'copilot', 'opencode',
         ]);
 
     $codeEnvironments->each(function ($environment): void {
@@ -62,6 +63,7 @@ it('returns an array of detected environment names for system discovery', functi
     $this->container->bind(ClaudeCode::class, fn () => $mockOther);
     $this->container->bind(Codex::class, fn () => $mockOther);
     $this->container->bind(Copilot::class, fn () => $mockOther);
+    $this->container->bind(OpenCode::class, fn () => $mockOther);
 
     $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -80,6 +82,7 @@ it('returns an empty array when no environments are detected for system discover
     $this->container->bind(ClaudeCode::class, fn () => $mockEnvironment);
     $this->container->bind(Codex::class, fn () => $mockEnvironment);
     $this->container->bind(Copilot::class, fn () => $mockEnvironment);
+    $this->container->bind(OpenCode::class, fn () => $mockEnvironment);
 
     $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -112,6 +115,7 @@ it('returns an array of detected environment names for project discovery', funct
     $this->container->bind(ClaudeCode::class, fn () => $mockClaudeCode);
     $this->container->bind(Codex::class, fn () => $mockOther);
     $this->container->bind(Copilot::class, fn () => $mockOther);
+    $this->container->bind(OpenCode::class, fn () => $mockOther);
 
     $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);
@@ -132,6 +136,7 @@ it('returns an empty array when no environments are detected for project discove
     $this->container->bind(ClaudeCode::class, fn () => $mockEnvironment);
     $this->container->bind(Codex::class, fn () => $mockEnvironment);
     $this->container->bind(Copilot::class, fn () => $mockEnvironment);
+    $this->container->bind(OpenCode::class, fn () => $mockEnvironment);
 
     $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledCodeEnvironments($basePath);

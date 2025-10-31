@@ -36,6 +36,7 @@ class BoostServiceProvider extends ServiceProvider
             $lockFiles = [
                 base_path('composer.lock'),
                 base_path('package-lock.json'),
+                base_path('bun.lock'),
                 base_path('bun.lockb'),
                 base_path('pnpm-lock.yaml'),
                 base_path('yarn.lock'),
@@ -73,7 +74,7 @@ class BoostServiceProvider extends ServiceProvider
 
         if (config('boost.browser_logs_watcher', true)) {
             $this->registerBrowserLogger();
-            $this->callAfterResolving('blade.compiler', fn (BladeCompiler $bladeCompiler) => $this->registerBladeDirectives($bladeCompiler));
+            $this->callAfterResolving('blade.compiler', $this->registerBladeDirectives(...));
             $this->hookIntoResponses($router);
         }
     }
