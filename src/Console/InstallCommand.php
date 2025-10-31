@@ -501,14 +501,14 @@ class InstallCommand extends Command
 
     protected function isRunningInsideSail(): bool
     {
-        return get_current_user() === 'sail';
+        return get_current_user() === 'sail' || getenv('LARAVEL_SAIL') === '1';
     }
 
     protected function buildMcpCommand(McpClient $mcpClient): array
     {
         if ($this->shouldUseSail()) {
             $sailPath = $mcpClient->useAbsolutePathForMcp()
-                ? base_path('vendor/laravel/sail/bin/sail')
+                ? base_path('vendor/bin/sail')
                 : './vendor/bin/sail';
 
             return ['laravel-boost', $sailPath, 'artisan', 'boost:mcp'];
