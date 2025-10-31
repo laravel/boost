@@ -3,7 +3,7 @@
 @endphp
 ## Laravel Wayfinder
 
-Wayfinder Generates fully-typed TypeScript functions for Laravel controllers and routes which you can import endpoints as functions and types. It Provides type safety and automatic synchronization between backend routes and frontend code.
+Wayfinder generates TypeScript functions and types for Laravel controllers and routes which you can import into your client side code. It provides type safety and automatic synchronization between backend routes and frontend code.
 
 ### Development Guidelines
 
