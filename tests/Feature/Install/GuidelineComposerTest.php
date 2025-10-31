@@ -36,7 +36,6 @@ test('includes Inertia React conditional guidelines based on version', function 
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
-    // Mock all Inertia package version checks
     $this->roster->shouldReceive('usesVersion')
         ->with(Packages::INERTIA_LARAVEL, '2.1.0', '>=')
         ->andReturn($shouldIncludeForm);
@@ -461,7 +460,10 @@ test('includes wayfinder guidelines with inertia integration when both packages 
         ->toContain('Wayfinder + Inertia')
         ->toContain('Wayfinder Form Component (React)')
         ->toContain('<Form {...store.form()}>')
-        ->toContain('## Laravel Wayfinder');
+        ->toContain('## Laravel Wayfinder')
+        ->not->toContain('Wayfinder Form Component (Vue)')
+        ->not->toContain('Wayfinder Form Component (Svelte)')
+        ->not->toContain('<Form v-bind="store.form()">');
 });
 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
@@ -499,7 +501,9 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
         ->toContain('Wayfinder + Inertia')
         ->toContain('Wayfinder Form Component (Vue)')
         ->toContain('<Form v-bind="store.form()">')
-        ->toContain('## Laravel Wayfinder');
+        ->toContain('## Laravel Wayfinder')
+        ->not->toContain('Wayfinder Form Component (React)')
+        ->not->toContain('Wayfinder Form Component (Svelte)');
 });
 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
@@ -537,7 +541,10 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
         ->toContain('Wayfinder + Inertia')
         ->toContain('Wayfinder Form Component (Svelte)')
         ->toContain('<Form {...store.form()}>')
-        ->toContain('## Laravel Wayfinder');
+        ->toContain('## Laravel Wayfinder')
+        ->not->toContain('Wayfinder Form Component (React)')
+        ->not->toContain('Wayfinder Form Component (Vue)')
+        ->not->toContain('<Form v-bind="store.form()">');
 });
 
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
