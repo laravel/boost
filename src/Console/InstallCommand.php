@@ -237,22 +237,18 @@ class InstallCommand extends Command
     {
         $features = collect(['mcp_server', 'ai_guidelines']);
 
-        if ($this->herd->isMcpAvailable() && $this->askToUseHerdMcp()) {
+        if ($this->herd->isMcpAvailable() && $this->shouldConfigureHerdMcp()) {
             $features->push('herd_mcp');
         }
 
-        if ($this->isSailInstalled()) {
-            $useSail = $this->isRunningInsideSail() || $this->askToUseSail();
-
-            if ($useSail) {
-                $features->push('sail');
-            }
+        if ($this->isSailInstalled() && ($this->isRunningInsideSail() || $this->shouldConfigureSail())) {
+            $features->push('sail');
         }
 
         return $features;
     }
 
-    protected function askToUseSail(): bool
+    protected function shouldConfigureSail(): bool
     {
         return confirm(
             label: 'Laravel Sail detected. Configure Boost MCP to use Sail?',
@@ -261,7 +257,7 @@ class InstallCommand extends Command
         );
     }
 
-    protected function askToUseHerdMcp(): bool
+    protected function shouldConfigureHerdMcp(): bool
     {
         return confirm(
             label: 'Would you like to install Herd MCP alongside Boost MCP?',
@@ -573,6 +569,7 @@ class InstallCommand extends Command
             // Install Herd MCP if enabled
             if ($this->shouldInstallHerdMcp()) {
                 $php = $mcpClient->getPhpPath();
+
                 try {
                     $result = $mcpClient->installMcp(
                         key: 'herd',
@@ -600,6 +597,7 @@ class InstallCommand extends Command
 
         if ($failed !== []) {
             $this->error(sprintf('%s Some MCP servers failed to install:', $this->redCross));
+
             foreach ($failed as $ideName => $errors) {
                 foreach ($errors as $server => $error) {
                     $this->line("  - {$ideName} ({$server}): {$error}");
