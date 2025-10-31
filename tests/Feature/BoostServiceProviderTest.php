@@ -9,7 +9,7 @@ use Laravel\Boost\BoostServiceProvider;
 
 beforeEach(function (): void {
     $this->refreshApplication();
-    Config::set('logging.channels.browser', null);
+    Config::set('logging.channels.browser');
 });
 
 describe('boost.enabled configuration', function (): void {
