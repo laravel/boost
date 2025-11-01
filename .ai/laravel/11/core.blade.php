@@ -32,6 +32,6 @@
 
 ### New Artisan Commands
 - List Artisan commands using Boost's MCP tool, if available. New commands available in Laravel 11:
-    - `php artisan make:enum`
-    - `php artisan make:class`
-    - `php artisan make:interface`
+    - `{{ $assist->artisan() }} make:enum`
+    - `{{ $assist->artisan() }} make:class`
+    - `{{ $assist->artisan() }} make:interface`

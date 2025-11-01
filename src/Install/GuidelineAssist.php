@@ -6,8 +6,8 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Boost\Support\Config as BoostConfig;
 use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
@@ -24,8 +24,11 @@ class GuidelineAssist
 
     protected static array $classes = [];
 
+    public bool $usesSail;
+
     public function __construct(public Roster $roster)
     {
+        $this->usesSail = (new BoostConfig)->getSail();
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
@@ -160,11 +163,6 @@ class GuidelineAssist
         return file_get_contents(current($this->enumPaths));
     }
 
-    public function packageGte(Packages $package, string $version): bool
-    {
-        return $this->roster->usesVersion($package, $version, '>=');
-    }
-
     public function inertia(): Inertia
     {
         return new Inertia($this->roster);
@@ -173,5 +171,26 @@ class GuidelineAssist
     public function nodePackageManager(): string
     {
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
+    }
+
+    public function artisan(): string
+    {
+        return $this->usesSail
+            ? Sail::SAIL_BINARY_PATH.' artisan'
+            : 'php artisan';
+    }
+
+    public function composer(): string
+    {
+        return $this->usesSail
+            ? Sail::SAIL_BINARY_PATH.' composer'
+            : 'composer';
+    }
+
+    public function bin(): string
+    {
+        return $this->usesSail
+            ? Sail::SAIL_BINARY_PATH.' bin'
+            : 'vendor/bin/';
     }
 }

@@ -5,7 +5,7 @@
 - Utilize static `make()` methods for consistent component initialization.
 
 ### Artisan
-- You must use the Filament specific Artisan commands to create new files or components for Filament. You can find these with the `list-artisan-commands` tool, or with `php artisan` and the `--help` option.
+- You must use the Filament specific Artisan commands to create new files or components for Filament. You can find these with the `list-artisan-commands` tool, or with `{{ $assist->artisan() }}` and the `--help` option.
 - Inspect the required options, always pass `--no-interaction`, and valid arguments for other options when applicable.
 
 ### Filament's Core Features

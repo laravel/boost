@@ -44,7 +44,7 @@ class GuidelineComposer
         Packages::MCP,
     ];
 
-    public function __construct(protected Roster $roster, protected Herd $herd)
+    public function __construct(protected Roster $roster, protected Herd $herd, protected Sail $sail)
     {
         $this->packagePriorities = [
             Packages::PEST->value => [Packages::PHPUNIT->value],
@@ -125,8 +125,12 @@ class GuidelineComposer
         // $phpMajorMinor = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
         // $guidelines->put('php/v'.$phpMajorMinor, $this->guidelinesDir('php/'.$phpMajorMinor));
 
-        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled()) {
+        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->sail->isInstalled()) {
             $guidelines->put('herd', $this->guideline('herd/core'));
+        }
+
+        if ($this->sail->isInstalled()) {
+            $guidelines->put('sail', $this->guideline('sail/core'));
         }
 
         if ($this->config->laravelStyle) {

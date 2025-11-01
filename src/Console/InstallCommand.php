@@ -19,6 +19,7 @@ use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
@@ -39,6 +40,8 @@ class InstallCommand extends Command
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
     private Herd $herd;
+
+    private Sail $sail;
 
     private Terminal $terminal;
 
@@ -74,9 +77,9 @@ class InstallCommand extends Command
         parent::__construct();
     }
 
-    public function handle(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
+    public function handle(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Sail $sail, Terminal $terminal): void
     {
-        $this->bootstrap($codeEnvironmentsDetector, $herd, $terminal);
+        $this->bootstrap($codeEnvironmentsDetector, $herd, $sail, $terminal);
 
         $this->displayBoostHeader();
         $this->discoverEnvironment();
@@ -85,10 +88,11 @@ class InstallCommand extends Command
         $this->outro();
     }
 
-    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
+    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Sail $sail, Terminal $terminal): void
     {
         $this->codeEnvironmentsDetector = $codeEnvironmentsDetector;
         $this->herd = $herd;
+        $this->sail = $sail;
         $this->terminal = $terminal;
 
         $this->terminal->initDimensions();
@@ -241,7 +245,7 @@ class InstallCommand extends Command
             $features->push('herd_mcp');
         }
 
-        if ($this->isSailInstalled() && ($this->isRunningInsideSail() || $this->shouldConfigureSail())) {
+        if ($this->sail->isInstalled() && ($this->sail->isRunningInside() || $this->shouldConfigureSail())) {
             $features->push('sail');
         }
 
@@ -489,21 +493,10 @@ class InstallCommand extends Command
         return $this->selectedBoostFeatures->contains('sail');
     }
 
-    protected function isSailInstalled(): bool
-    {
-        return file_exists(base_path('vendor/bin/sail')) &&
-               (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
-    }
-
-    protected function isRunningInsideSail(): bool
-    {
-        return get_current_user() === 'sail' || getenv('LARAVEL_SAIL') === '1';
-    }
-
     protected function buildMcpCommand(McpClient $mcpClient): array
     {
         if ($this->shouldUseSail()) {
-            return ['laravel-boost', './vendor/bin/sail', 'artisan', 'boost:mcp'];
+            return ['laravel-boost', Sail::SAIL_BINARY_PATH, 'artisan', 'boost:mcp'];
         }
 
         $inWsl = $this->isRunningInWsl();

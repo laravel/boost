@@ -7,5 +7,5 @@
 - Tables use the `Tables\Columns` namespace for table columns.
 - A new `Filament\Forms\Components\RichEditor` component is available.
 - Form and table schemas now use fluent method chaining.
-- Added `php artisan filament:optimize` command for production optimization.
+- Added `{{ $assist->artisan() }} filament:optimize` command for production optimization.
 - Requires implementing `FilamentUser` contract for production access control.

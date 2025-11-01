@@ -27,7 +27,7 @@ Application purpose: {!! config('boost.purpose') !!}
 - Do not change the application's dependencies without approval.
 
 ## Frontend Bundling
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->nodePackageManager() }} run build`, `{{ $assist->nodePackageManager() }} run dev`, or `composer run dev`. Ask them.
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->nodePackageManager() }} run build`, `{{ $assist->nodePackageManager() }} run dev`, or `{{ $assist->composer() }} run dev`. Ask them.
 
 ## Replies
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
