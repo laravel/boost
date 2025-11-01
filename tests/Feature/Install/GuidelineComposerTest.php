@@ -168,6 +168,8 @@ test('excludes Herd guidelines when Sail is installed', function (): void {
     $this->herd->shouldReceive('isInstalled')->andReturn(true);
     $this->sail->shouldReceive('isInstalled')->andReturn(true);
 
+    config(['app.url' => 'http://myapp.test']);
+
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
