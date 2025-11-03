@@ -34,6 +34,7 @@ class InstallCommand extends Command
 {
     use Colors;
 
+    /** @var string */
     protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
 
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
