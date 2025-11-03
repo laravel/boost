@@ -22,7 +22,6 @@ use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 
@@ -31,10 +30,11 @@ use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
 
-#[AsCommand('boost:install', 'Install Laravel Boost')]
 class InstallCommand extends Command
 {
     use Colors;
+
+    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp-config : Skip installing MCP server configuration}';
 
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
@@ -74,15 +74,26 @@ class InstallCommand extends Command
         parent::__construct();
     }
 
-    public function handle(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
-    {
+    public function handle(
+        CodeEnvironmentsDetector $codeEnvironmentsDetector,
+        Herd $herd,
+        Terminal $terminal,
+    ): int {
         $this->bootstrap($codeEnvironmentsDetector, $herd, $terminal);
+
+        [$guidelines, $mcp] = $this->validateOptions();
+
+        if ($guidelines === false && $mcp === false) {
+            return self::FAILURE;
+        }
 
         $this->displayBoostHeader();
         $this->discoverEnvironment();
-        $this->collectInstallationPreferences();
-        $this->performInstallation();
+        $this->collectInstallationPreferences($guidelines, $mcp);
+        $this->performInstallation($guidelines, $mcp);
         $this->outro();
+
+        return self::SUCCESS;
     }
 
     protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
@@ -100,6 +111,23 @@ class InstallCommand extends Command
         $this->selectedTargetMcpClient = collect();
 
         $this->projectName = config('app.name');
+    }
+
+    /**
+     * @return array{bool, bool}
+     */
+    protected function validateOptions(): array
+    {
+        $guidelines = ! $this->option('ignore-guidelines');
+        $mcp = ! $this->option('ignore-mcp-config');
+
+        if (! $guidelines && ! $mcp) {
+            $this->error('You cannot ignore both guidelines and MCP config. Please select at least one option to proceed.');
+
+            return [false, false];
+        }
+
+        return [$guidelines, $mcp];
     }
 
     protected function displayBoostHeader(): void
@@ -128,22 +156,24 @@ class InstallCommand extends Command
         $this->projectInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverProjectInstalledCodeEnvironments(base_path());
     }
 
-    protected function collectInstallationPreferences(): void
+    protected function collectInstallationPreferences(bool $guidelines, bool $mcp): void
     {
-        $this->selectedBoostFeatures = $this->selectBoostFeatures();
-        $this->selectedAiGuidelines = $this->selectAiGuidelines();
-        $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
-        $this->selectedTargetAgents = $this->selectTargetAgents();
-        $this->enforceTests = $this->determineTestEnforcement();
+        $this->selectedBoostFeatures = $mcp ? $this->selectBoostFeatures() : collect();
+        $this->selectedAiGuidelines = $guidelines ? $this->selectAiGuidelines() : collect();
+        $this->selectedTargetMcpClient = $mcp ? $this->selectTargetMcpClients() : collect();
+        $this->selectedTargetAgents = $guidelines ? $this->selectTargetAgents() : collect();
+        $this->enforceTests = $guidelines && $this->determineTestEnforcement();
     }
 
-    protected function performInstallation(): void
+    protected function performInstallation(bool $guidelines, bool $mcp): void
     {
-        $this->installGuidelines();
+        if ($guidelines) {
+            $this->installGuidelines();
+        }
 
         usleep(750000);
 
-        if ($this->selectedTargetMcpClient->isNotEmpty()) {
+        if ($mcp && $this->selectedTargetMcpClient->isNotEmpty()) {
             $this->installMcpServerConfig();
         }
     }
