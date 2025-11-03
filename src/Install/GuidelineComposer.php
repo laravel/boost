@@ -116,6 +116,10 @@ class GuidelineComposer
      */
     protected function find(): Collection
     {
+        // First, collect user custom guidelines to determine non-overrides
+        $userGuidelines = $this->guidelinesDir($this->customGuidelinePath());
+
+        // Build default and package guidelines (these may include custom overrides via guidelinePath)
         $guidelines = collect();
         $guidelines->put('foundation', $this->guideline('foundation'));
         $guidelines->put('boost', $this->guideline('boost/core'));
@@ -170,27 +174,7 @@ class GuidelineComposer
             $guidelines->put('tests', $this->guideline('enforce-tests'));
         }
 
-        $userGuidelines = $this->guidelinesDir($this->customGuidelinePath());
-        $pathsUsed = $guidelines->pluck('path');
-
-        foreach ($userGuidelines as $guideline) {
-            if ($pathsUsed->contains($guideline['path'])) {
-                continue; // Don't include this twice if it's an override
-            }
-
-            $guidelines->put('.ai/'.$guideline['name'], $guideline);
-        }
-
-        $pathsUsed = $guidelines->pluck('path');
-
-        foreach ($userGuidelines as $guideline) {
-            if ($pathsUsed->contains($guideline['path'])) {
-                continue; // Don't include this twice if it's an override
-            }
-
-            $guidelines->put('.ai/'.$guideline['name'], $guideline);
-        }
-
+        // Add third-party package guidelines
         collect(Composer::packagesDirectoriesWithBoostGuidelines())
             ->each(function (string $path, string $package) use ($guidelines): void {
                 $packageGuidelines = $this->guidelinesDir($path, true);
@@ -210,7 +194,20 @@ class GuidelineComposer
                 )
             );
 
-        return $guidelines
+        // Find custom guidelines that are not overrides and prepend them
+        $pathsUsed = $guidelines->pluck('path');
+        $customNonOverrides = collect();
+
+        foreach ($userGuidelines as $guideline) {
+            if ($pathsUsed->contains($guideline['path'])) {
+                continue; // Skip this as it's an override already included in default/package guidelines
+            }
+
+            $customNonOverrides->put('.ai/'.$guideline['name'], $guideline);
+        }
+
+        // Merge in desired order: custom non-overrides first, then default/package guidelines
+        return $customNonOverrides->merge($guidelines)
             ->where(fn (array $guideline): bool => ! empty(trim((string) $guideline['content'])));
     }
 
