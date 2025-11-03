@@ -34,7 +34,7 @@ class InstallCommand extends Command
 {
     use Colors;
 
-    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp-config : Skip installing MCP server configuration}';
+    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
 
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
@@ -119,7 +119,7 @@ class InstallCommand extends Command
     protected function validateOptions(): array
     {
         $guidelines = ! $this->option('ignore-guidelines');
-        $mcp = ! $this->option('ignore-mcp-config');
+        $mcp = ! $this->option('ignore-mcp');
 
         if (! $guidelines && ! $mcp) {
             $this->error('You cannot ignore both guidelines and MCP config. Please select at least one option to proceed.');
