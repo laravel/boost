@@ -415,3 +415,13 @@ test('getPhpPath maintains default behavior when forceAbsolutePath is false', fu
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('php');
 });
+
+test('getArtisanPath uses absolute path when forceAbsolutePath is true', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+    expect($environment->getArtisanPath(true))->toBe(base_path('artisan'));
+});
+
+test('getArtisanPath maintains default behavior when forceAbsolutePath is false', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+    expect($environment->getArtisanPath(false))->toBe('artisan');
+});

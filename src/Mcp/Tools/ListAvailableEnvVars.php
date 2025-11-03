@@ -60,7 +60,7 @@ class ListAvailableEnvVars extends Tool
             return Response::error('Failed to parse .env file');
         }
 
-        $envVars = array_map('trim', $matches[1]);
+        $envVars = array_map(trim(...), $matches[1]);
 
         sort($envVars);
 

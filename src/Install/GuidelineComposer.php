@@ -181,16 +181,6 @@ class GuidelineComposer
             $guidelines->put('.ai/'.$guideline['name'], $guideline);
         }
 
-        $pathsUsed = $guidelines->pluck('path');
-
-        foreach ($userGuidelines as $guideline) {
-            if ($pathsUsed->contains($guideline['path'])) {
-                continue; // Don't include this twice if it's an override
-            }
-
-            $guidelines->put('.ai/'.$guideline['name'], $guideline);
-        }
-
         collect(Composer::packagesDirectoriesWithBoostGuidelines())
             ->each(function (string $path, string $package) use ($guidelines): void {
                 $packageGuidelines = $this->guidelinesDir($path, true);
@@ -244,12 +234,36 @@ class GuidelineComposer
             $finder = Finder::create()
                 ->files()
                 ->in($dirPath)
-                ->name('*.blade.php');
+                ->name('*.blade.php')
+                ->name('*.md');
         } catch (DirectoryNotFoundException) {
             return [];
         }
 
         return array_map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty), iterator_to_array($finder));
+    }
+
+    protected function renderContent(string $content, string $path): string
+    {
+        $isBladeTemplate = str_ends_with($path, '.blade.php');
+
+        if (! $isBladeTemplate) {
+            return $content;
+        }
+
+        // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
+        // This prevents Blade from trying to execute PHP code examples and supports inline code
+        $placeholders = [
+            '`' => '___SINGLE_BACKTICK___',
+            '<?php' => '___OPEN_PHP_TAG___',
+        ];
+
+        $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
+        $rendered = Blade::render($content, [
+            'assist' => $this->guidelineAssist,
+        ]);
+
+        return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
 
     /**
@@ -272,18 +286,8 @@ class GuidelineComposer
         $content = file_get_contents($path);
         $content = $this->processBoostSnippets($content);
 
-        // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
-        // This prevents Blade from trying to execute PHP code examples and supports inline code
-        $placeholders = [
-            '`' => '___SINGLE_BACKTICK___',
-            '<?php' => '___OPEN_PHP_TAG___',
-        ];
+        $rendered = $this->renderContent($content, $path);
 
-        $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
-        $rendered = Blade::render($content, [
-            'assist' => $this->guidelineAssist,
-        ]);
-        $rendered = str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
 
         $this->storedSnippets = []; // Clear for next use
@@ -298,7 +302,7 @@ class GuidelineComposer
 
         return [
             'content' => trim($rendered),
-            'name' => str_replace('.blade.php', '', basename($path)),
+            'name' => str_replace(['.blade.php', '.md'], '', basename($path)),
             'description' => $description,
             'path' => $path,
             'custom' => str_contains($path, $this->customGuidelinePath()),
@@ -311,7 +315,7 @@ class GuidelineComposer
 
     protected function processBoostSnippets(string $content): string
     {
-        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function ($matches): string {
+        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function (array $matches): string {
             $name = $matches['name'];
             $lang = empty($matches['lang']) ? 'html' : $matches['lang'];
             $snippetContent = $matches['content'];
@@ -326,16 +330,21 @@ class GuidelineComposer
 
     protected function prependPackageGuidelinePath(string $path): string
     {
-        $path = preg_replace('/\.blade\.php$/', '', $path);
-
-        return str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../.ai/'.$path.'.blade.php');
+        return $this->prependGuidelinePath($path, __DIR__.'/../../.ai/');
     }
 
     protected function prependUserGuidelinePath(string $path): string
     {
-        $path = preg_replace('/\.blade\.php$/', '', $path);
+        return $this->prependGuidelinePath($path, $this->customGuidelinePath());
+    }
 
-        return str_replace('/', DIRECTORY_SEPARATOR, $this->customGuidelinePath($path.'.blade.php'));
+    private function prependGuidelinePath(string $path, string $basePath): string
+    {
+        if (! str_ends_with($path, '.md') && ! str_ends_with($path, '.blade.php')) {
+            $path .= '.blade.php';
+        }
+
+        return str_replace('/', DIRECTORY_SEPARATOR, $basePath.$path);
     }
 
     protected function guidelinePath(string $path): ?string
