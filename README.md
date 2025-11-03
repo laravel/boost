@@ -35,7 +35,7 @@ Next, install the MCP server and coding guidelines:
 php artisan boost:install
 ```
 
-You can safely add the generated MCP config (`.mcp.json`), generated guidelines (`CLAUDE.md`), and `boost.json` to your `.gitignore` file. These files are automatically re-generated when running `boost:install` and `boost:update`.
+You can safely add the generated mcp config file, guideline files (`.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `junie/`, etc.) and `boost.json` to your `.gitignore` as these files are automatically re-generated when running `boost:install` and `boost:update`.
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
