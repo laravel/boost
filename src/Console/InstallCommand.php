@@ -79,14 +79,13 @@ class InstallCommand extends Command
         Herd $herd,
         Terminal $terminal,
     ): int {
-        $this->bootstrap($codeEnvironmentsDetector, $herd, $terminal);
-
         [$guidelines, $mcp] = $this->validateOptions();
 
         if ($guidelines === false && $mcp === false) {
             return self::FAILURE;
         }
 
+        $this->bootstrap($codeEnvironmentsDetector, $herd, $terminal);
         $this->displayBoostHeader();
         $this->discoverEnvironment();
         $this->collectInstallationPreferences($guidelines, $mcp);
@@ -94,23 +93,6 @@ class InstallCommand extends Command
         $this->outro();
 
         return self::SUCCESS;
-    }
-
-    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
-    {
-        $this->codeEnvironmentsDetector = $codeEnvironmentsDetector;
-        $this->herd = $herd;
-        $this->terminal = $terminal;
-
-        $this->terminal->initDimensions();
-
-        $this->greenTick = $this->green('✓');
-        $this->redCross = $this->red('✗');
-
-        $this->selectedTargetAgents = collect();
-        $this->selectedTargetMcpClient = collect();
-
-        $this->projectName = config('app.name');
     }
 
     /**
@@ -128,6 +110,23 @@ class InstallCommand extends Command
         }
 
         return [$guidelines, $mcp];
+    }
+
+    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
+    {
+        $this->codeEnvironmentsDetector = $codeEnvironmentsDetector;
+        $this->herd = $herd;
+        $this->terminal = $terminal;
+
+        $this->terminal->initDimensions();
+
+        $this->greenTick = $this->green('✓');
+        $this->redCross = $this->red('✗');
+
+        $this->selectedTargetAgents = collect();
+        $this->selectedTargetMcpClient = collect();
+
+        $this->projectName = config('app.name');
     }
 
     protected function displayBoostHeader(): void
@@ -168,7 +167,7 @@ class InstallCommand extends Command
     protected function performInstallation(bool $guidelines, bool $mcp): void
     {
         if ($guidelines) {
-            $this->installGuidelines();
+            $this->installGuidelines($mcp);
         }
 
         usleep(750000);
@@ -419,7 +418,7 @@ class InstallCommand extends Command
         )->filter()->values();
     }
 
-    protected function installGuidelines(): void
+    protected function installGuidelines(bool $mcp): void
     {
         if ($this->selectedTargetAgents->isEmpty()) {
             $this->info(' No agents selected for guideline installation.');
@@ -483,17 +482,19 @@ class InstallCommand extends Command
             }
         }
 
-        $this->config->setSail(
-            $this->shouldUseSail()
-        );
+        if ($mcp) {
+            $this->config->setSail(
+                $this->shouldUseSail()
+            );
 
-        $this->config->setHerdMcp(
-            $this->shouldInstallHerdMcp()
-        );
+            $this->config->setHerdMcp(
+                $this->shouldInstallHerdMcp()
+            );
 
-        $this->config->setEditors(
-            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
-        );
+            $this->config->setEditors(
+                $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
+            );
+        }
 
         $this->config->setAgents(
             $this->selectedTargetAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray()
