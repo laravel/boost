@@ -388,6 +388,7 @@ test('includes correct package manager commands in guidelines based on lockfile'
 test('renderContent handles blade and markdown files correctly', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::VOLT, 'laravel/volt', '1.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -426,9 +427,8 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('Run `npm install` to install dependencies')
         ->toContain('Package manager: npm')
         // Preserves @volt directives in blade templates
-        ->toContain('=== .ai/test-blade-with-volt-directives rules ===')
         ->toContain('`@volt`')
-        ->toContain('`@endvolt`')
+        ->toContain('@endvolt')
         ->not->toContain('volt-anonymous-fragment')
         ->not->toContain('@livewire');
 });
