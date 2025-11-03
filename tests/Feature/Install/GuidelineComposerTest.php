@@ -429,8 +429,6 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('=== .ai/test-blade-with-volt-directives rules ===')
         ->toContain('`@volt`')
         ->toContain('`@endvolt`')
-        ->toContain('@volt')
-        ->toContain('@endvolt')
         ->not->toContain('volt-anonymous-fragment')
         ->not->toContain('@livewire');
 });
