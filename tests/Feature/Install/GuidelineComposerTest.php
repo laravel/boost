@@ -424,5 +424,13 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         // Processes blade variables correctly
         ->toContain('=== .ai/test-blade-with-assist rules ===')
         ->toContain('Run `npm install` to install dependencies')
-        ->toContain('Package manager: npm');
+        ->toContain('Package manager: npm')
+        // Preserves @volt directives in blade templates
+        ->toContain('=== .ai/test-blade-with-volt-directives rules ===')
+        ->toContain('`@volt`')
+        ->toContain('`@endvolt`')
+        ->toContain('@volt')
+        ->toContain('@endvolt')
+        ->not->toContain('volt-anonymous-fragment')
+        ->not->toContain('@livewire');
 });
