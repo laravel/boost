@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## Filament
 - Filament is used by this application, check how and where to follow existing application conventions.
 - Filament is a Server-Driven UI (SDUI) framework for Laravel. It allows developers to define user interfaces in PHP using structured configuration objects. It is built on top of Livewire, Alpine.js, and Tailwind CSS.

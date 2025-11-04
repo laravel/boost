@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## Laravel Pint Code Formatter
 
 - You must run `{{ $assist->bin() }}pint --dirty` before finalizing changes to ensure your code matches the project's expected style.

@@ -1,5 +1,7 @@
 ## Pest
-
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ### Testing
 - If you need to verify a feature is working, write or update a Unit / Feature test.
 

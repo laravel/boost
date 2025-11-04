@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## Filament 3
 
 ## Version 3 Changes To Focus On

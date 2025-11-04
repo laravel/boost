@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## Laravel Folio
 
 - Laravel Folio is a file based router. With Laravel Folio, a new route is created for every Blade file within the configured Folio directory. For example, pages are usually in in `resources/views/pages/` and the file structure determines routes:

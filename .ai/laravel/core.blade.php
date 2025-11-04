@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## Do Things the Laravel Way
 
 - Use `{{ $assist->artisan() }} make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
@@ -39,4 +42,8 @@
 - When creating tests, make use of `{{ $assist->artisan() }} make:test [options] <name>` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 
 ### Vite Error
+@if ($assist->config->enforceSail)
+- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `{{ $assist->composer() }} run dev` or ask the user to run it.
+@else
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `{{ $assist->nodePackageManager() }} run build` or ask the user to run `{{ $assist->nodePackageManager() }} run dev` or `{{ $assist->composer() }} run dev`.
+@endif

@@ -10,6 +10,8 @@ class GuidelineConfig
 
     public bool $laravelStyle = false;
 
+    public bool $enforceSail = false;
+
     public bool $caresAboutLocalization = false;
 
     public bool $hasAnApi = false;

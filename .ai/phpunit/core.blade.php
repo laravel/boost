@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## PHPUnit Core
 
 - This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `{{ $assist->artisan() }} make:test --phpunit <name>` to create a new test.

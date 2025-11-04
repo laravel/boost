@@ -245,7 +245,7 @@ class InstallCommand extends Command
             $features->push('herd_mcp');
         }
 
-        if ($this->sail->isInstalled() && ($this->sail->isRunningInside() || $this->shouldConfigureSail())) {
+        if ($this->sail->isInstalled() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
             $features->push('sail');
         }
 
@@ -407,6 +407,7 @@ class InstallCommand extends Command
         $guidelineConfig->caresAboutLocalization = $this->detectLocalization();
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedAiGuidelines->values()->toArray();
+        $guidelineConfig->enforceSail = $this->shouldUseSail();
 
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
         $guidelines = $composer->guidelines();

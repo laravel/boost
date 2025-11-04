@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
-use Laravel\Boost\Install\Sail;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
@@ -24,13 +23,10 @@ beforeEach(function (): void {
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
 
-    $this->sail = Mockery::mock(Sail::class);
-    $this->sail->shouldReceive('isInstalled')->andReturn(false)->byDefault();
-
     // Bind the mock to the service container so it's used everywhere
     $this->app->instance(Roster::class, $this->roster);
 
-    $this->composer = new GuidelineComposer($this->roster, $this->herd, $this->sail);
+    $this->composer = new GuidelineComposer($this->roster, $this->herd);
 });
 
 test('includes Inertia React conditional guidelines based on version', function (string $version, bool $shouldIncludeForm, bool $shouldInclude212Features): void {
@@ -159,18 +155,22 @@ test('includes Herd guidelines only when on .test domain and Herd is installed',
     'localhost with Herd' => ['http://localhost:8000', true, false],
 ]);
 
-test('excludes Herd guidelines when Sail is installed', function (): void {
+test('excludes Herd guidelines when Sail is configured', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
     $this->herd->shouldReceive('isInstalled')->andReturn(true);
-    $this->sail->shouldReceive('isInstalled')->andReturn(true);
 
     config(['app.url' => 'http://myapp.test']);
 
-    $guidelines = $this->composer->compose();
+    $config = new GuidelineConfig;
+    $config->enforceSail = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
 
     expect($guidelines)
         ->not->toContain('Laravel Herd')
@@ -178,18 +178,22 @@ test('excludes Herd guidelines when Sail is installed', function (): void {
 
 });
 
-test('excludes Sail guidelines when Herd is installed', function (): void {
+test('excludes Sail guidelines when Herd is configured', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
     $this->herd->shouldReceive('isInstalled')->andReturn(true);
-    $this->sail->shouldReceive('isInstalled')->andReturn(false);
 
     config(['app.url' => 'http://myapp.test']);
 
-    $guidelines = $this->composer->compose();
+    $config = new GuidelineConfig;
+    $config->enforceSail = false;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
 
     expect($guidelines)
         ->toContain('Laravel Herd')
@@ -308,7 +312,7 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd, $this->sail])->makePartial();
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
@@ -331,7 +335,7 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd, $this->sail])->makePartial();
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
@@ -434,7 +438,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
     $this->roster->shouldReceive('packages')->andReturn($packages);
     $this->nodePackageManager = NodePackageManager::NPM;
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd, $this->sail])->makePartial();
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));

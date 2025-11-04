@@ -24,8 +24,6 @@ class GuidelineComposer
 
     protected GuidelineConfig $config;
 
-    protected GuidelineAssist $guidelineAssist;
-
     /**
      * Package priority system to handle conflicts between packages.
      * When a higher-priority package is present, lower-priority packages are excluded from guidelines.
@@ -44,14 +42,14 @@ class GuidelineComposer
         Packages::MCP,
     ];
 
-    public function __construct(protected Roster $roster, protected Herd $herd, protected Sail $sail)
+    public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->packagePriorities = [
             Packages::PEST->value => [Packages::PHPUNIT->value],
             Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
+            Packages::LARAVEL->value => [Packages::SAIL->value],
         ];
         $this->config = new GuidelineConfig;
-        $this->guidelineAssist = new GuidelineAssist($roster);
     }
 
     public function config(GuidelineConfig $config): self
@@ -59,6 +57,11 @@ class GuidelineComposer
         $this->config = $config;
 
         return $this;
+    }
+
+    protected function assist(): GuidelineAssist
+    {
+        return new GuidelineAssist($this->roster, $this->config);
     }
 
     /**
@@ -125,11 +128,11 @@ class GuidelineComposer
         // $phpMajorMinor = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
         // $guidelines->put('php/v'.$phpMajorMinor, $this->guidelinesDir('php/'.$phpMajorMinor));
 
-        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->sail->isInstalled()) {
+        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->enforceSail) {
             $guidelines->put('herd', $this->guideline('herd/core'));
         }
 
-        if ($this->sail->isInstalled()) {
+        if ($this->config->enforceSail) {
             $guidelines->put('sail', $this->guideline('sail/core'));
         }
 
@@ -274,7 +277,7 @@ class GuidelineComposer
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
         $rendered = Blade::render($content, [
-            'assist' => $this->guidelineAssist,
+            'assist' => $this->assist(),
         ]);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);

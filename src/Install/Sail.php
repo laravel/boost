@@ -16,7 +16,7 @@ class Sail
                (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
     }
 
-    public function isRunningInside(): bool
+    public function isActive(): bool
     {
         return get_current_user() === 'sail' || getenv('LARAVEL_SAIL') === '1';
     }

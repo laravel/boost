@@ -6,7 +6,6 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
-use Laravel\Boost\Support\Config as BoostConfig;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Roster;
 use ReflectionClass;
@@ -24,11 +23,8 @@ class GuidelineAssist
 
     protected static array $classes = [];
 
-    public bool $usesSail;
-
-    public function __construct(public Roster $roster)
+    public function __construct(public Roster $roster, public GuidelineConfig $config)
     {
-        $this->usesSail = (new BoostConfig)->getSail();
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
@@ -175,22 +171,22 @@ class GuidelineAssist
 
     public function artisan(): string
     {
-        return $this->usesSail
+        return $this->config->enforceSail
             ? Sail::SAIL_BINARY_PATH.' artisan'
             : 'php artisan';
     }
 
     public function composer(): string
     {
-        return $this->usesSail
+        return $this->config->enforceSail
             ? Sail::SAIL_BINARY_PATH.' composer'
             : 'composer';
     }
 
     public function bin(): string
     {
-        return $this->usesSail
-            ? Sail::SAIL_BINARY_PATH.' bin'
+        return $this->config->enforceSail
+            ? Sail::SAIL_BINARY_PATH.' bin '
             : 'vendor/bin/';
     }
 }
