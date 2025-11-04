@@ -82,7 +82,7 @@ class InstallCommand extends Command
     ): int {
         [$guidelines, $mcp] = $this->validateOptions();
 
-        if ($guidelines === false && $mcp === false) {
+        if (! $guidelines && ! $mcp) {
             return self::FAILURE;
         }
 
