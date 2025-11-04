@@ -183,16 +183,6 @@ class GuidelineComposer
             $guidelines->put('.ai/'.$guideline['name'], $guideline);
         }
 
-        $pathsUsed = $guidelines->pluck('path');
-
-        foreach ($userGuidelines as $guideline) {
-            if ($pathsUsed->contains($guideline['path'])) {
-                continue; // Don't include this twice if it's an override
-            }
-
-            $guidelines->put('.ai/'.$guideline['name'], $guideline);
-        }
-
         collect(Composer::packagesDirectoriesWithBoostGuidelines())
             ->each(function (string $path, string $package) use ($guidelines): void {
                 $packageGuidelines = $this->guidelinesDir($path, true);
@@ -268,6 +258,8 @@ class GuidelineComposer
         $placeholders = [
             '`' => '___SINGLE_BACKTICK___',
             '<?php' => '___OPEN_PHP_TAG___',
+            '@volt' => '___VOLT_DIRECTIVE___',
+            '@endvolt' => '___ENDVOLT_DIRECTIVE___',
         ];
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
