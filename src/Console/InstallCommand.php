@@ -54,6 +54,9 @@ class InstallCommand extends Command
     /** @var Collection<int, string> */
     private Collection $selectedAiGuidelines;
 
+    /** @var array<int, string> */
+    private array $selectedBaseGuidelines = [];
+
     private string $projectName;
 
     /** @var array<non-empty-string> */
@@ -267,6 +270,11 @@ class InstallCommand extends Command
             return collect();
         }
 
+        // Get saved guidelines and filter only third-party ones
+        $savedGuidelines = $this->config->getGuidelines();
+        $thirdPartyKeys = $options->keys()->toArray();
+        $savedThirdParty = array_filter($savedGuidelines, fn ($key) => in_array($key, $thirdPartyKeys));
+
         return collect(multiselect(
             label: 'Which third-party AI guidelines do you want to install?',
             // @phpstan-ignore-next-line
@@ -275,7 +283,7 @@ class InstallCommand extends Command
 
                 return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
             }),
-            default: collect($this->config->getGuidelines()),
+            default: $savedThirdParty,
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
@@ -302,6 +310,82 @@ class InstallCommand extends Command
             Agent::class,
             sprintf('Which agents need AI guidelines for %s?', $this->projectName),
             $this->config->getAgents(),
+            autoDetect: false,
+        );
+    }
+
+    /**
+     * @param  Collection<string, array>  $guidelines
+     * @return array<int, string>
+     */
+    protected function selectGuidelines(Collection $guidelines): array
+    {
+        if ($guidelines->isEmpty()) {
+            return [];
+        }
+
+        // Ask if user wants to customize guideline selection
+        $customize = confirm(
+            label: 'Would you like to customize which guidelines to install?',
+            default: false,
+            hint: 'Select "No" to install all detected guidelines, or "Yes" to choose specific ones'
+        );
+
+        // If user doesn't want to customize, return all guidelines
+        if (! $customize) {
+            return $guidelines->keys()->toArray();
+        }
+
+        // Calculate max lengths for alignment
+        $maxKeyLength = $guidelines->keys()->map(fn ($key) => Str::length($key))->max();
+        $maxTokenLength = $guidelines->map(fn ($guideline) => Str::length('~'.($guideline['tokens'] ?? 0).' tokens'))->max();
+
+        $options = $guidelines->mapWithKeys(function (array $guideline, string $key) use ($maxKeyLength, $maxTokenLength): array {
+            $tokens = $guideline['tokens'] ?? 0;
+            $description = $guideline['description'] ?? '';
+
+            // Format with padding for alignment - use lowercase for consistency
+            $displayKey = strtolower($key);
+            $paddedKey = str_pad($displayKey, $maxKeyLength);
+            $tokenInfo = str_pad("~{$tokens} tokens", $maxTokenLength);
+
+            // Use color codes for better visual separation
+            $formattedOption = sprintf(
+                "%s  \033[2m%s\033[0m  %s",
+                $paddedKey,
+                $tokenInfo,
+                $description
+            );
+
+            return [$key => $formattedOption];
+        })->sortKeys();
+
+        // Get all saved guidelines (base + third-party combined)
+        $savedGuidelines = $this->config->getGuidelines();
+
+        // Filter to get only base guidelines (exclude third-party which have different format)
+        $availableKeys = $options->keys()->map(fn ($key) => Str::snake(str_replace('/', '_', $key)))->toArray();
+        $savedBaseGuidelines = array_filter($savedGuidelines, fn ($key) => in_array($key, $availableKeys));
+
+        // Convert saved snake_case guidelines back to original format for matching
+        if (! empty($savedBaseGuidelines)) {
+            $defaults = collect($savedBaseGuidelines)->map(function (string $snakeKey) use ($options) {
+                // Try to find matching guideline key
+                return $options->keys()->first(function (string $originalKey) use ($snakeKey) {
+                    $convertedKey = Str::snake(str_replace('/', '_', $originalKey));
+                    return $convertedKey === $snakeKey;
+                });
+            })->filter()->values()->toArray();
+        } else {
+            $defaults = $options->keys()->toArray();
+        }
+
+        return multiselect(
+            label: sprintf('Which guidelines do you want to add for %s?', $this->projectName),
+            options: $options->toArray(),
+            default: $defaults,
+            scroll: 15,
+            hint: 'All guidelines are selected by default. Use SPACE to toggle, ENTER to confirm.',
         );
     }
 
@@ -323,7 +407,7 @@ class InstallCommand extends Command
      * @param  array<int, string>  $defaults
      * @return Collection<int, CodeEnvironment>
      */
-    protected function selectCodeEnvironments(string $contractClass, string $label, array $defaults): Collection
+    protected function selectCodeEnvironments(string $contractClass, string $label, array $defaults, bool $autoDetect = true): Collection
     {
         $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
         $config = $this->getSelectionConfig($contractClass);
@@ -348,7 +432,7 @@ class InstallCommand extends Command
 
         $detectedDefaults = [];
 
-        if ($defaults === []) {
+        if ($autoDetect && $defaults === []) {
             foreach ($installedEnvNames as $envKey) {
                 $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
                 if ($matchingEnv) {
@@ -363,7 +447,7 @@ class InstallCommand extends Command
             default: $defaults === [] ? $detectedDefaults : $defaults,
             scroll: $options->count(),
             required: $config['required'],
-            hint: $defaults === [] || $detectedDefaults === [] ? '' : sprintf('Auto-detected %s for you',
+            hint: !$autoDetect || $defaults !== [] || $detectedDefaults === [] ? '' : sprintf('Auto-detected %s for you',
                 Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
                     $env = $availableEnvironments->first(fn ($env): bool => $env->name() === $className);
                     $displayMethod = $config['displayMethod'];
@@ -394,7 +478,10 @@ class InstallCommand extends Command
         $guidelineConfig->aiGuidelines = $this->selectedAiGuidelines->values()->toArray();
 
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
-        $guidelines = $composer->guidelines();
+        $allGuidelines = $composer->guidelines();
+
+        $this->selectedBaseGuidelines = $this->selectGuidelines($allGuidelines);
+        $guidelines = $allGuidelines->only($this->selectedBaseGuidelines);
 
         $this->newLine();
         $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
@@ -454,9 +541,13 @@ class InstallCommand extends Command
             $this->selectedTargetAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray()
         );
 
-        $this->config->setGuidelines(
+        // Combine base guidelines and third-party guidelines into one array
+        $allSelectedGuidelines = array_merge(
+            array_map(fn (string $key) => Str::snake(str_replace('/', '_', $key)), $this->selectedBaseGuidelines),
             $this->selectedAiGuidelines->values()->toArray()
         );
+
+        $this->config->setGuidelines($allSelectedGuidelines);
     }
 
     protected function shouldInstallStyleGuidelines(): bool
