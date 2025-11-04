@@ -59,11 +59,6 @@ class GuidelineComposer
         return $this;
     }
 
-    protected function assist(): GuidelineAssist
-    {
-        return new GuidelineAssist($this->roster, $this->config);
-    }
-
     /**
      * Auto discovers the guideline files and composes them into one string.
      */
@@ -343,6 +338,11 @@ class GuidelineComposer
 
             return $placeholder;
         }, $content);
+    }
+
+    protected function assist(): GuidelineAssist
+    {
+        return new GuidelineAssist($this->roster, $this->config);
     }
 
     protected function prependPackageGuidelinePath(string $path): string
