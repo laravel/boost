@@ -510,7 +510,7 @@ class InstallCommand extends Command
 
         return array_filter([
             'laravel-boost',
-            $inWsl ? 'wsl' : false,
+            $inWsl ? 'wsl.exe' : false,
             $mcpClient->getPhpPath($inWsl),
             $mcpClient->getArtisanPath($inWsl),
             'boost:mcp',
