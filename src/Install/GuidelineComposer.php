@@ -42,12 +42,21 @@ class GuidelineComposer
         Packages::MCP,
     ];
 
+    /**
+     * Packages that should be excluded from automatic guideline inclusion.
+     * These packages require explicit configuration to be included.
+     *
+     * @var array<int, Packages>
+     */
+    protected array $excludeByDefault = [
+        Packages::SAIL,
+    ];
+
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->packagePriorities = [
             Packages::PEST->value => [Packages::PHPUNIT->value],
             Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
-            Packages::LARAVEL->value => [Packages::SAIL->value],
         ];
         $this->config = new GuidelineConfig;
     }
@@ -211,10 +220,18 @@ class GuidelineComposer
      */
     protected function shouldExcludePackage(Package $package): bool
     {
+        if (in_array($package->package(), $this->excludeByDefault, true)) {
+            return true;
+        }
+
+        // Check if a higher priority package excludes this one
         foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
-            if (in_array($package->package()->value, $excludedPackages, true)) {
-                $priorityEnum = Packages::from($priorityPackage);
-                if ($this->roster->uses($priorityEnum)) {
+            $packageIsInExclusionList = in_array($package->package()->value, $excludedPackages, true);
+
+            if ($packageIsInExclusionList) {
+                $priorityPackageExists = $this->roster->uses(Packages::from($priorityPackage));
+
+                if ($priorityPackageExists) {
                     return true;
                 }
             }

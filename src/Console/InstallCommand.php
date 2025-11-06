@@ -23,7 +23,6 @@ use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 
@@ -32,10 +31,11 @@ use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
 
-#[AsCommand('boost:install', 'Install Laravel Boost')]
 class InstallCommand extends Command
 {
     use Colors;
+
+    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
 
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
@@ -72,20 +72,38 @@ class InstallCommand extends Command
 
     private string $redCross;
 
+    private bool $installGuidelines;
+
+    private bool $installMcpConfig;
+
     public function __construct(protected Config $config)
     {
         parent::__construct();
     }
 
-    public function handle(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Sail $sail, Terminal $terminal): void
-    {
-        $this->bootstrap($codeEnvironmentsDetector, $herd, $sail, $terminal);
+    public function handle(
+        CodeEnvironmentsDetector $codeEnvironmentsDetector,
+        Herd $herd,
+        Sail $sail,
+        Terminal $terminal,
+    ): int {
+        $this->installGuidelines = ! $this->option('ignore-guidelines');
+        $this->installMcpConfig = ! $this->option('ignore-mcp');
 
+        if (! $this->installGuidelines && ! $this->installMcpConfig) {
+            $this->error('You cannot ignore both guidelines and MCP config. Please select at least one option to proceed.');
+
+            return self::FAILURE;
+        }
+
+        $this->bootstrap($codeEnvironmentsDetector, $herd, $sail, $terminal);
         $this->displayBoostHeader();
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
         $this->performInstallation();
         $this->outro();
+
+        return self::SUCCESS;
     }
 
     protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Sail $sail, Terminal $terminal): void
@@ -143,11 +161,13 @@ class InstallCommand extends Command
 
     protected function performInstallation(): void
     {
-        $this->installGuidelines();
+        if ($this->installGuidelines) {
+            $this->installGuidelines();
+        }
 
         usleep(750000);
 
-        if ($this->selectedTargetMcpClient->isNotEmpty()) {
+        if ($this->installMcpConfig && $this->selectedTargetMcpClient->isNotEmpty()) {
             $this->installMcpServerConfig();
         }
     }
@@ -217,6 +237,10 @@ class InstallCommand extends Command
      */
     protected function determineTestEnforcement(): bool
     {
+        if (! $this->installGuidelines) {
+            return false;
+        }
+
         $hasMinimumTests = false;
 
         if (file_exists(base_path('vendor/bin/phpunit'))) {
@@ -239,6 +263,10 @@ class InstallCommand extends Command
      */
     protected function selectBoostFeatures(): Collection
     {
+        if (! $this->installMcpConfig) {
+            return collect();
+        }
+
         $features = collect(['mcp_server', 'ai_guidelines']);
 
         if ($this->herd->isMcpAvailable() && $this->shouldConfigureHerdMcp()) {
@@ -275,6 +303,10 @@ class InstallCommand extends Command
      */
     protected function selectAiGuidelines(): Collection
     {
+        if (! $this->installGuidelines) {
+            return collect();
+        }
+
         $options = app(GuidelineComposer::class)->guidelines()
             ->reject(fn (array $guideline): bool => $guideline['third_party'] === false);
 
@@ -301,6 +333,10 @@ class InstallCommand extends Command
      */
     protected function selectTargetMcpClients(): Collection
     {
+        if (! $this->installMcpConfig) {
+            return collect();
+        }
+
         return $this->selectCodeEnvironments(
             McpClient::class,
             sprintf('Which code editors do you use to work on %s?', $this->projectName),
@@ -313,6 +349,10 @@ class InstallCommand extends Command
      */
     protected function selectTargetAgents(): Collection
     {
+        if (! $this->installGuidelines) {
+            return collect();
+        }
+
         return $this->selectCodeEnvironments(
             Agent::class,
             sprintf('Which agents need AI guidelines for %s?', $this->projectName),
@@ -458,17 +498,19 @@ class InstallCommand extends Command
             }
         }
 
-        $this->config->setSail(
-            $this->shouldUseSail()
-        );
+        if ($this->installMcpConfig) {
+            $this->config->setSail(
+                $this->shouldUseSail()
+            );
 
-        $this->config->setHerdMcp(
-            $this->shouldInstallHerdMcp()
-        );
+            $this->config->setHerdMcp(
+                $this->shouldInstallHerdMcp()
+            );
 
-        $this->config->setEditors(
-            $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
-        );
+            $this->config->setEditors(
+                $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
+            );
+        }
 
         $this->config->setAgents(
             $this->selectedTargetAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray()
@@ -504,7 +546,7 @@ class InstallCommand extends Command
 
         return array_filter([
             'laravel-boost',
-            $inWsl ? 'wsl' : false,
+            $inWsl ? 'wsl.exe' : false,
             $mcpClient->getPhpPath($inWsl),
             $mcpClient->getArtisanPath($inWsl),
             'boost:mcp',
@@ -533,7 +575,6 @@ class InstallCommand extends Command
             )->toArray()
         );
 
-        /** @var McpClient $mcpClient */
         foreach ($this->selectedTargetMcpClient as $mcpClient) {
             $ideName = $mcpClient->mcpClientName();
             $ideDisplay = str_pad((string) $ideName, $longestIdeName);
