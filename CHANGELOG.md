@@ -1,6 +1,40 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.6.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.7.1...main)
+
+## [v1.7.1](https://github.com/laravel/boost/compare/v1.7.0...v1.7.1) - 2025-11-05
+
+### What's Changed
+
+* [1.x] Fix: WSL by changing 'wsl' to 'wsl.exe' in MCP config by [@MrPunyapal](https://github.com/MrPunyapal) in https://github.com/laravel/boost/pull/338
+* Add wayfinder guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/327
+* Update Readme about .gitignore files by [@chinmaypurav](https://github.com/chinmaypurav) in https://github.com/laravel/boost/pull/307
+* Update Tailwind v4+ guidelines  by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/321
+
+### New Contributors
+
+* [@MrPunyapal](https://github.com/MrPunyapal) made their first contribution in https://github.com/laravel/boost/pull/338
+* [@chinmaypurav](https://github.com/chinmaypurav) made their first contribution in https://github.com/laravel/boost/pull/307
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.7.0...v1.7.1
+
+## [v1.7.0](https://github.com/laravel/boost/compare/v1.6.0...v1.7.0) - 2025-11-04
+
+### What's Changed
+
+* feat: add opencode support by [@calebdw](https://github.com/calebdw) in https://github.com/laravel/boost/pull/88
+* Fix Invalid Argument Error with MCP tool by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/323
+* [1.x] Refactor to use first-class callable by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/315
+* [1.x] Sail Support for Boost by [@NIAN97](https://github.com/NIAN97) in https://github.com/laravel/boost/pull/303
+* Remove duplicate code in GuidelineComposer.php by [@phpfour](https://github.com/phpfour) in https://github.com/laravel/boost/pull/331
+* Handle `@volt` directives in GuidelineComposer by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/333
+
+### New Contributors
+
+* [@NIAN97](https://github.com/NIAN97) made their first contribution in https://github.com/laravel/boost/pull/303
+* [@phpfour](https://github.com/phpfour) made their first contribution in https://github.com/laravel/boost/pull/331
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.6.0...v1.7.0
 
 ## [v1.6.0](https://github.com/laravel/boost/compare/v1.5.1...v1.6.0) - 2025-10-28
 

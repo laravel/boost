@@ -263,6 +263,8 @@ class GuidelineComposer
         $placeholders = [
             '`' => '___SINGLE_BACKTICK___',
             '<?php' => '___OPEN_PHP_TAG___',
+            '@volt' => '___VOLT_DIRECTIVE___',
+            '@endvolt' => '___ENDVOLT_DIRECTIVE___',
         ];
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
