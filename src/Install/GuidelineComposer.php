@@ -48,7 +48,7 @@ class GuidelineComposer
      *
      * @var array<int, Packages>
      */
-    protected array $manuallyIncludedPackages = [
+    protected array $optInPackages = [
         Packages::SAIL,
     ];
 
@@ -220,11 +220,10 @@ class GuidelineComposer
      */
     protected function shouldExcludePackage(Package $package): bool
     {
-        if (in_array($package->package(), $this->manuallyIncludedPackages, true)) {
+        if (in_array($package->package(), $this->optInPackages, true)) {
             return true;
         }
 
-        // Check if a higher priority package excludes this one
         foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
             $packageIsInExclusionList = in_array($package->package()->value, $excludedPackages, true);
 
