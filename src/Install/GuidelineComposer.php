@@ -48,7 +48,7 @@ class GuidelineComposer
      *
      * @var array<int, Packages>
      */
-    protected array $excludeByDefault = [
+    protected array $manuallyIncludedPackages = [
         Packages::SAIL,
     ];
 
@@ -220,7 +220,7 @@ class GuidelineComposer
      */
     protected function shouldExcludePackage(Package $package): bool
     {
-        if (in_array($package->package(), $this->excludeByDefault, true)) {
+        if (in_array($package->package(), $this->manuallyIncludedPackages, true)) {
             return true;
         }
 
@@ -281,7 +281,7 @@ class GuidelineComposer
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
         $rendered = Blade::render($content, [
-            'assist' => $this->assist(),
+            'assist' => $this->getGuidelineAssist(),
         ]);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
@@ -349,7 +349,7 @@ class GuidelineComposer
         }, $content);
     }
 
-    protected function assist(): GuidelineAssist
+    protected function getGuidelineAssist(): GuidelineAssist
     {
         return new GuidelineAssist($this->roster, $this->config);
     }
