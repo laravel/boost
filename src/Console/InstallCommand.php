@@ -34,8 +34,7 @@ class InstallCommand extends Command
 {
     use Colors;
 
-    /** @var string */
-    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
+    protected string $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
 
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
@@ -70,6 +69,10 @@ class InstallCommand extends Command
 
     private string $redCross;
 
+    private bool $installGuidelines;
+
+    private bool $installMcpConfig;
+
     public function __construct(protected Config $config)
     {
         parent::__construct();
@@ -80,37 +83,23 @@ class InstallCommand extends Command
         Herd $herd,
         Terminal $terminal,
     ): int {
-        [$guidelines, $mcp] = $this->validateOptions();
+        $this->installGuidelines = ! $this->option('ignore-guidelines');
+        $this->installMcpConfig = ! $this->option('ignore-mcp');
 
-        if (! $guidelines && ! $mcp) {
+        if (! $this->installGuidelines && ! $this->installMcpConfig) {
+            $this->error('You cannot ignore both guidelines and MCP config. Please select at least one option to proceed.');
+
             return self::FAILURE;
         }
 
         $this->bootstrap($codeEnvironmentsDetector, $herd, $terminal);
         $this->displayBoostHeader();
         $this->discoverEnvironment();
-        $this->collectInstallationPreferences($guidelines, $mcp);
-        $this->performInstallation($guidelines, $mcp);
+        $this->collectInstallationPreferences();
+        $this->performInstallation();
         $this->outro();
 
         return self::SUCCESS;
-    }
-
-    /**
-     * @return array{bool, bool}
-     */
-    protected function validateOptions(): array
-    {
-        $guidelines = ! $this->option('ignore-guidelines');
-        $mcp = ! $this->option('ignore-mcp');
-
-        if (! $guidelines && ! $mcp) {
-            $this->error('You cannot ignore both guidelines and MCP config. Please select at least one option to proceed.');
-
-            return [false, false];
-        }
-
-        return [$guidelines, $mcp];
     }
 
     protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Terminal $terminal): void
@@ -156,24 +145,24 @@ class InstallCommand extends Command
         $this->projectInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverProjectInstalledCodeEnvironments(base_path());
     }
 
-    protected function collectInstallationPreferences(bool $guidelines, bool $mcp): void
+    protected function collectInstallationPreferences(): void
     {
-        $this->selectedBoostFeatures = $mcp ? $this->selectBoostFeatures() : collect();
-        $this->selectedAiGuidelines = $guidelines ? $this->selectAiGuidelines() : collect();
-        $this->selectedTargetMcpClient = $mcp ? $this->selectTargetMcpClients() : collect();
-        $this->selectedTargetAgents = $guidelines ? $this->selectTargetAgents() : collect();
-        $this->enforceTests = $guidelines && $this->determineTestEnforcement();
+        $this->selectedBoostFeatures = $this->selectBoostFeatures();
+        $this->selectedAiGuidelines = $this->selectAiGuidelines();
+        $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
+        $this->selectedTargetAgents = $this->selectTargetAgents();
+        $this->enforceTests = $this->determineTestEnforcement();
     }
 
-    protected function performInstallation(bool $guidelines, bool $mcp): void
+    protected function performInstallation(): void
     {
-        if ($guidelines) {
-            $this->installGuidelines($mcp);
+        if ($this->installGuidelines) {
+            $this->installGuidelines();
         }
 
         usleep(750000);
 
-        if ($mcp && $this->selectedTargetMcpClient->isNotEmpty()) {
+        if ($this->installMcpConfig && $this->selectedTargetMcpClient->isNotEmpty()) {
             $this->installMcpServerConfig();
         }
     }
@@ -243,6 +232,10 @@ class InstallCommand extends Command
      */
     protected function determineTestEnforcement(): bool
     {
+        if (! $this->installGuidelines) {
+            return false;
+        }
+
         $hasMinimumTests = false;
 
         if (file_exists(base_path('vendor/bin/phpunit'))) {
@@ -265,6 +258,10 @@ class InstallCommand extends Command
      */
     protected function selectBoostFeatures(): Collection
     {
+        if (! $this->installMcpConfig) {
+            return collect();
+        }
+
         $features = collect(['mcp_server', 'ai_guidelines']);
 
         if ($this->herd->isMcpAvailable() && $this->shouldConfigureHerdMcp()) {
@@ -301,6 +298,10 @@ class InstallCommand extends Command
      */
     protected function selectAiGuidelines(): Collection
     {
+        if (! $this->installGuidelines) {
+            return collect();
+        }
+
         $options = app(GuidelineComposer::class)->guidelines()
             ->reject(fn (array $guideline): bool => $guideline['third_party'] === false);
 
@@ -327,6 +328,10 @@ class InstallCommand extends Command
      */
     protected function selectTargetMcpClients(): Collection
     {
+        if (! $this->installMcpConfig) {
+            return collect();
+        }
+
         return $this->selectCodeEnvironments(
             McpClient::class,
             sprintf('Which code editors do you use to work on %s?', $this->projectName),
@@ -339,6 +344,10 @@ class InstallCommand extends Command
      */
     protected function selectTargetAgents(): Collection
     {
+        if (! $this->installGuidelines) {
+            return collect();
+        }
+
         return $this->selectCodeEnvironments(
             Agent::class,
             sprintf('Which agents need AI guidelines for %s?', $this->projectName),
@@ -419,7 +428,7 @@ class InstallCommand extends Command
         )->filter()->values();
     }
 
-    protected function installGuidelines(bool $mcp): void
+    protected function installGuidelines(): void
     {
         if ($this->selectedTargetAgents->isEmpty()) {
             $this->info(' No agents selected for guideline installation.');
@@ -483,7 +492,7 @@ class InstallCommand extends Command
             }
         }
 
-        if ($mcp) {
+        if ($this->installMcpConfig) {
             $this->config->setSail(
                 $this->shouldUseSail()
             );
@@ -571,7 +580,6 @@ class InstallCommand extends Command
             )->toArray()
         );
 
-        /** @var McpClient $mcpClient */
         foreach ($this->selectedTargetMcpClient as $mcpClient) {
             $ideName = $mcpClient->mcpClientName();
             $ideDisplay = str_pad((string) $ideName, $longestIdeName);
