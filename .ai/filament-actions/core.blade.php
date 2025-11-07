@@ -2,9 +2,11 @@
 
 ### Overview
 
-Filament Actions are a powerful feature that handle "doing something" within your application. Unlike traditional actions in web development, Filament Actions are specifically designed for user interfaces. They encapsulate the complete user workflow: the trigger (button/link), the interactive modal window (if needed), and the logic that executes when the action is completed.
+Filament Actions are a powerful feature that handle "doing something" within your application. Unlike traditional actions in web development, Filament Actions are specifically designed for user interfaces.
+They encapsulate the complete user workflow: the trigger (button/link), the interactive modal window (if needed), and the logic that executes when the action is completed.
 
-For example, a delete action might display a button that opens a confirmation modal, and when confirmed, executes the deletion logic. This entire workflow is defined as a single Action object.
+For example, a delete action might display a button that opens a confirmation modal, and when confirmed, executes the deletion logic.
+This entire workflow is defined as a single Action object.
 
 Actions can be used throughout your Filament application:
 - Custom Livewire components and panel pages
