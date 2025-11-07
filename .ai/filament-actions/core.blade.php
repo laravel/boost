@@ -260,7 +260,7 @@ Render the action in your Blade view:
     </code-snippet>
 @endverbatim
 
-The `<x-filament-actions::modals />` component injects the HTML required to render action modals. Include it once per Livewire component, regardless of how many actions you have.
+The @verbatim `<x-filament-actions::modals />`@endverbatim component injects the HTML required to render action modals. Include it once per Livewire component, regardless of how many actions you have.
 
 #### Passing Arguments to Actions
 
