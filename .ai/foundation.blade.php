@@ -1,5 +1,5 @@
 @php
-    /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
 # Laravel Boost Guidelines
 
