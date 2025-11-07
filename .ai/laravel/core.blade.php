@@ -42,8 +42,4 @@
 - When creating tests, make use of `{{ $assist->artisanCommand('make:test [options] <name>') }}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 
 ### Vite Error
-@if ($assist->config->usesSail)
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `{{ $assist->composerCommand('run dev') }}` or ask the user to run it.
-@else
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `{{ $assist->nodePackageManager() }} run build` or ask the user to run `{{ $assist->nodePackageManager() }} run dev` or `{{ $assist->composerCommand('run dev') }}`.
-@endif
+- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `{{ $assist->nodePackageManager('run build') }}` or ask the user to run `{{ $assist->nodePackageManager('run dev') }}` or `{{ $assist->composerCommand('run dev') }}`.

@@ -25,6 +25,11 @@ class Sail
         return self::BINARY_PATH.' composer';
     }
 
+    public static function nodePackageManagerCommand(string $manager): string
+    {
+        return self::BINARY_PATH.' '.$manager;
+    }
+
     public function isInstalled(): bool
     {
         return file_exists(base_path(self::BINARY_PATH)) &&
