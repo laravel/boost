@@ -533,6 +533,10 @@ class InstallCommand extends Command
 
     protected function shouldUseSail(): bool
     {
+        if ($this->selectedBoostFeatures->isEmpty()) {
+            return $this->config->getSail();
+        }
+
         return $this->selectedBoostFeatures->contains('sail');
     }
 
