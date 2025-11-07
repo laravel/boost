@@ -29,7 +29,7 @@ This is useful for actions like "create", which are not tied to a specific row, 
 
 #### Bulk Actions
 
-- Bulk actions now support the `chunkSelectedRecords()` method, allowing selected records to be processed in smaller batches instead of loading everything into memory at once — improving performance and reducing memory usage with large datasets.
+- Bulk actions now support the `chunkSelectedRecords()` method, allowing selected records to be processed in smaller batches instead of loading everything into memory at once, improving performance and reducing memory usage with large datasets.
 - You can now use `authorizeIndividualRecords()` to check a policy method for each selected record in a bulk action. Only the records the user is authorized to act on will be included in the $records array.
 - You can now display a notification after a bulk action completes to inform users of the outcome — especially useful when some records are skipped due to authorization.
     - Use `successNotificationTitle()` when all records are processed successfully.
@@ -38,7 +38,7 @@ This is useful for actions like "create", which are not tied to a specific row, 
 
 #### Rate limiting actions
 
-You can now use the `rateLimit()` method to limit how often an action can be triggered — per user IP, per minute.
+You can now use the `rateLimit()` method to limit how often an action can be triggered per user IP, per minute.
 
 #### Authorization
 
@@ -56,7 +56,7 @@ Authorization messages can now be shown in action tooltips and notifications.
 
 #### Import action
 
-Importing relationships: `BelongsToMany` relationships can now be imported via actions.
+`BelongsToMany` relationships can now be imported via actions.
 
 #### Export action
 
@@ -67,7 +67,7 @@ Importing relationships: `BelongsToMany` relationships can now be imported via a
 
 #### Tooltips for disabled buttons
 
-You can now display `tooltips` on disabled buttons.
+You can now display tooltips on disabled buttons.
 
 #### Testing actions
 
