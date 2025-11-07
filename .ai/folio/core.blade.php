@@ -14,10 +14,10 @@
 
 <code-snippet name="Example folio:page Commands for Automatic Routing" lang="shell">
     // Creates: resources/views/pages/products.blade.php → /products
-    {{ $assist->artisanCommand("folio:page 'products'") }}
+    {!! $assist->artisanCommand('folio:page "products"') !!}
 
     // Creates: resources/views/pages/products/[id].blade.php → /products/{id}
-    {{ $assist->artisanCommand("folio:page 'products/[id]'") }}
+    {!! $assist->artisanCommand('folio:page "products/[id]"') !!}
 </code-snippet>
 
 - Add a 'name' to each new Folio page at the very top of the file so it has a named route available for other parts of the codebase to use.

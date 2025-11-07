@@ -3,7 +3,7 @@
 @endphp
 ## PHPUnit Core
 
-- This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `{{ $assist->artisanCommand('make:test --phpunit <name>') }}` to create a new test.
+- This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `{{ $assist->artisanCommand('make:test --phpunit {name}') }}` to create a new test.
 - If you see a test using "Pest", convert it to PHPUnit.
 - Every time a test has been updated, run that singular test.
 - When the tests relating to your feature are passing, ask the user if they would like to also run the entire test suite to make sure everything is still passing.
