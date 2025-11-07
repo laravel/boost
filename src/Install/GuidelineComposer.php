@@ -132,11 +132,11 @@ class GuidelineComposer
         // $phpMajorMinor = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
         // $guidelines->put('php/v'.$phpMajorMinor, $this->guidelinesDir('php/'.$phpMajorMinor));
 
-        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->enforceSail) {
+        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->usesSail) {
             $guidelines->put('herd', $this->guideline('herd/core'));
         }
 
-        if ($this->config->enforceSail) {
+        if ($this->config->usesSail) {
             $guidelines->put('sail', $this->guideline('sail/core'));
         }
 

@@ -169,24 +169,36 @@ class GuidelineAssist
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
     }
 
+    public function artisanCommand(string $command): string
+    {
+        return "{$this->artisan()} {$command}";
+    }
+
+    public function composerCommand(string $command): string
+    {
+        $composerCommand = $this->config->usesSail
+            ? Sail::composerCommand()
+            : 'composer';
+
+        return "{$composerCommand} {$command}";
+    }
+
+    public function binCommand(string $command): string
+    {
+        return $this->config->usesSail
+            ? Sail::binCommand().$command
+            : "vendor/bin/{$command}";
+    }
+
     public function artisan(): string
     {
-        return $this->config->enforceSail
-            ? Sail::SAIL_BINARY_PATH.' artisan'
+        return $this->config->usesSail
+            ? Sail::artisanCommand()
             : 'php artisan';
     }
 
-    public function composer(): string
+    public function sailBinaryPath(): string
     {
-        return $this->config->enforceSail
-            ? Sail::SAIL_BINARY_PATH.' composer'
-            : 'composer';
-    }
-
-    public function bin(): string
-    {
-        return $this->config->enforceSail
-            ? Sail::SAIL_BINARY_PATH.' bin '
-            : 'vendor/bin/';
+        return Sail::BINARY_PATH;
     }
 }

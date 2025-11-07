@@ -8,16 +8,39 @@ use const DIRECTORY_SEPARATOR;
 
 class Sail
 {
-    public const SAIL_BINARY_PATH = 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail';
+    public const BINARY_PATH = 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail';
+
+    public static function artisanCommand(): string
+    {
+        return self::BINARY_PATH.' artisan';
+    }
+
+    public static function binCommand(): string
+    {
+        return self::BINARY_PATH.' bin ';
+    }
+
+    public static function composerCommand(): string
+    {
+        return self::BINARY_PATH.' composer';
+    }
 
     public function isInstalled(): bool
     {
-        return file_exists(base_path(self::SAIL_BINARY_PATH)) &&
-               (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
+        return file_exists(base_path(self::BINARY_PATH)) &&
+            (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
     }
 
     public function isActive(): bool
     {
         return get_current_user() === 'sail' || getenv('LARAVEL_SAIL') === '1';
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function buildMcpCommand(string $serverName): array
+    {
+        return [$serverName, self::BINARY_PATH, 'artisan', 'boost:mcp'];
     }
 }

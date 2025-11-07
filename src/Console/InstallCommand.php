@@ -447,7 +447,7 @@ class InstallCommand extends Command
         $guidelineConfig->caresAboutLocalization = $this->detectLocalization();
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedAiGuidelines->values()->toArray();
-        $guidelineConfig->enforceSail = $this->shouldUseSail();
+        $guidelineConfig->usesSail = $this->shouldUseSail();
 
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
         $guidelines = $composer->guidelines();
@@ -538,14 +538,16 @@ class InstallCommand extends Command
 
     protected function buildMcpCommand(McpClient $mcpClient): array
     {
+        $serverName = 'laravel-boost';
+
         if ($this->shouldUseSail()) {
-            return ['laravel-boost', Sail::SAIL_BINARY_PATH, 'artisan', 'boost:mcp'];
+            return $this->sail->buildMcpCommand($serverName);
         }
 
         $inWsl = $this->isRunningInWsl();
 
         return array_filter([
-            'laravel-boost',
+            $serverName,
             $inWsl ? 'wsl.exe' : false,
             $mcpClient->getPhpPath($inWsl),
             $mcpClient->getArtisanPath($inWsl),

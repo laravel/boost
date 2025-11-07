@@ -7,17 +7,17 @@
     - `pages/index.blade.php` → `/`
     - `pages/profile/index.blade.php` → `/profile`
     - `pages/auth/login.blade.php` → `/auth/login`
-- You may list available Folio routes using `{{ $assist->artisan() }} folio:list` or using Boost's `list-routes` tool.
+- You may list available Folio routes using `{{ $assist->artisanCommand("folio:list") }}`  or using Boost's `list-routes` tool.
 
 ### New Pages & Routes
-- Always create new `folio` pages and routes using `{{ $assist->artisan() }} folio:page [name]` following existing naming conventions.
+- Always create new `folio` pages and routes using `{{ $assist->artisanCommand('folio:page [name]') }}` following existing naming conventions.
 
 <code-snippet name="Example folio:page Commands for Automatic Routing" lang="shell">
     // Creates: resources/views/pages/products.blade.php → /products
-    {{ $assist->artisan() }} folio:page 'products'
+    {{ $assist->artisanCommand("folio:page 'products'") }}
 
     // Creates: resources/views/pages/products/[id].blade.php → /products/{id}
-    {{ $assist->artisan() }} folio:page 'products/[id]'
+    {{ $assist->artisanCommand("folio:page 'products/[id]'") }}
 </code-snippet>
 
 - Add a 'name' to each new Folio page at the very top of the file so it has a named route available for other parts of the codebase to use.

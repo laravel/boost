@@ -164,7 +164,7 @@ test('excludes Herd guidelines when Sail is configured', function (): void {
     config(['app.url' => 'http://myapp.test']);
 
     $config = new GuidelineConfig;
-    $config->enforceSail = true;
+    $config->usesSail = true;
 
     $guidelines = $this->composer
         ->config($config)
@@ -187,7 +187,7 @@ test('excludes Sail guidelines when Herd is configured', function (): void {
     config(['app.url' => 'http://myapp.test']);
 
     $config = new GuidelineConfig;
-    $config->enforceSail = false;
+    $config->usesSail = false;
 
     $guidelines = $this->composer
         ->config($config)
@@ -629,7 +629,7 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('## Laravel Wayfinder')
-        ->toContain('import { show } from \'@/actions/')
+        ->toContain("import { show, store, update } from '@/actions/App/Http/Controllers/PostController'")
         ->not->toContain('Wayfinder + Inertia')
         ->not->toContain('Wayfinder Form Component');
 });

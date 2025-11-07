@@ -30,10 +30,10 @@ Application purpose: {!! config('boost.purpose') !!}
 - Do not change the application's dependencies without approval.
 
 ## Frontend Bundling
-@if ($assist->config->enforceSail)
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->composer() }} run dev`. Ask them.
+@if ($assist->config->usesSail)
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->composerCommand('run dev') }}`. Ask them.
 @else
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->nodePackageManager() }} run build`, `{{ $assist->nodePackageManager() }} run dev`, or `{{ $assist->composer() }} run dev`. Ask them.
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->nodePackageManager() }} run build`, `{{ $assist->nodePackageManager() }} run dev`, or `{{ $assist->composerCommand('run dev') }}`. Ask them.
 @endif
 
 ## Replies
