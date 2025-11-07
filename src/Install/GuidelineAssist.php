@@ -164,9 +164,14 @@ class GuidelineAssist
         return new Inertia($this->roster);
     }
 
+    public function nodePackageManager(): string
+    {
+        return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
+    }
+
     public function nodePackageManagerCommand(string $command): string
     {
-        $manager = ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
+        $manager = $this->nodePackageManager();
         $nodePackageManagerCommand = $this->config->usesSail
             ? Sail::nodePackageManagerCommand($manager)
             : $manager;
