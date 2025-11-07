@@ -468,7 +468,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         // Processes blade variables correctly
         ->toContain('=== .ai/test-blade-with-assist rules ===')
         ->toContain('Run `npm install` to install dependencies')
-        ->toContain('Package manager: npm')
+        ->toContain('Package manager: npm install')
         // Preserves @volt directives in blade templates
         ->toContain('`@volt`')
         ->toContain('@endvolt')

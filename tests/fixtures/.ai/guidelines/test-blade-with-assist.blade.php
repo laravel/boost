@@ -1,5 +1,5 @@
 # Blade with @assist variable
 
-Run `{{ $assist->nodePackageManager('install') }}` to install dependencies.
+Run `{{ $assist->nodePackageManagerCommand('install') }}` to install dependencies.
 
-Package manager: {{ $assist->nodePackageManager('install') }}
+Package manager: {{ $assist->nodePackageManagerCommand('install') }}

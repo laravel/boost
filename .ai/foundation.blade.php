@@ -1,5 +1,5 @@
 @php
-/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+    /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
 # Laravel Boost Guidelines
 
@@ -10,11 +10,11 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 - php - {{ PHP_VERSION }}
 @foreach (app(\Laravel\Roster\Roster::class)->packages()->unique(fn ($package) => $package->rawName()) as $package)
-- {{ $package->rawName() }} ({{ $package->name() }}) - v{{ $package->majorVersion() }}
+    - {{ $package->rawName() }} ({{ $package->name() }}) - v{{ $package->majorVersion() }}
 @endforeach
 
 @if (! empty(config('boost.purpose')))
-Application purpose: {!! config('boost.purpose') !!}
+    Application purpose: {!! config('boost.purpose') !!}
 
 @endif
 ## Conventions
@@ -30,7 +30,7 @@ Application purpose: {!! config('boost.purpose') !!}
 - Do not change the application's dependencies without approval.
 
 ## Frontend Bundling
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->nodePackageManager('run build') }}`, `{{ $assist->nodePackageManager('run dev') }}`, or `{{ $assist->composerCommand('run dev') }}`. Ask them.
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->nodePackageManagerCommand('run build') }}`, `{{ $assist->nodePackageManagerCommand('run dev') }}`, or `{{ $assist->composerCommand('run dev') }}`. Ask them.
 
 ## Replies
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
