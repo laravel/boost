@@ -1,255 +1,26 @@
 ## Filament Actions 3
 
-### What is an Action?
+### Important Note About Version 3
 
-In Filament, actions also handle "doing" something in your app. However, they are a bit different from traditional
-actions.
-They are designed to be used in the context of a user interface. For instance, you might have a button to delete a
-client record, which opens a modal to confirm your decision.
-When the user clicks the "Delete" button in the modal, the client is deleted. This whole workflow is an "action".
+In Filament Actions v3, actions are **context-specific** and use different class namespaces depending on where they are used.
+This is a key difference from v4, where actions are unified across all contexts.
 
-@verbatim
-    <code-snippet name="Filament action example" lang="php">
-        use Filament\Actions\Action;
-
-        Action::make('delete')
-        ->requiresConfirmation()
-        ->action(fn () => $this->client->delete())
-    </code-snippet>
-@endverbatim
+**Always import the correct Action class for your context** to avoid errors and unexpected behavior.
 
 ### Types of Actions (Different Classes)
 
-Each context uses a specific class:
+Each context requires a specific Action class with its own namespace:
 
-1. `Filament\Actions\Action` - Custom Livewire components and panel pages
-- Supports full modals
-- Can open URLs or execute logic
+#### 1. Page Actions (`Filament\Actions\Action`)
 
-2. `Filament\Tables\Actions\Action` - Table actions (rows/header)
-- Supports modals
-- Can be added to specific columns
+Used in custom Livewire components and panel pages.
 
-3. `Filament\Tables\Actions\BulkAction` - Bulk actions
-- Executed on multiple selected records
-
-4. `Filament\Forms\Components\Actions\Action` - Actions in form components
-
-5. `Filament\Infolists\Components\Actions\Action` - Actions in infolists
-
-6. `Filament\Notifications\Actions\Action` - Actions in notifications
-- Does not support modals (only URL or Livewire events)
-
-7. `Filament\GlobalSearch\Actions\Action` - Actions in global search results
-- Does not support modals (only URL or Livewire events)
-
-### Prebuilt Actions
-
-Filament provides prebuilt actions for common Eloquent operations:
-
-- CreateAction - Create new records
-- EditAction - Edit existing records
-- ViewAction - View records (read-only)
-- DeleteAction - Delete records
-- ReplicateAction - Duplicate records
-- ForceDeleteAction - Permanently delete (soft deletes)
-- RestoreAction - Restore deleted records (soft deletes)
-- ImportAction - Import data
-- ExportAction - Export data
-
-These actions come with sensible default configurations and can be customized as needed.
-
-### Examples
-@verbatim
-    <code-snippet name="Filament action examples" lang="php">
-        use Filament\Actions\Action;
-
-        // Button (default) - with background
-        Action::make('edit')->button()
-
-        // Link - no background, link appearance
-        Action::make('edit')->link()
-
-        // Icon Button - icon only
-        Action::make('edit')
-        ->icon('heroicon-m-pencil-square')
-        ->iconButton()
-
-        // Responsive - icon button on mobile, button with label on desktop
-        Action::make('edit')
-        ->icon('heroicon-m-pencil-square')
-        ->button()
-        ->labeledFrom('md') // Label from md breakpoint
-    </code-snippet>
-@endverbatim
-
-### Authorization and Visibility
-
-Filament actions support conditional visibility and disabling based on authorization or other conditions.
+**Capabilities:**
+- Supports full modals with forms
+- Can open URLs or execute custom logic
 
 @verbatim
-    <code-snippet name="Filament action visibility" lang="php">
-        // Show/hide conditionally
-        Action::make('edit')
-        ->visible(auth()->user()->can('update', $this->post))
-        ->hidden(! auth()->user()->can('update', $this->post))
-
-        // Disable (keeps visible but inactive)
-        Action::make('delete')
-        ->disabled(! auth()->user()->can('delete', $this->post))
-    </code-snippet>
-@endverbatim
-
-### Confirmation Modal
-
-Filament actions can require confirmation before executing:
-
-@verbatim
-    <code-snippet name="Filament action confirmation" lang="php">
-        use App\Models\Post;
-        use Filament\Actions\Action;
-
-        Action::make('delete')
-        ->action(fn (Post $record) => $record->delete())
-        ->requiresConfirmation()
-        ->modalHeading('Delete post')
-        ->modalDescription('Are you sure? This cannot be undone.')
-        ->modalSubmitActionLabel('Yes, delete it')
-        ->modalIcon('heroicon-o-trash')
-        ->modalIconColor('danger')
-    </code-snippet>
-@endverbatim
-
-### Modal with Form
-
-Filament actions can open modals with forms to collect user input:
-
-@verbatim
-    <code-snippet name="Filament action modal with form" lang="php">
-        use App\Models\Post;
-        use App\Models\User;
-        use Filament\Actions\Action;
-        use Filament\Forms\Components\Select;
-
-        Action::make('updateAuthor')
-            ->form([
-                Select::make('authorId')
-                    ->label('Author')
-                    ->options(User::query()->pluck('name', 'id'))
-                    ->required(),
-            ])
-            ->action(function (array $data, Post $record): void {
-                $record->author()->associate($data['authorId']);
-                $record->save();
-            })
-    </code-snippet>
-@endverbatim
-
-### Wizard in Modal
-
-You can create multi-step wizards within action modals:
-
-@verbatim
-    <code-snippet name="Filament action wizard" lang="php">
-        use Filament\Actions\Action;
-        use Filament\Forms\Components\Wizard\Step;
-
-        Actions\Action::make('create')
-            ->steps([
-                Step::make('Step1')
-                    ->schema([
-                        // ...
-                    ]),
-                Step::make('Step2')
-                    ->schema([
-                        // ...
-                    ]),
-            ])
-    </code-snippet>
-@endverbatim
-
-### Custom Modal Content
-
-Filament actions allow for custom content in modals:
-
-@verbatim
-    <code-snippet name="Filament action custom modal content" lang="php">
-        use Filament\Actions\Action;
-
-        Action::make('advance')
-            ->modalContent(view('filament.pages.actions.advance'))
-            ->modalContentFooter(view('filament.pages.actions.footer'))
-    </code-snippet>
-@endverbatim
-
-### Modal Actions
-
-Filament actions support customizing modal actions:
-
-@verbatim
-    <code-snippet name="Filament action custom footer actions" lang="php">
-        use Filament\Actions\Action;
-        use Filament\Actions\StaticAction;
-
-        Action::make('help')
-            ->modal()
-            ->modalDescription('...')
-            ->modalCancelAction(fn (StaticAction $action) => $action->label('Close'))
-            ->modalSubmitAction(false), // Remove submit button
-    </code-snippet>
-@endverbatim
-
-@verbatim
-    <code-snippet name="Filament action custom footer actions" lang="php">
-        use Filament\Actions\Action;
-
-        // Extra footer actions
-        Action::make('create')
-            ->form([
-                // ...
-            ])
-            ->extraModalFooterActions(fn (Action $action): array => [
-                $action->makeModalSubmitAction('createAnother', arguments: ['another' => true]),
-            ])
-            ->action(function (array $data, array $arguments): void {
-                
-                // Create record
-
-                if ($arguments['another'] ?? false) {
-                    // Reset form without closing modal
-                }
-            }),
-    </code-snippet>
-@endverbatim
-
-### Chaining Actions
-
-Filament actions can chain multiple actions together, allowing one action to trigger another.
-
-@verbatim
-    <code-snippet name="Filament action chaining" lang="php">
-        use Filament\Actions\Action;
-
-        Action::make('first')
-            ->requiresConfirmation()
-            ->action(function () {})
-            ->extraModalFooterActions([
-                Action::make('second')
-                    ->requiresConfirmation()
-                    ->action(function () {}),
-            ]),
-    </code-snippet>
-@endverbatim
-
-You can use `->cancelParentActions('first')` on the second action to close the first action's modal when the second action is triggered.
-
-### Using Actions in Livewire Components
-
-Filament actions can be integrated into custom Livewire components. Here's how to set up and use actions within a Livewire component:
-
-@verbatim
-    <code-snippet name="Filament action rendering" lang="php">
-        use App\Models\Post;
+    <code-snippet name="Page Action Example" lang="php">
         use Filament\Actions\Action;
         use Filament\Actions\Concerns\InteractsWithActions;
         use Filament\Actions\Contracts\HasActions;
@@ -262,145 +33,231 @@ Filament actions can be integrated into custom Livewire components. Here's how t
             use InteractsWithActions;
             use InteractsWithForms;
 
-            public Post $post;
-
-            // The method name must be: {actionName} or {actionName}Action
-            public function deleteAction(): Action
+            public function editAction(): Action
             {
-                return Action::make('delete')
-                    ->requiresConfirmation()
-                    ->action(fn () => $this->post->delete());
-            }
-
-            public function render()
-            {
-                return view('livewire.manage-post');
+                return Action::make('edit')
+                    ->icon('heroicon-m-pencil-square')
+                    ->form([
+                        // Form fields...
+                    ])
+                    ->action(function (array $data): void {
+                        // Update logic...
+                    });
             }
         }
     </code-snippet>
 @endverbatim
 
-**Important**: The method must share the exact same name as the action, or the name followed by `Action`.
+#### 2. Table Actions (`Filament\Tables\Actions\Action`)
 
-Now, to render the action in your Livewire component's Blade view:
+Used in table rows and headers. **Note:** This is a different class from page actions.
+
+**Capabilities:**
+- Supports modals
+- Can be added to specific columns
+- Can be row actions or header actions
 
 @verbatim
-    <code-snippet name="Filament action rendering" lang="blade">
-        <div>
-            {{-- Render action --}}
-            {{ $this->deleteAction }}
+    <code-snippet name="Table Action Example" lang="php">
+        use Filament\Tables\Actions\Action;
+        use Filament\Tables\Table;
 
-            {{-- Required for modals (once per component) --}}
-            <x-filament-actions::modals />
-        </div>
+        public function table(Table $table): Table
+        {
+            return $table
+                ->columns([
+                    // ...
+                ])
+                ->actions([
+                    // Row actions - appear in each row
+                    Action::make('edit')
+                        ->icon('heroicon-m-pencil-square')
+                        ->url(fn (Post $record): string => route('posts.edit', $record)),
+                    Action::make('delete')
+                        ->requiresConfirmation()
+                        ->action(fn (Post $record) => $record->delete()),
+                ])
+                ->headerActions([
+                    // Header actions - appear at the top of the table
+                    Action::make('create')
+                        ->icon('heroicon-m-plus')
+                        ->url(route('posts.create')),
+                ]);
+        }
     </code-snippet>
 @endverbatim
 
-You also need `<x-filament-actions::modals />` which injects the HTML required to render action modals. 
-This only needs to be included within the Livewire component once, regardless of how many actions you have for that component.
+**Table-specific features:**
+- Use `->actions()` for row actions
+- Use `->headerActions()` for actions at the top of the table
+- Row actions have access to the `$record` parameter
 
+#### 3. Bulk Actions (`Filament\Tables\Actions\BulkAction`)
 
-### Passing Arguments
+Special type of table action executed on multiple selected records at once.
 
-You can pass arguments to actions when rendering them:
+**Important:** This is a separate class, not the regular `Action` class.
 
 @verbatim
-    <code-snippet name="Filament action rendering" lang="blade">
-        <div>
-            @foreach ($posts as $post)
-                <h2>{{ $post->title }}</h2>
+    <code-snippet name="Bulk Action Example" lang="php">
+        use Filament\Tables\Actions\BulkAction;
+        use Filament\Tables\Table;
+        use Illuminate\Database\Eloquent\Collection;
 
-                {{ ($this->deleteAction)(['post' => $post->id]) }}
-            @endforeach
+        public function table(Table $table): Table
+        {
+            return $table
+                ->columns([
+                    // ...
+                ])
+                ->bulkActions([
+                    BulkAction::make('delete')
+                        ->requiresConfirmation()
+                        ->action(fn (Collection $records) => $records->each->delete()),
 
-            <x-filament-actions::modals />
-        </div>
+                    BulkAction::make('publish')
+                        ->icon('heroicon-m-check')
+                        ->action(fn (Collection $records) => $records->each->publish()),
+                ]);
+        }
     </code-snippet>
 @endverbatim
 
-@verbatim
-    <code-snippet name="Filament action rendering" lang="php">
-        Action::make('delete')
-            ->action(function (array $arguments) {
-                $post = Post::find($arguments['post']);
+**Bulk action characteristics:**
+- Receives a `Collection` of records, not a single record
+- Appears when user selects multiple table rows
+- Can have confirmation modals and forms
 
-                $post?->delete();
-            });
-    </code-snippet>
-@endverbatim
+#### 4. Form Component Actions (`Filament\Forms\Components\Actions\Action`)
 
-### Visibility in Livewire
+Actions attached to form components like text inputs, selects, etc.
 
 @verbatim
-    <code-snippet name="Check Action Visibility" lang="blade">
-        <div>
-            {{-- Check if action is visible before rendering --}}
-            @if ($this->deleteAction->isVisible())
-                {{ $this->deleteAction }}
-            @endif
+    <code-snippet name="Form Component Action Example" lang="php">
+        use Filament\Forms\Components\Actions;
+        use Filament\Forms\Components\Actions\Action;
+        use Filament\Forms\Components\TextInput;
 
-            {{-- With arguments --}}
-            @if (($this->deleteAction)(['post' => $post->id])->isVisible())
-                {{ ($this->deleteAction)(['post' => $post->id]) }}
-            @endif
-        </div>
-    </code-snippet>
-@endverbatim
+        TextInput::make('email')
+            ->suffixAction(
+                Action::make('sendVerification')
+                    ->icon('heroicon-m-envelope')
+                    ->action(function () {
+                        // Send verification email...
+                    })
+            ),
 
-### Grouping Actions
-
-You can group multiple actions together for better organization and presentation.
-
-@verbatim
-    <code-snippet name="Grouping Actions" lang="blade">
-        <div>
-            <x-filament-actions::group :actions="[
-                $this->editAction,
-                $this->viewAction,
-                $this->deleteAction,
-            ]" />
-
-            <x-filament-actions::modals />
-        </div>
-    </code-snippet>
-@endverbatim
-
-### Triggering Programmatically
-
-You can trigger actions programmatically using Livewire's `$wire` or `wire:click` directives.
-
-@verbatim
-    <code-snippet name="Triggering Actions" lang="blade">
-        <button wire:click="mountAction('test', { id: 12345 })">
-            Button
-        </button>
-    </code-snippet>
-@endverbatim
-
-@verbatim
-    <code-snippet name="Triggering Actions" lang="js">
-        $wire.mountAction('test', { id: 12345 })
-    </code-snippet>
-@endverbatim
-
-### Testing Actions
-
-Filament uses Pest for testing. However, you can easily adapt this to PHPUnit.
-
-@verbatim
-    <code-snippet name="Filament action rendering" lang="php">
-        use function Pest\Livewire\livewire;
-
-        it('can send invoices', function () {
-            $invoice = Invoice::factory()->create();
-
-            livewire(EditInvoice::class, [
-                'invoice' => $invoice,
+            Actions::make([
+                Action::make('sendNotification')
+                    ->icon('heroicon-m-bell')
+                    ->action(function () {}),
             ])
-                ->callAction('send');
-
-            expect($invoice->refresh())
-                ->isSent()->toBeTrue();
-        });
     </code-snippet>
 @endverbatim
+
+**Common patterns:**
+- `->suffixAction()` - Action at the end of the input
+- `->prefixAction()` - Action at the start of the input
+- `->hintAction()` - Action in the hint area
+
+#### 5. Infolist Actions (`Filament\Infolists\Components\Actions\Action`)
+
+Actions used within infolist entries.
+
+@verbatim
+    <code-snippet name="Infolist Action Example" lang="php">
+        use Filament\Infolists\Components\Actions\Action;
+        use Filament\Infolists\Components\TextEntry;
+
+        TextEntry::make('status')
+            ->badge()
+            ->suffixAction(
+                Action::make('changeStatus')
+                    ->icon('heroicon-m-pencil-square')
+                    ->form([
+                        // Form fields...
+                    ])
+                    ->action(function (array $data) {
+                        // Update status...
+                    })
+            )
+    </code-snippet>
+@endverbatim
+
+#### 6. Notification Actions (`Filament\Notifications\Actions\Action`)
+
+Actions in notification messages. **Limited functionality.**
+
+**Important limitations:**
+- Does **not** support modals
+- Can only open URLs or dispatch Livewire events
+
+@verbatim
+    <code-snippet name="Notification Action Example" lang="php">
+        use Filament\Notifications\Actions\Action;
+        use Filament\Notifications\Notification;
+
+        Notification::make()
+            ->title('New invoice created')
+            ->body('Invoice #12345 has been created.')
+            ->actions([
+                Action::make('view')
+                    ->button()
+                    ->url(route('invoices.show', 12345)),
+                Action::make('markAsRead')
+                    ->button()
+                    ->dispatch('markAsRead', [12345]),
+            ])
+            ->send();
+    </code-snippet>
+@endverbatim
+
+#### 7. Global Search Actions (`Filament\GlobalSearch\Actions\Action`)
+
+Actions displayed in global search results. **Limited functionality.**
+
+**Important limitations:**
+- Does **not** support modals
+- Can only open URLs or dispatch Livewire events
+
+@verbatim
+    <code-snippet name="Global Search Action Example" lang="php">
+        use Filament\GlobalSearch\Actions\Action;
+
+        public static function getGlobalSearchResultActions(Model $record): array
+        {
+            return [
+                Action::make('edit')
+                    ->url(static::getUrl('edit', ['record' => $record])),
+            ];
+        }
+    </code-snippet>
+@endverbatim
+
+### Using Prebuilt Actions in Version 3
+
+When using prebuilt actions (CreateAction, EditAction, etc.) in v3, import them from the context-specific namespace:
+
+@verbatim
+    <code-snippet name="Prebuilt Actions with Correct Namespaces" lang="php">
+        // For pages
+        use Filament\Actions\CreateAction;
+        use Filament\Actions\DeleteAction;
+
+        // For tables
+        use Filament\Tables\Actions\CreateAction;
+        use Filament\Tables\Actions\EditAction;
+        use Filament\Tables\Actions\DeleteAction;
+        use Filament\Tables\Actions\BulkActionGroup;
+        use Filament\Tables\Actions\DeleteBulkAction;
+    </code-snippet>
+@endverbatim
+
+### Upgrading to Version 4
+
+If you're planning to upgrade to Filament Actions v4, be aware that:
+- All action classes are unified into `Filament\Actions` namespace
+- Tables have new toolbar actions area
+- Bulk actions have new capabilities like chunking and individual authorization
+
+See `.ai/filament-actions/4/core.blade.php` for v4-specific features.
