@@ -6,7 +6,7 @@
 - If you need to verify a feature is working, write or update a Unit / Feature test.
 
 ### Pest Tests
-- All tests must be written using Pest. Use `{{ $assist->artisanCommand('make:test --pest <name>') }}`.
+- All tests must be written using Pest. Use `{{ $assist->artisanCommand('make:test --pest {name}') }}`.
 - You must not remove any tests or test files from the tests directory without approval. These are not temporary or helper files - these are core to the application.
 - Tests should test all of the happy paths, failure paths, and weird paths.
 - Tests live in the `tests/Feature` and `tests/Unit` directories.
