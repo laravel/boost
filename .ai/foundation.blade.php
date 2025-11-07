@@ -10,7 +10,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 - php - {{ PHP_VERSION }}
 @foreach (app(\Laravel\Roster\Roster::class)->packages()->unique(fn ($package) => $package->rawName()) as $package)
-    - {{ $package->rawName() }} ({{ $package->name() }}) - v{{ $package->majorVersion() }}
+- {{ $package->rawName() }} ({{ $package->name() }}) - v{{ $package->majorVersion() }}
 @endforeach
 
 @if (! empty(config('boost.purpose')))
