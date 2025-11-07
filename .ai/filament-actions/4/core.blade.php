@@ -4,7 +4,7 @@
 
 #### Unified Actions
 
-Actions are now fully unified across tables, forms, infolists and regular actions. 
+Actions are now fully unified across tables, forms, infolists and regular actions.
 Instead of having separate Action classes for each context, all actions now use a single `Filament\Actions` namespace.
 
 #### Toolbar actions
@@ -88,5 +88,19 @@ Testing actions in v4 is now simpler and more streamlined.
 
         livewire(ManageInvoices::class)
             ->assertActionExists(TestAction::make('send')->arguments(['invoice' => $invoice->getKey()]))
+    </code-snippet>
+@endverbatim
+
+#### Heroicon enums
+
+You can now use Heroicon enums when specifying icons for actions.
+
+@verbatim
+    <code-snippet name="Heroicon Enum Example" lang="php">
+        use Filament\Actions\Action;
+        use Filament\Support\Icons\Heroicon;
+
+        Action::make('create')
+            ->icon(Heroicon::OutlinedPlusCircle);
     </code-snippet>
 @endverbatim
