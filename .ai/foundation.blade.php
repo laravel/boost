@@ -14,7 +14,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 @endforeach
 
 @if (! empty(config('boost.purpose')))
-    Application purpose: {!! config('boost.purpose') !!}
+Application purpose: {!! config('boost.purpose') !!}
 
 @endif
 ## Conventions
