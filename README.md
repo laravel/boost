@@ -37,9 +37,17 @@ php artisan boost:install
 
 Feel free to add the generated MCP configuration file, guideline files (`.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `junie/`, etc.) and `boost.json` configuration file to your application's `.gitignore` as these files are automatically re-generated when running `boost:install` and `boost:update`.
 
-Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
+Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, Kiro, or your AI agent of choice.
 
 ### Setup Your Code Editors
+
+#### Kiro
+
+1. Open the command palette (`Cmd+Shift+P` or `Ctrl+Shift+P`)
+2. Search for "MCP: Reconnect All Servers" and press `enter`
+3. The `laravel-boost` MCP server will be automatically detected and connected
+
+Kiro automatically loads AI guidelines from `.kiro/steering/laravel-boost.md` to provide context-aware assistance for your Laravel application.
 
 #### PhpStorm
 

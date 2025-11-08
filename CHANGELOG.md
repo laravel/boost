@@ -2,6 +2,12 @@
 
 ## [Unreleased](https://github.com/laravel/boost/compare/v1.7.1...main)
 
+### Added
+
+- Added support for Kiro IDE as both an editor and AI agent
+- Kiro guidelines are created at `.kiro/steering/laravel-boost.md`
+- Kiro MCP configuration at `.kiro/settings/mcp.json`
+
 ## [v1.7.1](https://github.com/laravel/boost/compare/v1.7.0...v1.7.1) - 2025-11-05
 
 ### What's Changed
