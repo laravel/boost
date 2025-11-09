@@ -599,7 +599,7 @@ test('loads third-party guidelines from vendor directory when no override exists
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).DIRECTORY_SEPARATOR.ltrim((string) $path, '/\\'));
 
     // Simulate loading a vendor guideline without an override
     $vendorPath = realpath(testDirectory('fixtures/vendor/spatie/laravel-permission/resources/boost/guidelines/core.blade.php'));
@@ -631,7 +631,7 @@ test('overrides third-party guidelines from vendor directory with custom guideli
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).DIRECTORY_SEPARATOR.ltrim((string) $path, '/\\'));
 
     // Simulate loading a vendor guideline that has an override
     $vendorPath = realpath(testDirectory('fixtures/vendor/laravel/fortify/resources/boost/guidelines/core.blade.php'));
@@ -639,6 +639,9 @@ test('overrides third-party guidelines from vendor directory with custom guideli
     $method = $reflection->getMethod('guideline');
     $method->setAccessible(true);
     $result = $method->invoke($composer, $vendorPath, true);
+
+    // Normalize paths for cross-platform comparison
+    $expectedOverridePath = str_replace('/', DIRECTORY_SEPARATOR, '.ai/guidelines/laravel/fortify/core.blade.php');
 
     expect($result)
         ->toBeArray()
@@ -651,7 +654,7 @@ test('overrides third-party guidelines from vendor directory with custom guideli
         ->and($result['third_party'])
         ->toBeTrue()
         ->and($result['path'])
-        ->toContain('.ai/guidelines/laravel/fortify/core.blade.php') // Should use override path
+        ->toContain($expectedOverridePath) // Should use override path
         ->not->toContain('vendor');
 });
 
@@ -665,7 +668,7 @@ test('guidelinePath correctly resolves vendor package paths to override location
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).DIRECTORY_SEPARATOR.ltrim((string) $path, '/\\'));
 
     $reflection = new ReflectionClass($composer);
     $method = $reflection->getMethod('guidelinePath');
@@ -675,8 +678,12 @@ test('guidelinePath correctly resolves vendor package paths to override location
     $vendorPathWithOverride = realpath(testDirectory('fixtures/vendor/laravel/fortify/resources/boost/guidelines/core.blade.php'));
     $resolvedPath = $method->invoke($composer, $vendorPathWithOverride, true);
 
+    // Normalize paths for cross-platform comparison
+    $expectedOverridePath = str_replace('/', DIRECTORY_SEPARATOR, '.ai/guidelines/laravel/fortify/core.blade.php');
+    $expectedVendorPath = str_replace('/', DIRECTORY_SEPARATOR, 'vendor/spatie/laravel-permission');
+
     expect($resolvedPath)
-        ->toContain('.ai/guidelines/laravel/fortify/core.blade.php')
+        ->toContain($expectedOverridePath)
         ->not->toContain('vendor');
 
     // Test without override
@@ -684,6 +691,6 @@ test('guidelinePath correctly resolves vendor package paths to override location
     $resolvedPath = $method->invoke($composer, $vendorPathWithoutOverride, true);
 
     expect($resolvedPath)
-        ->toContain('vendor/spatie/laravel-permission')
+        ->toContain($expectedVendorPath)
         ->toBe($vendorPathWithoutOverride);
 });
