@@ -273,7 +273,7 @@ class GuidelineComposer
      */
     protected function guideline(string $path, bool $thirdParty = false): array
     {
-        $path = $this->guidelinePath($path);
+        $path = $this->guidelinePath($path, $thirdParty);
         if (is_null($path)) {
             return [
                 'content' => '',
@@ -349,7 +349,7 @@ class GuidelineComposer
         return str_replace('/', DIRECTORY_SEPARATOR, $basePath.$path);
     }
 
-    protected function guidelinePath(string $path): ?string
+    protected function guidelinePath(string $path, bool $thirdParty = false): ?string
     {
         // Relative path, prepend our package path to it
         if (! file_exists($path)) {
@@ -364,6 +364,27 @@ class GuidelineComposer
         // If this is a custom guideline, return it unchanged
         if (str_contains($path, $this->customGuidelinePath())) {
             return $path;
+        }
+
+        // Check if this is a third-party package guideline from vendor directory
+        if ($thirdParty) {
+            $vendorPos = strpos($path, DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR);
+            $afterVendor = substr($path, $vendorPos + strlen(DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR));
+
+            // Remove common guideline directory patterns
+            $relativePath = str_replace(
+                DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, [
+                    'resources',
+                    'boost',
+                    'guidelines',
+                ]).DIRECTORY_SEPARATOR,
+                DIRECTORY_SEPARATOR,
+                $afterVendor
+            );
+
+            $customPath = $this->prependUserGuidelinePath($relativePath);
+
+            return file_exists($customPath) ? $customPath : $path;
         }
 
         // The path is not a custom guideline, check if the user has an override for this

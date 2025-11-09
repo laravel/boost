@@ -588,3 +588,102 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
         ->not->toContain('Wayfinder + Inertia')
         ->not->toContain('Wayfinder Form Component');
 });
+
+test('loads third-party guidelines from vendor directory when no override exists', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    // Simulate loading a vendor guideline without an override
+    $vendorPath = realpath(testDirectory('fixtures/vendor/spatie/laravel-permission/resources/boost/guidelines/core.blade.php'));
+    $reflection = new ReflectionClass($composer);
+    $method = $reflection->getMethod('guideline');
+    $method->setAccessible(true);
+    $result = $method->invoke($composer, $vendorPath, true);
+
+    expect($result)
+        ->toBeArray()
+        ->toHaveKey('content')
+        ->toHaveKey('path')
+        ->and($result['content'])
+        ->toContain('This is a third-party guideline without an override')
+        ->toContain('Always use Spatie\'s permission system for authorization')
+        ->and($result['third_party'])
+        ->toBeTrue()
+        ->and($result['path'])
+        ->toBe($vendorPath); // Should use vendor path since no override exists
+});
+
+test('overrides third-party guidelines from vendor directory with custom guidelines', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    // Simulate loading a vendor guideline that has an override
+    $vendorPath = realpath(testDirectory('fixtures/vendor/laravel/fortify/resources/boost/guidelines/core.blade.php'));
+    $reflection = new ReflectionClass($composer);
+    $method = $reflection->getMethod('guideline');
+    $method->setAccessible(true);
+    $result = $method->invoke($composer, $vendorPath, true);
+
+    expect($result)
+        ->toBeArray()
+        ->toHaveKey('content')
+        ->toHaveKey('path')
+        ->and($result['content'])
+        ->toContain('This is a custom override for Laravel Fortify guidelines')
+        ->toContain('Never use two-factor authentication in development')
+        ->not->toContain('This is the original third-party guideline from the vendor directory')
+        ->and($result['third_party'])
+        ->toBeTrue()
+        ->and($result['path'])
+        ->toContain('.ai/guidelines/laravel/fortify/core.blade.php') // Should use override path
+        ->not->toContain('vendor');
+});
+
+test('guidelinePath correctly resolves vendor package paths to override locations', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    $reflection = new ReflectionClass($composer);
+    $method = $reflection->getMethod('guidelinePath');
+    $method->setAccessible(true);
+
+    // Test with override present
+    $vendorPathWithOverride = realpath(testDirectory('fixtures/vendor/laravel/fortify/resources/boost/guidelines/core.blade.php'));
+    $resolvedPath = $method->invoke($composer, $vendorPathWithOverride, true);
+
+    expect($resolvedPath)
+        ->toContain('.ai/guidelines/laravel/fortify/core.blade.php')
+        ->not->toContain('vendor');
+
+    // Test without override
+    $vendorPathWithoutOverride = realpath(testDirectory('fixtures/vendor/spatie/laravel-permission/resources/boost/guidelines/core.blade.php'));
+    $resolvedPath = $method->invoke($composer, $vendorPathWithoutOverride, true);
+
+    expect($resolvedPath)
+        ->toContain('vendor/spatie/laravel-permission')
+        ->toBe($vendorPathWithoutOverride);
+});
