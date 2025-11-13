@@ -227,12 +227,8 @@ class GuidelineComposer
         foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
             $packageIsInExclusionList = in_array($package->package()->value, $excludedPackages, true);
 
-            if ($packageIsInExclusionList) {
-                $priorityPackageExists = $this->roster->uses(Packages::from($priorityPackage));
-
-                if ($priorityPackageExists) {
-                    return true;
-                }
+            if ($packageIsInExclusionList && $this->roster->uses(Packages::from($priorityPackage))) {
+                return true;
             }
         }
 
