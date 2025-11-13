@@ -35,7 +35,7 @@ Next, install the MCP server and coding guidelines:
 php artisan boost:install
 ```
 
-Feel free to add the generated MCP configuration file, guideline files (`.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `junie/`, etc.) and `boost.json` configuration file to your application's `.gitignore` as these files are automatically re-generated when running `boost:install` and `boost:update`.
+Feel free to add the generated MCP configuration file, guideline files (`.mcp.json`, `CLAUDE.md`, `AGENTS.md`, `junie/`, etc.) and `boost.json` configuration file to your application's `.gitignore` as these files are automatically re-generated when running `boost:install` and `boost:install`.
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
@@ -112,10 +112,10 @@ Laravel Boost includes AI guidelines for the following packages and frameworks. 
 
 ### Keeping Guidelines Up-to-Date
 
-You may want to periodically update your local AI guidelines to ensure they reflect the latest versions of the Laravel ecosystem packages you have installed. To do so, you can use the `boost:update` Artisan command.
+You may want to periodically update your local AI guidelines to ensure they reflect the latest versions of the Laravel ecosystem packages you have installed. To do so, you can use the `boost:install` Artisan command.
 
 ```bash
-php artisan boost:update
+php artisan boost:install
 ```
 
 You may also automate this process by adding it to your Composer "post-update-cmd" scripts:
@@ -124,7 +124,7 @@ You may also automate this process by adding it to your Composer "post-update-cm
 {
   "scripts": {
     "post-update-cmd": [
-      "@php artisan boost:update --ansi"
+      "@php artisan boost:install --ansi"
     ]
   }
 }
