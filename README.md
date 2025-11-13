@@ -130,6 +130,9 @@ You may also automate this process by adding it to your Composer "post-update-cm
 }
 ```
 
+> [!NOTE]
+> If you do not see a `boost:update` command, make sure you are on the latest Laravel Boost version. Laravel Boost will only be registered if `BOOST_ENABLED=true` is set in your `.env` file (or if `APP_DEBUG=true`).
+
 ## Available Documentation
 
 | Package | Versions Supported |
