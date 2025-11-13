@@ -12,22 +12,27 @@ class Sail
 
     public static function artisanCommand(): string
     {
-        return self::BINARY_PATH.' artisan';
+        return self::command('artisan');
     }
 
     public static function binCommand(): string
     {
-        return self::BINARY_PATH.' bin ';
+        return self::command('bin ');
     }
 
     public static function composerCommand(): string
     {
-        return self::BINARY_PATH.' composer';
+        return self::command('composer');
     }
 
     public static function nodePackageManagerCommand(string $manager): string
     {
-        return self::BINARY_PATH.' '.$manager;
+        return self::command($manager);
+    }
+
+    public static function command(string $command): string
+    {
+        return self::BINARY_PATH.' '.$command;
     }
 
     public function isInstalled(): bool
