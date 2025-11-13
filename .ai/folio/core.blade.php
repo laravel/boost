@@ -7,7 +7,7 @@
     - `pages/index.blade.php` → `/`
     - `pages/profile/index.blade.php` → `/profile`
     - `pages/auth/login.blade.php` → `/auth/login`
-- You may list available Folio routes using `{{ $assist->artisanCommand("folio:list") }}`  or using Boost's `list-routes` tool.
+- You may list available Folio routes using `{{ $assist->artisanCommand('folio:list') }}`  or using Boost's `list-routes` tool.
 
 ### New Pages & Routes
 - Always create new `folio` pages and routes using `{{ $assist->artisanCommand('folio:page [name]') }}` following existing naming conventions.
