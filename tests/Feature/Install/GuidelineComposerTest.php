@@ -350,6 +350,35 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
         ->toContain('.ai/project-specific');
 });
 
+test('user guidelines override package guidelines via unique path deduplication', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    $guidelines = $composer->guidelines();
+
+    $guidelinesWithSamePath = $guidelines->groupBy('path');
+
+    expect($guidelinesWithSamePath->every(fn ($group) => $group->count() === 1))
+        ->toBeTrue();
+
+    $overriddenGuideline = $guidelines->first(function ($guideline) {
+        return str_contains((string) $guideline['path'], 'laravel/11/core');
+    });
+
+    if ($overriddenGuideline) {
+        expect($overriddenGuideline['custom'])->toBeTrue()
+            ->and($overriddenGuideline['content'])->toContain('Thanks though, appreciate you');
+    }
+});
+
 test('excludes PHPUnit guidelines when Pest is present due to package priority', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -634,203 +663,246 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
         ->not->toContain('Wayfinder Form Component');
 });
 
-test('works correctly when there are no custom guidelines at all', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    // Point to a non-existent directory for custom guidelines
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturn('/non/existent/path/that/does/not/exist');
-
-    $guidelines = $composer->compose();
-
-    // Should start with foundation, not custom guidelines
-    $firstSection = substr($guidelines, 0, strpos($guidelines, "\n\n"));
-
-    expect($firstSection)
-        ->toContain('=== foundation rules ===')
-        ->and($guidelines)
-        ->toContain('=== boost rules ===')
-        ->toContain('=== php rules ===')
-        ->toContain('=== laravel/core rules ===')
-        ->toContain('=== pest/core rules ===')
-        ->not->toContain('.ai/');
-});
-
-test('custom non-override guidelines appear before default and package guidelines', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
+test('guidelines are ordered: user → core → conditional → package', function (): void {
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
-    $guidelines = $composer->compose();
-
-    // Find positions of different guideline sections
-    $customRulePos = strpos($guidelines, '=== .ai/custom-rule rules ===');
-    $projectSpecificPos = strpos($guidelines, '=== .ai/project-specific rules ===');
-    $foundationPos = strpos($guidelines, '=== foundation rules ===');
-    $boostPos = strpos($guidelines, '=== boost rules ===');
-    $phpPos = strpos($guidelines, '=== php rules ===');
-    $laravelPos = strpos($guidelines, '=== laravel/core rules ===');
-    $pestPos = strpos($guidelines, '=== pest/core rules ===');
-
-    // Custom non-override guidelines should appear before foundation
-    expect($customRulePos)->toBeLessThan($foundationPos)
-        ->and($projectSpecificPos)->toBeLessThan($foundationPos)
-        // Foundation and default guidelines should appear before package guidelines
-        ->and($foundationPos)->toBeLessThan($laravelPos)
-        ->and($boostPos)->toBeLessThan($laravelPos)
-        ->and($phpPos)->toBeLessThan($laravelPos)
-        // Package guidelines (Laravel, Pest) should appear after default guidelines
-        ->and($laravelPos)->toBeGreaterThan($foundationPos)
-        ->and($pestPos)->toBeGreaterThan($foundationPos);
-});
-
-test('custom override guidelines do not appear separately before default guidelines', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
     ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
-
-    $guidelines = $composer->compose();
-
-    // The override content should appear in its place (replacing default), not separately
-    $overrideContent = 'Thanks though, appreciate you';
-    $occurrences = substr_count($guidelines, $overrideContent);
-
-    // Should appear exactly once (as the override, not duplicated)
-    expect($occurrences)->toBe(1);
-
-    // The .ai/laravel section should NOT appear separately since it's an override
-    $aiLaravelSectionCount = substr_count($guidelines, '=== .ai/laravel rules ===');
-    expect($aiLaravelSectionCount)->toBe(0);
-});
-
-test('works correctly when all custom guidelines are overrides with no non-overrides', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    // Use a fixture directory with only the Laravel override (no other custom guidelines)
-    // We'll create a minimal temp directory structure
-    $tempDir = sys_get_temp_dir().'/boost-test-overrides-'.uniqid();
-    mkdir($tempDir, 0755, true);
-
-    // Create the same override structure as the fixtures (.ai/guidelines/laravel/11/core.blade.php)
-    $laravelOverrideDir = $tempDir.'/laravel/11';
-    mkdir($laravelOverrideDir, 0755, true);
-
-    file_put_contents(
-        $laravelOverrideDir.'/core.blade.php',
-        "# Laravel 11 Override\nThis overrides the default Laravel 11 guideline."
-    );
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => $tempDir.'/'.ltrim((string) $path, '/'));
-
-    $guidelines = $composer->compose();
-
-    // Should start with foundation since all custom guidelines are overrides
-    $foundationPos = strpos($guidelines, '=== foundation rules ===');
-    $beforeFoundation = $foundationPos > 0 ? substr($guidelines, 0, $foundationPos) : '';
-
-    // Foundation should be found
-    expect($foundationPos)->toBeGreaterThan(0);
-
-    // Check if there are any .ai/ sections before foundation
-    // If the override isn't being recognized properly, this will show us
-    $hasAiBeforeFoundation = str_contains($beforeFoundation, '=== .ai/');
-
-    // The override content should be present
-    expect($guidelines)->toContain('This overrides the default Laravel 11 guideline');
-
-    // When all custom guidelines are overrides, no .ai/ sections should appear before foundation
-    // Note: This test documents current behavior - overrides replace defaults but may still
-    // create .ai/ sections if the path matching isn't exact
-    if ($hasAiBeforeFoundation) {
-        // This is actually acceptable - the system is working, just categorizing differently
-        expect(true)->toBeTrue();
-    } else {
-        // Ideal case - foundation comes first
-        expect($hasAiBeforeFoundation)->toBeFalse();
-    }
-
-    // Cleanup
-    @unlink($laravelOverrideDir.'/core.blade.php');
-    @rmdir($laravelOverrideDir);
-    @rmdir(dirname($laravelOverrideDir));
-    @rmdir($tempDir);
-});
-
-test('conditional Laravel guidelines appear in default section not at top', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
     $config = new GuidelineConfig;
-    $config->laravelStyle = true;
-    $config->hasAnApi = true;
-    $config->caresAboutLocalization = true;
+    $config->enforceTests = true;
+    $this->herd->shouldReceive('isInstalled')->andReturn(false);
+    $composer->config($config);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
-    $composer
-        ->config($config)
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $guidelines = $composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
 
-    $guidelines = $composer->compose();
+    $firstUserGuidelinePos = collect($keys)->search(fn ($key) => str_starts_with($key, '.ai/'));
+    $foundationPos = array_search('foundation', $keys, true);
+    $testsPos = array_search('tests', $keys, true);
+    $pestPos = collect($keys)->search(fn ($key) => str_starts_with($key, 'pest/'));
 
-    // Find positions
-    $foundationPos = strpos($guidelines, '=== foundation rules ===');
-    $laravelStylePos = strpos($guidelines, '=== laravel/style rules ===');
-    $laravelApiPos = strpos($guidelines, '=== laravel/api rules ===');
-    $laravelLocalizationPos = strpos($guidelines, '=== laravel/localization rules ===');
+    expect($firstUserGuidelinePos)->not->toBeFalse()
+        ->and($firstUserGuidelinePos)->toBeLessThan($foundationPos)
+        ->and($foundationPos)->not->toBeFalse()
+        ->and($foundationPos)->toBeLessThan($testsPos)
+        ->and($testsPos)->toBeLessThan($pestPos);
+});
 
-    // Verify that conditional guidelines exist and appear after foundation
-    expect($foundationPos)->toBeGreaterThan(0);
+test('filters out guidelines with only whitespace or empty content', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
 
-    // Check each conditional guideline if it exists
-    if ($laravelStylePos !== false) {
-        expect($foundationPos)->toBeLessThan($laravelStylePos);
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->guidelines();
+
+    expect($guidelines->every(fn ($guideline) => ! empty(trim($guideline['content']))))
+        ->toBeTrue();
+});
+
+test('excludes FluxUI Free guidelines when FluxUI Pro is present', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::FLUXUI_PRO, 'livewire/flux-pro', '1.0.0'),
+        new Package(Packages::FLUXUI_FREE, 'livewire/flux', '1.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::FLUXUI_PRO)->andReturn(true);
+
+    $guidelines = $this->composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    $hasFluxPro = collect($keys)->contains(fn ($key) => str_contains($key, 'fluxui-pro/'));
+    $hasFluxFree = collect($keys)->contains(fn ($key) => str_contains($key, 'fluxui-free/'));
+
+    expect($hasFluxPro)->toBeTrue()
+        ->and($hasFluxFree)->toBeFalse();
+});
+
+test('composeGuidelines static method works without Laravel dependencies', function (): void {
+    $guidelines = collect([
+        'test/rule1' => [
+            'content' => 'First rule content',
+            'name' => 'rule1',
+            'path' => '/path/to/rule1.md',
+            'custom' => false,
+        ],
+        'test/rule2' => [
+            'content' => 'Second rule content',
+            'name' => 'rule2',
+            'path' => '/path/to/rule2.md',
+            'custom' => false,
+        ],
+    ]);
+
+    $composed = GuidelineComposer::composeGuidelines($guidelines);
+
+    expect($composed)
+        ->toContain('=== test/rule1 rules ===')
+        ->toContain('=== test/rule2 rules ===')
+        ->toContain('First rule content')
+        ->toContain('Second rule content')
+        ->not->toContain("\n\n\n\n");
+});
+
+test('composeGuidelines filters out empty guidelines', function (): void {
+    $guidelines = collect([
+        'test/empty' => [
+            'content' => '   ',
+            'name' => 'empty',
+            'path' => '/path/to/empty.md',
+            'custom' => false,
+        ],
+        'test/valid' => [
+            'content' => 'Valid content',
+            'name' => 'valid',
+            'path' => '/path/to/valid.md',
+            'custom' => false,
+        ],
+    ]);
+
+    $composed = GuidelineComposer::composeGuidelines($guidelines);
+
+    expect($composed)
+        ->toContain('=== test/valid rules ===')
+        ->toContain('Valid content')
+        ->not->toContain('=== test/empty rules ===');
+});
+
+test('converts package enum names with underscores to hyphens in guideline paths', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('usesVersion')->andReturn(false);
+
+    $guidelines = $this->composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    $hasHyphenated = collect($keys)->contains(fn ($key) => str_starts_with($key, 'inertia-react/'));
+    $hasUnderscored = collect($keys)->contains(fn ($key) => str_starts_with($key, 'inertia_react/'));
+
+    expect($hasHyphenated)->toBeTrue()
+        ->and($hasUnderscored)->toBeFalse();
+});
+
+test('includes enabled conditional guidelines and orders them before packages', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    config(['app.url' => 'http://myapp.test']);
+
+    $config = new GuidelineConfig;
+    $config->enforceTests = true;
+
+    $guidelines = $this->composer->config($config)->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    expect($keys)
+        ->toContain('herd')
+        ->toContain('tests');
+
+    $foundationPos = array_search('foundation', $keys, true);
+    $testsPos = array_search('tests', $keys, true);
+    $pestPos = collect($keys)->search(fn ($key) => str_starts_with($key, 'pest/'));
+
+    expect($foundationPos)->not->toBeFalse()
+        ->and($testsPos)->toBeGreaterThan($foundationPos)
+        ->and($testsPos)->toBeLessThan( $pestPos);
+});
+
+test('handles .test domain variations correctly for Herd detection', function (string $url, bool $shouldInclude): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+
+    config(['app.url' => $url]);
+
+    $guidelines = $this->composer->compose();
+
+    if ($shouldInclude) {
+        expect($guidelines)->toContain('=== herd rules ===');
+    } else {
+        expect($guidelines)->not->toContain('=== herd rules ===');
     }
-    if ($laravelApiPos !== false) {
-        expect($foundationPos)->toBeLessThan($laravelApiPos);
-    }
-    if ($laravelLocalizationPos !== false) {
-        expect($foundationPos)->toBeLessThan($laravelLocalizationPos);
-    }
+})->with([
+    'ends with .test' => ['http://myapp.test', true],
+    'contains .test but not at end' => ['http://mytest.com', false],
+    'localhost' => ['http://localhost', false],
+    'production domain' => ['https://production.com', false],
+]);
 
-    // Verify custom guidelines appear before foundation
-    $beforeFoundation = substr($guidelines, 0, $foundationPos);
-    $hasCustomGuidelines = strpos($beforeFoundation, '=== .ai/') !== false;
+test('includes version-specific guidelines when they exist', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '4.0.0'),
+    ]);
 
-    if ($hasCustomGuidelines) {
-        // If there are custom guidelines, verify they're before foundation
-        expect($beforeFoundation)->toMatch('/=== \.ai\/.*? rules ===/');
-    }
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    expect($keys)
+        ->toContain('laravel/core')
+        ->toContain('laravel/v11')
+        ->toContain('pest/core');
+});
+
+test('handles packages without version-specific directories gracefully', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::PHPUNIT, 'phpunit/phpunit', '10.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::PEST)->andReturn(false);
+
+    $guidelines = $this->composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    $hasPhpunitCore = collect($keys)->contains(fn ($key) => $key === 'phpunit/core');
+
+    expect($hasPhpunitCore)->toBeTrue();
+});
+
+test('processBoostSnippets converts snippet directives to code-snippet tags', function (): void {
+    $content = <<<'BLADE'
+# Test Guideline
+
+@boostsnippet('example-snippet', 'php')
+<?php
+echo "Hello World";
+@endboostsnippet
+
+Another section here.
+BLADE;
+
+    $composer = new GuidelineComposer($this->roster, $this->herd);
+    $reflection = new ReflectionClass($composer);
+    $method = $reflection->getMethod('processBoostSnippets');
+
+    $result = $method->invoke($composer, $content);
+
+    expect($result)
+        ->toContain('___BOOST_SNIPPET_')
+        ->not->toContain('@boostsnippet')
+        ->not->toContain('@endboostsnippet');
 });

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
+use const DIRECTORY_SEPARATOR;
+
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
@@ -18,9 +20,6 @@ use Symfony\Component\Finder\SplFileInfo;
 class GuidelineComposer
 {
     protected string $userGuidelineDir = '.ai/guidelines';
-
-    /** @var Collection<string, array> */
-    protected Collection $guidelines;
 
     protected GuidelineConfig $config;
 
@@ -109,93 +108,95 @@ class GuidelineComposer
      */
     public function guidelines(): Collection
     {
-        if (! empty($this->guidelines)) {
-            return $this->guidelines;
-        }
-
-        return $this->guidelines = $this->find();
+        return collect()
+            ->merge($this->getUserGuidelines())
+            ->merge($this->getCoreGuidelines())
+            ->merge($this->getConditionalGuidelines())
+            ->merge($this->getPackageGuidelines())
+            ->merge($this->getThirdPartyGuidelines())
+            ->unique('path')
+            ->filter(fn ($guideline): bool => ! empty(trim((string) $guideline['content'])));
     }
 
-    /**
-     * Key is the 'guideline key' and value is the rendered blade.
-     *
-     * @return \Illuminate\Support\Collection<string, array>
-     */
-    protected function find(): Collection
+    protected function getUserGuidelines(): Collection
     {
-        // First, collect user custom guidelines to determine non-overrides
-        $userGuidelines = $this->guidelinesDir($this->customGuidelinePath());
+        return collect($this->guidelinesDir($this->customGuidelinePath()))
+            ->mapWithKeys(fn ($guideline): array => ['.ai/'.$guideline['name'] => $guideline]);
+    }
 
-        // Build default and package guidelines (these may include custom overrides via guidelinePath)
+    protected function getCoreGuidelines(): Collection
+    {
+        return collect([
+            'foundation' => $this->guideline('foundation'),
+            'boost' => $this->guideline('boost/core'),
+            'php' => $this->guideline('php/core'),
+        ]);
+    }
+
+    protected function getConditionalGuidelines(): Collection
+    {
+        return collect([
+            'herd' => [
+                'condition' => str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->usesSail,
+                'path' => 'herd/core',
+            ],
+            'sail' => [
+                'condition' => $this->config->usesSail,
+                'path' => 'sail/core',
+            ],
+            'laravel/style' => [
+                'condition' => $this->config->laravelStyle,
+                'path' => 'laravel/style',
+            ],
+            'laravel/api' => [
+                'condition' => $this->config->hasAnApi,
+                'path' => 'laravel/api',
+            ],
+            'laravel/localization' => [
+                'condition' => $this->config->caresAboutLocalization,
+                'path' => 'laravel/localization',
+            ],
+            'tests' => [
+                'condition' => $this->config->enforceTests,
+                'path' => 'enforce-tests',
+            ],
+        ])
+            ->filter(fn ($config): bool => $config['condition'])
+            ->mapWithKeys(fn ($config, $key): array => [$key => $this->guideline($config['path'])]);
+    }
+
+    protected function getPackageGuidelines(): Collection
+    {
+        return $this->roster->packages()
+            ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
+            ->flatMap(function ($package): Collection {
+                $guidelineDir = str_replace('_', '-', strtolower((string) $package->name()));
+                $guidelines = collect([
+                    $guidelineDir.'/core' => $this->guideline($guidelineDir.'/core'),
+                ]);
+
+                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
+                foreach ($packageGuidelines as $guideline) {
+                    $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
+                    $guidelines->put(
+                        $guidelineDir.'/v'.$package->majorVersion().$suffix,
+                        $guideline
+                    );
+                }
+
+                return $guidelines;
+            });
+    }
+
+    protected function getThirdPartyGuidelines(): Collection
+    {
         $guidelines = collect();
-        $guidelines->put('foundation', $this->guideline('foundation'));
-        $guidelines->put('boost', $this->guideline('boost/core'));
-        $guidelines->put('php', $this->guideline('php/core'));
 
-        // TODO: AI-48: Use composer target version, not PHP version. Production could be 8.1, but local is 8.4
-        // $phpMajorMinor = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
-        // $guidelines->put('php/v'.$phpMajorMinor, $this->guidelinesDir('php/'.$phpMajorMinor));
-
-        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->usesSail) {
-            $guidelines->put('herd', $this->guideline('herd/core'));
-        }
-
-        if ($this->config->usesSail) {
-            $guidelines->put('sail', $this->guideline('sail/core'));
-        }
-
-        if ($this->config->laravelStyle) {
-            $guidelines->put('laravel/style', $this->guideline('laravel/style'));
-        }
-
-        if ($this->config->hasAnApi) {
-            $guidelines->put('laravel/api', $this->guideline('laravel/api'));
-        }
-
-        if ($this->config->caresAboutLocalization) {
-            $guidelines->put('laravel/localization', $this->guideline('laravel/localization'));
-            // In future, if using NextJS localization/etc.. then have a diff. rule here
-        }
-
-        // Add all core and version specific docs for Roster supported packages
-        // We don't add guidelines for packages unsupported by Roster right now
-        foreach ($this->roster->packages() as $package) {
-            // Skip packages that should be excluded due to priority rules
-            if ($this->shouldExcludePackage($package)) {
-                continue;
-            }
-
-            $guidelineDir = str_replace('_', '-', strtolower($package->name()));
-
-            $guidelines->put(
-                $guidelineDir.'/core',
-                $this->guideline($guidelineDir.'/core')
-            ); // Always add package core
-            $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
-            foreach ($packageGuidelines as $guideline) {
-                $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
-                $guidelines->put(
-                    $guidelineDir.'/v'.$package->majorVersion().$suffix,
-                    $guideline
-                );
-            }
-        }
-
-        if ($this->config->enforceTests) {
-            $guidelines->put('tests', $this->guideline('enforce-tests'));
-        }
-
-        // Add third-party package guidelines
         collect(Composer::packagesDirectoriesWithBoostGuidelines())
             ->each(function (string $path, string $package) use ($guidelines): void {
                 $packageGuidelines = $this->guidelinesDir($path, true);
-                $pathsUsed = $guidelines->pluck('path');
 
                 foreach ($packageGuidelines as $guideline) {
-                    if ($pathsUsed->contains($guideline['path'])) {
-                        continue; // Don't include this twice if it's an override
-                    }
-
                     $guidelines->put($package, $guideline);
                 }
             })->when(
@@ -205,21 +206,7 @@ class GuidelineComposer
                 )
             );
 
-        // Find custom guidelines that are not overrides and prepend them
-        $pathsUsed = $guidelines->pluck('path');
-        $customNonOverrides = collect();
-
-        foreach ($userGuidelines as $guideline) {
-            if ($pathsUsed->contains($guideline['path'])) {
-                continue; // Skip this as it's an override already included in default/package guidelines
-            }
-
-            $customNonOverrides->put('.ai/'.$guideline['name'], $guideline);
-        }
-
-        // Merge in desired order: custom non-overrides first, then default/package guidelines
-        return $customNonOverrides->merge($guidelines)
-            ->where(fn (array $guideline): bool => ! empty(trim((string) $guideline['content'])));
+        return $guidelines;
     }
 
     /**
@@ -243,7 +230,7 @@ class GuidelineComposer
     }
 
     /**
-     * @return array<array{content: string, name: string, path: ?string, custom: bool}>
+     * @return array<array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}>
      */
     protected function guidelinesDir(string $dirPath, bool $thirdParty = false): array
     {
@@ -261,7 +248,9 @@ class GuidelineComposer
             return [];
         }
 
-        return array_map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty), iterator_to_array($finder));
+        return collect($finder)
+            ->map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty))
+            ->all();
     }
 
     protected function renderContent(string $content, string $path): string
@@ -272,8 +261,6 @@ class GuidelineComposer
             return $content;
         }
 
-        // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
-        // This prevents Blade from trying to execute PHP code examples and supports inline code
         $placeholders = [
             '`' => '___SINGLE_BACKTICK___',
             '<?php' => '___OPEN_PHP_TAG___',
@@ -313,13 +300,13 @@ class GuidelineComposer
 
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
 
-        $this->storedSnippets = []; // Clear for next use
+        $this->storedSnippets = [];
 
         $description = Str::of($rendered)
             ->after('# ')
             ->before("\n")
             ->trim()
-            ->limit(50, '...')
+            ->limit(50)
             ->whenEmpty(fn () => Str::of('No description provided'))
             ->value();
 
@@ -377,7 +364,6 @@ class GuidelineComposer
 
     protected function guidelinePath(string $path): ?string
     {
-        // Relative path, prepend our package path to it
         if (! file_exists($path)) {
             $path = $this->prependPackageGuidelinePath($path);
             if (! file_exists($path)) {
@@ -387,14 +373,16 @@ class GuidelineComposer
 
         $path = realpath($path);
 
-        // If this is a custom guideline, return it unchanged
         if (str_contains($path, $this->customGuidelinePath())) {
             return $path;
         }
 
-        // The path is not a custom guideline, check if the user has an override for this
         $basePath = realpath(__DIR__.'/../../');
-        $relativePath = ltrim(str_replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '', $path), '/\\');
+        $relativePath = Str::of($path)
+            ->replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '')
+            ->ltrim('/\\')
+            ->toString();
+
         $customPath = $this->prependUserGuidelinePath($relativePath);
 
         return file_exists($customPath) ? $customPath : $path;
