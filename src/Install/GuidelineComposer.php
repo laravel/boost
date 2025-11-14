@@ -173,7 +173,8 @@ class GuidelineComposer
                 'condition' => $this->config->enforceTests,
                 'path' => 'enforce-tests',
             ],
-        ])->filter(fn ($config): bool => $config['condition'])
+        ])
+            ->filter(fn ($config): bool => $config['condition'])
             ->mapWithKeys(fn ($config, $key): array => [$key => $this->guideline($config['path'])]);
     }
 
@@ -183,13 +184,12 @@ class GuidelineComposer
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function ($package): Collection {
                 $guidelineDir = str_replace('_', '-', strtolower($package->name()));
-                $guidelines = collect([
-                    $guidelineDir.'/core' => $this->guideline($guidelineDir.'/core'),
-                ]);
-
+                $guidelines = collect([$guidelineDir.'/core' => $this->guideline($guidelineDir.'/core')]);
                 $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
+
                 foreach ($packageGuidelines as $guideline) {
                     $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
+
                     $guidelines->put(
                         $guidelineDir.'/v'.$package->majorVersion().$suffix,
                         $guideline
