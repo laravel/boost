@@ -24,8 +24,6 @@ class GuidelineComposer
 
     protected GuidelineConfig $config;
 
-    protected GuidelineAssist $guidelineAssist;
-
     /**
      * Package priority system to handle conflicts between packages.
      * When a higher-priority package is present, lower-priority packages are excluded from guidelines.
@@ -44,6 +42,16 @@ class GuidelineComposer
         Packages::MCP,
     ];
 
+    /**
+     * Packages that should be excluded from automatic guideline inclusion.
+     * These packages require explicit configuration to be included.
+     *
+     * @var array<int, Packages>
+     */
+    protected array $optInPackages = [
+        Packages::SAIL,
+    ];
+
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->packagePriorities = [
@@ -51,7 +59,6 @@ class GuidelineComposer
             Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
         ];
         $this->config = new GuidelineConfig;
-        $this->guidelineAssist = new GuidelineAssist($roster);
     }
 
     public function config(GuidelineConfig $config): self
@@ -125,8 +132,12 @@ class GuidelineComposer
         // $phpMajorMinor = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
         // $guidelines->put('php/v'.$phpMajorMinor, $this->guidelinesDir('php/'.$phpMajorMinor));
 
-        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled()) {
+        if (str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->usesSail) {
             $guidelines->put('herd', $this->guideline('herd/core'));
+        }
+
+        if ($this->config->usesSail) {
+            $guidelines->put('sail', $this->guideline('sail/core'));
         }
 
         if ($this->config->laravelStyle) {
@@ -209,12 +220,15 @@ class GuidelineComposer
      */
     protected function shouldExcludePackage(Package $package): bool
     {
+        if (in_array($package->package(), $this->optInPackages, true)) {
+            return true;
+        }
+
         foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
-            if (in_array($package->package()->value, $excludedPackages, true)) {
-                $priorityEnum = Packages::from($priorityPackage);
-                if ($this->roster->uses($priorityEnum)) {
-                    return true;
-                }
+            $packageIsInExclusionList = in_array($package->package()->value, $excludedPackages, true);
+
+            if ($packageIsInExclusionList && $this->roster->uses(Packages::from($priorityPackage))) {
+                return true;
             }
         }
 
@@ -262,7 +276,7 @@ class GuidelineComposer
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
         $rendered = Blade::render($content, [
-            'assist' => $this->guidelineAssist,
+            'assist' => $this->getGuidelineAssist(),
         ]);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
@@ -328,6 +342,11 @@ class GuidelineComposer
 
             return $placeholder;
         }, $content);
+    }
+
+    protected function getGuidelineAssist(): GuidelineAssist
+    {
+        return new GuidelineAssist($this->roster, $this->config);
     }
 
     protected function prependPackageGuidelinePath(string $path): string

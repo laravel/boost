@@ -1,7 +1,10 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## Livewire Volt
 
 - This project uses Livewire Volt for interactivity within its pages. New pages requiring interactivity must also use Livewire Volt. There is documentation available for it.
-- Make new Volt components using `php artisan make:volt [name] [--test] [--pest]`
+- Make new Volt components using `{{ $assist->artisanCommand('make:volt [name] [--test] [--pest]') }}`
 - Volt is a **class-based** and **functional** API for Livewire that supports single-file components, allowing a component's PHP logic and Blade templates to co-exist in the same file
 - Livewire Volt allows PHP logic and Blade templates in one file. Components use the @verbatim`@volt`@endverbatim directive.
 - You must check existing Volt components to determine if they're functional or class based. If you can't detect that, ask the user which they prefer before writing a Volt component.

@@ -7,7 +7,6 @@ namespace Laravel\Boost\Install;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
@@ -24,7 +23,7 @@ class GuidelineAssist
 
     protected static array $classes = [];
 
-    public function __construct(public Roster $roster)
+    public function __construct(public Roster $roster, public GuidelineConfig $config)
     {
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
@@ -160,11 +159,6 @@ class GuidelineAssist
         return file_get_contents(current($this->enumPaths));
     }
 
-    public function packageGte(Packages $package, string $version): bool
-    {
-        return $this->roster->usesVersion($package, $version, '>=');
-    }
-
     public function inertia(): Inertia
     {
         return new Inertia($this->roster);
@@ -173,5 +167,48 @@ class GuidelineAssist
     public function nodePackageManager(): string
     {
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
+    }
+
+    public function nodePackageManagerCommand(string $command): string
+    {
+        $manager = $this->nodePackageManager();
+        $nodePackageManagerCommand = $this->config->usesSail
+            ? Sail::nodePackageManagerCommand($manager)
+            : $manager;
+
+        return "{$nodePackageManagerCommand} {$command}";
+    }
+
+    public function artisanCommand(string $command): string
+    {
+        return "{$this->artisan()} {$command}";
+    }
+
+    public function composerCommand(string $command): string
+    {
+        $composerCommand = $this->config->usesSail
+            ? Sail::composerCommand()
+            : 'composer';
+
+        return "{$composerCommand} {$command}";
+    }
+
+    public function binCommand(string $command): string
+    {
+        return $this->config->usesSail
+            ? Sail::binCommand().$command
+            : "vendor/bin/{$command}";
+    }
+
+    public function artisan(): string
+    {
+        return $this->config->usesSail
+            ? Sail::artisanCommand()
+            : 'php artisan';
+    }
+
+    public function sailBinaryPath(): string
+    {
+        return Sail::BINARY_PATH;
     }
 }

@@ -9,7 +9,7 @@ Wayfinder generates TypeScript functions and types for Laravel controllers and r
 - Always use `search-docs` to check wayfinder correct usage before implementing any features.
 - Always Prefer named imports for tree-shaking (e.g., `import { show } from '@/actions/...'`)
 - Avoid default controller imports (prevents tree-shaking)
-- Run `php artisan wayfinder:generate` after route changes if Vite plugin isn't installed
+- Run `{{ $assist->artisanCommand('wayfinder:generate') }}` after route changes if Vite plugin isn't installed
 
 ### Feature Overview
 - Form Support: Use `.form()` with `--with-form` flag for HTML form attributes — `<form {...store.form()}>` → `action="/posts" method="post"`
