@@ -674,7 +674,7 @@ test('custom non-override guidelines appear before default and package guideline
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).DIRECTORY_SEPARATOR.ltrim((string) $path, '/\\'));
 
     $guidelines = $composer->compose();
 
@@ -709,7 +709,7 @@ test('custom override guidelines do not appear separately before default guideli
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).DIRECTORY_SEPARATOR.ltrim((string) $path, '/\\'));
 
     $guidelines = $composer->compose();
 
@@ -749,7 +749,7 @@ test('works correctly when all custom guidelines are overrides with no non-overr
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => $tempDir.'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => $tempDir.DIRECTORY_SEPARATOR.ltrim((string) $path, '/\\'));
 
     $guidelines = $composer->compose();
 
@@ -801,7 +801,7 @@ test('conditional Laravel guidelines appear in default section not at top', func
     $composer
         ->config($config)
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).DIRECTORY_SEPARATOR.ltrim((string) $path, '/\\'));
 
     $guidelines = $composer->compose();
 
