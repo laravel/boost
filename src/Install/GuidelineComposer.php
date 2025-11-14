@@ -199,14 +199,14 @@ class GuidelineComposer
                 foreach ($packageGuidelines as $guideline) {
                     $guidelines->put($package, $guideline);
                 }
-            })->when(
-                isset($this->config->aiGuidelines),
-                fn (Collection $collection): Collection => $collection->filter(
-                    fn (string $name): bool => in_array($name, $this->config->aiGuidelines, true),
-                )
-            );
+            });
 
-        return $guidelines;
+        return $guidelines->when(
+            isset($this->config->aiGuidelines),
+            fn (Collection $collection): Collection => $collection->filter(
+                fn (mixed $guideline, string $name): bool => in_array($name, $this->config->aiGuidelines, true),
+            )
+        );
     }
 
     /**

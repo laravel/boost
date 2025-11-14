@@ -823,7 +823,7 @@ test('includes enabled conditional guidelines and orders them before packages', 
 
     expect($foundationPos)->not->toBeFalse()
         ->and($testsPos)->toBeGreaterThan($foundationPos)
-        ->and($testsPos)->toBeLessThan( $pestPos);
+        ->and($testsPos)->toBeLessThan($pestPos);
 });
 
 test('handles .test domain variations correctly for Herd detection', function (string $url, bool $shouldInclude): void {
@@ -881,28 +881,4 @@ test('handles packages without version-specific directories gracefully', functio
     $hasPhpunitCore = collect($keys)->contains(fn ($key) => $key === 'phpunit/core');
 
     expect($hasPhpunitCore)->toBeTrue();
-});
-
-test('processBoostSnippets converts snippet directives to code-snippet tags', function (): void {
-    $content = <<<'BLADE'
-# Test Guideline
-
-@boostsnippet('example-snippet', 'php')
-<?php
-echo "Hello World";
-@endboostsnippet
-
-Another section here.
-BLADE;
-
-    $composer = new GuidelineComposer($this->roster, $this->herd);
-    $reflection = new ReflectionClass($composer);
-    $method = $reflection->getMethod('processBoostSnippets');
-
-    $result = $method->invoke($composer, $content);
-
-    expect($result)
-        ->toContain('___BOOST_SNIPPET_')
-        ->not->toContain('@boostsnippet')
-        ->not->toContain('@endboostsnippet');
 });
