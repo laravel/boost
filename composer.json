@@ -14,7 +14,7 @@
     },
     "require": {
         "php": "^8.1",
-        "guzzlehttp/guzzle": "^7.10",
+        "guzzlehttp/guzzle": "^7.9",
         "illuminate/console": "^10.49.0|^11.45.3|^12.28.1",
         "illuminate/contracts": "^10.49.0|^11.45.3|^12.28.1",
         "illuminate/routing": "^10.49.0|^11.45.3|^12.28.1",
