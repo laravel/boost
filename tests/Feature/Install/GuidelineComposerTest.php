@@ -153,6 +153,51 @@ test('includes Herd guidelines only when on .test domain and Herd is installed',
     'localhost with Herd' => ['http://localhost:8000', true, false],
 ]);
 
+test('excludes Herd guidelines when Sail is configured', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+
+    config(['app.url' => 'http://myapp.test']);
+
+    $config = new GuidelineConfig;
+    $config->usesSail = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->not->toContain('Laravel Herd')
+        ->toContain('Laravel Sail');
+
+});
+
+test('excludes Sail guidelines when Herd is configured', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+
+    config(['app.url' => 'http://myapp.test']);
+
+    $config = new GuidelineConfig;
+    $config->usesSail = false;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain('Laravel Herd')
+        ->not->toContain('Laravel Sail');
+});
+
 test('composes guidelines with proper formatting', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -423,7 +468,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         // Processes blade variables correctly
         ->toContain('=== .ai/test-blade-with-assist rules ===')
         ->toContain('Run `npm install` to install dependencies')
-        ->toContain('Package manager: npm')
+        ->toContain('Package manager: npm install')
         // Preserves @volt directives in blade templates
         ->toContain('`@volt`')
         ->toContain('@endvolt')
@@ -584,7 +629,7 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('## Laravel Wayfinder')
-        ->toContain('import { show } from \'@/actions/')
+        ->toContain("import { show, store, update } from '@/actions/App/Http/Controllers/PostController'")
         ->not->toContain('Wayfinder + Inertia')
         ->not->toContain('Wayfinder Form Component');
 });

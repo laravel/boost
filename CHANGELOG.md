@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.7.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.0...main)
+
+## [v1.8.0](https://github.com/laravel/boost/compare/v1.7.1...v1.8.0) - 2025-11-11
+
+### What's Changed
+
+* Ignore MCP config update in boost:update by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/334
+* Update wayfinder guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/343
+* Remove Filament guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/349
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.7.1...v1.8.0
 
 ## [v1.7.1](https://github.com/laravel/boost/compare/v1.7.0...v1.7.1) - 2025-11-05
 

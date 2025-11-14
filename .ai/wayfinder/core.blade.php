@@ -9,7 +9,7 @@ Wayfinder generates TypeScript functions and types for Laravel controllers and r
 - Always use `search-docs` to check wayfinder correct usage before implementing any features.
 - Always Prefer named imports for tree-shaking (e.g., `import { show } from '@/actions/...'`)
 - Avoid default controller imports (prevents tree-shaking)
-- Run `wayfinder:generate` after route changes if Vite plugin isn't installed
+- Run `{{ $assist->artisanCommand('wayfinder:generate') }}` after route changes if Vite plugin isn't installed
 
 ### Feature Overview
 - Form Support: Use `.form()` with `--with-form` flag for HTML form attributes — `<form {...store.form()}>` → `action="/posts" method="post"`
@@ -65,7 +65,7 @@ If your application uses the `<Form>` component from Inertia, you can use Wayfin
 @endif
 @else
 If your application uses the `useForm` component from Inertia, you can directly submit to the wayfinder generated functions.
-    
+
 <code-snippet name="Wayfinder useForm Example" lang="typescript">
     import { store } from "@/actions/App/Http/Controllers/ExampleController";
 

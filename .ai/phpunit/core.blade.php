@@ -1,6 +1,9 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 ## PHPUnit Core
 
-- This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `php artisan make:test --phpunit <name>` to create a new test.
+- This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `{{ $assist->artisanCommand('make:test --phpunit {name}') }}` to create a new test.
 - If you see a test using "Pest", convert it to PHPUnit.
 - Every time a test has been updated, run that singular test.
 - When the tests relating to your feature are passing, ask the user if they would like to also run the entire test suite to make sure everything is still passing.
@@ -9,6 +12,6 @@
 
 ### Running Tests
 - Run the minimal number of tests, using an appropriate filter, before finalizing.
-- To run all tests: `php artisan test`.
-- To run all tests in a file: `php artisan test tests/Feature/ExampleTest.php`.
-- To filter on a particular test name: `php artisan test --filter=testName` (recommended after making a change to a related file).
+- To run all tests: `{{ $assist->artisanCommand('test') }}`.
+- To run all tests in a file: `{{ $assist->artisanCommand('test tests/Feature/ExampleTest.php') }}`.
+- To filter on a particular test name: `{{ $assist->artisanCommand('test --filter=testName') }}` (recommended after making a change to a related file).
