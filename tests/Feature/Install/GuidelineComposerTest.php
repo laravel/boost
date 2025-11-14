@@ -343,8 +343,10 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
 
     expect($overrideStringCount)->toBe(1)
         ->and($guidelines)
-        ->toContain('Thanks though, appreciate you') // From user guidelines
-        ->not->toContain('## Laravel 11') // Heading from Boost's L11/core guideline
+        ->toContain('Thanks though, appreciate you')
+        ->not->toContain('## Laravel 11')
+        ->toContain('=== laravel/v11 rules ===')
+        ->not->toContain('=== .ai/core rules ===')
         ->and($composer->used())
         ->toContain('.ai/custom-rule')
         ->toContain('.ai/project-specific');

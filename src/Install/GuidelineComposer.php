@@ -115,13 +115,19 @@ class GuidelineComposer
             return $this->guidelines;
         }
 
-        return $this->guidelines = collect()
-            ->merge($this->getUserGuidelines())
+        $base = collect()
             ->merge($this->getCoreGuidelines())
             ->merge($this->getConditionalGuidelines())
             ->merge($this->getPackageGuidelines())
-            ->merge($this->getThirdPartyGuidelines())
-            ->unique('path')
+            ->merge($this->getThirdPartyGuidelines());
+
+        $basePaths = $base->pluck('path')->filter()->values();
+
+        $customGuidelines = $this->getUserGuidelines()
+            ->reject(fn ($guideline): bool => $basePaths->contains($guideline['path']));
+
+        return $this->guidelines = $customGuidelines
+            ->merge($base)
             ->filter(fn ($guideline): bool => ! empty(trim((string) $guideline['content'])));
     }
 
