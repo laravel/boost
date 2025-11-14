@@ -21,6 +21,9 @@ class GuidelineComposer
 {
     protected string $userGuidelineDir = '.ai/guidelines';
 
+    /** @var Collection<string, array> */
+    protected Collection $guidelines;
+
     protected GuidelineConfig $config;
 
     /**
@@ -108,7 +111,11 @@ class GuidelineComposer
      */
     public function guidelines(): Collection
     {
-        return collect()
+        if (! empty($this->guidelines)) {
+            return $this->guidelines;
+        }
+
+        return $this->guidelines = collect()
             ->merge($this->getUserGuidelines())
             ->merge($this->getCoreGuidelines())
             ->merge($this->getConditionalGuidelines())
@@ -160,8 +167,7 @@ class GuidelineComposer
                 'condition' => $this->config->enforceTests,
                 'path' => 'enforce-tests',
             ],
-        ])
-            ->filter(fn ($config): bool => $config['condition'])
+        ])->filter(fn ($config): bool => $config['condition'])
             ->mapWithKeys(fn ($config, $key): array => [$key => $this->guideline($config['path'])]);
     }
 
@@ -170,7 +176,7 @@ class GuidelineComposer
         return $this->roster->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function ($package): Collection {
-                $guidelineDir = str_replace('_', '-', strtolower((string) $package->name()));
+                $guidelineDir = str_replace('_', '-', strtolower($package->name()));
                 $guidelines = collect([
                     $guidelineDir.'/core' => $this->guideline($guidelineDir.'/core'),
                 ]);
@@ -261,6 +267,8 @@ class GuidelineComposer
             return $content;
         }
 
+        // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
+        // This prevents Blade from trying to execute PHP code examples and supports inline code
         $placeholders = [
             '`' => '___SINGLE_BACKTICK___',
             '<?php' => '___OPEN_PHP_TAG___',
@@ -300,7 +308,7 @@ class GuidelineComposer
 
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
 
-        $this->storedSnippets = [];
+        $this->storedSnippets = []; // Clear for next use
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -364,6 +372,7 @@ class GuidelineComposer
 
     protected function guidelinePath(string $path): ?string
     {
+        // Relative path, prepend our package path to it
         if (! file_exists($path)) {
             $path = $this->prependPackageGuidelinePath($path);
             if (! file_exists($path)) {
@@ -373,10 +382,12 @@ class GuidelineComposer
 
         $path = realpath($path);
 
+        // If this is a custom guideline, return it unchanged
         if (str_contains($path, $this->customGuidelinePath())) {
             return $path;
         }
 
+        // The path is not a custom guideline, check if the user has an override for this
         $basePath = realpath(__DIR__.'/../../');
         $relativePath = Str::of($path)
             ->replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '')

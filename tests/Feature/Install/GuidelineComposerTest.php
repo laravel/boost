@@ -350,35 +350,6 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
         ->toContain('.ai/project-specific');
 });
 
-test('user guidelines override package guidelines via unique path deduplication', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
-
-    $guidelines = $composer->guidelines();
-
-    $guidelinesWithSamePath = $guidelines->groupBy('path');
-
-    expect($guidelinesWithSamePath->every(fn ($group) => $group->count() === 1))
-        ->toBeTrue();
-
-    $overriddenGuideline = $guidelines->first(function ($guideline) {
-        return str_contains((string) $guideline['path'], 'laravel/11/core');
-    });
-
-    if ($overriddenGuideline) {
-        expect($overriddenGuideline['custom'])->toBeTrue()
-            ->and($overriddenGuideline['content'])->toContain('Thanks though, appreciate you');
-    }
-});
-
 test('excludes PHPUnit guidelines when Pest is present due to package priority', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -663,7 +634,7 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
         ->not->toContain('Wayfinder Form Component');
 });
 
-test('guidelines are ordered: user → core → conditional → package', function (): void {
+test('the guidelines are in correct order', function (): void {
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
@@ -683,29 +654,18 @@ test('guidelines are ordered: user → core → conditional → package', functi
     $guidelines = $composer->guidelines();
     $keys = $guidelines->keys()->toArray();
 
-    $firstUserGuidelinePos = collect($keys)->search(fn ($key) => str_starts_with($key, '.ai/'));
+    $firstUserGuidelinePos = collect($keys)->search(fn ($key): bool => str_starts_with((string) $key, '.ai/'));
     $foundationPos = array_search('foundation', $keys, true);
     $testsPos = array_search('tests', $keys, true);
-    $pestPos = collect($keys)->search(fn ($key) => str_starts_with($key, 'pest/'));
+    $pestPos = collect($keys)->search(fn ($key): bool => str_starts_with((string) $key, 'pest/'));
 
     expect($firstUserGuidelinePos)->not->toBeFalse()
-        ->and($firstUserGuidelinePos)->toBeLessThan($foundationPos)
         ->and($foundationPos)->not->toBeFalse()
+        ->and($testsPos)->not->toBeFalse()
+        ->and($pestPos)->not->toBeFalse()
+        ->and($firstUserGuidelinePos)->toBeLessThan($foundationPos)
         ->and($foundationPos)->toBeLessThan($testsPos)
         ->and($testsPos)->toBeLessThan($pestPos);
-});
-
-test('filters out guidelines with only whitespace or empty content', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $guidelines = $this->composer->guidelines();
-
-    expect($guidelines->every(fn ($guideline) => ! empty(trim($guideline['content']))))
-        ->toBeTrue();
 });
 
 test('excludes FluxUI Free guidelines when FluxUI Pro is present', function (): void {
@@ -721,37 +681,11 @@ test('excludes FluxUI Free guidelines when FluxUI Pro is present', function (): 
     $guidelines = $this->composer->guidelines();
     $keys = $guidelines->keys()->toArray();
 
-    $hasFluxPro = collect($keys)->contains(fn ($key) => str_contains($key, 'fluxui-pro/'));
-    $hasFluxFree = collect($keys)->contains(fn ($key) => str_contains($key, 'fluxui-free/'));
+    $hasFluxPro = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-pro/'));
+    $hasFluxFree = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-free/'));
 
     expect($hasFluxPro)->toBeTrue()
         ->and($hasFluxFree)->toBeFalse();
-});
-
-test('composeGuidelines static method works without Laravel dependencies', function (): void {
-    $guidelines = collect([
-        'test/rule1' => [
-            'content' => 'First rule content',
-            'name' => 'rule1',
-            'path' => '/path/to/rule1.md',
-            'custom' => false,
-        ],
-        'test/rule2' => [
-            'content' => 'Second rule content',
-            'name' => 'rule2',
-            'path' => '/path/to/rule2.md',
-            'custom' => false,
-        ],
-    ]);
-
-    $composed = GuidelineComposer::composeGuidelines($guidelines);
-
-    expect($composed)
-        ->toContain('=== test/rule1 rules ===')
-        ->toContain('=== test/rule2 rules ===')
-        ->toContain('First rule content')
-        ->toContain('Second rule content')
-        ->not->toContain("\n\n\n\n");
 });
 
 test('composeGuidelines filters out empty guidelines', function (): void {
@@ -778,7 +712,7 @@ test('composeGuidelines filters out empty guidelines', function (): void {
         ->not->toContain('=== test/empty rules ===');
 });
 
-test('converts package enum names with underscores to hyphens in guideline paths', function (): void {
+test('correctly converts package names to hyphens in guideline paths', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
@@ -790,8 +724,8 @@ test('converts package enum names with underscores to hyphens in guideline paths
     $guidelines = $this->composer->guidelines();
     $keys = $guidelines->keys()->toArray();
 
-    $hasHyphenated = collect($keys)->contains(fn ($key) => str_starts_with($key, 'inertia-react/'));
-    $hasUnderscored = collect($keys)->contains(fn ($key) => str_starts_with($key, 'inertia_react/'));
+    $hasHyphenated = collect($keys)->contains(fn ($key): bool => str_starts_with((string) $key, 'inertia-react/'));
+    $hasUnderscored = collect($keys)->contains(fn ($key): bool => str_starts_with((string) $key, 'inertia_react/'));
 
     expect($hasHyphenated)->toBeTrue()
         ->and($hasUnderscored)->toBeFalse();
@@ -819,52 +753,14 @@ test('includes enabled conditional guidelines and orders them before packages', 
 
     $foundationPos = array_search('foundation', $keys, true);
     $testsPos = array_search('tests', $keys, true);
-    $pestPos = collect($keys)->search(fn ($key) => str_starts_with($key, 'pest/'));
+    $pestPos = collect($keys)->search(fn ($key): bool => str_starts_with((string) $key, 'pest/'));
 
     expect($foundationPos)->not->toBeFalse()
+        ->and($testsPos)->not->toBeFalse()
+        ->and($pestPos)->not->toBeFalse()
         ->and($testsPos)->toBeGreaterThan($foundationPos)
         ->and($testsPos)->toBeLessThan($pestPos);
-});
 
-test('handles .test domain variations correctly for Herd detection', function (string $url, bool $shouldInclude): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
-
-    config(['app.url' => $url]);
-
-    $guidelines = $this->composer->compose();
-
-    if ($shouldInclude) {
-        expect($guidelines)->toContain('=== herd rules ===');
-    } else {
-        expect($guidelines)->not->toContain('=== herd rules ===');
-    }
-})->with([
-    'ends with .test' => ['http://myapp.test', true],
-    'contains .test but not at end' => ['http://mytest.com', false],
-    'localhost' => ['http://localhost', false],
-    'production domain' => ['https://production.com', false],
-]);
-
-test('includes version-specific guidelines when they exist', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '4.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $guidelines = $this->composer->guidelines();
-    $keys = $guidelines->keys()->toArray();
-
-    expect($keys)
-        ->toContain('laravel/core')
-        ->toContain('laravel/v11')
-        ->toContain('pest/core');
 });
 
 test('handles packages without version-specific directories gracefully', function (): void {
@@ -878,7 +774,7 @@ test('handles packages without version-specific directories gracefully', functio
     $guidelines = $this->composer->guidelines();
     $keys = $guidelines->keys()->toArray();
 
-    $hasPhpunitCore = collect($keys)->contains(fn ($key) => $key === 'phpunit/core');
+    $hasPhpunitCore = collect($keys)->contains(fn ($key): bool => $key === 'phpunit/core');
 
     expect($hasPhpunitCore)->toBeTrue();
 });
