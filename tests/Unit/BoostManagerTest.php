@@ -7,6 +7,8 @@ use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
 use Laravel\Boost\Install\CodeEnvironment\Codex;
 use Laravel\Boost\Install\CodeEnvironment\Copilot;
 use Laravel\Boost\Install\CodeEnvironment\Cursor;
+use Laravel\Boost\Install\CodeEnvironment\Gemini;
+use Laravel\Boost\Install\CodeEnvironment\OpenCode;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
 use Tests\Unit\Install\ExampleCodeEnvironment;
@@ -22,6 +24,8 @@ it('returns default code environments', function (): void {
         'claudecode' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
+        'opencode' => OpenCode::class,
+        'gemini' => Gemini::class,
     ]);
 });
 
