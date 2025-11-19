@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Gemini extends CodeEnvironment implements Agent
+class Gemini extends CodeEnvironment implements Agent, McpClient
 {
     public function name(): string
     {
