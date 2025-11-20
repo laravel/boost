@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use const DIRECTORY_SEPARATOR;
-
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
@@ -129,7 +127,7 @@ class GuidelineComposer
 
         return $this->guidelines = $customGuidelines
             ->merge($base)
-            ->reject(fn ($guideline): bool => blank((string) $guideline['content']));
+            ->filter(fn ($guideline): bool => filled($guideline['content']));
     }
 
     /**
