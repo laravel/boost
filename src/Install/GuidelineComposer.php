@@ -192,11 +192,11 @@ class GuidelineComposer
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function ($package): Collection {
                 $guidelineDir = str_replace('_', '-', strtolower($package->name()));
-                $guidelines = collect([$guidelineDir.DIRECTORY_SEPARATOR.'core' => $this->guideline($guidelineDir.'/core')]);
-                $packageGuidelines = $this->guidelinesDir($guidelineDir.DIRECTORY_SEPARATOR.$package->majorVersion());
+                $guidelines = collect([$guidelineDir.'/core' => $this->guideline($guidelineDir.'/core')]);
+                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
 
                 foreach ($packageGuidelines as $guideline) {
-                    $suffix = $guideline['name'] === 'core' ? '' : DIRECTORY_SEPARATOR.$guideline['name'];
+                    $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
 
                     $guidelines->put(
                         $guidelineDir.'/v'.$package->majorVersion().$suffix,
