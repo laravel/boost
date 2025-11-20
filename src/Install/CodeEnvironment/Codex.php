@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\CodeEnvironment;
 
+use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
@@ -53,6 +54,6 @@ class Codex extends CodeEnvironment implements Agent, McpClient
 
     public function shellMcpCommand(): string
     {
-        return 'codex mcp add {key} -- {command} {args} {env}';
+        return 'codex mcp add {key} -- {command} {args}';
     }
 }
