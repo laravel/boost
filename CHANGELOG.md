@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.1...main)
+
+## [v1.8.1](https://github.com/laravel/boost/compare/v1.8.0...v1.8.1) - 2025-11-18
+
+### What's Changed
+
+* Add Sail Support in Guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/329
+* Fix CallToolWithExecutor Error by [@RedArchon](https://github.com/RedArchon) in https://github.com/laravel/boost/pull/359
+
+### New Contributors
+
+* [@RedArchon](https://github.com/RedArchon) made their first contribution in https://github.com/laravel/boost/pull/359
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.0...v1.8.1
 
 ## [v1.8.0](https://github.com/laravel/boost/compare/v1.7.1...v1.8.0) - 2025-11-11
 

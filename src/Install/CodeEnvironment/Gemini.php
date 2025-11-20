@@ -6,29 +6,28 @@ namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Codex extends CodeEnvironment implements Agent, McpClient
+class Gemini extends CodeEnvironment implements Agent, McpClient
 {
     public function name(): string
     {
-        return 'codex';
+        return 'gemini';
     }
 
     public function displayName(): string
     {
-        return 'Codex';
+        return 'Gemini';
     }
 
     public function systemDetectionConfig(Platform $platform): array
     {
         return match ($platform) {
             Platform::Darwin, Platform::Linux => [
-                'command' => 'which codex',
+                'command' => 'command -v gemini',
             ],
             Platform::Windows => [
-                'command' => 'where codex 2>nul',
+                'command' => 'where gemini 2>nul',
             ],
         };
     }
@@ -36,23 +35,18 @@ class Codex extends CodeEnvironment implements Agent, McpClient
     public function projectDetectionConfig(): array
     {
         return [
-            'paths' => ['.codex'],
-            'files' => ['AGENTS.md'],
+            'paths' => ['.gemini'],
+            'files' => ['GEMINI.md'],
         ];
+    }
+
+    public function mcpConfigPath(): string
+    {
+        return '.gemini/settings.json';
     }
 
     public function guidelinesPath(): string
     {
-        return 'AGENTS.md';
-    }
-
-    public function mcpInstallationStrategy(): McpInstallationStrategy
-    {
-        return McpInstallationStrategy::SHELL;
-    }
-
-    public function shellMcpCommand(): string
-    {
-        return 'codex mcp add {key} -- {command} {args}';
+        return 'GEMINI.md';
     }
 }

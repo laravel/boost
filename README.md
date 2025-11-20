@@ -67,6 +67,18 @@ Once Laravel Boost has been installed, you're ready to start coding with Cursor,
 2. Open a shell in the project's directory
 3. Run `claude mcp add -s local -t stdio laravel-boost php artisan boost:mcp`
 
+#### Codex
+
+1. Codex support is typically enabled automatically, but if you find it isn't
+2. Open a shell in the project's directory
+3. Run `codex mcp add -- php artisan boost:mcp`
+
+#### Gemini
+
+1. Gemini support is typically enabled automatically, but if you find it isn't
+2. Open a shell in the project's directory
+3. Run `gemini mcp add -s project -t stdio laravel-boost php artisan boost:mcp`
+
 ## Available MCP Tools
 
 | Name                       | Notes                                                                                                          |
