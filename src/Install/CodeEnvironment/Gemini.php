@@ -41,11 +41,6 @@ class Gemini extends CodeEnvironment implements Agent, McpClient
         ];
     }
 
-    public function mcpInstallationStrategy(): McpInstallationStrategy
-    {
-        return McpInstallationStrategy::FILE;
-    }
-
     public function mcpConfigPath(): string
     {
         return '.gemini/settings.json';
