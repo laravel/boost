@@ -6,7 +6,6 @@ namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
 class Gemini extends CodeEnvironment implements Agent, McpClient
