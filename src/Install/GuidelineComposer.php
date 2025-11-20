@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
@@ -128,15 +129,21 @@ class GuidelineComposer
 
         return $this->guidelines = $customGuidelines
             ->merge($base)
-            ->filter(fn ($guideline): bool => ! empty(trim((string) $guideline['content'])));
+            ->reject(fn ($guideline): bool => blank((string) $guideline['content']));
     }
 
+    /**
+     * @return Collection<string, array>
+     */
     protected function getUserGuidelines(): Collection
     {
         return collect($this->guidelinesDir($this->customGuidelinePath()))
             ->mapWithKeys(fn ($guideline): array => ['.ai/'.$guideline['name'] => $guideline]);
     }
 
+    /**
+     * @return Collection<string, array>
+     */
     protected function getCoreGuidelines(): Collection
     {
         return collect([
@@ -146,6 +153,9 @@ class GuidelineComposer
         ]);
     }
 
+    /**
+     * @return Collection<string, array>
+     */
     protected function getConditionalGuidelines(): Collection
     {
         return collect([
@@ -178,17 +188,17 @@ class GuidelineComposer
             ->mapWithKeys(fn ($config, $key): array => [$key => $this->guideline($config['path'])]);
     }
 
-    protected function getPackageGuidelines(): Collection
+    protected function getPackageGuidelines(): PackageCollection
     {
         return $this->roster->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function ($package): Collection {
                 $guidelineDir = str_replace('_', '-', strtolower($package->name()));
-                $guidelines = collect([$guidelineDir.'/core' => $this->guideline($guidelineDir.'/core')]);
-                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
+                $guidelines = collect([$guidelineDir.DIRECTORY_SEPARATOR.'core' => $this->guideline($guidelineDir.'/core')]);
+                $packageGuidelines = $this->guidelinesDir($guidelineDir.DIRECTORY_SEPARATOR.$package->majorVersion());
 
                 foreach ($packageGuidelines as $guideline) {
-                    $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
+                    $suffix = $guideline['name'] === 'core' ? '' : DIRECTORY_SEPARATOR.$guideline['name'];
 
                     $guidelines->put(
                         $guidelineDir.'/v'.$package->majorVersion().$suffix,
@@ -200,6 +210,9 @@ class GuidelineComposer
             });
     }
 
+    /**
+     * @return Collection<string, array>
+     */
     protected function getThirdPartyGuidelines(): Collection
     {
         $guidelines = collect();
