@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.3...main)
+
+## [v1.8.3](https://github.com/laravel/boost/compare/v1.8.2...v1.8.3) - 2025-11-26
+
+### What's Changed
+
+* Update FluxUI component list by [@rzv-me](https://github.com/rzv-me) in https://github.com/laravel/boost/pull/369
+
+### New Contributors
+
+* [@rzv-me](https://github.com/rzv-me) made their first contribution in https://github.com/laravel/boost/pull/369
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.2...v1.8.3
 
 ## [v1.8.2](https://github.com/laravel/boost/compare/v1.8.1...v1.8.2) - 2025-11-20
 
