@@ -14,6 +14,7 @@ declare(strict_types=1);
 */
 
 use Laravel\Mcp\Response;
+use function Pest\testDirectory;
 
 uses(Tests\TestCase::class)->in('Unit', 'Feature');
 
@@ -62,6 +63,13 @@ expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray) 
 
     return $this;
 });
+
+if (! function_exists('fixture')) {
+    function fixture(string $name): string
+    {
+        return testDirectory('Fixtures/'.$name);
+    }
+}
 
 function fixtureContent(string $name): string
 {
