@@ -63,7 +63,7 @@ expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray) 
     return $this;
 });
 
-function fixture(string $name): string
+function fixtureContent(string $name): string
 {
-    return file_get_contents(\Pest\testDirectory('fixtures/'.$name));
+    return file_get_contents(fixture($name));
 }
