@@ -14,6 +14,7 @@ declare(strict_types=1);
 */
 
 use Laravel\Mcp\Response;
+
 use function Pest\testDirectory;
 
 uses(Tests\TestCase::class)->in('Unit', 'Feature');
