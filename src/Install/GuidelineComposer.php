@@ -249,8 +249,7 @@ class GuidelineComposer
                 ->files()
                 ->in($dirPath)
                 ->name('*.blade.php')
-                ->name('*.md')
-                ->ignoreUnreadableDirs();
+                ->name('*.md');
         } catch (DirectoryNotFoundException) {
             return [];
         }

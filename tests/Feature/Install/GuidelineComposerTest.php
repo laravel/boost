@@ -313,7 +313,7 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     expect($composer->compose())
         ->toContain('=== .ai/custom-rule rules ===')
@@ -336,7 +336,7 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->compose();
     $overrideStringCount = substr_count((string) $guidelines, 'Thanks though, appreciate you');
@@ -440,7 +440,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->compose();
 
