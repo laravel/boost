@@ -1,6 +1,35 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.3...main)
+
+## [v1.8.3](https://github.com/laravel/boost/compare/v1.8.2...v1.8.3) - 2025-11-26
+
+### What's Changed
+
+* Update FluxUI component list by [@rzv-me](https://github.com/rzv-me) in https://github.com/laravel/boost/pull/369
+
+### New Contributors
+
+* [@rzv-me](https://github.com/rzv-me) made their first contribution in https://github.com/laravel/boost/pull/369
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.2...v1.8.3
+
+## [v1.8.2](https://github.com/laravel/boost/compare/v1.8.1...v1.8.2) - 2025-11-20
+
+### What's Changed
+
+* tests: adds missing opencode in tests by [@MrPunyapal](https://github.com/MrPunyapal) in https://github.com/laravel/boost/pull/361
+* Add Gemini by [@iruoy](https://github.com/iruoy) in https://github.com/laravel/boost/pull/360
+* Extend Codex functionality with MCP config by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/364
+* Update README.md by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/365
+* Downgrade guzzle version to ^7.9 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/356
+* Put user-defined guidelines at the top by [@phpfour](https://github.com/phpfour) in https://github.com/laravel/boost/pull/332
+
+### New Contributors
+
+* [@iruoy](https://github.com/iruoy) made their first contribution in https://github.com/laravel/boost/pull/360
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.1...v1.8.2
 
 ## [v1.8.1](https://github.com/laravel/boost/compare/v1.8.0...v1.8.1) - 2025-11-18
 

@@ -343,8 +343,10 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
 
     expect($overrideStringCount)->toBe(1)
         ->and($guidelines)
-        ->toContain('Thanks though, appreciate you') // From user guidelines
-        ->not->toContain('## Laravel 11') // Heading from Boost's L11/core guideline
+        ->toContain('Thanks though, appreciate you')
+        ->not->toContain('## Laravel 11')
+        ->toContain('=== laravel/v11 rules ===')
+        ->not->toContain('=== .ai/core rules ===')
         ->and($composer->used())
         ->toContain('.ai/custom-rule')
         ->toContain('.ai/project-specific');
@@ -632,4 +634,132 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
         ->toContain("import { show, store, update } from '@/actions/App/Http/Controllers/PostController'")
         ->not->toContain('Wayfinder + Inertia')
         ->not->toContain('Wayfinder Form Component');
+});
+
+test('the guidelines are in correct order', function (): void {
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->enforceTests = true;
+    $this->herd->shouldReceive('isInstalled')->andReturn(false);
+    $composer->config($config);
+
+    $guidelines = $composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    $firstUserGuidelinePos = collect($keys)->search(fn ($key): bool => str_starts_with((string) $key, '.ai/'));
+    $foundationPos = array_search('foundation', $keys, true);
+    $testsPos = array_search('tests', $keys, true);
+    $pestPos = collect($keys)->search(fn ($key): bool => str_starts_with((string) $key, 'pest/'));
+
+    expect($firstUserGuidelinePos)->not->toBeFalse()
+        ->and($foundationPos)->not->toBeFalse()
+        ->and($testsPos)->not->toBeFalse()
+        ->and($pestPos)->not->toBeFalse()
+        ->and($firstUserGuidelinePos)->toBeLessThan($foundationPos)
+        ->and($foundationPos)->toBeLessThan($testsPos)
+        ->and($testsPos)->toBeLessThan($pestPos);
+});
+
+test('excludes FluxUI Free guidelines when FluxUI Pro is present', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::FLUXUI_PRO, 'livewire/flux-pro', '1.0.0'),
+        new Package(Packages::FLUXUI_FREE, 'livewire/flux', '1.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->with(Packages::FLUXUI_PRO)->andReturn(true);
+
+    $guidelines = $this->composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    $hasFluxPro = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-pro/'));
+    $hasFluxFree = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-free/'));
+
+    expect($hasFluxPro)->toBeTrue()
+        ->and($hasFluxFree)->toBeFalse();
+});
+
+test('composeGuidelines filters out empty guidelines', function (): void {
+    $guidelines = collect([
+        'test/empty' => [
+            'content' => '   ',
+            'name' => 'empty',
+            'path' => '/path/to/empty.md',
+            'custom' => false,
+        ],
+        'test/valid' => [
+            'content' => 'Valid content',
+            'name' => 'valid',
+            'path' => '/path/to/valid.md',
+            'custom' => false,
+        ],
+    ]);
+
+    $composed = GuidelineComposer::composeGuidelines($guidelines);
+
+    expect($composed)
+        ->toContain('=== test/valid rules ===')
+        ->toContain('Valid content')
+        ->not->toContain('=== test/empty rules ===');
+});
+
+test('correctly converts package names to hyphens in guideline paths', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('usesVersion')->andReturn(false);
+
+    $guidelines = $this->composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    $hasHyphenated = collect($keys)->contains(fn ($key): bool => str_starts_with((string) $key, 'inertia-react/'));
+    $hasUnderscored = collect($keys)->contains(fn ($key): bool => str_starts_with((string) $key, 'inertia_react/'));
+
+    expect($hasHyphenated)->toBeTrue()
+        ->and($hasUnderscored)->toBeFalse();
+});
+
+test('includes enabled conditional guidelines and orders them before packages', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    config(['app.url' => 'http://myapp.test']);
+
+    $config = new GuidelineConfig;
+    $config->enforceTests = true;
+
+    $guidelines = $this->composer->config($config)->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    expect($keys)
+        ->toContain('herd')
+        ->toContain('tests');
+
+    $foundationPos = array_search('foundation', $keys, true);
+    $testsPos = array_search('tests', $keys, true);
+    $pestPos = collect($keys)->search(fn ($key): bool => str_starts_with((string) $key, 'pest/'));
+
+    expect($foundationPos)->not->toBeFalse()
+        ->and($testsPos)->not->toBeFalse()
+        ->and($pestPos)->not->toBeFalse()
+        ->and($testsPos)->toBeGreaterThan($foundationPos)
+        ->and($testsPos)->toBeLessThan($pestPos);
 });
