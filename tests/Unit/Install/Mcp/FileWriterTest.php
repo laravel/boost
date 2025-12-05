@@ -69,7 +69,7 @@ test('updates existing plain JSON file using simple method', function (): void {
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp-plain.json'),
+        content: fixtureContent('mcp-plain.json'),
         capturedPath: $writtenPath,
         capturedContent: $writtenContent
     );
@@ -101,7 +101,7 @@ test('adds to existing mcpServers in plain JSON', function (): void {
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp-with-servers.json'),
+        content: fixtureContent('mcp-with-servers.json'),
         capturedPath: $writtenPath,
         capturedContent: $writtenContent
     );
@@ -129,7 +129,7 @@ test('preserves complex JSON5 features that VS Code supports', function (): void
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp.json5'),
+        content: fixtureContent('mcp.json5'),
         capturedContent: $writtenContent
     );
 
@@ -153,7 +153,7 @@ test('detects plain JSON with comments inside strings as safe', function (): voi
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp-comments-in-strings.json'),
+        content: fixtureContent('mcp-comments-in-strings.json'),
         capturedContent: $writtenContent
     );
 
@@ -220,7 +220,7 @@ test('generateServerJson creates correct JSON snippet', function (): void {
 });
 
 test('fixture mcp-no-configkey.json5 is detected as JSON5 and will use injectNewConfigKey', function (): void {
-    $content = fixture('mcp-no-configkey.json5');
+    $content = fixtureContent('mcp-no-configkey.json5');
     $writer = new FileWriter('/tmp/test.json');
     $reflection = new ReflectionClass($writer);
 
@@ -241,7 +241,7 @@ test('injects new configKey when it does not exist', function (): void {
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp-no-configkey.json5'),
+        content: fixtureContent('mcp-no-configkey.json5'),
         capturedContent: $writtenContent
     );
 
@@ -266,7 +266,7 @@ test('injects into existing configKey preserving JSON5 features', function (): v
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp.json5'),
+        content: fixtureContent('mcp.json5'),
         capturedContent: $writtenContent
     );
 
@@ -296,7 +296,7 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn(true);
     File::shouldReceive('size')->andReturn(1000);
-    File::shouldReceive('get')->andReturn(fixture('mcp.json5'));
+    File::shouldReceive('get')->andReturn(fixtureContent('mcp.json5'));
     File::shouldReceive('put')
         ->with(
             Mockery::capture($capturedPath),
@@ -351,7 +351,7 @@ test('injects into empty configKey object', function (): void {
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp-empty-configkey.json5'),
+        content: fixtureContent('mcp-empty-configkey.json5'),
         capturedContent: $writtenContent
     );
 
@@ -375,7 +375,7 @@ test('preserves trailing commas when injecting into existing servers', function 
 
     mockFileOperations(
         fileExists: true,
-        content: fixture('mcp-trailing-comma.json5'),
+        content: fixtureContent('mcp-trailing-comma.json5'),
         capturedContent: $writtenContent
     );
 

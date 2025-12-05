@@ -78,15 +78,11 @@ test('multiselect behavior matches install command expectations', function (): v
     );
 
     // Verify we get keys that can be used with in_array checks
-    expect($result)->toBeArray();
-    expect($result)->toHaveCount(3); // All 3 selected (2 default + 1 added)
-
-    // These are the exact checks used in InstallCommand
-    expect(in_array('mcp_server', $result, true))->toBeTrue();
-    expect(in_array('ai_guidelines', $result, true))->toBeTrue();
-    expect(in_array('style_guidelines', $result, true))->toBeTrue();
-
-    // Verify it doesn't contain the display values
-    expect(in_array('Boost MCP Server', $result, true))->toBeFalse();
-    expect(in_array('Package AI Guidelines (i.e. Framework, Inertia, Pest)', $result, true))->toBeFalse();
+    expect($result)->toBeArray()
+        ->and($result)->toHaveCount(3)
+        ->and($result)->toContain('mcp_server')
+        ->and($result)->toContain('ai_guidelines')
+        ->and($result)->toContain('style_guidelines')
+        ->and($result)->not->toContain('Boost MCP Server')
+        ->and($result)->not->toContain('Package AI Guidelines (i.e. Framework, Inertia, Pest)');
 })->skipOnWindows();

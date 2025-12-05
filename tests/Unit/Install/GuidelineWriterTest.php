@@ -26,8 +26,8 @@ test('it creates directory when it does not exist', function (): void {
     $writer = new GuidelineWriter($agent);
     $writer->write('test guidelines');
 
-    expect(is_dir(dirname($filePath)))->toBeTrue()
-        ->and(file_exists($filePath))->toBeTrue();
+    expect(dirname($filePath))->toBeDirectory()
+        ->and($filePath)->toBeFile();
 
     // Cleanup
     unlink($filePath);

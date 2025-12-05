@@ -384,7 +384,7 @@ test('installFileMcp works with existing config file using JSON 5', function ():
     $vscode = new VSCode($this->strategyFactory);
     $capturedPath = '';
     $capturedContent = '';
-    $json5 = fixture('mcp.json5');
+    $json5 = fixtureContent('mcp.json5');
 
     File::shouldReceive('exists')->once()->andReturn(true);
     File::shouldReceive('size')->once()->andReturn(10);
@@ -403,7 +403,7 @@ test('installFileMcp works with existing config file using JSON 5', function ():
 
     expect($wasWritten)->toBeTrue()
         ->and($capturedPath)->toBe($vscode->mcpConfigPath())
-        ->and($capturedContent)->toBe(fixture('mcp-expected.json5'));
+        ->and($capturedContent)->toBe(fixtureContent('mcp-expected.json5'));
 });
 
 test('getPhpPath uses absolute paths when forceAbsolutePath is true', function (): void {
