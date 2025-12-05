@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Tools;
 
 use Exception;
-use Illuminate\JsonSchema\JsonSchema;
+use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class DatabaseSchema extends Tool
     /**
      * Get the tool's input schema.
      *
-     * @return array<string, JsonSchema>
+     * @return array<string, Type>
      */
     public function schema(JsonSchema $schema): array
     {
