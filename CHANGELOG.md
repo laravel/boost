@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.4...main)
+
+## [v1.8.4](https://github.com/laravel/boost/compare/v1.8.3...v1.8.4) - 2025-12-05
+
+### What's Changed
+
+* Update Boost for `laravel/mcp` ^0.4.1 compatibility by [@xybr-dev](https://github.com/xybr-dev) in https://github.com/laravel/boost/pull/375
+
+### New Contributors
+
+* [@xybr-dev](https://github.com/xybr-dev) made their first contribution in https://github.com/laravel/boost/pull/375
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.3...v1.8.4
 
 ## [v1.8.3](https://github.com/laravel/boost/compare/v1.8.2...v1.8.3) - 2025-11-26
 
