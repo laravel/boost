@@ -6,6 +6,7 @@ namespace Laravel\Boost\Mcp\Tools;
 
 use Generator;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\JsonSchema\Types\Type;
 use Laravel\Boost\Concerns\MakesHttpRequests;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -28,7 +29,7 @@ class SearchDocs extends Tool
     /**
      * Get the tool's input schema.
      *
-     * @return array<string, \Illuminate\JsonSchema\Types\Type>
+     * @return array<string, Type>
      */
     public function schema(JsonSchema $schema): array
     {
