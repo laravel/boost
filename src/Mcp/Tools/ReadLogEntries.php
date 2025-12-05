@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Illuminate\JsonSchema\JsonSchema;
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Boost\Concerns\ReadsLogs;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;

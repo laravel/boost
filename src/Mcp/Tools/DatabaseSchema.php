@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Tools;
 
 use Exception;
-use Illuminate\JsonSchema\JsonSchema;
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
