@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 beforeEach(function (): void {
-    $this->app['view']->addNamespace('test', __DIR__.'/../../fixtures');
+    $this->app['view']->addNamespace('test', __DIR__.'/../../Fixtures');
 });
 
 function createMiddlewareResponse($response): SymfonyResponse

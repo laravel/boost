@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 use Laravel\Mcp\Response;
 
+use function Pest\testDirectory;
+
 uses(Tests\TestCase::class)->in('Unit', 'Feature');
 
 expect()->extend('isToolResult', fn () => $this->toBeInstanceOf(Response::class));
@@ -63,7 +65,14 @@ expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray) 
     return $this;
 });
 
-function fixture(string $name): string
+if (! function_exists('fixture')) {
+    function fixture(string $name): string
+    {
+        return testDirectory('Fixtures/'.$name);
+    }
+}
+
+function fixtureContent(string $name): string
 {
-    return file_get_contents(\Pest\testDirectory('fixtures/'.$name));
+    return file_get_contents(fixture($name));
 }
