@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.4...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.5...main)
+
+## [v1.8.5](https://github.com/laravel/boost/compare/v1.8.4...v1.8.5) - 2025-12-08
+
+### What's Changed
+
+* PHP 8.5 support by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/368
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.4...v1.8.5
 
 ## [v1.8.4](https://github.com/laravel/boost/compare/v1.8.3...v1.8.4) - 2025-12-05
 
