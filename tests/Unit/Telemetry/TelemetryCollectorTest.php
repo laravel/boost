@@ -27,9 +27,10 @@ it('records tool invocations', function (): void {
 it('does not record when disabled via config', function (): void {
     config(['boost.telemetry.enabled' => false]);
 
-    $this->collector->record(DatabaseQuery::class);
+    $collector = new TelemetryCollector;
+    $collector->record(DatabaseQuery::class);
 
-    expect($this->collector->toolCounts)->toBe([]);
+    expect($collector->toolCounts)->toBe([]);
 });
 
 it('auto-flushes when reaching MAX_TOOLS_PER_FLUSH', function (): void {
@@ -108,8 +109,9 @@ it('flush does nothing when telemetry is disabled', function (): void {
         '*' => Http::response(['status' => 'ok'], 200),
     ]);
 
-    $this->collector->toolCounts = ['SomeTool' => 1];
-    $this->collector->flush();
+    $collector = new TelemetryCollector;
+    $collector->toolCounts = ['SomeTool' => 1];
+    $collector->flush();
 
     expect(Http::recorded())->toHaveCount(0);
 });
