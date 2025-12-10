@@ -39,7 +39,7 @@ Feel free to add the generated MCP configuration file, guideline files (`.mcp.js
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
-### Setup Your Code Editors
+### Set up Your Code Editors
 
 #### PhpStorm
 
