@@ -6,6 +6,7 @@ namespace Laravel\Boost\Mcp;
 
 use Dotenv\Dotenv;
 use Illuminate\Support\Env;
+use Laravel\Boost\Telemetry\TelemetryCollector;
 use Laravel\Mcp\Response;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -17,6 +18,10 @@ class ToolExecutor
     {
         if (! ToolRegistry::isToolAllowed($toolClass)) {
             return Response::error("Tool not registered or not allowed: {$toolClass}");
+        }
+
+        if (config('boost.telemetry.enabled')) {
+            app(TelemetryCollector::class)->record($toolClass);
         }
 
         return $this->executeInSubprocess($toolClass, $arguments);

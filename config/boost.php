@@ -29,4 +29,20 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Telemetry
+    |--------------------------------------------------------------------------
+    |
+    | Boost collects anonymous usage telemetry to help improve the tool.
+    | Only tool names and invocation counts are collected - no file paths,
+    | code, or identifying information is ever sent to telemetry.
+    |
+    */
+
+    'telemetry' => [
+        'enabled' => env('BOOST_TELEMETRY_ENABLED', true),
+        'url' => env('BOOST_TELEMETRY_URL', 'https://boost.laravel.com/api/telemetry'),
+    ],
+
 ];
