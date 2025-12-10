@@ -12,9 +12,7 @@ class TelemetryCollector
 {
     use MakesHttpRequests;
 
-    protected const MAX_TOOLS_PER_FLUSH = 20;
-
-    public array $toolCounts = [];
+    public array $toolData = [];
 
     protected bool $enabled;
 
@@ -24,8 +22,11 @@ class TelemetryCollector
 
     protected string $laravelVersion;
 
+    protected float $sessionStartTime;
+
     public function __construct()
     {
+        $this->sessionStartTime = microtime(true);
         $this->enabled = config('boost.telemetry.enabled', false);
         if ($this->enabled) {
             $this->url = config('boost.telemetry.url', 'https://boost.laravel.com/api/telemetry');
@@ -46,23 +47,28 @@ class TelemetryCollector
         $this->flush();
     }
 
-    public function record(string $toolName): void
+    public function record(string $toolName, int $wordCount): void
     {
         if (! $this->enabled) {
             return;
         }
 
-        $totalCount = array_sum($this->toolCounts);
-        if ($totalCount >= self::MAX_TOOLS_PER_FLUSH) {
-            $this->flush();
+        if (! isset($this->toolData[$toolName])) {
+            $this->toolData[$toolName] = [];
         }
 
-        $this->toolCounts[$toolName] = ($this->toolCounts[$toolName] ?? 0) + 1;
+        $tokens = $this->calculateTokens($wordCount);
+        $this->toolData[$toolName][] = ['tokens' => $tokens];
+    }
+
+    protected function calculateTokens(int $wordCount): int
+    {
+        return (int) round($wordCount * 1.3);
     }
 
     public function flush(): void
     {
-        if ($this->toolCounts === [] || ! $this->enabled) {
+        if ($this->toolData === [] || ! $this->enabled) {
             return;
         }
 
@@ -73,13 +79,15 @@ class TelemetryCollector
         } catch (Throwable) {
             //
         } finally {
-            $this->toolCounts = [];
+            $this->toolData = [];
+            $this->sessionStartTime = microtime(true);
         }
     }
 
     protected function buildPayload(): string
     {
         $version = InstalledVersions::getVersion('laravel/boost');
+        $sessionEndTime = microtime(true);
 
         return base64_encode(json_encode([
             'session_id' => $this->sessionId,
@@ -87,8 +95,24 @@ class TelemetryCollector
             'php_version' => PHP_VERSION,
             'os' => PHP_OS_FAMILY,
             'laravel_version' => $this->laravelVersion,
-            'tools' => $this->toolCounts,
+            'session_start' => date('c', (int) $this->sessionStartTime),
+            'session_end' => date('c', (int) $sessionEndTime),
+            'tools' => $this->formatToolsData(),
             'timestamp' => date('c'),
         ]));
+    }
+
+    protected function formatToolsData(): array
+    {
+        $formatted = [];
+
+        foreach ($this->toolData as $toolName => $invocations) {
+            $formatted[$toolName] = [];
+            foreach ($invocations as $index => $invocation) {
+                $formatted[$toolName][(string) ($index + 1)] = $invocation;
+            }
+        }
+
+        return $formatted;
     }
 }

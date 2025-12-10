@@ -20,10 +20,6 @@ class ToolExecutor
             return Response::error("Tool not registered or not allowed: {$toolClass}");
         }
 
-        if (config('boost.telemetry.enabled')) {
-            app(TelemetryCollector::class)->record($toolClass);
-        }
-
         return $this->executeInSubprocess($toolClass, $arguments);
     }
 
@@ -46,11 +42,14 @@ class ToolExecutor
             timeout: $this->getTimeout($arguments)
         );
 
+        $wordCount = 0;
+
         try {
             $process->mustRun();
 
             $output = $process->getOutput();
             $decoded = json_decode($output, true);
+            $wordCount = str_word_count($output);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return Response::error('Invalid JSON output from tool process: '.json_last_error_msg());
@@ -66,6 +65,10 @@ class ToolExecutor
             $errorOutput = $process->getErrorOutput().$process->getOutput();
 
             return Response::error("Process tool execution failed: {$errorOutput}");
+        } finally {
+            if (config('boost.telemetry.enabled')) {
+                app(TelemetryCollector::class)->record($toolClass, $wordCount);
+            }
         }
     }
 

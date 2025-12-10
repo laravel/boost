@@ -8,19 +8,24 @@ use Laravel\Boost\Telemetry\TelemetryCollector;
 
 beforeEach(function (): void {
     $this->collector = app(TelemetryCollector::class);
-    $this->collector->toolCounts = [];
+    $this->collector->toolData = [];
 });
 
 it('records tool invocations', function (): void {
     config(['boost.telemetry.enabled' => true]);
 
-    $this->collector->record(DatabaseQuery::class);
-    $this->collector->record(DatabaseQuery::class);
-    $this->collector->record(Tinker::class);
+    $this->collector->record(DatabaseQuery::class, 100);
+    $this->collector->record(DatabaseQuery::class, 200);
+    $this->collector->record(Tinker::class, 150);
 
-    expect($this->collector->toolCounts)->toBe([
-        DatabaseQuery::class => 2,
-        Tinker::class => 1,
+    expect($this->collector->toolData)->toBe([
+        DatabaseQuery::class => [
+            ['tokens' => 130], // 100 * 1.3
+            ['tokens' => 260], // 200 * 1.3
+        ],
+        Tinker::class => [
+            ['tokens' => 195], // 150 * 1.3
+        ],
     ]);
 });
 
@@ -28,46 +33,9 @@ it('does not record when disabled via config', function (): void {
     config(['boost.telemetry.enabled' => false]);
 
     $collector = new TelemetryCollector;
-    $collector->record(DatabaseQuery::class);
+    $collector->record(DatabaseQuery::class, 100);
 
-    expect($collector->toolCounts)->toBe([]);
-});
-
-it('auto-flushes when reaching MAX_TOOLS_PER_FLUSH', function (): void {
-    config(['boost.telemetry.enabled' => true]);
-
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
-    for ($i = 0; $i < 20; $i++) {
-        $this->collector->record(Tinker::class);
-    }
-
-    expect($this->collector->toolCounts)->toHaveCount(1)
-        ->and($this->collector->toolCounts[Tinker::class])->toBe(20);
-
-    $this->collector->record(Tinker::class);
-
-    expect(Http::recorded())->toHaveCount(1)
-        ->and($this->collector->toolCounts)->toHaveCount(1)
-        ->and($this->collector->toolCounts[Tinker::class])->toBe(1);
-});
-
-it('does not auto-flush below MAX_TOOLS_PER_FLUSH', function (): void {
-    config(['boost.telemetry.enabled' => true]);
-
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
-    for ($i = 0; $i < 19; $i++) {
-        $this->collector->record(Tinker::class);
-    }
-
-    expect(Http::recorded())->toHaveCount(0)
-        ->and($this->collector->toolCounts)->toHaveCount(1)
-        ->and($this->collector->toolCounts[Tinker::class])->toBe(19);
+    expect($collector->toolData)->toBe([]);
 });
 
 it('flush sends data and clears counts', function (): void {
@@ -77,7 +45,7 @@ it('flush sends data and clears counts', function (): void {
         '*' => Http::response(['status' => 'ok'], 200),
     ]);
 
-    $this->collector->record(Tinker::class);
+    $this->collector->record(Tinker::class, 150);
     $this->collector->flush();
 
     expect(Http::recorded())->toHaveCount(1);
@@ -86,11 +54,11 @@ it('flush sends data and clears counts', function (): void {
     $payload = json_decode(base64_decode((string) $request['data'], true), true);
 
     expect($request->url())->toBe(config('boost.telemetry.url'))
-        ->and($payload['tools'][Tinker::class])->toBe(1)
-        ->and($this->collector->toolCounts)->toBe([]);
+        ->and($payload['tools'][Tinker::class]['1'])->toBe(['tokens' => 195]) // 150 * 1.3
+        ->and($this->collector->toolData)->toBe([]);
 });
 
-it('flush does nothing when toolCounts is empty', function (): void {
+it('flush does nothing when toolData is empty', function (): void {
     config(['boost.telemetry.enabled' => true]);
 
     Http::fake([
@@ -110,7 +78,7 @@ it('flush does nothing when telemetry is disabled', function (): void {
     ]);
 
     $collector = new TelemetryCollector;
-    $collector->toolCounts = ['SomeTool' => 1];
+    $collector->toolData = ['SomeTool' => [['tokens' => 100]]];
     $collector->flush();
 
     expect(Http::recorded())->toHaveCount(0);
@@ -123,10 +91,10 @@ it('flush fails silently on network error', function (): void {
         '*' => Http::response(null, 500),
     ]);
 
-    $this->collector->record(Tinker::class);
+    $this->collector->record(Tinker::class, 100);
     $this->collector->flush();
 
-    expect($this->collector->toolCounts)->toBe([]);
+    expect($this->collector->toolData)->toBe([]);
 });
 
 it('flush fails silently on connection timeout', function (): void {
@@ -136,10 +104,10 @@ it('flush fails silently on connection timeout', function (): void {
         throw new \Exception('Connection timeout');
     });
 
-    $this->collector->record(Tinker::class);
+    $this->collector->record(Tinker::class, 100);
     $this->collector->flush();
 
-    expect($this->collector->toolCounts)->toBe([]);
+    expect($this->collector->toolData)->toBe([]);
 });
 
 it('includes buildPayload as the correct structure', function (): void {
@@ -149,7 +117,7 @@ it('includes buildPayload as the correct structure', function (): void {
         '*' => Http::response(['status' => 'ok'], 200),
     ]);
 
-    $this->collector->record(Tinker::class);
+    $this->collector->record(Tinker::class, 100);
     $this->collector->flush();
 
     expect(Http::recorded())->toHaveCount(1);
@@ -157,10 +125,23 @@ it('includes buildPayload as the correct structure', function (): void {
     $request = Http::recorded()[0][0];
     $payload = json_decode(base64_decode((string) $request['data'], true), true);
 
-    expect($payload)->toHaveKeys(['session_id', 'boost_version', 'php_version', 'os', 'laravel_version', 'tools', 'timestamp'])
+    expect($payload)->toHaveKeys([
+        'session_id',
+        'boost_version',
+        'php_version',
+        'os',
+        'laravel_version',
+        'session_start',
+        'session_end',
+        'tools',
+        'timestamp',
+    ])
         ->and($payload['php_version'])->toBe(PHP_VERSION)
         ->and($payload['os'])->toBe(PHP_OS_FAMILY)
-        ->and($payload['tools'])->toBeArray();
+        ->and($payload['tools'])->toBeArray()
+        ->and($payload['tools'][Tinker::class]['1']['tokens'])->toBe(130) // 100 * 1.3
+        ->and(strtotime((string) $payload['session_start']))->not->toBeFalse()
+        ->and(strtotime((string) $payload['session_end']))->not->toBeFalse();
 });
 
 it('sends session_id as a consistent hash of base_path', function (): void {
@@ -172,7 +153,7 @@ it('sends session_id as a consistent hash of base_path', function (): void {
 
     $expectedSessionId = hash('sha256', base_path());
 
-    $this->collector->record(Tinker::class);
+    $this->collector->record(Tinker::class, 100);
     $this->collector->flush();
 
     expect(Http::recorded())->toHaveCount(1);
@@ -181,6 +162,28 @@ it('sends session_id as a consistent hash of base_path', function (): void {
     $payload = json_decode(base64_decode((string) $request['data'], true), true);
 
     expect($payload['session_id'])->toBe($expectedSessionId);
+});
+
+it('records tool response sizes and resets after flush', function (): void {
+    config(['boost.telemetry.enabled' => true]);
+
+    Http::fake([
+        '*' => Http::response(['status' => 'ok'], 200),
+    ]);
+
+    $this->collector->record(Tinker::class, 128);
+    $this->collector->record(Tinker::class, 256);
+
+    $this->collector->flush();
+
+    expect(Http::recorded())->toHaveCount(1);
+
+    $request = Http::recorded()[0][0];
+    $payload = json_decode(base64_decode((string) $request['data'], true), true);
+
+    expect($payload['tools'][Tinker::class]['1']['tokens'])->toBe(166) // 128 * 1.3
+        ->and($payload['tools'][Tinker::class]['2']['tokens'])->toBe(333) // 256 * 1.3
+        ->and($this->collector->toolData)->toBe([]);
 });
 
 it('uses boost_version as InstalledVersions', function (): void {
@@ -192,7 +195,7 @@ it('uses boost_version as InstalledVersions', function (): void {
 
     $expectedVersion = InstalledVersions::getVersion('laravel/boost');
 
-    $this->collector->record(Tinker::class);
+    $this->collector->record(Tinker::class, 100);
     $this->collector->flush();
 
     expect(Http::recorded())->toHaveCount(1);
