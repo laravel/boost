@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp;
 
 use DirectoryIterator;
+use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
+use Laravel\Boost\Mcp\Prompts\BladePrompt;
 use Laravel\Boost\Mcp\Resources\ApplicationInfo;
+use Laravel\Boost\Support\Composer;
 use Laravel\Mcp\Server;
 
 class Boost extends Server
@@ -58,7 +61,8 @@ class Boost extends Server
     {
         collect($this->discoverTools())->each(fn (string $tool): string => $this->tools[] = $tool);
         collect($this->discoverResources())->each(fn (string $resource): string => $this->resources[] = $resource);
-        collect($this->discoverPrompts())->each(fn (string $prompt): string => $this->prompts[] = $prompt);
+
+        $this->discoverThirdPartyPrompts();
 
         // Override the tools/call method to use our ToolExecutor
         $this->methods['tools/call'] = CallToolWithExecutor::class;
@@ -122,32 +126,22 @@ class Boost extends Server
         return $resources;
     }
 
-    /**
-     * @return array<int, class-string<\Laravel\Mcp\Server\Prompt>>
-     */
-    protected function discoverPrompts(): array
+    protected function discoverThirdPartyPrompts(): void
     {
-        $prompts = [];
+        $guidelineAssist = app(GuidelineAssist::class);
 
-        $excludedPrompts = config('boost.mcp.prompts.exclude', []);
-        $promptDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Prompts');
+        foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
+            $corePath = $path.DIRECTORY_SEPARATOR.'core.blade.php';
 
-        foreach ($promptDir as $promptFile) {
-            if ($promptFile->isFile() && $promptFile->getExtension() === 'php') {
-                $fqdn = 'Laravel\\Boost\\Mcp\\Prompts\\'.$promptFile->getBasename('.php');
-                if (class_exists($fqdn) && ! in_array($fqdn, $excludedPrompts, true)) {
-                    $prompts[] = $fqdn;
-                }
+            if (file_exists($corePath)) {
+                $this->registerThirdPartyPrompt($package, $corePath, $guidelineAssist);
             }
         }
+    }
 
-        $extraPrompts = config('boost.mcp.prompts.include', []);
-        foreach ($extraPrompts as $promptClass) {
-            if (class_exists($promptClass)) {
-                $prompts[] = $promptClass;
-            }
-        }
-
-        return $prompts;
+    protected function registerThirdPartyPrompt(string $package, string $bladePath, GuidelineAssist $guidelineAssist): void
+    {
+        $prompt = new BladePrompt($guidelineAssist, $package, $bladePath);
+        $this->prompts[] = $prompt;
     }
 }
