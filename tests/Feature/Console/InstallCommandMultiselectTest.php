@@ -25,12 +25,12 @@ test('multiselect returns keys for associative array', function (): void {
     );
 
     // Assert that we get the keys, not the values
-    expect($result)->toBeArray();
-    expect($result)->toHaveCount(2, 'Should have 2 items selected');
-    expect($result)->toContain('mcp_server');
-    expect($result)->toContain('ai_guidelines');
-    expect($result)->not->toContain('Boost MCP Server');
-    expect($result)->not->toContain('Package AI Guidelines');
+    expect($result)->toBeArray()
+        ->toHaveCount(2, 'Should have 2 items selected')
+        ->toContain('mcp_server')
+        ->toContain('ai_guidelines')
+        ->not->toContain('Boost MCP Server')
+        ->not->toContain('Package AI Guidelines');
 })->skipOnWindows();
 
 test('multiselect returns values for indexed array', function (): void {
@@ -48,9 +48,9 @@ test('multiselect returns values for indexed array', function (): void {
     );
 
     // For indexed arrays, it returns the actual values
-    expect($result)->toBeArray();
-    expect($result)->toContain('Option 1');
-    expect($result)->toContain('Option 2');
+    expect($result)->toBeArray()
+        ->toContain('Option 1')
+        ->toContain('Option 2');
 })->skipOnWindows();
 
 test('multiselect behavior matches install command expectations', function (): void {
@@ -79,10 +79,10 @@ test('multiselect behavior matches install command expectations', function (): v
 
     // Verify we get keys that can be used with in_array checks
     expect($result)->toBeArray()
-        ->and($result)->toHaveCount(3)
-        ->and($result)->toContain('mcp_server')
-        ->and($result)->toContain('ai_guidelines')
-        ->and($result)->toContain('style_guidelines')
-        ->and($result)->not->toContain('Boost MCP Server')
-        ->and($result)->not->toContain('Package AI Guidelines (i.e. Framework, Inertia, Pest)');
+        ->toHaveCount(3)
+        ->toContain('mcp_server')
+        ->toContain('ai_guidelines')
+        ->toContain('style_guidelines')
+        ->not->toContain('Boost MCP Server')
+        ->not->toContain('Package AI Guidelines (i.e. Framework, Inertia, Pest)');
 })->skipOnWindows();
