@@ -4,10 +4,27 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
-use DirectoryIterator;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
-use Laravel\Boost\Mcp\Resources\ApplicationInfo;
+use Laravel\Boost\Mcp\Tools\ApplicationInfo;
+use Laravel\Boost\Mcp\Tools\BrowserLogs;
+use Laravel\Boost\Mcp\Tools\DatabaseConnections;
+use Laravel\Boost\Mcp\Tools\DatabaseQuery;
+use Laravel\Boost\Mcp\Tools\DatabaseSchema;
+use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
+use Laravel\Boost\Mcp\Tools\GetConfig;
+use Laravel\Boost\Mcp\Tools\LastError;
+use Laravel\Boost\Mcp\Tools\ListArtisanCommands;
+use Laravel\Boost\Mcp\Tools\ListAvailableConfigKeys;
+use Laravel\Boost\Mcp\Tools\ListAvailableEnvVars;
+use Laravel\Boost\Mcp\Tools\ListRoutes;
+use Laravel\Boost\Mcp\Tools\ReadLogEntries;
+use Laravel\Boost\Mcp\Tools\ReportFeedback;
+use Laravel\Boost\Mcp\Tools\SearchDocs;
+use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\Prompt;
+use Laravel\Mcp\Server\Resource;
+use Laravel\Mcp\Server\Tool;
 
 class Boost extends Server
 {
@@ -34,120 +51,90 @@ class Boost extends Server
     /**
      * The tools registered with this MCP server.
      *
-     * @var array<int, class-string<\Laravel\Mcp\Server\Tool>>
+     * @var array<int, class-string<Tool>>
      */
     protected array $tools = [];
 
     /**
      * The resources registered with this MCP server.
      *
-     * @var array<int, class-string<\Laravel\Mcp\Server\Resource>>
+     * @var array<int, class-string<Resource>>
      */
-    protected array $resources = [
-        ApplicationInfo::class,
-    ];
+    protected array $resources = [];
 
     /**
      * The prompts registered with this MCP server.
      *
-     * @var array<int, class-string<\Laravel\Mcp\Server\Prompt>>
+     * @var array<int, class-string<Prompt>>
      */
     protected array $prompts = [];
 
     protected function boot(): void
     {
-        collect($this->discoverTools())->each(fn (string $tool): string => $this->tools[] = $tool);
-        collect($this->discoverResources())->each(fn (string $resource): string => $this->resources[] = $resource);
-        collect($this->discoverPrompts())->each(fn (string $prompt): string => $this->prompts[] = $prompt);
+        $this->tools = $this->discoverTools();
+        $this->resources = $this->discoverResources();
+        $this->prompts = $this->discoverPrompts();
 
         // Override the tools/call method to use our ToolExecutor
         $this->methods['tools/call'] = CallToolWithExecutor::class;
     }
 
     /**
-     * @return array<int, class-string<\Laravel\Mcp\Server\Tool>>
+     * @param  array<int, class-string>  $availablePrimitives
+     * @return array<int, class-string>
+     */
+    private function discoverPrimitives(array $availablePrimitives, string $type): array
+    {
+        return collect($availablePrimitives)
+            ->diff(config("boost.mcp.{$type}.exclude", []))
+            ->merge(
+                collect(config("boost.mcp.{$type}.include", []))
+                    ->filter(fn (string $class): bool => class_exists($class))
+            )
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, class-string<Tool>>
      */
     protected function discoverTools(): array
     {
-        $tools = [];
-
-        $excludedTools = config('boost.mcp.tools.exclude', []);
-        $toolDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Tools');
-
-        foreach ($toolDir as $toolFile) {
-            if ($toolFile->isFile() && $toolFile->getExtension() === 'php') {
-                $fqdn = 'Laravel\\Boost\\Mcp\\Tools\\'.$toolFile->getBasename('.php');
-                if (class_exists($fqdn) && ! in_array($fqdn, $excludedTools, true)) {
-                    $tools[] = $fqdn;
-                }
-            }
-        }
-
-        $extraTools = config('boost.mcp.tools.include', []);
-        foreach ($extraTools as $toolClass) {
-            if (class_exists($toolClass)) {
-                $tools[] = $toolClass;
-            }
-        }
-
-        return $tools;
+        return $this->discoverPrimitives([
+            ApplicationInfo::class,
+            BrowserLogs::class,
+            DatabaseConnections::class,
+            DatabaseQuery::class,
+            DatabaseSchema::class,
+            GetAbsoluteUrl::class,
+            GetConfig::class,
+            LastError::class,
+            ListArtisanCommands::class,
+            ListAvailableConfigKeys::class,
+            ListAvailableEnvVars::class,
+            ListRoutes::class,
+            ReadLogEntries::class,
+            ReportFeedback::class,
+            SearchDocs::class,
+            Tinker::class,
+        ], 'tools');
     }
 
     /**
-     * @return array<int, class-string<\Laravel\Mcp\Server\Resource>>
+     * @return array<int, class-string<Resource>>
      */
     protected function discoverResources(): array
     {
-        $resources = [];
-
-        $excludedResources = config('boost.mcp.resources.exclude', []);
-        $resourceDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Resources');
-
-        foreach ($resourceDir as $resourceFile) {
-            if ($resourceFile->isFile() && $resourceFile->getExtension() === 'php') {
-                $fqdn = 'Laravel\\Boost\\Mcp\\Resources\\'.$resourceFile->getBasename('.php');
-                if (class_exists($fqdn) && ! in_array($fqdn, $excludedResources, true) && $fqdn !== ApplicationInfo::class) {
-                    $resources[] = $fqdn;
-                }
-            }
-        }
-
-        $extraResources = config('boost.mcp.resources.include', []);
-        foreach ($extraResources as $resourceClass) {
-            if (class_exists($resourceClass)) {
-                $resources[] = $resourceClass;
-            }
-        }
-
-        return $resources;
+        return $this->discoverPrimitives([
+            Resources\ApplicationInfo::class,
+        ], 'resources');
     }
 
     /**
-     * @return array<int, class-string<\Laravel\Mcp\Server\Prompt>>
+     * @return array<int, class-string<Prompt>>
      */
     protected function discoverPrompts(): array
     {
-        $prompts = [];
-
-        $excludedPrompts = config('boost.mcp.prompts.exclude', []);
-        $promptDir = new DirectoryIterator(__DIR__.DIRECTORY_SEPARATOR.'Prompts');
-
-        foreach ($promptDir as $promptFile) {
-            if ($promptFile->isFile() && $promptFile->getExtension() === 'php') {
-                $fqdn = 'Laravel\\Boost\\Mcp\\Prompts\\'.$promptFile->getBasename('.php');
-                if (class_exists($fqdn) && ! in_array($fqdn, $excludedPrompts, true)) {
-                    $prompts[] = $fqdn;
-                }
-            }
-        }
-
-        $extraPrompts = config('boost.mcp.prompts.include', []);
-        foreach ($extraPrompts as $promptClass) {
-            if (class_exists($promptClass)) {
-                $prompts[] = $promptClass;
-            }
-        }
-
-        return $prompts;
+        return $this->discoverPrimitives([], 'prompts');
     }
 }
