@@ -37,17 +37,17 @@ test('it sanitizes name parameter wildcards and filters correctly', function ():
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('admin.dashboard', 'admin.users.store')
-        ->and($response)->not->toolTextContains('user.profile', 'two-factor.enable');
+        ->not->toolTextContains('user.profile', 'two-factor.enable');
 
     $response = $tool->handle(new Request(['name' => '*two-factor*']));
 
     expect($response)->toolTextContains('two-factor.enable')
-        ->and($response)->not->toolTextContains('admin.dashboard', 'user.profile');
+        ->not->toolTextContains('admin.dashboard', 'user.profile');
 
     $response = $tool->handle(new Request(['name' => '*api*']));
 
     expect($response)->toolTextContains('api.posts.index', 'api.posts.update')
-        ->and($response)->not->toolTextContains('admin.dashboard', 'user.profile');
+        ->not->toolTextContains('admin.dashboard', 'user.profile');
 
 });
 
@@ -63,12 +63,12 @@ test('it sanitizes method parameter wildcards and filters correctly', function (
     $response = $tool->handle(new Request(['method' => '*GET*']));
 
     expect($response)->toolTextContains('admin.dashboard', 'user.profile', 'api.posts.index')
-        ->and($response)->not->toolTextContains('admin.users.store');
+        ->not->toolTextContains('admin.users.store');
 
     $response = $tool->handle(new Request(['method' => '*POST*']));
 
     expect($response)->toolTextContains('admin.users.store')
-        ->and($response)->not->toolTextContains('admin.dashboard');
+        ->not->toolTextContains('admin.dashboard');
 });
 
 test('it handles edge cases and empty results correctly', function (): void {

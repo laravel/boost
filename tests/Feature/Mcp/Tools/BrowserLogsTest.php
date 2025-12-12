@@ -94,11 +94,14 @@ test('@boostJs blade directive renders browser logger script', function (): void
 
     // Test that the script contains expected content
     $script = BrowserLogger::getScript();
-    expect($script)->toContain('browser-logger-active')
-        ->and($script)->toContain('/_boost/browser-logs')
-        ->and($script)->toContain('console.log')
-        ->and($script)->toContain('console.error')
-        ->and($script)->toContain('window.onerror');
+
+    expect($script)->toContain(
+        'browser-logger-active',
+        '/_boost/browser-logs',
+        'console.log',
+        'console.error',
+        'window.onerror'
+    );
 });
 
 test('browser logs endpoint processes logs correctly', function (): void {
@@ -202,7 +205,7 @@ HTML;
 
     $content = $result->getContent();
     expect($content)->toContain('browser-logger-active')
-        ->and($content)->toContain('</head>')
+        ->toContain('</head>')
         // Should not inject twice
         ->and(substr_count($content, 'browser-logger-active'))->toBe(1);
 });
@@ -219,7 +222,7 @@ test('InjectBoost middleware does not inject into non-HTML responses', function 
 
     $content = $result->getContent();
     expect($content)->toBe($json)
-        ->and($content)->not->toContain('browser-logger-active');
+        ->not->toContain('browser-logger-active');
 });
 
 test('InjectBoost middleware does not inject script twice', function (): void {
@@ -266,5 +269,5 @@ HTML;
 
     $content = $result->getContent();
     expect($content)->toContain('browser-logger-active')
-        ->and($content)->toMatch('/<script[^>]*browser-logger-active[^>]*>.*<\/script>\s*<\/body>/s');
+        ->toMatch('/<script[^>]*browser-logger-active[^>]*>.*<\/script>\s*<\/body>/s');
 });

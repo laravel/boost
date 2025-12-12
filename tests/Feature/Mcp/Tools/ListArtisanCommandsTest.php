@@ -13,13 +13,13 @@ test('it returns list of artisan commands', function (): void {
         ->toolHasNoError()
         ->toolJsonContent(function ($content): void {
             expect($content)->toBeArray()
-                ->and($content)->not->toBeEmpty();
+                ->not->toBeEmpty();
 
             // Check that it contains some basic Laravel commands
             $commandNames = array_column($content, 'name');
             expect($commandNames)->toContain('migrate')
-                ->and($commandNames)->toContain('make:model')
-                ->and($commandNames)->toContain('route:list');
+                ->toContain('make:model')
+                ->toContain('route:list');
 
             // Check the structure of each command
             foreach ($content as $command) {
