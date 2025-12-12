@@ -14,6 +14,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
+use Laravel\Boost\Telemetry\TelemetryCollector;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\Roster;
 
@@ -58,6 +59,8 @@ class BoostServiceProvider extends ServiceProvider
 
             return $roster;
         });
+
+        $this->app->singleton(TelemetryCollector::class);
     }
 
     public function boot(Router $router): void
