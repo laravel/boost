@@ -27,10 +27,8 @@ test('multiselect returns keys for associative array', function (): void {
     // Assert that we get the keys, not the values
     expect($result)->toBeArray()
         ->toHaveCount(2, 'Should have 2 items selected')
-        ->toContain('mcp_server')
-        ->toContain('ai_guidelines')
-        ->not->toContain('Boost MCP Server')
-        ->not->toContain('Package AI Guidelines');
+        ->toContain('mcp_server', 'ai_guidelines')
+        ->not->toContain('Boost MCP Server', 'Package AI Guidelines');
 })->skipOnWindows();
 
 test('multiselect returns values for indexed array', function (): void {
@@ -49,8 +47,7 @@ test('multiselect returns values for indexed array', function (): void {
 
     // For indexed arrays, it returns the actual values
     expect($result)->toBeArray()
-        ->toContain('Option 1')
-        ->toContain('Option 2');
+        ->toContain('Option 1', 'Option 2');
 })->skipOnWindows();
 
 test('multiselect behavior matches install command expectations', function (): void {
@@ -80,9 +77,6 @@ test('multiselect behavior matches install command expectations', function (): v
     // Verify we get keys that can be used with in_array checks
     expect($result)->toBeArray()
         ->toHaveCount(3)
-        ->toContain('mcp_server')
-        ->toContain('ai_guidelines')
-        ->toContain('style_guidelines')
-        ->not->toContain('Boost MCP Server')
-        ->not->toContain('Package AI Guidelines (i.e. Framework, Inertia, Pest)');
+        ->toContain('mcp_server', 'ai_guidelines', 'style_guidelines')
+        ->not->toContain('Boost MCP Server', 'Package AI Guidelines (i.e. Framework, Inertia, Pest)');
 })->skipOnWindows();
