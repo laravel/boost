@@ -94,11 +94,14 @@ test('@boostJs blade directive renders browser logger script', function (): void
 
     // Test that the script contains expected content
     $script = BrowserLogger::getScript();
-    expect($script)->toContain('browser-logger-active')
-        ->and($script)->toContain('/_boost/browser-logs')
-        ->and($script)->toContain('console.log')
-        ->and($script)->toContain('console.error')
-        ->and($script)->toContain('window.onerror');
+
+    expect($script)->toContain(
+        'browser-logger-active',
+        '/_boost/browser-logs',
+        'console.log',
+        'console.error',
+        'window.onerror'
+    );
 });
 
 test('browser logs endpoint processes logs correctly', function (): void {
