@@ -20,15 +20,17 @@ test('it returns list of config keys in dot notation', function (): void {
         ->toolJsonContent(function ($content): void {
             expect($content)->toBeArray()
                 ->not->toBeEmpty()
-                // Check that it contains common Laravel config keys
-                ->toContain('app.name')
-                ->toContain('app.env')
-                ->toContain('database.default')
-                // Check that it contains our test keys
-                ->toContain('test.simple')
-                ->toContain('test.nested.key')
-                ->toContain('test.array.0')
-                ->toContain('test.array.1');
+                ->toContain(
+                    // Check that it constains common Laravel config keys
+                    'app.name',
+                    'app.env',
+                    'database.default',
+                    // Check that it contains our test keys
+                    'test.simple',
+                    'test.nested.key',
+                    'test.array.0',
+                    'test.array.1'
+                );
 
             // Check that keys are sorted
             $sortedContent = $content;
