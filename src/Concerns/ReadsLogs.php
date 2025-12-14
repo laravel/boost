@@ -45,11 +45,83 @@ trait ReadsLogs
         $channel = Config::get('logging.default');
         $channelConfig = Config::get("logging.channels.{$channel}");
 
+        // Handle stack driver by resolving to its first channel with a path
+        $channelConfig = $this->resolveChannelWithPath($channelConfig);
+
         if (($channelConfig['driver'] ?? null) === 'daily') {
-            return storage_path('logs/laravel-'.date('Y-m-d').'.log');
+            return $this->resolveDailyLogFilePath($channelConfig['path'] ?? storage_path('logs/laravel.log'));
         }
 
-        return storage_path('logs/laravel.log');
+        return $channelConfig['path'] ?? storage_path('logs/laravel.log');
+    }
+
+    /**
+     * Resolve a channel config that has a path, handling stack drivers recursively.
+     *
+     * @param  array<string, mixed>|null  $channelConfig
+     * @return array<string, mixed>|null
+     */
+    protected function resolveChannelWithPath(?array $channelConfig, int $depth = 0): ?array
+    {
+        if ($channelConfig === null || $depth > 5) {
+            return $channelConfig;
+        }
+
+        if (($channelConfig['driver'] ?? null) !== 'stack') {
+            return $channelConfig;
+        }
+
+        $stackChannels = $channelConfig['channels'] ?? [];
+
+        foreach ($stackChannels as $stackChannel) {
+            $stackChannelConfig = Config::get("logging.channels.{$stackChannel}");
+
+            if (! is_array($stackChannelConfig)) {
+                continue;
+            }
+
+            $resolved = $this->resolveChannelWithPath($stackChannelConfig, $depth + 1);
+
+            if (isset($resolved['path'])) {
+                return $resolved;
+            }
+        }
+
+        return $channelConfig;
+    }
+
+    /**
+     * Resolve the daily log file path, falling back to the most recent if today's doesn't exist.
+     *
+     * @param  string  $basePath  The configured path (e.g., storage_path('logs/laravel.log'))
+     */
+    protected function resolveDailyLogFilePath(string $basePath): string
+    {
+        // Daily driver appends date before the extension: laravel.log -> laravel-2025-12-14.log
+        $pathInfo = pathinfo($basePath);
+        $directory = $pathInfo['dirname'];
+        $filename = $pathInfo['filename'];
+        $extension = isset($pathInfo['extension']) ? '.'.$pathInfo['extension'] : '';
+
+        $todayLogFile = $directory.DIRECTORY_SEPARATOR.$filename.'-'.date('Y-m-d').$extension;
+
+        if (file_exists($todayLogFile)) {
+            return $todayLogFile;
+        }
+
+        // Look for the most recent daily log file with matching base name
+        $pattern = $directory.DIRECTORY_SEPARATOR.$filename.'-*'.$extension;
+        $files = glob($pattern);
+
+        if ($files !== false && $files !== []) {
+            // Sort by filename (which includes date) in descending order to get most recent
+            rsort($files);
+
+            return $files[0];
+        }
+
+        // Fall back to today's path even if it doesn't exist (error will be handled by caller)
+        return $todayLogFile;
     }
 
     /**
