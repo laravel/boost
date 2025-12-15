@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Mcp\Resources\ThirdPartyResource;
+use Laravel\Boost\Mcp\Resources\PackageGuidelineResource;
 
 beforeEach(function (): void {
     $this->testBladePath = sys_get_temp_dir().'/test-resource-guideline.blade.php';
@@ -22,25 +22,25 @@ afterEach(function (): void {
 });
 
 test('it generates resource uri from the package name', function (): void {
-    $resource = new ThirdPartyResource('acme/payments', $this->testBladePath);
+    $resource = new PackageGuidelineResource('acme/payments', $this->testBladePath);
 
     expect($resource->uri())->toBe('file://instructions/acme/payments.md');
 });
 
 test('it generates a description from the package name', function (): void {
-    $resource = new ThirdPartyResource('acme/payments', $this->testBladePath);
+    $resource = new PackageGuidelineResource('acme/payments', $this->testBladePath);
 
     expect($resource->description())->toBe('Guidelines for acme/payments');
 });
 
 test('it has Markdown mime type', function (): void {
-    $resource = new ThirdPartyResource('acme/payments', $this->testBladePath);
+    $resource = new PackageGuidelineResource('acme/payments', $this->testBladePath);
 
     expect($resource->mimeType())->toBe('text/markdown');
 });
 
 test('it renders blade guideline content', function (): void {
-    $resource = new ThirdPartyResource('acme/payments', $this->testBladePath);
+    $resource = new PackageGuidelineResource('acme/payments', $this->testBladePath);
 
     $response = $resource->handle();
 
@@ -62,7 +62,7 @@ User::factory()->create();
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $resource = new ThirdPartyResource('test/package', $this->testBladePath);
+    $resource = new PackageGuidelineResource('test/package', $this->testBladePath);
     $response = $resource->handle();
 
     expect($response)->isToolResult()
@@ -81,7 +81,7 @@ echo "Hello World";
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $resource = new ThirdPartyResource('test/package', $this->testBladePath);
+    $resource = new PackageGuidelineResource('test/package', $this->testBladePath);
     $response = $resource->handle();
 
     expect($response)->isToolResult()
@@ -100,7 +100,7 @@ function example() {
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $resource = new ThirdPartyResource('test/package', $this->testBladePath);
+    $resource = new PackageGuidelineResource('test/package', $this->testBladePath);
     $response = $resource->handle();
 
     expect($response)->isToolResult()
@@ -119,7 +119,7 @@ function example() {
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $resource = new ThirdPartyResource('test/package', $this->testBladePath);
+    $resource = new PackageGuidelineResource('test/package', $this->testBladePath);
 
     $response1 = $resource->handle();
     $content1 = (string) $response1->content();
@@ -133,7 +133,7 @@ function example() {
 });
 
 test('it handles non-existent blade file gracefully', function (): void {
-    $resource = new ThirdPartyResource('acme/test', '/non/existent/path.blade.php');
+    $resource = new PackageGuidelineResource('acme/test', '/non/existent/path.blade.php');
 
     $response = $resource->handle();
 

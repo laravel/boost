@@ -8,7 +8,7 @@ use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Resource;
 
-class ThirdPartyResource extends Resource
+class PackageGuidelineResource extends Resource
 {
     use RendersBladeGuidelines;
 

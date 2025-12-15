@@ -6,8 +6,8 @@ namespace Laravel\Boost\Mcp;
 
 use InvalidArgumentException;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
-use Laravel\Boost\Mcp\Prompts\ThirdPartyPrompt;
-use Laravel\Boost\Mcp\Resources\ThirdPartyResource;
+use Laravel\Boost\Mcp\Prompts\PackageGuidelinePrompt;
+use Laravel\Boost\Mcp\Resources\PackageGuidelineResource;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
@@ -141,8 +141,8 @@ class Boost extends Server
     private function discoverThirdPartyPrimitives(string $primitiveType): array
     {
         $primitiveClass = match ($primitiveType) {
-            Prompt::class => ThirdPartyPrompt::class,
-            Resource::class => ThirdPartyResource::class,
+            Prompt::class => PackageGuidelinePrompt::class,
+            Resource::class => PackageGuidelineResource::class,
             default => throw new InvalidArgumentException('Invalid Primitive Type'),
         };
 

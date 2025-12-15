@@ -8,7 +8,7 @@ use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Prompt;
 
-class ThirdPartyPrompt extends Prompt
+class PackageGuidelinePrompt extends Prompt
 {
     use RendersBladeGuidelines;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Mcp\Prompts\ThirdPartyPrompt;
+use Laravel\Boost\Mcp\Prompts\PackageGuidelinePrompt;
 
 beforeEach(function (): void {
     $this->testBladePath = sys_get_temp_dir().'/test-guideline.blade.php';
@@ -22,7 +22,7 @@ afterEach(function (): void {
 });
 
 it('renders a blade file as a prompt', function (): void {
-    $prompt = new ThirdPartyPrompt('acme/payments', $this->testBladePath);
+    $prompt = new PackageGuidelinePrompt('acme/payments', $this->testBladePath);
 
     $response = $prompt->handle();
 
@@ -34,14 +34,14 @@ it('renders a blade file as a prompt', function (): void {
 });
 
 it('generates correct metadata from the package name', function (): void {
-    $prompt = new ThirdPartyPrompt('acme/payments', $this->testBladePath);
+    $prompt = new PackageGuidelinePrompt('acme/payments', $this->testBladePath);
 
     expect($prompt->name())->toBe('acme/payments')
         ->and($prompt->description())->toBe('Guidelines for acme/payments');
 });
 
 it('handles a non-existent blade file gracefully', function (): void {
-    $prompt = new ThirdPartyPrompt('acme/test', '/non/existent/path.blade.php');
+    $prompt = new PackageGuidelinePrompt('acme/test', '/non/existent/path.blade.php');
 
     $response = $prompt->handle();
 
@@ -61,7 +61,7 @@ User::factory()->create();
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $prompt = new ThirdPartyPrompt('test/package', $this->testBladePath);
+    $prompt = new PackageGuidelinePrompt('test/package', $this->testBladePath);
     $response = $prompt->handle();
 
     expect($response)->isToolResult()
@@ -80,7 +80,7 @@ echo "Hello World";
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $prompt = new ThirdPartyPrompt('test/package', $this->testBladePath);
+    $prompt = new PackageGuidelinePrompt('test/package', $this->testBladePath);
     $response = $prompt->handle();
 
     expect($response)->isToolResult()
@@ -99,7 +99,7 @@ function example() {
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $prompt = new ThirdPartyPrompt('test/package', $this->testBladePath);
+    $prompt = new PackageGuidelinePrompt('test/package', $this->testBladePath);
     $response = $prompt->handle();
 
     expect($response)->isToolResult()
@@ -118,7 +118,7 @@ function example() {
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $prompt = new ThirdPartyPrompt('test/package', $this->testBladePath);
+    $prompt = new PackageGuidelinePrompt('test/package', $this->testBladePath);
 
     $response1 = $prompt->handle();
     $content1 = (string) $response1->content();
