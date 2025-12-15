@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
+use InvalidArgumentException;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
-use Laravel\Boost\Mcp\Prompts\BladePrompt;
+use Laravel\Boost\Mcp\Prompts\ThirdPartyPrompt;
+use Laravel\Boost\Mcp\Resources\ThirdPartyResource;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
@@ -112,9 +114,12 @@ class Boost extends Server
      */
     protected function discoverResources(): array
     {
-        return $this->filterPrimitives([
-            Resources\ApplicationInfo::class,
-        ], 'resources');
+        return $this->filterPrimitives(
+            [
+                Resources\ApplicationInfo::class,
+                ...$this->discoverThirdPartyPrimitives(Resource::class)],
+            'resources'
+        );
     }
 
     /**
@@ -123,30 +128,42 @@ class Boost extends Server
     protected function discoverPrompts(): array
     {
         return $this->filterPrimitives(
-            $this->discoverThirdPartyPrompts(),
+            $this->discoverThirdPartyPrimitives(Prompt::class),
             'prompts'
         );
     }
 
-    protected function discoverThirdPartyPrompts(): array
+    /**
+     * @template T of Prompt|Resource
+     *
+     * @param  class-string<T>  $primitiveType
+     * @return array<int, T>
+     */
+    private function discoverThirdPartyPrimitives(string $primitiveType): array
     {
-        $thirdPartyPrompts = [];
+        $primitiveClass = match ($primitiveType) {
+            Prompt::class => ThirdPartyPrompt::class,
+            Resource::class => ThirdPartyResource::class,
+            default => throw new InvalidArgumentException('Invalid Primitive Type'),
+        };
+
+        $primitives = [];
         $guidelineAssist = app(GuidelineAssist::class);
 
         foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
-            $guidelinePath = $path.DIRECTORY_SEPARATOR.'core.blade.php';
+            $corePath = $path.DIRECTORY_SEPARATOR.'core.blade.php';
 
-            if (file_exists($guidelinePath)) {
-                $thirdPartyPrompts[] = new BladePrompt($guidelineAssist, $package, $guidelinePath);
+            if (file_exists($corePath)) {
+                $primitives[] = new $primitiveClass($guidelineAssist, $package, $corePath);
             }
         }
 
-        return $thirdPartyPrompts;
+        return $primitives;
     }
 
     /**
-     * @param  array<int, class-string>  $availablePrimitives
-     * @return array<int, class-string>
+     * @param  array<int, Tool|Resource|Prompt|class-string>  $availablePrimitives
+     * @return array<int, Tool|Resource|Prompt|class-string>
      */
     private function filterPrimitives(array $availablePrimitives, string $type): array
     {

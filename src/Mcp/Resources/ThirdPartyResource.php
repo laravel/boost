@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Mcp\Prompts;
+namespace Laravel\Boost\Mcp\Resources;
 
-use Illuminate\Support\Str;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Mcp\Response;
-use Laravel\Mcp\Server\Prompt;
+use Laravel\Mcp\Server\Resource;
 
-class BladePrompt extends Prompt
+class ThirdPartyResource extends Resource
 {
     use RendersBladeGuidelines;
 
@@ -19,9 +18,9 @@ class BladePrompt extends Prompt
         protected string $packageName,
         protected string $bladePath,
     ) {
-
-        $this->name = Str::slug(str_replace('/', '-', $packageName)).'-task';
+        $this->uri = "file://instructions/{$packageName}.md";
         $this->description = "Guidelines for {$packageName}";
+        $this->mimeType = 'text/markdown';
     }
 
     public function handle(): Response

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
-use Laravel\Boost\Mcp\Prompts\BladePrompt;
+use Laravel\Boost\Mcp\Prompts\ThirdPartyPrompt;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Roster;
 
@@ -15,7 +15,7 @@ test('composer discovers packages with boost guidelines', function (): void {
     expect($packages)->toBeArray();
 });
 
-test('blade prompt can be registered with correct structure', function (): void {
+test('blade prompt can be registered with the correct structure', function (): void {
     $testBladePath = sys_get_temp_dir().'/test-registration-'.uniqid().'.blade.php';
     file_put_contents($testBladePath, '# Test Guidelines');
 
@@ -23,10 +23,10 @@ test('blade prompt can be registered with correct structure', function (): void 
     $herd = app(Herd::class);
     $guidelineAssist = new GuidelineAssist($roster, new GuidelineConfig, $herd);
 
-    $prompt = new BladePrompt('test/package', $testBladePath, $guidelineAssist);
+    $prompt = new ThirdPartyPrompt($guidelineAssist, 'test/package', $testBladePath);
 
-    expect($prompt)->toBeInstanceOf(BladePrompt::class)
-        ->and($prompt->name())->toBe('test-package-task')
+    expect($prompt)->toBeInstanceOf(ThirdPartyPrompt::class)
+        ->and($prompt->name())->toBe('test/package')
         ->and($prompt->description())->toBe('Guidelines for test/package');
 
     unlink($testBladePath);
@@ -40,10 +40,10 @@ test('register third party prompt method creates blade prompt', function (): voi
     $herd = app(Herd::class);
     $guidelineAssist = new GuidelineAssist($roster, new GuidelineConfig, $herd);
 
-    $prompt = new BladePrompt($guidelineAssist, 'vendor/package', $testBladePath);
+    $prompt = new ThirdPartyPrompt($guidelineAssist, 'vendor/package', $testBladePath);
 
-    expect($prompt)->toBeInstanceOf(BladePrompt::class)
-        ->and($prompt->name())->toContain('vendor-package')
+    expect($prompt)->toBeInstanceOf(ThirdPartyPrompt::class)
+        ->and($prompt->name())->toBe('vendor/package')
         ->and($prompt->description())->toContain('vendor/package');
 
     $response = $prompt->handle();

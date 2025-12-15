@@ -5,15 +5,14 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
-use Laravel\Boost\Mcp\Prompts\ThirdPartyPrompt;
+use Laravel\Boost\Mcp\Resources\ThirdPartyResource;
 use Laravel\Roster\Roster;
 
 beforeEach(function (): void {
-    // Create a test blade file
-    $this->testBladePath = sys_get_temp_dir().'/test-guideline.blade.php';
-    file_put_contents($this->testBladePath, '# Test Guideline
+    $this->testBladePath = sys_get_temp_dir().'/test-resource-guideline.blade.php';
+    file_put_contents($this->testBladePath, '# Test Resource Guideline
 
-This is a test guideline for testing.
+This is a test guideline for resource testing.
 
 ## Rules
 - Follow best practices
@@ -30,34 +29,40 @@ afterEach(function (): void {
     }
 });
 
-test('it renders blade file as prompt', function (): void {
-    $prompt = new ThirdPartyPrompt($this->guidelineAssist, 'acme/payments', $this->testBladePath);
+test('it renders blade file as resource', function (): void {
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'acme/payments', $this->testBladePath);
 
-    $response = $prompt->handle();
+    $response = $resource->handle();
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolTextContains('Test Guideline')
+        ->toolTextContains('Test Resource Guideline')
         ->toolTextContains('Follow best practices')
         ->toolTextContains('Write clean code');
 });
 
-test('it generates correct prompt name from package', function (): void {
-    $prompt = new ThirdPartyPrompt($this->guidelineAssist, 'acme/payments', $this->testBladePath);
+test('it generates correct resource uri from package', function (): void {
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'acme/payments', $this->testBladePath);
 
-    expect($prompt->name())->toBe('acme/payments');
+    expect($resource->uri())->toBe('file://instructions/acme/payments.md');
 });
 
 test('it generates correct description from package', function (): void {
-    $prompt = new ThirdPartyPrompt($this->guidelineAssist, 'acme/payments', $this->testBladePath);
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'acme/payments', $this->testBladePath);
 
-    expect($prompt->description())->toBe('Guidelines for acme/payments');
+    expect($resource->description())->toBe('Guidelines for acme/payments');
+});
+
+test('it has correct mime type', function (): void {
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'acme/payments', $this->testBladePath);
+
+    expect($resource->mimeType())->toBe('text/markdown');
 });
 
 test('it handles non-existent blade file gracefully', function (): void {
-    $prompt = new ThirdPartyPrompt($this->guidelineAssist, 'acme/test', '/non/existent/path.blade.php');
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'acme/test', '/non/existent/path.blade.php');
 
-    $response = $prompt->handle();
+    $response = $resource->handle();
 
     expect($response)->isToolResult()
         ->toolHasNoError();
@@ -76,8 +81,8 @@ User::factory()->create();
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $prompt = new ThirdPartyPrompt($this->guidelineAssist, 'test/package', $this->testBladePath);
-    $response = $prompt->handle();
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'test/package', $this->testBladePath);
+    $response = $resource->handle();
 
     expect($response)->isToolResult()
         ->toolTextContains('`Model::factory()`')
@@ -95,8 +100,8 @@ echo "Hello World";
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $prompt = new ThirdPartyPrompt($this->guidelineAssist, 'test/package', $this->testBladePath);
-    $response = $prompt->handle();
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'test/package', $this->testBladePath);
+    $response = $resource->handle();
 
     expect($response)->isToolResult()
         ->toolTextContains('<?php')
@@ -114,8 +119,8 @@ function example() {
 
     file_put_contents($this->testBladePath, $bladeContent);
 
-    $prompt = new ThirdPartyPrompt($this->guidelineAssist, 'test/package', $this->testBladePath);
-    $response = $prompt->handle();
+    $resource = new ThirdPartyResource($this->guidelineAssist, 'test/package', $this->testBladePath);
+    $response = $resource->handle();
 
     expect($response)->isToolResult()
         ->toolTextContains('<code-snippet name="example" lang="php">')
