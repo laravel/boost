@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Prompts;
 
-use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Prompt;
@@ -14,7 +13,6 @@ class ThirdPartyPrompt extends Prompt
     use RendersBladeGuidelines;
 
     public function __construct(
-        protected GuidelineAssist $guidelineAssist,
         protected string $packageName,
         protected string $bladePath,
     ) {
@@ -29,10 +27,5 @@ class ThirdPartyPrompt extends Prompt
         $content = $this->renderBlade($this->bladePath);
 
         return Response::text($content);
-    }
-
-    protected function getGuidelineAssist(): GuidelineAssist
-    {
-        return $this->guidelineAssist;
     }
 }

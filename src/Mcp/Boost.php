@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp;
 
 use InvalidArgumentException;
-use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\Prompts\ThirdPartyPrompt;
 use Laravel\Boost\Mcp\Resources\ThirdPartyResource;
@@ -148,13 +147,12 @@ class Boost extends Server
         };
 
         $primitives = [];
-        $guidelineAssist = app(GuidelineAssist::class);
 
         foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
             $corePath = $path.DIRECTORY_SEPARATOR.'core.blade.php';
 
             if (file_exists($corePath)) {
-                $primitives[] = new $primitiveClass($guidelineAssist, $package, $corePath);
+                $primitives[] = new $primitiveClass($package, $corePath);
             }
         }
 

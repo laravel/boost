@@ -62,8 +62,15 @@ trait RendersBladeGuidelines
 
         $rendered = $this->renderContent($content, $bladePath);
 
-        return str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
+        $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
+
+        $this->storedSnippets = [];
+
+        return $rendered;
     }
 
-    abstract protected function getGuidelineAssist(): GuidelineAssist;
+    protected function getGuidelineAssist(): GuidelineAssist
+    {
+        return app(GuidelineAssist::class);
+    }
 }
