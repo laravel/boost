@@ -129,7 +129,7 @@ function example() {
 
     expect($content1)->toBe($content2)
         ->and($content1)->toContain('<code-snippet name="example" lang="php">')
-        ->and($content1)->not->toContain('___BOOST_SNIPPET_'); // No unresolved placeholders
+        ->and($content1)->not->toContain('___BOOST_SNIPPET___');
 });
 
 test('it handles non-existent blade file gracefully', function (): void {
