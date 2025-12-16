@@ -25,7 +25,7 @@ class PackageGuidelineResource extends Resource
 
     public function handle(): Response
     {
-        $content = $this->renderBlade($this->bladePath);
+        $content = $this->renderGuidelineFile($this->bladePath);
 
         return Response::text($content);
     }

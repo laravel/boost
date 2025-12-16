@@ -16,7 +16,6 @@ class PackageGuidelinePrompt extends Prompt
         protected string $packageName,
         protected string $bladePath,
     ) {
-
         $this->name = $this->packageName;
         $this->title = $this->packageName;
         $this->description = "Guidelines for {$packageName}";
@@ -24,7 +23,7 @@ class PackageGuidelinePrompt extends Prompt
 
     public function handle(): Response
     {
-        $content = $this->renderBlade($this->bladePath);
+        $content = $this->renderGuidelineFile($this->bladePath);
 
         return Response::text($content);
     }
