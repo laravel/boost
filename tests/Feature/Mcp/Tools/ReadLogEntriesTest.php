@@ -8,7 +8,6 @@ use Laravel\Boost\Mcp\Tools\ReadLogEntries;
 use Laravel\Mcp\Request;
 
 beforeEach(function (): void {
-    // Clean up any existing log files before each test
     $logDir = storage_path('logs');
     $files = glob($logDir.'/*.log');
     if ($files) {
@@ -154,7 +153,7 @@ LOG;
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolTextContains('local.DEBUG: Yesterday\'s log message');
+        ->toolTextContains("local.DEBUG: Yesterday's log message");
 });
 
 test('it uses single channel path from stack when no daily channel', function (): void {
@@ -235,4 +234,32 @@ test('it returns error when log file is empty', function (): void {
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolTextContains('Unable to retrieve log entries, or no entries yet.');
+});
+
+test('it ignores non-daily log files when selecting most recent daily log', function (): void {
+    $basePath = storage_path('logs/laravel.log');
+    Config::set('logging.default', 'daily');
+    Config::set('logging.channels.daily', [
+        'driver' => 'daily',
+        'path' => $basePath,
+    ]);
+
+    $logDir = storage_path('logs');
+    File::ensureDirectoryExists($logDir);
+
+    File::put($logDir.'/laravel-2024-01-10.log', '[2024-01-10 10:00:00] local.DEBUG: Daily log from 2024-01-10');
+    File::put($logDir.'/laravel-2024-01-15.log', '[2024-01-15 10:00:00] local.DEBUG: Daily log from 2024-01-15');
+    File::put($logDir.'/laravel-backup.log', '[2024-01-20 10:00:00] local.DEBUG: Backup log');
+    File::put($logDir.'/laravel-error.log', '[2024-01-20 10:00:00] local.DEBUG: Error log');
+    File::put($logDir.'/laravel-zzz.log', '[2024-01-20 10:00:00] local.DEBUG: Zzz log');
+
+    $tool = new ReadLogEntries;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Daily log from 2024-01-15')
+        ->toolTextDoesNotContain('Backup log')
+        ->toolTextDoesNotContain('Error log')
+        ->toolTextDoesNotContain('Zzz log');
 });
