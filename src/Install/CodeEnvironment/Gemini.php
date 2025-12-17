@@ -47,6 +47,6 @@ class Gemini extends CodeEnvironment implements Agent, McpClient
 
     public function guidelinesPath(): string
     {
-        return 'GEMINI.md';
+        return config('boost.agents.gemini.guidelines_path', 'GEMINI.md');
     }
 }

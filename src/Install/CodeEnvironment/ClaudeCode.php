@@ -53,6 +53,6 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient
 
     public function guidelinesPath(): string
     {
-        return 'CLAUDE.md';
+        return config('boost.agents.claude_code.guidelines_path', 'CLAUDE.md');
     }
 }

@@ -46,6 +46,6 @@ class Copilot extends CodeEnvironment implements Agent
 
     public function guidelinesPath(): string
     {
-        return '.github/copilot-instructions.md';
+        return config('boost.agents.copilot.guidelines_path', '.github/copilot-instructions.md');
     }
 }

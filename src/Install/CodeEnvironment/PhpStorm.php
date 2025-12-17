@@ -65,6 +65,6 @@ class PhpStorm extends CodeEnvironment implements Agent, McpClient
 
     public function guidelinesPath(): string
     {
-        return '.junie/guidelines.md';
+        return config('boost.agents.phpstorm.guidelines_path', '.junie/guidelines.md');
     }
 }
