@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Concerns;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 
 trait ReadsLogs
@@ -45,19 +46,18 @@ trait ReadsLogs
         $channel = Config::get('logging.default');
         $channelConfig = Config::get("logging.channels.{$channel}");
 
-        // Handle stack driver by resolving to its first channel with a path
         $channelConfig = $this->resolveChannelWithPath($channelConfig);
 
-        if (($channelConfig['driver'] ?? null) === 'daily') {
-            return $this->resolveDailyLogFilePath($channelConfig['path'] ?? storage_path('logs/laravel.log'));
+        $baseLogPath = Arr::get($channelConfig, 'path', storage_path('logs/laravel.log'));
+
+        if (Arr::get($channelConfig, 'driver') === 'daily') {
+            return $this->resolveDailyLogFilePath($baseLogPath);
         }
 
-        return $channelConfig['path'] ?? storage_path('logs/laravel.log');
+        return $baseLogPath;
     }
 
-    /**
-     * Resolve a channel config that has a path, handling stack drivers recursively.
-     *
+    /***
      * @param  array<string, mixed>|null  $channelConfig
      * @return array<string, mixed>|null
      */
@@ -90,14 +90,8 @@ trait ReadsLogs
         return $channelConfig;
     }
 
-    /**
-     * Resolve the daily log file path, falling back to the most recent if today's doesn't exist.
-     *
-     * @param  string  $basePath  The configured path (e.g., storage_path('logs/laravel.log'))
-     */
     protected function resolveDailyLogFilePath(string $basePath): string
     {
-        // Daily driver appends date before the extension: laravel.log -> laravel-2025-12-14.log
         $pathInfo = pathinfo($basePath);
         $directory = $pathInfo['dirname'];
         $filename = $pathInfo['filename'];
@@ -109,19 +103,16 @@ trait ReadsLogs
             return $todayLogFile;
         }
 
-        // Look for the most recent daily log file with matching base name
         $pattern = $directory.DIRECTORY_SEPARATOR.$filename.'-*'.$extension;
-        $files = glob($pattern);
+        $files = glob($pattern) ?: [];
 
-        if ($files !== false && $files !== []) {
-            // Sort by filename (which includes date) in descending order to get most recent
-            rsort($files);
+        $datePattern = '/^'.preg_quote($filename, '/').'-\d{4}-\d{2}-\d{2}'.preg_quote($extension, '/').'$/';
+        $latestFile = collect($files)
+            ->filter(fn ($file): int|false => preg_match($datePattern, basename((string) $file)))
+            ->sortDesc()
+            ->first();
 
-            return $files[0];
-        }
-
-        // Fall back to today's path even if it doesn't exist (error will be handled by caller)
-        return $todayLogFile;
+        return $latestFile ?? $todayLogFile;
     }
 
     /**
@@ -202,7 +193,7 @@ trait ReadsLogs
             $offset = max($fileSize - $chunkSize, 0);
             fseek($handle, $offset);
 
-            // If we started mid-line, discard the partial line to align to next newline.
+            // If we started mid-line, discard the partial line to align to the next newline.
             if ($offset > 0) {
                 fgets($handle);
             }
