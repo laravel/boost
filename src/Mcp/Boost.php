@@ -113,12 +113,12 @@ class Boost extends Server
      */
     protected function discoverResources(): array
     {
-        return $this->filterPrimitives(
-            [
-                Resources\ApplicationInfo::class,
-                ...$this->discoverThirdPartyPrimitives(Resource::class)],
-            'resources'
-        );
+        $availableResources = [
+            Resources\ApplicationInfo::class,
+            ...$this->discoverThirdPartyPrimitives(Resource::class),
+        ];
+
+        return $this->filterPrimitives($availableResources, 'resources');
     }
 
     /**
