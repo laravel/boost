@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
+use InvalidArgumentException;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
+use Laravel\Boost\Mcp\Prompts\PackageGuidelinePrompt;
+use Laravel\Boost\Mcp\Resources\PackageGuidelineResource;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
@@ -21,6 +24,7 @@ use Laravel\Boost\Mcp\Tools\ReadLogEntries;
 use Laravel\Boost\Mcp\Tools\ReportFeedback;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Boost\Mcp\Tools\Tinker;
+use Laravel\Boost\Support\Composer;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Resource;
@@ -80,27 +84,11 @@ class Boost extends Server
     }
 
     /**
-     * @param  array<int, class-string>  $availablePrimitives
-     * @return array<int, class-string>
-     */
-    private function discoverPrimitives(array $availablePrimitives, string $type): array
-    {
-        return collect($availablePrimitives)
-            ->diff(config("boost.mcp.{$type}.exclude", []))
-            ->merge(
-                collect(config("boost.mcp.{$type}.include", []))
-                    ->filter(fn (string $class): bool => class_exists($class))
-            )
-            ->values()
-            ->all();
-    }
-
-    /**
      * @return array<int, class-string<Tool>>
      */
     protected function discoverTools(): array
     {
-        return $this->discoverPrimitives([
+        return $this->filterPrimitives([
             ApplicationInfo::class,
             BrowserLogs::class,
             DatabaseConnections::class,
@@ -125,9 +113,12 @@ class Boost extends Server
      */
     protected function discoverResources(): array
     {
-        return $this->discoverPrimitives([
+        $availableResources = [
             Resources\ApplicationInfo::class,
-        ], 'resources');
+            ...$this->discoverThirdPartyPrimitives(Resource::class),
+        ];
+
+        return $this->filterPrimitives($availableResources, 'resources');
     }
 
     /**
@@ -135,6 +126,52 @@ class Boost extends Server
      */
     protected function discoverPrompts(): array
     {
-        return $this->discoverPrimitives([], 'prompts');
+        return $this->filterPrimitives(
+            $this->discoverThirdPartyPrimitives(Prompt::class),
+            'prompts'
+        );
+    }
+
+    /**
+     * @template T of Prompt|Resource
+     *
+     * @param  class-string<T>  $primitiveType
+     * @return array<int, T>
+     */
+    private function discoverThirdPartyPrimitives(string $primitiveType): array
+    {
+        $primitiveClass = match ($primitiveType) {
+            Prompt::class => PackageGuidelinePrompt::class,
+            Resource::class => PackageGuidelineResource::class,
+            default => throw new InvalidArgumentException('Invalid Primitive Type'),
+        };
+
+        $primitives = [];
+
+        foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
+            $corePath = $path.DIRECTORY_SEPARATOR.'core.blade.php';
+
+            if (file_exists($corePath)) {
+                $primitives[] = new $primitiveClass($package, $corePath);
+            }
+        }
+
+        return $primitives;
+    }
+
+    /**
+     * @param  array<int, Tool|Resource|Prompt|class-string>  $availablePrimitives
+     * @return array<int, Tool|Resource|Prompt|class-string>
+     */
+    private function filterPrimitives(array $availablePrimitives, string $type): array
+    {
+        return collect($availablePrimitives)
+            ->diff(config("boost.mcp.{$type}.exclude", []))
+            ->merge(
+                collect(config("boost.mcp.{$type}.include", []))
+                    ->filter(fn (string $class): bool => class_exists($class))
+            )
+            ->values()
+            ->all();
     }
 }
