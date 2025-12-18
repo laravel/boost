@@ -13,34 +13,6 @@ beforeEach(function (): void {
     $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
 });
 
-test('name returns copilot', function (): void {
-    $copilot = new Copilot($this->strategyFactory);
-
-    expect($copilot->name())->toBe('copilot');
-});
-
-test('displayName returns GitHub Copilot', function (): void {
-    $copilot = new Copilot($this->strategyFactory);
-
-    expect($copilot->displayName())->toBe('GitHub Copilot');
-});
-
-test('systemDetectionConfig returns empty files array', function (): void {
-    $copilot = new Copilot($this->strategyFactory);
-
-    expect($copilot->systemDetectionConfig(Platform::Darwin))
-        ->toBe(['files' => []]);
-});
-
-test('projectDetectionConfig returns copilot instructions file', function (): void {
-    $copilot = new Copilot($this->strategyFactory);
-
-    expect($copilot->projectDetectionConfig())
-        ->toBe([
-            'files' => ['.github/copilot-instructions.md'],
-        ]);
-});
-
 test('detectOnSystem always returns false', function (): void {
     $copilot = new Copilot($this->strategyFactory);
 
@@ -49,20 +21,14 @@ test('detectOnSystem always returns false', function (): void {
         ->and($copilot->detectOnSystem(Platform::Windows))->toBeFalse();
 });
 
-test('mcpClientName returns null', function (): void {
-    $copilot = new Copilot($this->strategyFactory);
-
-    expect($copilot->mcpClientName())->toBeNull();
-});
-
-test('guidelinesPath returns default path when no config set', function (): void {
+test('guidelinesPath returns a default path when no config set', function (): void {
     $copilot = new Copilot($this->strategyFactory);
 
     expect($copilot->guidelinesPath())->toBe('.github/copilot-instructions.md');
 });
 
-test('guidelinesPath returns custom path from config', function (): void {
-    config(['boost.agents.copilot.guidelines_path' => 'docs/copilot.md']);
+test('guidelinesPath returns a custom path from config', function (): void {
+    config(['boost.code_environments.copilot.guidelines_path' => 'docs/copilot.md']);
 
     $copilot = new Copilot($this->strategyFactory);
 

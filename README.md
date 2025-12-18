@@ -166,47 +166,6 @@ You can override Boost's built-in AI guidelines by creating your own custom guid
 
 For example, to override Boost's "Inertia React v2 Form Guidance" guidelines, create a file at `.ai/guidelines/inertia-react/2/forms.blade.php`. When you run `boost:install`, Boost will include your custom guideline instead of the default one.
 
-### Customizing Guideline File Paths
-
-By default, Boost writes guideline files to your project root (e.g., `CLAUDE.md`, `AGENTS.md`) or agent-specific directories (e.g., `.cursor/rules/laravel-boost.mdc`). You may customize these paths to suit your project structure—for example, consolidating all AI guidelines in a dedicated directory or organizing them within a monorepo.
-
-First, publish the configuration file:
-
-```bash
-php artisan vendor:publish --tag=boost-config
-```
-
-Then modify the `agents` section in `config/boost.php`:
-
-```php
-'agents' => [
-    'claude_code' => [
-        'guidelines_path' => 'docs/ai/CLAUDE.md',
-    ],
-    'cursor' => [
-        'guidelines_path' => 'docs/ai/cursor-rules.mdc',
-    ],
-],
-```
-
-After updating the configuration, regenerate your guidelines:
-
-```bash
-php artisan boost:update
-```
-
-You may also configure paths via environment variables:
-
-| Agent | Environment Variable | Default |
-|-------|---------------------|---------|
-| Claude Code | `BOOST_CLAUDE_GUIDELINES_PATH` | `CLAUDE.md` |
-| Codex | `BOOST_CODEX_GUIDELINES_PATH` | `AGENTS.md` |
-| Copilot | `BOOST_COPILOT_GUIDELINES_PATH` | `.github/copilot-instructions.md` |
-| Cursor | `BOOST_CURSOR_GUIDELINES_PATH` | `.cursor/rules/laravel-boost.mdc` |
-| Gemini | `BOOST_GEMINI_GUIDELINES_PATH` | `GEMINI.md` |
-| OpenCode | `BOOST_OPENCODE_GUIDELINES_PATH` | `AGENTS.md` |
-| PhpStorm (Junie) | `BOOST_PHPSTORM_GUIDELINES_PATH` | `.junie/guidelines.md` |
-
 ## Third-Party Package AI Guidelines
 
 If you maintain a third-party package and would like Boost to include AI guidelines for it, you can do so by adding a `resources/boost/guidelines/core.blade.php` file to your package. When users of your package run `php artisan boost:install`, Boost will automatically load your guidelines.
