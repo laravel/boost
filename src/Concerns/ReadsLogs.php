@@ -63,7 +63,11 @@ trait ReadsLogs
      */
     protected function resolveChannelWithPath(?array $channelConfig, int $depth = 0): ?array
     {
-        if ($channelConfig === null || $depth > 5) {
+        if ($channelConfig === null || $depth > 2) {
+            return $channelConfig;
+        }
+
+        if (isset($channelConfig['path'])) {
             return $channelConfig;
         }
 
@@ -71,23 +75,13 @@ trait ReadsLogs
             return $channelConfig;
         }
 
-        $stackChannels = $channelConfig['channels'] ?? [];
+        $firstValidLoggerConfig = collect($channelConfig['channels'] ?? [])
+            ->map(fn (string $name) => Config::get("logging.channels.{$name}"))
+            ->filter(fn ($config): bool => is_array($config))
+            ->map(fn (array $config) => $this->resolveChannelWithPath($config, $depth + 1))
+            ->first(fn (?array $config): bool => isset($config['path']));
 
-        foreach ($stackChannels as $stackChannel) {
-            $stackChannelConfig = Config::get("logging.channels.{$stackChannel}");
-
-            if (! is_array($stackChannelConfig)) {
-                continue;
-            }
-
-            $resolved = $this->resolveChannelWithPath($stackChannelConfig, $depth + 1);
-
-            if (isset($resolved['path'])) {
-                return $resolved;
-            }
-        }
-
-        return $channelConfig;
+        return $firstValidLoggerConfig ?? $channelConfig;
     }
 
     protected function resolveDailyLogFilePath(string $basePath): string
@@ -108,7 +102,7 @@ trait ReadsLogs
 
         $datePattern = '/^'.preg_quote($filename, '/').'-\d{4}-\d{2}-\d{2}'.preg_quote($extension, '/').'$/';
         $latestFile = collect($files)
-            ->filter(fn ($file): int|false => preg_match($datePattern, basename((string) $file)))
+            ->filter(fn ($file): int|false => preg_match($datePattern, basename($file)))
             ->sortDesc()
             ->first();
 
