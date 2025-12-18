@@ -57,7 +57,7 @@ trait ReadsLogs
         return $baseLogPath;
     }
 
-    /***
+    /**
      * @param  array<string, mixed>|null  $channelConfig
      * @return array<string, mixed>|null
      */
