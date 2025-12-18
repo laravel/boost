@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+
     /*
     |--------------------------------------------------------------------------
     | Boost Master Switch
@@ -27,4 +28,5 @@ return [
     */
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
+
 ];
