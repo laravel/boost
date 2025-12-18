@@ -17,7 +17,7 @@ beforeEach(function (): void {
     File::ensureDirectoryExists($logDir);
 });
 
-test('it returns log entries when file exists with single driver', function (): void {
+it('returns log entries when a file exists with single driver', function (): void {
     $logFile = storage_path('logs/laravel.log');
 
     Config::set('logging.default', 'single');
@@ -45,7 +45,7 @@ LOG;
         ->toolTextDoesNotContain('local.DEBUG: First log message');
 });
 
-test('it detects daily driver directly and reads configured path', function (): void {
+it('detects daily driver directly and reads configured path', function (): void {
     $basePath = storage_path('logs/laravel.log');
     $logFile = storage_path('logs/laravel-'.date('Y-m-d').'.log');
 
@@ -71,7 +71,7 @@ LOG;
         ->toolTextContains('local.DEBUG: Daily log message');
 });
 
-test('it detects daily driver within stack channel', function (): void {
+it('detects daily driver within stack channel', function (): void {
     $basePath = storage_path('logs/laravel.log');
     $logFile = storage_path('logs/laravel-'.date('Y-m-d').'.log');
 
@@ -101,7 +101,7 @@ LOG;
         ->toolTextContains('local.DEBUG: Stack with daily log message');
 });
 
-test('it uses custom path from daily channel config', function (): void {
+it('uses custom path from daily channel config', function (): void {
     $basePath = storage_path('logs/custom-app.log');
     $logFile = storage_path('logs/custom-app-'.date('Y-m-d').'.log');
 
@@ -127,7 +127,7 @@ LOG;
         ->toolTextContains('local.DEBUG: Custom path log message');
 });
 
-test('it falls back to most recent daily log when today has no logs', function (): void {
+it('falls back to the most recent daily log when today has no logs', function (): void {
     $basePath = storage_path('logs/laravel.log');
 
     Config::set('logging.default', 'daily');
@@ -150,7 +150,7 @@ test('it falls back to most recent daily log when today has no logs', function (
         ->toolTextContains("local.DEBUG: Yesterday's log message");
 });
 
-test('it uses single channel path from stack when no daily channel', function (): void {
+it('uses single channel path from stack when no daily channel', function (): void {
     $logFile = storage_path('logs/app.log');
 
     Config::set('logging.default', 'stack');
@@ -179,7 +179,7 @@ LOG;
         ->toolTextContains('local.DEBUG: Single in stack log message');
 });
 
-test('it returns error when entries argument is invalid', function (): void {
+it('returns error when entries argument is invalid', function (): void {
     $tool = new ReadLogEntries;
 
     $response = $tool->handle(new Request(['entries' => 0]));
@@ -193,7 +193,7 @@ test('it returns error when entries argument is invalid', function (): void {
         ->toolTextContains('The "entries" argument must be greater than 0.');
 });
 
-test('it returns error when log file does not exist', function (): void {
+it('returns error when log file does not exist', function (): void {
     Config::set('logging.default', 'single');
     Config::set('logging.channels.single', [
         'driver' => 'single',
@@ -208,7 +208,7 @@ test('it returns error when log file does not exist', function (): void {
         ->toolTextContains('Log file not found');
 });
 
-test('it returns error when log file is empty', function (): void {
+it('returns error when log file is empty', function (): void {
     $logFile = storage_path('logs/laravel.log');
 
     Config::set('logging.default', 'single');
@@ -228,7 +228,7 @@ test('it returns error when log file is empty', function (): void {
         ->toolTextContains('Unable to retrieve log entries, or no entries yet.');
 });
 
-test('it ignores non-daily log files when selecting most recent daily log', function (): void {
+it('ignores non-daily log files when selecting most recent daily log', function (): void {
     $basePath = storage_path('logs/laravel.log');
 
     Config::set('logging.default', 'daily');
@@ -257,7 +257,7 @@ test('it ignores non-daily log files when selecting most recent daily log', func
         ->toolTextDoesNotContain('Zzz log');
 });
 
-test('it handles deeply nested stack configurations with a depth limit', function (): void {
+it('handles deeply nested stack configurations with a depth limit', function (): void {
     $logFile = storage_path('logs/deep.log');
 
     Config::set('logging.default', 'stack1');
@@ -289,7 +289,7 @@ test('it handles deeply nested stack configurations with a depth limit', functio
         ->toolTextContains('local.DEBUG: Deep stack log message');
 });
 
-test('it prioritizes the first channel with a path when the stack has multiple channels', function (): void {
+it('prioritizes the first channel with a path when the stack has multiple channels', function (): void {
     $dailyLogFile = storage_path('logs/laravel-'.date('Y-m-d').'.log');
     $singleLogFile = storage_path('logs/single.log');
 
@@ -322,7 +322,7 @@ test('it prioritizes the first channel with a path when the stack has multiple c
         ->toolTextDoesNotContain('Single channel log');
 });
 
-test('it handles missing channel configuration gracefully', function (): void {
+it('handles missing channel configuration gracefully', function (): void {
     $logFile = storage_path('logs/single.log');
 
     Config::set('logging.default', 'stack');
@@ -346,7 +346,7 @@ test('it handles missing channel configuration gracefully', function (): void {
         ->toolTextContains('local.DEBUG: Fallback log');
 });
 
-test('it handles stack with only channels without paths', function (): void {
+it('handles stack with only channels without paths', function (): void {
     Config::set('logging.default', 'stack');
     Config::set('logging.channels.stack', [
         'driver' => 'stack',
@@ -372,7 +372,7 @@ test('it handles stack with only channels without paths', function (): void {
         ->toolTextContains('local.DEBUG: Default fallback log');
 });
 
-test('it handles nested stack with a daily driver', function (): void {
+it('handles nested stack with a daily driver', function (): void {
     $basePath = storage_path('logs/laravel.log');
     $logFile = storage_path('logs/laravel-'.date('Y-m-d').'.log');
 
@@ -401,7 +401,7 @@ test('it handles nested stack with a daily driver', function (): void {
         ->toolTextContains('local.DEBUG: Nested stack daily log');
 });
 
-test('it handles daily logs in subdirectories', function (): void {
+it('handles daily logs in subdirectories', function (): void {
     $basePath = storage_path('logs/app/application.log');
     $logFile = storage_path('logs/app/application-'.date('Y-m-d').'.log');
 
