@@ -43,7 +43,7 @@ class Codex extends CodeEnvironment implements Agent, McpClient
 
     public function guidelinesPath(): string
     {
-        return 'AGENTS.md';
+        return config('boost.code_environments.codex.guidelines_path', 'AGENTS.md');
     }
 
     public function mcpInstallationStrategy(): McpInstallationStrategy
