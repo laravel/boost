@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.6...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.7...main)
+
+## [v1.8.7](https://github.com/laravel/boost/compare/v1.8.6...v1.8.7) - 2025-12-19
+
+### What's Changed
+
+* Refactor filterPrimitives method to improve class string handling  by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/395
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.6...v1.8.7
 
 ## [v1.8.6](https://github.com/laravel/boost/compare/v1.8.5...v1.8.6) - 2025-12-19
 
