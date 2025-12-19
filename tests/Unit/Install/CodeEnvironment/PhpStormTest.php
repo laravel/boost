@@ -37,3 +37,17 @@ test('guidelinesPath returns a custom path from config', function (): void {
 
     expect($phpstorm->guidelinesPath())->toBe('.idea/guidelines.md');
 });
+
+test('mcpConfigPath returns idea path when not selected as agent', function (): void {
+    $phpstorm = new PhpStorm($this->strategyFactory);
+    $phpstorm->selectedAsAgent = false;
+
+    expect($phpstorm->mcpConfigPath())->toBe('.idea/mcp.json');
+});
+
+test('mcpConfigPath returns junie path when selected as agent', function (): void {
+    $phpstorm = new PhpStorm($this->strategyFactory);
+    $phpstorm->selectedAsAgent = true;
+
+    expect($phpstorm->mcpConfigPath())->toBe('.junie/mcp/mcp.json');
+});

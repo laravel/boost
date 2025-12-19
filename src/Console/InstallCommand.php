@@ -14,6 +14,7 @@ use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Cli\DisplayHelper;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -592,6 +593,11 @@ class InstallCommand extends Command
         );
 
         foreach ($this->selectedTargetMcpClient as $mcpClient) {
+            if ($mcpClient instanceof PhpStorm) {
+                $mcpClient->selectedAsAgent = $this->selectedTargetAgents
+                    ->contains(fn ($agent): bool => $agent instanceof PhpStorm);
+            }
+
             $ideName = $mcpClient->mcpClientName();
             $ideDisplay = str_pad((string) $ideName, $longestIdeName);
             $this->output->write("  {$ideDisplay}... ");

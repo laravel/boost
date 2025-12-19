@@ -12,6 +12,8 @@ class PhpStorm extends CodeEnvironment implements Agent, McpClient
 {
     public bool $useAbsolutePathForMcp = true;
 
+    public bool $selectedAsAgent = false;
+
     public function name(): string
     {
         return 'phpstorm';
@@ -60,6 +62,10 @@ class PhpStorm extends CodeEnvironment implements Agent, McpClient
 
     public function mcpConfigPath(): string
     {
+        if (! $this->selectedAsAgent) {
+            return '.idea/mcp.json';
+        }
+
         return '.junie/mcp/mcp.json';
     }
 
