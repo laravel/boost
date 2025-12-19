@@ -11,7 +11,7 @@
 ### Constructors
 - Use PHP 8 constructor property promotion in `__construct()`.
     - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
-- Do not allow empty `__construct()` methods with zero parameters.
+- Do not allow empty `__construct()` methods with zero parameters unless the constructor is marked private.
 
 ### Type Declarations
 - Always use explicit return type declarations for methods and functions.
