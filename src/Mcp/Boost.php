@@ -165,12 +165,20 @@ class Boost extends Server
      */
     private function filterPrimitives(array $availablePrimitives, string $type): array
     {
-        return collect($availablePrimitives)
+        $collection = collect($availablePrimitives);
+
+        $classStrings = $collection->filter(fn ($item): bool => is_string($item));
+        $instances = $collection->reject(fn ($item): bool => is_string($item));
+
+        $filteredClassStrings = $classStrings
             ->diff(config("boost.mcp.{$type}.exclude", []))
             ->merge(
                 collect(config("boost.mcp.{$type}.include", []))
                     ->filter(fn (string $class): bool => class_exists($class))
-            )
+            );
+
+        return $filteredClassStrings
+            ->merge($instances)
             ->values()
             ->all();
     }
