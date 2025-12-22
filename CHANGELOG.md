@@ -1,6 +1,36 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.7...main)
+
+## [v1.8.7](https://github.com/laravel/boost/compare/v1.8.6...v1.8.7) - 2025-12-19
+
+### What's Changed
+
+* Refactor filterPrimitives method to improve class string handling  by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/395
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.6...v1.8.7
+
+## [v1.8.6](https://github.com/laravel/boost/compare/v1.8.5...v1.8.6) - 2025-12-19
+
+### What's Changed
+
+* Correct grammar in Editor Setup header by [@tooshay](https://github.com/tooshay) in https://github.com/laravel/boost/pull/381
+* [1.x] chore: improve workflow by [@MrPunyapal](https://github.com/MrPunyapal) in https://github.com/laravel/boost/pull/385
+* Simplify tool and resource discovery logic in MCP by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/383
+* [1.x] chore: improve tests by [@MrPunyapal](https://github.com/MrPunyapal) in https://github.com/laravel/boost/pull/386
+* Add Resource and Prompts for Package Guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/389
+* Bump laravel/mcp package version by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/393
+* Allow configurable guideline paths for AI agents by [@jordanpartridge](https://github.com/jordanpartridge) in https://github.com/laravel/boost/pull/392
+* Fix log file resolution for stack logging driver by [@sabist](https://github.com/sabist) in https://github.com/laravel/boost/pull/388
+* Refactor agent selection logic in InstallCommand by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/394
+
+### New Contributors
+
+* [@tooshay](https://github.com/tooshay) made their first contribution in https://github.com/laravel/boost/pull/381
+* [@jordanpartridge](https://github.com/jordanpartridge) made their first contribution in https://github.com/laravel/boost/pull/392
+* [@sabist](https://github.com/sabist) made their first contribution in https://github.com/laravel/boost/pull/388
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.5...v1.8.6
 
 ## [v1.8.5](https://github.com/laravel/boost/compare/v1.8.4...v1.8.5) - 2025-12-08
 

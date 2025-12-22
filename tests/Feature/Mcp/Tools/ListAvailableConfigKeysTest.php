@@ -19,16 +19,18 @@ test('it returns list of config keys in dot notation', function (): void {
         ->toolHasNoError()
         ->toolJsonContent(function ($content): void {
             expect($content)->toBeArray()
-                ->and($content)->not->toBeEmpty()
-                // Check that it contains common Laravel config keys
-                ->and($content)->toContain('app.name')
-                ->and($content)->toContain('app.env')
-                ->and($content)->toContain('database.default')
-                // Check that it contains our test keys
-                ->and($content)->toContain('test.simple')
-                ->and($content)->toContain('test.nested.key')
-                ->and($content)->toContain('test.array.0')
-                ->and($content)->toContain('test.array.1');
+                ->not->toBeEmpty()
+                ->toContain(
+                    // Check that it constains common Laravel config keys
+                    'app.name',
+                    'app.env',
+                    'database.default',
+                    // Check that it contains our test keys
+                    'test.simple',
+                    'test.nested.key',
+                    'test.array.0',
+                    'test.array.1'
+                );
 
             // Check that keys are sorted
             $sortedContent = $content;
@@ -49,6 +51,6 @@ test('it handles empty config gracefully', function (): void {
         ->toolJsonContent(function ($content): void {
             expect($content)->toBeArray()
                 // Should still have Laravel default config keys
-                ->and($content)->toContain('app.name');
+                ->toContain('app.name');
         });
 });
