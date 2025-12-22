@@ -16,7 +16,8 @@
 - Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
 
 ### Laravel 12 Structure
-- No middleware files in `app/Http/Middleware/`.
+- In Laravel 11 and 12, middlewares are no longer registered in Kernel.php.
+- Middlewares are configured declaratively in bootstrap/app.php using Application::configure()->withMiddleware()
 - `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
 - `bootstrap/providers.php` contains application specific service providers.
 - **No app\Console\Kernel.php** - use `bootstrap/app.php` or `routes/console.php` for console configuration.
