@@ -7,9 +7,10 @@ use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Boost\Telemetry\TelemetryCollector;
 
 beforeEach(function (): void {
+    app()->forgetInstance(TelemetryCollector::class);
+
     config(['boost.telemetry.enabled' => true]);
     Http::fake(['*' => Http::response(['status' => 'ok'])]);
-    app()->forgetInstance(TelemetryCollector::class);
     $this->collector = app(TelemetryCollector::class);
     $this->collector->toolData = [];
     $this->collector->resourceData = [];
