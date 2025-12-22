@@ -8,6 +8,7 @@ use Laravel\Boost\Telemetry\TelemetryCollector;
 
 beforeEach(function (): void {
     config(['boost.telemetry.enabled' => true]);
+    Http::fake(['*' => Http::response(['status' => 'ok'])]);
     app()->forgetInstance(TelemetryCollector::class);
     $this->collector = app(TelemetryCollector::class);
     $this->collector->toolData = [];
@@ -63,10 +64,6 @@ it('does not record when disabled via config', function (): void {
 });
 
 it('flush sends data and clears counts', function (): void {
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
     $this->collector->recordTool(Tinker::class, 150);
     $this->collector->recordResource('file://instructions/application-info.md');
     $this->collector->recordPrompt('laravel/framework');
@@ -87,10 +84,6 @@ it('flush sends data and clears counts', function (): void {
 });
 
 it('flush does nothing when toolData is empty', function (): void {
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
     $this->collector->flush();
 
     expect(Http::recorded())->toHaveCount(0);
@@ -98,10 +91,6 @@ it('flush does nothing when toolData is empty', function (): void {
 
 it('flush does nothing when telemetry is disabled', function (): void {
     config(['boost.telemetry.enabled' => false]);
-
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
 
     $collector = new TelemetryCollector;
     $collector->toolData = ['SomeTool' => [['tokens' => 100]]];
@@ -111,9 +100,7 @@ it('flush does nothing when telemetry is disabled', function (): void {
 });
 
 it('flush fails silently on network error', function (): void {
-    Http::fake([
-        '*' => Http::response(null, 500),
-    ]);
+    Http::fake(['*' => Http::response(null, 500)]);
 
     $this->collector->recordTool(Tinker::class, 100);
     $this->collector->flush();
@@ -133,10 +120,6 @@ it('flush fails silently on connection timeout', function (): void {
 });
 
 it('includes buildPayload as the correct structure', function (): void {
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
     $this->collector->recordTool(Tinker::class, 100);
     $this->collector->recordResource('file://instructions/application-info.md');
     $this->collector->recordPrompt('laravel/framework');
@@ -171,10 +154,6 @@ it('includes buildPayload as the correct structure', function (): void {
 });
 
 it('sends session_id as a consistent hash of base_path', function (): void {
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
     $expectedSessionId = hash('sha256', base_path());
 
     $this->collector->recordTool(Tinker::class, 100);
@@ -189,10 +168,6 @@ it('sends session_id as a consistent hash of base_path', function (): void {
 });
 
 it('records tool response sizes and resets after flush', function (): void {
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
     $this->collector->recordTool(Tinker::class, 128);
     $this->collector->recordTool(Tinker::class, 256);
     $this->collector->recordResource('file://instructions/laravel/framework.md');
@@ -215,10 +190,6 @@ it('records tool response sizes and resets after flush', function (): void {
 });
 
 it('uses boost_version as InstalledVersions', function (): void {
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
     $expectedVersion = InstalledVersions::getVersion('laravel/boost');
 
     $this->collector->recordTool(Tinker::class, 100);
@@ -233,10 +204,6 @@ it('uses boost_version as InstalledVersions', function (): void {
 });
 
 it('resets resource and prompts data after a flush', function (): void {
-    Http::fake([
-        '*' => Http::response(['status' => 'ok'], 200),
-    ]);
-
     $this->collector->recordResource('file://instructions/application-info.md');
     $this->collector->recordPrompt('laravel/framework');
     $this->collector->flush();

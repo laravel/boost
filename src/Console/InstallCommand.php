@@ -224,9 +224,9 @@ class InstallCommand extends Command
             File::put($envPath, $updatedContent);
 
             $this->newLine();
-            $this->info("  {$this->greenTick} Telemetry {$status}");
-        } catch (Exception $e) {
-            $this->warn("  Unable to configure telemetry: {$e->getMessage()}");
+            $this->info("{$this->greenTick} Telemetry {$status}");
+        } catch (Exception $exception) {
+            $this->warn("Unable to configure telemetry: {$exception->getMessage()}");
         }
     }
 
