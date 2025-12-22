@@ -14,6 +14,10 @@ class TelemetryCollector
 
     public array $toolData = [];
 
+    public array $resourceData = [];
+
+    public array $promptData = [];
+
     protected bool $enabled;
 
     protected string $url;
@@ -47,7 +51,7 @@ class TelemetryCollector
         $this->flush();
     }
 
-    public function record(string $toolName, int $wordCount): void
+    public function recordTool(string $toolName, int $wordCount): void
     {
         if (! $this->enabled) {
             return;
@@ -61,6 +65,24 @@ class TelemetryCollector
         $this->toolData[$toolName][] = ['tokens' => $tokens];
     }
 
+    public function recordResource(string $resourceUri): void
+    {
+        if (! $this->enabled) {
+            return;
+        }
+
+        $this->resourceData[$resourceUri] = ($this->resourceData[$resourceUri] ?? 0) + 1;
+    }
+
+    public function recordPrompt(string $promptName): void
+    {
+        if (! $this->enabled) {
+            return;
+        }
+
+        $this->promptData[$promptName] = ($this->promptData[$promptName] ?? 0) + 1;
+    }
+
     protected function calculateTokens(int $wordCount): int
     {
         return (int) round($wordCount * 1.3);
@@ -68,7 +90,7 @@ class TelemetryCollector
 
     public function flush(): void
     {
-        if ($this->toolData === [] || ! $this->enabled) {
+        if (($this->toolData === [] && $this->resourceData === [] && $this->promptData === []) || ! $this->enabled) {
             return;
         }
 
@@ -80,6 +102,8 @@ class TelemetryCollector
             //
         } finally {
             $this->toolData = [];
+            $this->resourceData = [];
+            $this->promptData = [];
             $this->sessionStartTime = microtime(true);
         }
     }
@@ -98,6 +122,8 @@ class TelemetryCollector
             'session_start' => date('c', (int) $this->sessionStartTime),
             'session_end' => date('c', (int) $sessionEndTime),
             'tools' => $this->formatToolsData(),
+            'resources' => $this->resourceData,
+            'prompts' => $this->promptData,
             'timestamp' => date('c'),
         ]));
     }

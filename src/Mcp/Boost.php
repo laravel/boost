@@ -6,6 +6,8 @@ namespace Laravel\Boost\Mcp;
 
 use InvalidArgumentException;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
+use Laravel\Boost\Mcp\Methods\GetPromptWithTelemetry;
+use Laravel\Boost\Mcp\Methods\ReadResourceWithTelemetry;
 use Laravel\Boost\Mcp\Prompts\PackageGuidelinePrompt;
 use Laravel\Boost\Mcp\Resources\PackageGuidelineResource;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
@@ -81,6 +83,8 @@ class Boost extends Server
 
         // Override the tools/call method to use our ToolExecutor
         $this->methods['tools/call'] = CallToolWithExecutor::class;
+        $this->methods['resources/read'] = ReadResourceWithTelemetry::class;
+        $this->methods['prompts/get'] = GetPromptWithTelemetry::class;
     }
 
     /**

@@ -67,7 +67,7 @@ class ToolExecutor
             return Response::error("Process tool execution failed: {$errorOutput}");
         } finally {
             if (config('boost.telemetry.enabled')) {
-                app(TelemetryCollector::class)->record($toolClass, $wordCount);
+                app(TelemetryCollector::class)->recordTool($toolClass, $wordCount);
             }
         }
     }
