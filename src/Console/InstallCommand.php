@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Laravel\Boost\Contracts\Agent;
@@ -101,6 +102,7 @@ class InstallCommand extends Command
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
         $this->performInstallation();
+        $this->enableTelemetry();
         $this->outro();
 
         return self::SUCCESS;
@@ -191,6 +193,41 @@ class InstallCommand extends Command
         ksort($tools);
 
         return $tools;
+    }
+
+    protected function enableTelemetry(): void
+    {
+        $envPath = base_path('.env');
+
+        if (! File::exists($envPath)) {
+            return;
+        }
+
+        try {
+            $envContent = File::get($envPath);
+            $envKey = 'BOOST_TELEMETRY_ENABLED';
+
+            if (preg_match("/^{$envKey}=.*/m", $envContent)) {
+                return;
+            }
+
+            $enableTelemetry = confirm(
+                label: 'Enable anonymous telemetry to help improve Laravel Boost?',
+                hint: 'You can change this anytime by updating `BOOST_TELEMETRY_ENABLED` in your .env file'
+            );
+
+            $envValue = $enableTelemetry ? 'true' : 'false';
+            $status = $enableTelemetry ? 'enabled' : 'disabled';
+
+            $updatedContent = rtrim($envContent).PHP_EOL.PHP_EOL."{$envKey}={$envValue}".PHP_EOL;
+
+            File::put($envPath, $updatedContent);
+
+            $this->newLine();
+            $this->info("  {$this->greenTick} Telemetry {$status}");
+        } catch (Exception $e) {
+            $this->warn("  Unable to configure telemetry: {$e->getMessage()}");
+        }
     }
 
     protected function outro(): void

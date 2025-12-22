@@ -41,7 +41,7 @@ return [
     */
 
     'telemetry' => [
-        'enabled' => env('BOOST_TELEMETRY_ENABLED', true),
+        'enabled' => env('BOOST_TELEMETRY_ENABLED', false),
         'url' => env('BOOST_TELEMETRY_URL', 'https://boost.laravel.com/api/telemetry'),
     ],
 
