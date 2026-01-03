@@ -6,6 +6,7 @@ namespace Laravel\Boost\Mcp;
 
 use Dotenv\Dotenv;
 use Illuminate\Support\Env;
+use Laravel\Boost\Telemetry\TelemetryCollector;
 use Laravel\Mcp\Response;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -41,11 +42,14 @@ class ToolExecutor
             timeout: $this->getTimeout($arguments)
         );
 
+        $wordCount = 0;
+
         try {
             $process->mustRun();
 
             $output = $process->getOutput();
             $decoded = json_decode($output, true);
+            $wordCount = str_word_count($output);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return Response::error('Invalid JSON output from tool process: '.json_last_error_msg());
@@ -61,6 +65,10 @@ class ToolExecutor
             $errorOutput = $process->getErrorOutput().$process->getOutput();
 
             return Response::error("Process tool execution failed: {$errorOutput}");
+        } finally {
+            if (config('boost.telemetry.enabled')) {
+                app(TelemetryCollector::class)->recordTool($toolClass, $wordCount);
+            }
         }
     }
 

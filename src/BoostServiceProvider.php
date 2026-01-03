@@ -16,6 +16,7 @@ use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
+use Laravel\Boost\Telemetry\TelemetryCollector;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\Roster;
 
@@ -67,6 +68,8 @@ class BoostServiceProvider extends ServiceProvider
             $app->make(Roster::class),
             $app->make(GuidelineConfig::class)
         ));
+
+        $this->app->singleton(TelemetryCollector::class);
     }
 
     public function boot(Router $router): void
