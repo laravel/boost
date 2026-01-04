@@ -320,7 +320,7 @@ class GuidelineComposer
             'path' => $path,
             'custom' => str_contains($path, $this->customGuidelinePath()),
             'third_party' => $thirdParty,
-            'tokens' => round(str_word_count($rendered) * 1.3),
+            'tokens' => (int) round(str_word_count($rendered) * 1.3),
         ];
     }
 

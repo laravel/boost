@@ -243,7 +243,7 @@ class SkillComposer
             return null;
         }
 
-        $content = file_get_contents($path);
+        $content = (string) file_get_contents($path);
 
         $frontmatter = $this->extractFrontmatter($content);
         if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
@@ -334,21 +334,24 @@ class SkillComposer
             }
         }
 
-        $path = realpath($path);
+        $realPath = realpath($path);
+        if ($realPath === false) {
+            return null;
+        }
 
         // If this is a custom skill, return it unchanged
-        if (str_contains($path, $this->customSkillPath())) {
-            return $path;
+        if (str_contains($realPath, $this->customSkillPath())) {
+            return $realPath;
         }
 
         // Check if the user has an override for this skill
-        $basePath = realpath(dirname(__DIR__, 2));
-        $relativePath = str_replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '', $path);
+        $basePath = (string) realpath(dirname(__DIR__, 2));
+        $relativePath = str_replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '', $realPath);
         $relativePath = ltrim($relativePath, '/\\');
 
         $customPath = $this->prependUserSkillPath($relativePath);
 
-        return file_exists($customPath) ? $customPath : $path;
+        return file_exists($customPath) ? $customPath : $realPath;
     }
 
     /**
