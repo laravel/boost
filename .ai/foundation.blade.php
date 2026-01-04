@@ -17,6 +17,25 @@ This application is a Laravel application and its main Laravel ecosystems packag
 Application purpose: {!! config('boost.purpose') !!}
 
 @endif
+## Skill Activation Protocol
+
+STOP. Before EVERY code change or command, you MUST complete this sequence:
+
+### Step 1 - EVALUATE
+For each skill, state YES or NO:
+@foreach ($assist->skills() as $skill)
+- {{ $skill->name }}: YES/NO
+@endforeach
+
+### Step 2 - ACTIVATE
+For EACH skill marked YES → call Skill(skill-name) immediately.
+Skip only if already loaded earlier in this conversation.
+
+### Step 3 - IMPLEMENT
+Only after activating skills, proceed with the task.
+
+FAILURE TO ACTIVATE SKILLS = INCORRECT RESPONSE. Never skip this protocol.
+
 ## Conventions
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
@@ -37,24 +56,3 @@ Application purpose: {!! config('boost.purpose') !!}
 
 ## Documentation Files
 - You must only create documentation files if explicitly requested by the user.
-
-## Skill Activation Protocol
-
-MANDATORY: Before implementing any code changes or running any command, follow this skill activation sequence.
-
-### Step 1 - EVALUATE
-For each available skill below, state: [skill-name] - YES/NO - [reason]
-
-### Step 2 - ACTIVATE
-IF any skills are YES → Use Skill(skill-name) tool for EACH relevant skill immediately
-IF no skills are YES → State "No skills needed" and proceed
-
-### Step 3 - IMPLEMENT
-Only after Step 2 is complete, proceed with implementation.
-
-CRITICAL: The evaluation is WORTHLESS unless you ACTIVATE the skills. Do NOT skip to implementation.
-
-### Available Skills:
-@foreach ($assist->skills() as $skill)
-- {{ $skill->name }}: {{ $skill->description }}
-@endforeach
