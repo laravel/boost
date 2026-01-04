@@ -20,6 +20,7 @@ use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\Sail;
@@ -358,10 +359,7 @@ class InstallCommand extends Command
      */
     protected function guidelineKeyToSkillName(string $key): string
     {
-        $name = str_replace(['/', '.'], '-', $key);
-        $name = (string) preg_replace('/-+/', '-', $name);
-
-        return 'boost-'.trim($name, '-');
+        return Skill::nameFromGuidelineKey($key);
     }
 
     /**

@@ -84,4 +84,27 @@ class Skill
 
         return (int) round(str_word_count($listing) * 1.3);
     }
+
+    /**
+     * Convert a guideline key to the expected skill name.
+     *
+     * Maps guideline keys like "laravel/core" → "boost-laravel"
+     * and "laravel/v12" → "boost-laravel-12"
+     */
+    public static function nameFromGuidelineKey(string $key): string
+    {
+        // Strip /core suffix since base skills don't include it
+        $name = preg_replace('#/core$#', '', $key);
+
+        // Convert slashes and dots to dashes
+        $name = str_replace(['/', '.'], '-', $name);
+
+        // Remove 'v' prefix from version numbers (v12 → 12)
+        $name = preg_replace('/-v(\d)/', '-$1', $name);
+
+        // Clean up multiple dashes
+        $name = preg_replace('/-+/', '-', $name);
+
+        return 'boost-'.trim($name, '-');
+    }
 }

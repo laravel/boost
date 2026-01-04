@@ -109,20 +109,9 @@ class SkillComposer
         }
 
         // Include if there's no corresponding skill
-        $expectedSkillName = $this->guidelineKeyToSkillName($key);
+        $expectedSkillName = Skill::nameFromGuidelineKey($key);
 
         return ! in_array($expectedSkillName, $skillNames, true);
-    }
-
-    /**
-     * Convert a guideline key to the expected skill name.
-     */
-    protected function guidelineKeyToSkillName(string $key): string
-    {
-        $name = str_replace(['/', '.'], '-', $key);
-        $name = preg_replace('/-+/', '-', $name);
-
-        return 'boost-'.trim($name, '-');
     }
 
     /**
