@@ -12,7 +12,7 @@ namespace Laravel\Boost\Contracts;
  *
  * @see https://agentskills.io/home
  */
-interface HasSkills
+interface HasSkills extends Agent
 {
     /**
      * Get the directory where Skills should be written.

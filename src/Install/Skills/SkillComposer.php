@@ -154,7 +154,7 @@ class SkillComposer
      */
     protected function getPackageSkills(): Collection
     {
-        return $this->roster->packages()
+        return collect($this->roster->packages())
             ->flatMap(function (Package $package): Collection {
                 $skillDir = str_replace('_', '-', strtolower($package->name()));
                 $skills = collect();

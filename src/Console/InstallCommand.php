@@ -499,9 +499,9 @@ class InstallCommand extends Command
         $skillComposer = app(SkillComposer::class)->config($guidelineConfig);
         $guidelines = $guidelineComposer->guidelines();
 
-        // Separate skill-capable agents from legacy agents
-        $skillAgents = $this->selectedTargetAgents->filter(fn ($agent) => $agent instanceof HasSkills);
-        $legacyAgents = $this->selectedTargetAgents->reject(fn ($agent) => $agent instanceof HasSkills);
+        /** @var Collection<int, HasSkills> $skillAgents */
+        $skillAgents = $this->selectedTargetAgents->filter(fn (Agent $agent) => $agent instanceof HasSkills);
+        $legacyAgents = $this->selectedTargetAgents->reject(fn (Agent $agent) => $agent instanceof HasSkills);
 
         $this->newLine();
 
