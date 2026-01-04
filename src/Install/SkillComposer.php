@@ -242,9 +242,12 @@ class SkillComposer
         $bodyContent = $this->removeFrontmatter($content);
         $rendered = trim($this->renderSkillContent($bodyContent, $path));
 
-        if (empty($rendered)) {
+        // Load corresponding core.blade.php and append its rendered content
+        $corePath = str_replace('skill.blade.php', 'core.blade.php', $path);
+        if (! file_exists($corePath)) {
             return null;
         }
+        $rendered .= "\n".$this->renderGuidelineFile($corePath);
 
         return new Skill(
             name: $frontmatter['name'],
