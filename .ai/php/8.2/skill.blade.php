@@ -1,5 +1,5 @@
 ---
 name: boost-php-82
-description: PHP 8.2 specific features including readonly classes and DNF types. Use when working with PHP 8.2.
+description: Use this skill before writing any PHP code.
 ---
 @include('php.8.2.core')

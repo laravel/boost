@@ -1,5 +1,5 @@
 ---
 name: boost-inertia-laravel-1
-description: Inertia.js Laravel adapter v1 specific patterns. Use when working with Inertia Laravel v1.
+description: Use this skill before writing any Inertia backend code.
 ---
 @include('inertia-laravel.1.core')

@@ -1,5 +1,5 @@
 ---
 name: boost-php
-description: PHP coding standards including strict types, constructor promotion, type declarations, and PHPDoc blocks. Use when writing PHP code.
+description: Use this skill before writing any PHP code.
 ---
 @include('php.core')

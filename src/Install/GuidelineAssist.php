@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Roster;
@@ -210,5 +211,15 @@ class GuidelineAssist
     public function sailBinaryPath(): string
     {
         return Sail::BINARY_PATH;
+    }
+
+    /**
+     * Get the composed skills collection.
+     *
+     * @return Collection<string, Skill>
+     */
+    public function skills(): Collection
+    {
+        return app(SkillComposer::class)->compose();
     }
 }

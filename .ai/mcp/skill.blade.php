@@ -1,5 +1,5 @@
 ---
 name: boost-mcp
-description: Model Context Protocol (MCP) server patterns for Laravel. Use when working with MCP tools.
+description: Use this skill before building any MCP server or tool.
 ---
 @include('mcp.core')

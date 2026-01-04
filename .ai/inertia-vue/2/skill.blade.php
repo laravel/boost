@@ -1,5 +1,5 @@
 ---
 name: boost-inertia-vue-2-forms
-description: Inertia.js Vue v2 form handling patterns. Use when working with forms in Inertia Vue v2.
+description: Use this skill before writing any Vue code.
 ---
 @include('inertia-vue.2.forms')

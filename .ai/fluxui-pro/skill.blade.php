@@ -1,5 +1,5 @@
 ---
 name: boost-fluxui-pro
-description: Flux UI Pro component library patterns. Use when building with Flux UI Pro components.
+description: Use this skill before building any UI components.
 ---
 @include('fluxui-pro.core')

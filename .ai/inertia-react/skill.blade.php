@@ -1,5 +1,5 @@
 ---
 name: boost-inertia-react
-description: Inertia.js with React patterns including Link components and navigation. Use when building React-based Inertia frontends.
+description: Use this skill before writing any React code.
 ---
 @include('inertia-react.core')

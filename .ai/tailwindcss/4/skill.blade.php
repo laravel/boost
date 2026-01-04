@@ -1,5 +1,5 @@
 ---
 name: boost-tailwindcss-4
-description: Tailwind CSS v4 specific features and utilities. Use when working with Tailwind CSS v4.
+description: Use this skill before writing any Tailwind styles.
 ---
 @include('tailwindcss.4.core')

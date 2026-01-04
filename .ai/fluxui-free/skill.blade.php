@@ -1,5 +1,5 @@
 ---
 name: boost-fluxui-free
-description: Flux UI free component library patterns. Use when building with Flux UI free components.
+description: Use this skill before building any UI components.
 ---
 @include('fluxui-free.core')

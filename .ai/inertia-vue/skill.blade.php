@@ -1,5 +1,5 @@
 ---
 name: boost-inertia-vue
-description: Inertia.js with Vue.js patterns including Link components and navigation. Use when building Vue-based Inertia frontends.
+description: Use this skill before writing any Vue code.
 ---
 @include('inertia-vue.core')

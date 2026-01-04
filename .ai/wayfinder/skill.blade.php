@@ -1,5 +1,5 @@
 ---
 name: boost-wayfinder
-description: Laravel Wayfinder type-safe routing patterns. Use when working with Wayfinder.
+description: Use this skill before working with TypeScript routes.
 ---
 @include('wayfinder.core')

@@ -1,5 +1,5 @@
 ---
 name: boost-tailwindcss
-description: Tailwind CSS utility patterns including spacing, dark mode, and component extraction. Use when styling with Tailwind.
+description: Use this skill before writing any Tailwind styles.
 ---
 @include('tailwindcss.core')

@@ -1,5 +1,5 @@
 ---
 name: boost-laravel-10
-description: Laravel 10 specific patterns and file structure. Use when working with Laravel 10 applications.
+description: Use this skill before writing any Laravel code.
 ---
 @include('laravel.10.core')

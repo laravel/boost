@@ -1,5 +1,5 @@
 ---
 name: boost-inertia-svelte
-description: Inertia.js with Svelte patterns including Link components and navigation. Use when building Svelte-based Inertia frontends.
+description: Use this skill before writing any Svelte code.
 ---
 @include('inertia-svelte.core')

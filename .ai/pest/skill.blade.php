@@ -1,5 +1,5 @@
 ---
 name: boost-pest
-description: Pest PHP testing framework patterns including test structure, assertions, mocking, and datasets. Use when writing Pest tests.
+description: Use this skill before writing any test.
 ---
 @include('pest.core')

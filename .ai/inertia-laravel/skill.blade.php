@@ -1,5 +1,5 @@
 ---
 name: boost-inertia-laravel
-description: Inertia.js Laravel adapter patterns for building SPAs with Laravel backends. Use when working with Inertia.js.
+description: Use this skill before writing any Inertia backend code.
 ---
 @include('inertia-laravel.core')

@@ -37,3 +37,24 @@ Application purpose: {!! config('boost.purpose') !!}
 
 ## Documentation Files
 - You must only create documentation files if explicitly requested by the user.
+
+## Skill Activation Protocol
+
+MANDATORY: Before implementing any code changes or running any command, follow this skill activation sequence.
+
+### Step 1 - EVALUATE
+For each available skill below, state: [skill-name] - YES/NO - [reason]
+
+### Step 2 - ACTIVATE
+IF any skills are YES → Use Skill(skill-name) tool for EACH relevant skill immediately
+IF no skills are YES → State "No skills needed" and proceed
+
+### Step 3 - IMPLEMENT
+Only after Step 2 is complete, proceed with implementation.
+
+CRITICAL: The evaluation is WORTHLESS unless you ACTIVATE the skills. Do NOT skip to implementation.
+
+### Available Skills:
+@foreach ($assist->skills() as $skill)
+- {{ $skill->name }}: {{ $skill->description }}
+@endforeach

@@ -1,5 +1,5 @@
 ---
 name: boost-inertia-svelte-1-forms
-description: Inertia.js Svelte v1 form handling patterns. Use when working with forms in Inertia Svelte v1.
+description: Use this skill before writing any Svelte code.
 ---
 @include('inertia-svelte.1.forms')

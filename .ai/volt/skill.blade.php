@@ -1,5 +1,5 @@
 ---
 name: boost-volt
-description: Laravel Volt single-file Livewire components. Use when building Volt components.
+description: Use this skill before writing any Volt code.
 ---
 @include('volt.core')
