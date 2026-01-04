@@ -266,8 +266,13 @@ class SkillComposer
             return [];
         }
 
+        $yaml = $matches[1];
+
+        // Quote description values containing colons to prevent YAML parse errors
+        $yaml = preg_replace('/^(description:)\s*(.+:.+)$/m', '$1 "$2"', $yaml);
+
         try {
-            return Yaml::parse($matches[1]) ?? [];
+            return Yaml::parse($yaml) ?? [];
         } catch (\Exception) {
             return [];
         }

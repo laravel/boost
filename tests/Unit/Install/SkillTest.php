@@ -89,3 +89,29 @@ test('estimates tokens based on name and description only', function (): void {
 
     expect($skill->estimatedTokens())->toBe(5);
 });
+
+test('nameFromGuidelineKey maps guideline keys to skill names', function (string $guidelineKey, string $expectedSkillName): void {
+    expect(Skill::nameFromGuidelineKey($guidelineKey))->toBe($expectedSkillName);
+})->with([
+    // Base /core guidelines strip the suffix
+    'laravel/core' => ['laravel/core', 'boost-laravel'],
+    'pest/core' => ['pest/core', 'boost-pest'],
+    'livewire/core' => ['livewire/core', 'boost-livewire'],
+    'tailwindcss/core' => ['tailwindcss/core', 'boost-tailwindcss'],
+    'pint/core' => ['pint/core', 'boost-pint'],
+
+    // Version-specific guidelines map to version-specific skills
+    'laravel/v12' => ['laravel/v12', 'boost-laravel-12'],
+    'pest/v4' => ['pest/v4', 'boost-pest-4'],
+    'tailwindcss/v4' => ['tailwindcss/v4', 'boost-tailwindcss-4'],
+
+    // Version-specific guidelines produce version-specific names (matching is handled separately)
+    'livewire/v3' => ['livewire/v3', 'boost-livewire-3'],
+
+    // Nested paths with slashes
+    'inertia-laravel/v2' => ['inertia-laravel/v2', 'boost-inertia-laravel-2'],
+    'inertia-react/v2/forms' => ['inertia-react/v2/forms', 'boost-inertia-react-2-forms'],
+
+    // Third-party package guidelines
+    'filament/filament' => ['filament/filament', 'boost-filament-filament'],
+]);

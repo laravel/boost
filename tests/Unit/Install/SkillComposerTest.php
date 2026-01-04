@@ -82,6 +82,27 @@ BLADE;
     expect($method->invoke($this->skillComposer, $content))->toBe([]);
 });
 
+test('handles unquoted colons in description values', function (): void {
+    $content = <<<'BLADE'
+---
+name: boost-livewire-3
+description: Livewire 3 patterns including wire: directives and syntax changes.
+---
+
+Content.
+BLADE;
+
+    $reflection = new ReflectionClass($this->skillComposer);
+    $method = $reflection->getMethod('extractFrontmatter');
+    $method->setAccessible(true);
+
+    $frontmatter = $method->invoke($this->skillComposer, $content);
+
+    expect($frontmatter)
+        ->toHaveKey('name', 'boost-livewire-3')
+        ->toHaveKey('description', 'Livewire 3 patterns including wire: directives and syntax changes.');
+});
+
 test('identifies foundation guidelines correctly', function (): void {
     $reflection = new ReflectionClass($this->skillComposer);
     $method = $reflection->getMethod('isFoundationGuideline');
