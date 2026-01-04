@@ -268,7 +268,8 @@ class GuidelineComposer
                 ->files()
                 ->in($dirPath)
                 ->name('*.blade.php')
-                ->name('*.md');
+                ->name('*.md')
+                ->notName('skill.blade.php');
         } catch (DirectoryNotFoundException) {
             return [];
         }

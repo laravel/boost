@@ -45,3 +45,23 @@ test('guidelinesPath returns a nested custom path from config', function (): voi
 
     expect($claude->guidelinesPath())->toBe('docs/ai/CLAUDE.md');
 });
+
+test('implements HasSkills interface', function (): void {
+    $claude = new ClaudeCode($this->strategyFactory);
+
+    expect($claude)->toBeInstanceOf(\Laravel\Boost\Contracts\HasSkills::class);
+});
+
+test('skillsPath returns default .claude/skills when no config set', function (): void {
+    $claude = new ClaudeCode($this->strategyFactory);
+
+    expect($claude->skillsPath())->toBe('.claude/skills');
+});
+
+test('skillsPath returns custom path from config', function (): void {
+    config(['boost.code_environments.claude_code.skills_path' => '.custom/skills']);
+
+    $claude = new ClaudeCode($this->strategyFactory);
+
+    expect($claude->skillsPath())->toBe('.custom/skills');
+});

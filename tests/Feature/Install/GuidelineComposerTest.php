@@ -763,3 +763,18 @@ test('includes enabled conditional guidelines and orders them before packages', 
         ->and($testsPos)->toBeGreaterThan($foundationPos)
         ->and($testsPos)->toBeLessThan($pestPos);
 });
+
+test('excludes skill.blade.php files from guideline discovery', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->compose();
+
+    // Skill files should not appear as guidelines
+    expect($guidelines)
+        ->not->toContain('=== skill rules ===')
+        ->not->toContain('=== .ai/skill rules ===');
+});

@@ -34,3 +34,15 @@ test('guidelinesPath returns a custom path from config', function (): void {
 
     expect($copilot->guidelinesPath())->toBe('docs/copilot.md');
 });
+
+test('implements HasSkills interface', function (): void {
+    $copilot = new Copilot($this->strategyFactory);
+
+    expect($copilot)->toBeInstanceOf(\Laravel\Boost\Contracts\HasSkills::class);
+});
+
+test('skillsPath returns .github/skills', function (): void {
+    $copilot = new Copilot($this->strategyFactory);
+
+    expect($copilot->skillsPath())->toBe('.github/skills');
+});

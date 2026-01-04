@@ -37,3 +37,15 @@ test('guidelinesPath returns a custom path from config', function (): void {
 
     expect($codex->guidelinesPath())->toBe('docs/AGENTS.md');
 });
+
+test('implements HasSkills interface', function (): void {
+    $codex = new Codex($this->strategyFactory);
+
+    expect($codex)->toBeInstanceOf(\Laravel\Boost\Contracts\HasSkills::class);
+});
+
+test('skillsPath returns default .codex/skills', function (): void {
+    $codex = new Codex($this->strategyFactory);
+
+    expect($codex->skillsPath())->toBe('.codex/skills');
+});

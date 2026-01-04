@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\HasSkills;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Codex extends CodeEnvironment implements Agent, McpClient
+class Codex extends CodeEnvironment implements Agent, McpClient, HasSkills
 {
     public function name(): string
     {
@@ -54,5 +55,10 @@ class Codex extends CodeEnvironment implements Agent, McpClient
     public function shellMcpCommand(): string
     {
         return 'codex mcp add {key} -- {command} {args}';
+    }
+
+    public function skillsPath(): string
+    {
+        return config('boost.code_environments.codex.skills_path', '.codex/skills');
     }
 }

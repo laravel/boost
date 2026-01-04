@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\HasSkills;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Cli\DisplayHelper;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
@@ -19,6 +20,8 @@ use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Install\Skills\SkillComposer;
+use Laravel\Boost\Install\Skills\SkillWriter;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
@@ -314,18 +317,51 @@ class InstallCommand extends Command
             return collect();
         }
 
+        $skills = app(SkillComposer::class)->compose();
+
         return collect(multiselect(
             label: 'Which third-party AI guidelines do you want to install?',
             // @phpstan-ignore-next-line
-            options: $options->mapWithKeys(function (array $guideline, string $name): array {
+            options: $options->mapWithKeys(function (array $guideline, string $name) use ($skills): array {
                 $humanName = str_replace('/core', '', $name);
+                $tokenDisplay = $this->formatGuidelineTokenDisplay($name, $guideline['tokens'], $skills);
 
-                return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
+                return [$name => "{$humanName} {$tokenDisplay} {$guideline['description']}"];
             }),
             default: collect($this->config->getGuidelines()),
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
+    }
+
+    /**
+     * Format the token display for a guideline, showing both guideline and skill tokens if available.
+     *
+     * @param  Collection<string, \Laravel\Boost\Install\Skills\Skill>  $skills
+     */
+    protected function formatGuidelineTokenDisplay(string $guidelineKey, int $guidelineTokens, Collection $skills): string
+    {
+        $skillName = $this->guidelineKeyToSkillName($guidelineKey);
+        $skill = $skills->get($skillName);
+
+        if ($skill === null) {
+            return "(~{$guidelineTokens} tokens)";
+        }
+
+        $skillTokens = $skill->estimatedTokens();
+
+        return "(~{$guidelineTokens} tokens, ~{$skillTokens} as skill)";
+    }
+
+    /**
+     * Convert a guideline key to the expected skill name.
+     */
+    protected function guidelineKeyToSkillName(string $key): string
+    {
+        $name = str_replace(['/', '.'], '-', $key);
+        $name = (string) preg_replace('/-+/', '-', $name);
+
+        return 'boost-'.trim($name, '-');
     }
 
     /**
@@ -459,40 +495,94 @@ class InstallCommand extends Command
         $guidelineConfig->aiGuidelines = $this->selectedAiGuidelines->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
 
-        $composer = app(GuidelineComposer::class)->config($guidelineConfig);
-        $guidelines = $composer->guidelines();
+        $guidelineComposer = app(GuidelineComposer::class)->config($guidelineConfig);
+        $skillComposer = app(SkillComposer::class)->config($guidelineConfig);
+        $guidelines = $guidelineComposer->guidelines();
+
+        // Separate skill-capable agents from legacy agents
+        $skillAgents = $this->selectedTargetAgents->filter(fn ($agent) => $agent instanceof HasSkills);
+        $legacyAgents = $this->selectedTargetAgents->reject(fn ($agent) => $agent instanceof HasSkills);
 
         $this->newLine();
-        $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
-        DisplayHelper::grid(
-            $guidelines
-                ->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))
-                ->values()
-                ->sort()
-                ->toArray(),
-            $this->terminal->cols()
-        );
-        $this->newLine();
+
+        if ($skillAgents->isNotEmpty()) {
+            $skills = $skillComposer->compose();
+            if ($skills->isNotEmpty()) {
+                $this->info(sprintf(' Installing %d skills to your selected agents', $skills->count()));
+                DisplayHelper::grid(
+                    $skills->keys()->sort()->toArray(),
+                    $this->terminal->cols()
+                );
+                $this->newLine();
+            }
+        }
+
+        if ($legacyAgents->isNotEmpty() || $skillAgents->isNotEmpty()) {
+            $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
+            DisplayHelper::grid(
+                $guidelines
+                    ->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))
+                    ->values()
+                    ->sort()
+                    ->toArray(),
+                $this->terminal->cols()
+            );
+            $this->newLine();
+        }
+
         usleep(750000);
 
         $failed = [];
-        $composedAiGuidelines = $composer->compose();
-
         $longestAgentName = max(1, ...$this->selectedTargetAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
-        /** @var CodeEnvironment $agent */
-        foreach ($this->selectedTargetAgents as $agent) {
-            $agentName = $agent->agentName();
-            $displayAgentName = str_pad((string) $agentName, $longestAgentName);
-            $this->output->write("  {$displayAgentName}... ");
-            /** @var Agent $agent */
-            try {
-                (new GuidelineWriter($agent))
-                    ->write($composedAiGuidelines);
 
-                $this->line($this->greenTick);
-            } catch (Exception $e) {
-                $failed[$agentName] = $e->getMessage();
-                $this->line($this->redCross);
+        // Install skills to skill-capable agents
+        if ($skillAgents->isNotEmpty()) {
+            $skills = $skillComposer->compose();
+            $foundation = $skillComposer->composeFoundation();
+
+            // Group agents by skills path to avoid duplicate writes
+            $skillsByPath = $skillAgents->groupBy(fn (HasSkills $agent) => $agent->skillsPath());
+
+            foreach ($skillsByPath as $skillsPath => $agents) {
+                // Write skills once per unique path
+                $writer = new SkillWriter($skillsPath);
+                $writer->cleanBoostSkills();
+                $writer->writeAll($skills);
+
+                // Write foundation to each agent's guideline file
+                foreach ($agents as $agent) {
+                    $agentName = $agent->agentName();
+                    $displayAgentName = str_pad((string) $agentName, $longestAgentName);
+                    $this->output->write("  {$displayAgentName}... ");
+
+                    try {
+                        (new GuidelineWriter($agent))->write($foundation);
+                        $skillCount = $skills->count();
+                        $this->line("{$this->greenTick} ({$skillCount} skills)");
+                    } catch (Exception $e) {
+                        $failed[$agentName] = $e->getMessage();
+                        $this->line($this->redCross);
+                    }
+                }
+            }
+        }
+
+        // Install full guidelines to legacy agents
+        if ($legacyAgents->isNotEmpty()) {
+            $composedAiGuidelines = $guidelineComposer->compose();
+
+            foreach ($legacyAgents as $agent) {
+                $agentName = $agent->agentName();
+                $displayAgentName = str_pad((string) $agentName, $longestAgentName);
+                $this->output->write("  {$displayAgentName}... ");
+
+                try {
+                    (new GuidelineWriter($agent))->write($composedAiGuidelines);
+                    $this->line($this->greenTick);
+                } catch (Exception $e) {
+                    $failed[$agentName] = $e->getMessage();
+                    $this->line($this->redCross);
+                }
             }
         }
 

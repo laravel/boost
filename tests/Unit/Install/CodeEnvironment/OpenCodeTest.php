@@ -49,3 +49,15 @@ test('guidelinesPath returns a custom path from config', function (): void {
 
     expect($opencode->guidelinesPath())->toBe('docs/AGENTS.md');
 });
+
+test('implements HasSkills interface', function (): void {
+    $opencode = new OpenCode($this->strategyFactory);
+
+    expect($opencode)->toBeInstanceOf(\Laravel\Boost\Contracts\HasSkills::class);
+});
+
+test('skillsPath returns default .opencode/skills', function (): void {
+    $opencode = new OpenCode($this->strategyFactory);
+
+    expect($opencode->skillsPath())->toBe('.opencode/skills');
+});
