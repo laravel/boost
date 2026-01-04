@@ -20,8 +20,8 @@ use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
-use Laravel\Boost\Install\Skills\SkillComposer;
-use Laravel\Boost\Install\Skills\SkillWriter;
+use Laravel\Boost\Install\SkillComposer;
+use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
@@ -337,7 +337,7 @@ class InstallCommand extends Command
     /**
      * Format the token display for a guideline, showing both guideline and skill tokens if available.
      *
-     * @param  Collection<string, \Laravel\Boost\Install\Skills\Skill>  $skills
+     * @param  Collection<string, \Laravel\Boost\Install\Skill>  $skills
      */
     protected function formatGuidelineTokenDisplay(string $guidelineKey, int $guidelineTokens, Collection $skills): string
     {

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Install\Skills\Skill;
-use Laravel\Boost\Install\Skills\SkillWriter;
+use Laravel\Boost\Install\Skill;
+use Laravel\Boost\Install\SkillWriter;
 
 beforeEach(function (): void {
     $this->testDir = sys_get_temp_dir().'/boost-skills-test-'.uniqid();

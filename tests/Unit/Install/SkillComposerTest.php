@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\Herd;
-use Laravel\Boost\Install\Skills\SkillComposer;
+use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Roster;
 
 beforeEach(function (): void {

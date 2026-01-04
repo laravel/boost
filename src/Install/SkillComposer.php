@@ -2,11 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\Skills;
+namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
-use Laravel\Boost\Install\GuidelineComposer;
-use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
@@ -204,7 +202,7 @@ class SkillComposer
     protected function skillsDir(string $dirPath, bool $thirdParty = false): array
     {
         if (! is_dir($dirPath)) {
-            $dirPath = str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../../.ai/'.$dirPath);
+            $dirPath = str_replace('/', DIRECTORY_SEPARATOR, dirname(__DIR__, 2).'/.ai/'.$dirPath);
         }
 
         try {
@@ -309,7 +307,7 @@ class SkillComposer
 
     protected function prependPackageSkillPath(string $path): string
     {
-        return $this->prependSkillPath($path, __DIR__.'/../../../.ai/');
+        return $this->prependSkillPath($path, dirname(__DIR__, 2).'/.ai/');
     }
 
     protected function prependUserSkillPath(string $path): string
@@ -344,7 +342,7 @@ class SkillComposer
         }
 
         // Check if the user has an override for this skill
-        $basePath = realpath(__DIR__.'/../../../');
+        $basePath = realpath(dirname(__DIR__, 2));
         $relativePath = str_replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '', $path);
         $relativePath = ltrim($relativePath, '/\\');
 

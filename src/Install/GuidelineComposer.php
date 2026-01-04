@@ -260,7 +260,7 @@ class GuidelineComposer
     protected function guidelinesDir(string $dirPath, bool $thirdParty = false): array
     {
         if (! is_dir($dirPath)) {
-            $dirPath = str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../.ai/'.$dirPath);
+            $dirPath = str_replace('/', DIRECTORY_SEPARATOR, dirname(__DIR__, 2).'/.ai/'.$dirPath);
         }
 
         try {
@@ -331,7 +331,7 @@ class GuidelineComposer
 
     protected function prependPackageGuidelinePath(string $path): string
     {
-        return $this->prependGuidelinePath($path, __DIR__.'/../../.ai/');
+        return $this->prependGuidelinePath($path, dirname(__DIR__, 2).'/.ai/');
     }
 
     protected function prependUserGuidelinePath(string $path): string
@@ -366,7 +366,7 @@ class GuidelineComposer
         }
 
         // The path is not a custom guideline, check if the user has an override for this
-        $basePath = realpath(__DIR__.'/../../');
+        $basePath = realpath(dirname(__DIR__, 2));
         $relativePath = Str::of($path)
             ->replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '')
             ->ltrim('/\\')

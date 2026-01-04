@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\Skills;
+namespace Laravel\Boost\Install;
 
 /**
  * Value object representing an Agent Skill.

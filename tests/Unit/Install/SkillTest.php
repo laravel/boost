@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Install\Skills\Skill;
+use Laravel\Boost\Install\Skill;
 
 test('creates a skill with required properties', function (): void {
     $skill = new Skill(

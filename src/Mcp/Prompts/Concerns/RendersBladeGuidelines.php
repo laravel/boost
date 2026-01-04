@@ -19,6 +19,16 @@ trait RendersBladeGuidelines
             return $content;
         }
 
+        // Register .ai/ directory as a view namespace so @include works
+        $aiPath = dirname(__DIR__, 4).'/.ai';
+        $viewFactory = app('view');
+        $finder = $viewFactory->getFinder();
+        $existingPaths = $finder->getPaths();
+
+        if (! in_array($aiPath, $existingPaths, true)) {
+            $finder->prependLocation($aiPath);
+        }
+
         // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
         // This prevents Blade from trying to execute PHP code examples and supports inline code
         $placeholders = [
