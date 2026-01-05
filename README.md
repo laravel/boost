@@ -96,7 +96,6 @@ Once Laravel Boost has been installed, you're ready to start coding with Cursor,
 | List Available Env Vars    | Inspect the available environment variable keys                                                                |
 | List Routes                | Inspect the application's routes                                                                               |
 | Read Log Entries           | Read the last N log entries                                                                                    |
-| Report Feedback            | Share Boost & Laravel AI feedback with the team, just say "give Boost feedback: x, y, and z"                   |
 | Search Docs                | Query the Laravel hosted documentation API service to retrieve documentation based on installed packages       |
 | Tinker                     | Execute arbitrary code within the context of the application                                                   |
 
