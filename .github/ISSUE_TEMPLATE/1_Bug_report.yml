@@ -6,8 +6,8 @@ body:
       value: "Please read [our full contribution guide](https://laravel.com/docs/contributions#bug-reports) before submitting bug reports. If you notice improper DocBlock, PHPStan, or IDE warnings while using Laravel, do not create a GitHub issue. Instead, please submit a pull request to fix the problem."
   - type: input
     attributes:
-      label: Laravel Package Version
-      description: Provide the Laravel Package version that you are using.
+      label: Boost Version
+      description: Provide the Boost Package version that you are using.
       placeholder: 1.6.1
     validations:
       required: true
@@ -18,6 +18,13 @@ body:
       placeholder: 10.4.1
     validations:
       required: true
+  - type: input
+    attributes:
+      label: Agent/IDE Version
+      description: Provide the IDE/Agent version that you are using and facing issues with.
+      placeholder: 10.4.1
+    validations:
+      required: false
   - type: input
     attributes:
       label: PHP Version
