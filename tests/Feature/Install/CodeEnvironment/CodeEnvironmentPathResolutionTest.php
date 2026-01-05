@@ -21,7 +21,7 @@ test('PhpStorm returns absolute artisan path', function (): void {
 
     // Should be an absolute path ending with 'artisan'
     expect($artisanPath)->toEndWith('artisan')
-        ->and($artisanPath)->not()->toBe('artisan');
+        ->not->toBe('artisan');
 });
 
 test('Cursor returns relative php string', function (): void {
@@ -44,7 +44,7 @@ test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', fu
 
     expect($cursor->getPhpPath(true))->toBe(PHP_BINARY);
     expect($cursor->getArtisanPath(true))->toEndWith('artisan')
-        ->and($cursor->getArtisanPath(true))->not()->toBe('artisan');
+        ->not->toBe('artisan');
 });
 
 test('CodeEnvironment maintains relative paths when forceAbsolutePath is false', function (): void {
@@ -65,7 +65,7 @@ test('PhpStorm paths remain absolute regardless of forceAbsolutePath parameter',
 
     $artisanPath = $phpStorm->getArtisanPath(true);
     expect($artisanPath)->toEndWith('artisan')
-        ->and($artisanPath)->not()->toBe('artisan');
+        ->not->toBe('artisan');
 
     expect($phpStorm->getArtisanPath(false))->toBe($artisanPath);
 });

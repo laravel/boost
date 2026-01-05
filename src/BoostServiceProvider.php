@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
+use Laravel\Boost\Install\GuidelineAssist;
+use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Mcp\Facades\Mcp;
@@ -58,6 +60,13 @@ class BoostServiceProvider extends ServiceProvider
 
             return $roster;
         });
+
+        $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
+
+        $this->app->singleton(GuidelineAssist::class, fn ($app): GuidelineAssist => new GuidelineAssist(
+            $app->make(Roster::class),
+            $app->make(GuidelineConfig::class)
+        ));
     }
 
     public function boot(Router $router): void

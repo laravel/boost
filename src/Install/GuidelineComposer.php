@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
+use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
@@ -18,6 +18,8 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class GuidelineComposer
 {
+    use RendersBladeGuidelines;
+
     protected string $userGuidelineDir = '.ai/guidelines';
 
     /** @var Collection<string, array> */
@@ -276,31 +278,6 @@ class GuidelineComposer
             ->all();
     }
 
-    protected function renderContent(string $content, string $path): string
-    {
-        $isBladeTemplate = str_ends_with($path, '.blade.php');
-
-        if (! $isBladeTemplate) {
-            return $content;
-        }
-
-        // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
-        // This prevents Blade from trying to execute PHP code examples and supports inline code
-        $placeholders = [
-            '`' => '___SINGLE_BACKTICK___',
-            '<?php' => '___OPEN_PHP_TAG___',
-            '@volt' => '___VOLT_DIRECTIVE___',
-            '@endvolt' => '___ENDVOLT_DIRECTIVE___',
-        ];
-
-        $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
-        $rendered = Blade::render($content, [
-            'assist' => $this->getGuidelineAssist(),
-        ]);
-
-        return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
-    }
-
     /**
      * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
      */
@@ -344,23 +321,6 @@ class GuidelineComposer
             'third_party' => $thirdParty,
             'tokens' => round(str_word_count($rendered) * 1.3),
         ];
-    }
-
-    private array $storedSnippets = [];
-
-    protected function processBoostSnippets(string $content): string
-    {
-        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function (array $matches): string {
-            $name = $matches['name'];
-            $lang = empty($matches['lang']) ? 'html' : $matches['lang'];
-            $snippetContent = $matches['content'];
-
-            $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
-
-            $this->storedSnippets[$placeholder] = '<code-snippet name="'.$name.'" lang="'.$lang.'">'."\n".$snippetContent."\n".'</code-snippet>'."\n\n";
-
-            return $placeholder;
-        }, $content);
     }
 
     protected function getGuidelineAssist(): GuidelineAssist

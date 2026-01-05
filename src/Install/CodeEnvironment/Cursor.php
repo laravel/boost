@@ -56,7 +56,7 @@ class Cursor extends CodeEnvironment implements Agent, McpClient
 
     public function guidelinesPath(): string
     {
-        return '.cursor/rules/laravel-boost.mdc';
+        return config('boost.code_environments.cursor.guidelines_path', '.cursor/rules/laravel-boost.mdc');
     }
 
     public function frontmatter(): bool

@@ -12,6 +12,6 @@
 
 ### Running Tests
 - Run the minimal number of tests, using an appropriate filter, before finalizing.
-- To run all tests: `{{ $assist->artisanCommand('test') }}`.
-- To run all tests in a file: `{{ $assist->artisanCommand('test tests/Feature/ExampleTest.php') }}`.
-- To filter on a particular test name: `{{ $assist->artisanCommand('test --filter=testName') }}` (recommended after making a change to a related file).
+- To run all tests: `{{ $assist->artisanCommand('test --compact') }}`.
+- To run all tests in a file: `{{ $assist->artisanCommand('test --compact tests/Feature/ExampleTest.php') }}`.
+- To filter on a particular test name: `{{ $assist->artisanCommand('test --compact --filter=testName') }}` (recommended after making a change to a related file).

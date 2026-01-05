@@ -353,10 +353,20 @@ class InstallCommand extends Command
             return collect();
         }
 
+        $defaults = $this->config->getAgents();
+
+        if ($this->selectedTargetMcpClient->isNotEmpty()) {
+            $defaults = $this->selectedTargetMcpClient
+                ->filter(fn (McpClient $client): bool => $client instanceof Agent)
+                ->map(fn (McpClient $client): string => $client->name())
+                ->values()
+                ->toArray();
+        }
+
         return $this->selectCodeEnvironments(
             Agent::class,
             sprintf('Which agents need AI guidelines for %s?', $this->projectName),
-            $this->config->getAgents(),
+            $defaults,
         );
     }
 
