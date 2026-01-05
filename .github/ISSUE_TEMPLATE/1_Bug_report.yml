@@ -20,9 +20,9 @@ body:
       required: true
   - type: input
     attributes:
-      label: Agent/IDE Version
-      description: Provide the IDE/Agent version that you are using and facing issues with.
-      placeholder: 10.4.1
+      label: Agent/IDE Name & Version
+      description: Provide the IDE/Agent name and version that you are using and facing issues with.
+      placeholder: "VsCode 10.4.1 or Claude 2.0.76"
     validations:
       required: false
   - type: input
