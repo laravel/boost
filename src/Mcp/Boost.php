@@ -21,7 +21,6 @@ use Laravel\Boost\Mcp\Tools\ListAvailableConfigKeys;
 use Laravel\Boost\Mcp\Tools\ListAvailableEnvVars;
 use Laravel\Boost\Mcp\Tools\ListRoutes;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
-use Laravel\Boost\Mcp\Tools\ReportFeedback;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Boost\Support\Composer;
@@ -102,7 +101,6 @@ class Boost extends Server
             ListAvailableEnvVars::class,
             ListRoutes::class,
             ReadLogEntries::class,
-            ReportFeedback::class,
             SearchDocs::class,
             Tinker::class,
         ], 'tools');
