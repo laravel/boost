@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.7...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.8...main)
+
+## [v1.8.8](https://github.com/laravel/boost/compare/v1.8.7...v1.8.8) - 2026-01-07
+
+* Add `--compact` flag to testing examples by [@ohnotnow](https://github.com/ohnotnow) in https://github.com/laravel/boost/pull/403
+* Update bug report issue template by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/410
+* Remove ReportFeedback tool by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/409
+* fix: improve middleware register specification for laravel 11 and 12 by [@PanchoDP](https://github.com/PanchoDP) in https://github.com/laravel/boost/pull/398
+* Update documentation for 'search-docs' tool usage by [@blakedeckard](https://github.com/blakedeckard) in https://github.com/laravel/boost/pull/401
+* Mention when private constructors are ok by [@cosmastech](https://github.com/cosmastech) in https://github.com/laravel/boost/pull/387
+* Consistency and quality pass by [@taylorotwell](https://github.com/taylorotwell) in https://github.com/laravel/boost/pull/413
 
 ## [v1.8.7](https://github.com/laravel/boost/compare/v1.8.6...v1.8.7) - 2025-12-19
 
