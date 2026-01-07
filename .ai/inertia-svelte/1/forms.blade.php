@@ -1,9 +1,9 @@
-## Inertia + Svelte Forms
+## Inertia v1 + Svelte Forms
 
 - For form handling, use `router.post` and related methods. Do not use regular forms.
 
 @verbatim
-<code-snippet lang="svelte" name="Inertia Form Example">
+<code-snippet name="Inertia Svelte Form Example" lang="svelte">
 <script>
     import { router } from '@inertiajs/svelte'
 
