@@ -1,9 +1,9 @@
 @php
     /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-## Inertia + Svelte Forms
+## Inertia v2 + Svelte Forms
 
-- There are critical differences between Svelte 4 and 5, use the `search-docs` tool for up-to-date guidance.
+- There are critical differences between Svelte 4 and 5; use the `search-docs` tool for up-to-date guidance.
 
 @if($assist->inertia()->hasFormComponent())
 @boostsnippet("`<Form>` Component Example", "svelte5")

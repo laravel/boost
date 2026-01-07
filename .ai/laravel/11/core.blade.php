@@ -3,13 +3,13 @@
 @endphp
 ## Laravel 11
 
-- Use the `search-docs` tool to get version specific documentation.
+- Use the `search-docs` tool to get version-specific documentation.
 @if (file_exists(base_path('app/Http/Kernel.php')))
 - This project upgraded from Laravel 10 without migrating to the new streamlined Laravel 11 file structure.
-- This is **perfectly fine** and recommended by Laravel. Follow the existing structure from Laravel 10. We do not to need migrate to the Laravel 11 structure unless the user explicitly requests that.
+- This is **perfectly fine** and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the Laravel 11 structure unless the user explicitly requests it.
 
 ### Laravel 10 Structure
-- Middleware typically live in `app/Http/Middleware/` and service providers in `app/Providers/`.
+- Middleware typically lives in `app/Http/Middleware/` and service providers in `app/Providers/`.
 - There is no `bootstrap/app.php` application configuration in a Laravel 10 structure:
     - Middleware registration is in `app/Http/Kernel.php`
     - Exception handling is in `app/Exceptions/Handler.php`
@@ -37,5 +37,5 @@
 ### New Artisan Commands
 - List Artisan commands using Boost's MCP tool, if available. New commands available in Laravel 11:
     - `{{ $assist->artisanCommand('make:enum') }}`
-    - `{{ $assist->artisanCommand('make:class') }} `
-    - `{{ $assist->artisanCommand('make:interface') }} `
+    - `{{ $assist->artisanCommand('make:class') }}`
+    - `{{ $assist->artisanCommand('make:interface') }}`

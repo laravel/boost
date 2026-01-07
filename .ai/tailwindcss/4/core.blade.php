@@ -1,6 +1,6 @@
-## Tailwind 4
+## Tailwind CSS 4
 
-- Always use Tailwind CSS v4 - do not use the deprecated utilities.
+- Always use Tailwind CSS v4; do not use the deprecated utilities.
 - `corePlugins` is not supported in Tailwind v4.
 - In Tailwind v4, configuration is CSS-first using the `@theme` directive — no separate `tailwind.config.js` file is needed.
 @verbatim<code-snippet name="Extending Theme in CSS" lang="css">
@@ -20,7 +20,7 @@
 @endverbatim
 
 ### Replaced Utilities
-- Tailwind v4 removed deprecated utilities. Do not use the deprecated option - use the replacement.
+- Tailwind v4 removed deprecated utilities. Do not use the deprecated option; use the replacement.
 - Opacity values are still numeric.
 
 | Deprecated |	Replacement |

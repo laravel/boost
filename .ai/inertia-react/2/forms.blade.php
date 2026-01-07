@@ -1,7 +1,7 @@
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-## Inertia + React Forms
+## Inertia v2 + React Forms
 
 @if($assist->inertia()->hasFormComponent())
 @boostsnippet("`<Form>` Component Example", "react")
@@ -37,7 +37,7 @@ export default () => (
 @endif
 
 @if($assist->inertia()->hasFormComponent() === false)
-{{-- Inertia 2.0.x, not 2.1.0 or higher. So they still need to use 'useForm' --}}
+{{-- Inertia 2.0.x, not 2.1.0 or higher. So still need to use 'useForm' --}}
 @boostsnippet("Inertia React useForm Example", "react")
 import { useForm } from '@inertiajs/react'
 
