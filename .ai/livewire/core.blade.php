@@ -41,8 +41,8 @@
 </code-snippet>
 @endverbatim
 @verbatim
-    <code-snippet name="Testing Livewire Component Exists on Page" lang="php">
-        $this->get('/posts/create')
-        ->assertSeeLivewire(CreatePost::class);
-    </code-snippet>
+<code-snippet name="Testing Livewire Component Exists on Page" lang="php">
+    $this->get('/posts/create')
+    ->assertSeeLivewire(CreatePost::class);
+</code-snippet>
 @endverbatim

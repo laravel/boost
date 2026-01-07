@@ -1,7 +1,6 @@
 ## Inertia v1 + Vue Forms
 
 - For form handling in Inertia pages, use `router.post` and related methods. Do not use regular forms.
-
 @verbatim
 <code-snippet name="Inertia Vue Form Example" lang="vue">
 <script setup>

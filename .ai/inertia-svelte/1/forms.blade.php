@@ -1,7 +1,6 @@
 ## Inertia v1 + Svelte Forms
 
 - For form handling, use `router.post` and related methods. Do not use regular forms.
-
 @verbatim
 <code-snippet name="Inertia Svelte Form Example" lang="svelte">
 <script>

@@ -6,7 +6,6 @@
 - Fallback to standard Blade components if Flux is unavailable.
 - If available, use the `search-docs` tool to get the exact documentation and code snippets available for this project.
 - Flux UI components look like this:
-
 @verbatim
 <code-snippet name="Flux UI Component Example" lang="blade">
     <flux:button variant="primary"/>

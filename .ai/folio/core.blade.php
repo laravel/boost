@@ -21,7 +21,6 @@
 </code-snippet>
 
 - Add a 'name' to each new Folio page at the very top of the file so it has a named route available for other parts of the codebase to use.
-
 @verbatim
 <code-snippet name="Adding Named Route to Folio Page" lang="php">
 use function Laravel\Folio\name;
@@ -33,7 +32,6 @@ name('products.index');
 ### Support & Documentation
 - Folio supports: middleware, serving pages from multiple paths, subdomain routing, named routes, nested routes, index routes, route parameters, and route model binding.
 - If available, use the `search-docs` tool to use Folio to its full potential and help the user effectively.
-
 @verbatim
 <code-snippet name="Folio Middleware Example" lang="php">
 use function Laravel\Folio\{name, middleware};
