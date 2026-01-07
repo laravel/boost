@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.8...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.9...main)
+
+## [v1.8.9](https://github.com/laravel/boost/compare/v1.8.8...v1.8.9) - 2026-01-07
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.8...v1.8.9
 
 ## [v1.8.8](https://github.com/laravel/boost/compare/v1.8.7...v1.8.8) - 2026-01-07
 
