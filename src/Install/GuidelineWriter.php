@@ -68,6 +68,9 @@ class GuidelineWriter
                 $newContent = $frontMatter.$existingContent.$separatingNewlines.$replacement;
             }
 
+            // Normalize multiple blank lines to single blank lines
+            $newContent = preg_replace("/\n{3,}/", "\n\n", (string) $newContent);
+
             // Ensure file content ends with a newline
             if (! str_ends_with((string) $newContent, "\n")) {
                 $newContent .= "\n";
