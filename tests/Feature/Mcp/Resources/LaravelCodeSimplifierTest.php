@@ -4,29 +4,38 @@ declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier;
 
-test('it has correct uri', function (): void {
-    $resource = new LaravelCodeSimplifier;
+beforeEach(function (): void {
+    $this->resource = new LaravelCodeSimplifier;
+});
 
-    expect($resource->uri())->toBe('file://instructions/laravel-code-simplifier.md');
+test('it has correct uri', function (): void {
+    expect($this->resource->uri())->toBe('file://instructions/laravel-code-simplifier.md');
 });
 
 test('it has a description', function (): void {
-    $resource = new LaravelCodeSimplifier;
-
-    expect($resource->description())->not->toBeEmpty();
+    expect($this->resource->description())
+        ->toContain('Simplifies')
+        ->toContain('PHP/Laravel')
+        ->toContain('maintainability');
 });
 
 test('it has markdown mime type', function (): void {
-    $resource = new LaravelCodeSimplifier;
-
-    expect($resource->mimeType())->toBe('text/markdown');
+    expect($this->resource->mimeType())->toBe('text/markdown');
 });
 
 test('it returns a valid response', function (): void {
-    $resource = new LaravelCodeSimplifier;
-
-    $response = $resource->handle();
+    $response = $this->resource->handle();
 
     expect($response)->isToolResult()
         ->toolHasNoError();
+});
+
+test('it contains core guideline content', function (): void {
+    $response = $this->resource->handle();
+
+    expect($response)->isToolResult()
+        ->toolTextContains('Laravel Code Simplifier')
+        ->toolTextContains('Preserve Functionality')
+        ->toolTextContains('Apply Project Standards')
+        ->toolTextContains('Enhance Clarity');
 });

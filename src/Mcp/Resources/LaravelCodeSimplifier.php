@@ -21,7 +21,8 @@ class LaravelCodeSimplifier extends Resource
     public function handle(): Response
     {
         $bladePath = dirname(__DIR__, 3).'/resources/guidelines/laravel-code-simplifier.blade.php';
+        $content = $this->renderGuidelineFile($bladePath);
 
-        return Response::text($this->renderGuidelineFile($bladePath));
+        return Response::text($content);
     }
 }
