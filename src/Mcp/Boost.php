@@ -7,7 +7,7 @@ namespace Laravel\Boost\Mcp;
 use InvalidArgumentException;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\Prompts\PackageGuidelinePrompt;
-use Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier;
+use Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier\LaravelCodeSimplifier;
 use Laravel\Boost\Mcp\Resources\PackageGuidelineResource;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;

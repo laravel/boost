@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier;
+use Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier\LaravelCodeSimplifier;
 
 beforeEach(function (): void {
     $this->resource = new LaravelCodeSimplifier;

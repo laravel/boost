@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Mcp\Resources;
+namespace Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier;
 
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Mcp\Response;
@@ -20,8 +20,7 @@ class LaravelCodeSimplifier extends Resource
 
     public function handle(): Response
     {
-        $bladePath = dirname(__DIR__, 3).'/resources/guidelines/laravel-code-simplifier.blade.php';
-        $content = $this->renderGuidelineFile($bladePath);
+        $content = $this->renderGuidelineFile(__DIR__.'/laravel-code-simplifier.blade.php');
 
         return Response::text($content);
     }
