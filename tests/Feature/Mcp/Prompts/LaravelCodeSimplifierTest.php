@@ -2,36 +2,32 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier\LaravelCodeSimplifier;
+use Laravel\Boost\Mcp\Prompts\LaravelCodeSimplifier\LaravelCodeSimplifier;
 
 beforeEach(function (): void {
-    $this->resource = new LaravelCodeSimplifier;
+    $this->prompt = new LaravelCodeSimplifier;
 });
 
-test('it has correct uri', function (): void {
-    expect($this->resource->uri())->toBe('file://instructions/laravel-code-simplifier.md');
+test('it has correct name', function (): void {
+    expect($this->prompt->name())->toBe('laravel-code-simplifier');
 });
 
 test('it has a description', function (): void {
-    expect($this->resource->description())
+    expect($this->prompt->description())
         ->toContain('Simplifies')
         ->toContain('PHP/Laravel')
         ->toContain('maintainability');
 });
 
-test('it has markdown mime type', function (): void {
-    expect($this->resource->mimeType())->toBe('text/markdown');
-});
-
 test('it returns a valid response', function (): void {
-    $response = $this->resource->handle();
+    $response = $this->prompt->handle();
 
     expect($response)->isToolResult()
         ->toolHasNoError();
 });
 
 test('it contains core guideline content', function (): void {
-    $response = $this->resource->handle();
+    $response = $this->prompt->handle();
 
     expect($response)->isToolResult()
         ->toolTextContains('Laravel Code Simplifier')

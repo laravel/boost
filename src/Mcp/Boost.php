@@ -6,8 +6,8 @@ namespace Laravel\Boost\Mcp;
 
 use InvalidArgumentException;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
+use Laravel\Boost\Mcp\Prompts\LaravelCodeSimplifier\LaravelCodeSimplifier;
 use Laravel\Boost\Mcp\Prompts\PackageGuidelinePrompt;
-use Laravel\Boost\Mcp\Resources\LaravelCodeSimplifier\LaravelCodeSimplifier;
 use Laravel\Boost\Mcp\Resources\PackageGuidelineResource;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
@@ -114,7 +114,6 @@ class Boost extends Server
     {
         $availableResources = [
             Resources\ApplicationInfo::class,
-            LaravelCodeSimplifier::class,
             ...$this->discoverThirdPartyPrimitives(Resource::class),
         ];
 
@@ -126,10 +125,12 @@ class Boost extends Server
      */
     protected function discoverPrompts(): array
     {
-        return $this->filterPrimitives(
-            $this->discoverThirdPartyPrimitives(Prompt::class),
-            'prompts'
-        );
+        $availablePrompts = [
+            LaravelCodeSimplifier::class,
+            ...$this->discoverThirdPartyPrimitives(Prompt::class),
+        ];
+
+        return $this->filterPrimitives($availablePrompts, 'prompts');
     }
 
     /**
