@@ -26,7 +26,7 @@ Boost also features a powerful Documentation API that combines a built-in MCP to
 Laravel Boost can be installed via Composer:
 
 ```bash
-composer require laravel/boost --dev
+composer require laravel/boost -w --dev
 ```
 
 Next, install the MCP server and coding guidelines:
