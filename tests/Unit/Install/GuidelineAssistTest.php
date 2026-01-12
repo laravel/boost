@@ -7,7 +7,6 @@ use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Roster;
-use Mockery\MockInterface;
 
 it('uses default php artisan when no config', function (): void {
     $config = new GuidelineConfig;
@@ -189,8 +188,8 @@ it('custom node path overrides Sail', function (): void {
     $config = new GuidelineConfig;
     $config->usesSail = true;
     $config->executables = new ExecutableConfig(
-        nodePath: '/custom/npm',
         nodeManager: 'npm',
+        nodePath: '/custom/npm',
     );
 
     $roster = Mockery::mock(Roster::class);
@@ -274,10 +273,10 @@ it('all custom executables work together', function (): void {
         php: '/opt/php8.3',
         artisan: '/app/artisan',
         composer: '/usr/local/bin/composer',
+        sail: '/custom/sail',
         vendorBin: '/app/vendor/bin',
         nodeManager: 'pnpm',
         nodePath: '/usr/local/bin/pnpm',
-        sail: '/custom/sail',
     );
 
     $roster = Mockery::mock(Roster::class);

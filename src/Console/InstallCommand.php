@@ -617,7 +617,7 @@ class InstallCommand extends Command
 
         // Only prompt for node if different from detected
         $roster = app(\Laravel\Roster\Roster::class);
-        $detectedManager = $roster->nodePackageManager()?->value ?? 'npm';
+        $detectedManager = $roster->nodePackageManager()->value ?? 'npm';
         $configureNode = confirm(
             label: "Configure custom Node package manager? (detected: {$detectedManager})",
             default: false,

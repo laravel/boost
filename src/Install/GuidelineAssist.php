@@ -208,7 +208,7 @@ class GuidelineAssist
     public function composerCommand(string $command): string
     {
         // Priority: Custom config > Sail > Default
-        if ($executables = $this->config->executables) {
+        if (($executables = $this->config->executables) instanceof ExecutableConfig) {
             $composer = $executables->composer;
         } elseif ($this->shouldUseSail()) {
             $composer = Sail::composerCommand();
@@ -235,7 +235,7 @@ class GuidelineAssist
     public function artisan(): string
     {
         // Priority: Custom config > Sail > Default
-        if ($executables = $this->config->executables) {
+        if (($executables = $this->config->executables) instanceof ExecutableConfig) {
             return "{$executables->php} {$executables->artisan}";
         }
 
@@ -248,6 +248,6 @@ class GuidelineAssist
 
     public function sailBinaryPath(): string
     {
-        return $this->config->executables?->sail ?? Sail::BINARY_PATH;
+        return $this->config->executables->sail ?? Sail::BINARY_PATH;
     }
 }
