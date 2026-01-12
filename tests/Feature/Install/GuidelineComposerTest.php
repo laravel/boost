@@ -763,3 +763,99 @@ test('includes enabled conditional guidelines and orders them before packages', 
         ->and($testsPos)->toBeGreaterThan($foundationPos)
         ->and($testsPos)->toBeLessThan($pestPos);
 });
+
+test('skills returns collection of Skill objects', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = $this->composer->skills();
+
+    expect($skills)->toBeInstanceOf(\Illuminate\Support\Collection::class)
+        ->and($skills)->not->toBeEmpty();
+});
+
+test('skills discovers Boost built-in skills from .ai directory', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = $this->composer->skills();
+
+    $skillNames = $skills->pluck('name')->toArray();
+
+    expect($skillNames)->toContain('building-livewire-components');
+});
+
+test('skill has proper structure with name description and path', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = $this->composer->skills();
+
+    $livewireSkill = $skills->get('building-livewire-components');
+
+    expect($livewireSkill)->not->toBeNull()
+        ->and($livewireSkill->name)->toBe('building-livewire-components')
+        ->and($livewireSkill->description)->not->toBeEmpty()
+        ->and($livewireSkill->path)->toBeDirectory()
+        ->and($livewireSkill->custom)->toBeFalse();
+});
+
+test('skills caches result after first call', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills1 = $this->composer->skills();
+    $skills2 = $this->composer->skills();
+
+    expect($skills1)->toBe($skills2);
+});
+
+test('user skills override built-in skills', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $userSkillPath = base_path('.ai/skills/building-livewire-components');
+
+    if (! is_dir($userSkillPath)) {
+        @mkdir($userSkillPath, 0755, true);
+        file_put_contents($userSkillPath.'/SKILL.md', "---\nname: building-livewire-components\ndescription: Custom user skill\n---\n# Custom");
+
+        $skills = $this->composer->skills();
+        $skill = $skills->get('building-livewire-components');
+
+        expect($skill->custom)->toBeTrue();
+
+        unlink($userSkillPath.'/SKILL.md');
+        rmdir($userSkillPath);
+    }
+})->skip(fn (): bool => ! is_writable(base_path('.ai/skills') ?: base_path()));
+
+test('skills ignores directories without SKILL.md', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = $this->composer->skills();
+
+    foreach ($skills as $skill) {
+        expect(file_exists($skill->path.'/SKILL.md'))->toBeTrue();
+    }
+});

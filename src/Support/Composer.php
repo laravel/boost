@@ -39,13 +39,31 @@ class Composer
 
     public static function packagesDirectoriesWithBoostGuidelines(): array
     {
-        return collect(Composer::packagesDirectories())
-            ->map(fn (string $path): string => implode(DIRECTORY_SEPARATOR, [
-                $path,
-                'resources',
-                'boost',
-                'guidelines',
-            ]))->filter(fn (string $path): bool => is_dir($path))
+        return self::packagesDirectoriesWithBoostSubpath('guidelines');
+    }
+
+    public static function packagesDirectoriesWithBoostSkills(): array
+    {
+        return self::packagesDirectoriesWithBoostSubpath();
+    }
+
+    /**
+     * Get package directories containing a Boost subpath.
+     *
+     * @param  string|null  $subpath  Optional subpath under resources/boost/ (e.g., 'guidelines')
+     */
+    private static function packagesDirectoriesWithBoostSubpath(?string $subpath = null): array
+    {
+        return collect(self::packagesDirectories())
+            ->map(function (string $path) use ($subpath): string {
+                $parts = [$path, 'resources', 'boost'];
+                if ($subpath !== null) {
+                    $parts[] = $subpath;
+                }
+
+                return implode(DIRECTORY_SEPARATOR, $parts);
+            })
+            ->filter(fn (string $path): bool => is_dir($path))
             ->toArray();
     }
 }

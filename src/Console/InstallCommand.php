@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Contracts\SkillsAgent;
 use Laravel\Boost\Install\Cli\DisplayHelper;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
@@ -20,6 +21,7 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\Sail;
+use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
@@ -508,6 +510,8 @@ class InstallCommand extends Command
             }
         }
 
+        $this->installSkills($composer);
+
         if ($this->installMcpConfig) {
             $this->config->setSail(
                 $this->shouldUseSail()
@@ -529,6 +533,48 @@ class InstallCommand extends Command
         $this->config->setGuidelines(
             $this->selectedAiGuidelines->values()->toArray()
         );
+    }
+
+    protected function installSkills(GuidelineComposer $composer): void
+    {
+        $skillsAgents = $this->selectedTargetAgents
+            ->filter(fn ($agent): bool => $agent instanceof SkillsAgent);
+
+        if ($skillsAgents->isEmpty()) {
+            return;
+        }
+
+        $skills = $composer->skills();
+
+        if ($skills->isEmpty()) {
+            return;
+        }
+
+        $this->newLine();
+        $this->info(sprintf(' Installing %d skills for skills-capable agents', $skills->count()));
+        DisplayHelper::grid(
+            $skills->map(fn ($skill): string => $skill->name)->values()->sort()->toArray(),
+            $this->terminal->cols()
+        );
+        $this->newLine();
+
+        $longestAgentName = max(1, ...$skillsAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
+
+        /** @var SkillsAgent&Agent $agent */
+        foreach ($skillsAgents as $agent) {
+            $agentName = $agent->agentName();
+            $displayAgentName = str_pad((string) $agentName, $longestAgentName);
+            $this->output->write("  {$displayAgentName}... ");
+
+            try {
+                (new SkillWriter($agent))->writeAll($skills);
+                $this->line($this->greenTick);
+            } catch (Exception) {
+                $this->line($this->redCross);
+            }
+        }
+
+        $this->newLine();
     }
 
     protected function shouldInstallStyleGuidelines(): bool
