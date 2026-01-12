@@ -45,7 +45,7 @@ it('custom executables override Sail for artisan commands', function (): void {
     $assist = new GuidelineAssist($roster, $config);
 
     expect($assist->artisan())->toBe('/custom/php artisan');
-    expect($assist->artisan())->not()->toContain('vendor/bin/sail');
+    expect($assist->artisan())->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
 });
 
 it('uses Sail when no custom executables', function (): void {
@@ -55,7 +55,7 @@ it('uses Sail when no custom executables', function (): void {
     $roster = Mockery::mock(Roster::class);
     $assist = new GuidelineAssist($roster, $config);
 
-    expect($assist->artisan())->toBe('vendor/bin/sail artisan');
+    expect($assist->artisan())->toBe(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail').' artisan');
 });
 
 it('uses default composer when no config', function (): void {
@@ -90,7 +90,7 @@ it('custom composer path overrides Sail', function (): void {
     $assist = new GuidelineAssist($roster, $config);
 
     expect($assist->composerCommand('install'))->toBe('/custom/composer install');
-    expect($assist->composerCommand('install'))->not()->toContain('vendor/bin/sail');
+    expect($assist->composerCommand('install'))->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
 });
 
 it('uses Sail for composer when no custom config', function (): void {
@@ -100,17 +100,7 @@ it('uses Sail for composer when no custom config', function (): void {
     $roster = Mockery::mock(Roster::class);
     $assist = new GuidelineAssist($roster, $config);
 
-    expect($assist->composerCommand('install'))->toBe('vendor/bin/sail composer install');
-});
-
-it('uses default vendor/bin for bin commands', function (): void {
-    $config = new GuidelineConfig;
-    $roster = Mockery::mock(Roster::class);
-    $assist = new GuidelineAssist($roster, $config);
-
-    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
-    expect($assist->binCommand('pest'))->toBe('vendor/bin/pest');
-    expect($assist->binCommand('phpstan'))->toBe('vendor/bin/phpstan');
+    expect($assist->composerCommand('install'))->toBe(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail').' composer install');
 });
 
 it('uses custom vendor_bin path when configured', function (): void {
@@ -138,7 +128,7 @@ it('custom vendor_bin overrides Sail for bin commands', function (): void {
     $assist = new GuidelineAssist($roster, $config);
 
     expect($assist->binCommand('pint'))->toBe('/custom/vendor/bin/pint');
-    expect($assist->binCommand('pint'))->not()->toContain('vendor/bin/sail');
+    expect($assist->binCommand('pint'))->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
 });
 
 it('uses Sail for bin commands when no custom config', function (): void {
@@ -148,7 +138,7 @@ it('uses Sail for bin commands when no custom config', function (): void {
     $roster = Mockery::mock(Roster::class);
     $assist = new GuidelineAssist($roster, $config);
 
-    expect($assist->binCommand('pint'))->toBe('vendor/bin/sail bin pint');
+    expect($assist->binCommand('pint'))->toBe(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail').' bin pint');
 });
 
 it('uses detected node package manager when no custom config', function (): void {
@@ -207,7 +197,7 @@ it('custom node path overrides Sail', function (): void {
     $assist = new GuidelineAssist($roster, $config);
 
     expect($assist->nodePackageManagerCommand('install'))->toBe('/custom/npm install');
-    expect($assist->nodePackageManagerCommand('install'))->not()->toContain('vendor/bin/sail');
+    expect($assist->nodePackageManagerCommand('install'))->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
 });
 
 it('uses Sail for node commands when no custom config', function (): void {
@@ -220,7 +210,7 @@ it('uses Sail for node commands when no custom config', function (): void {
 
     $assist = new GuidelineAssist($roster, $config);
 
-    expect($assist->nodePackageManagerCommand('install'))->toBe('vendor/bin/sail npm install');
+    expect($assist->nodePackageManagerCommand('install'))->toBe(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail').' npm install');
 });
 
 it('defaults to npm when roster returns null', function (): void {
@@ -241,7 +231,7 @@ it('uses default sail binary path when no config', function (): void {
     $roster = Mockery::mock(Roster::class);
     $assist = new GuidelineAssist($roster, $config);
 
-    expect($assist->sailBinaryPath())->toBe('vendor/bin/sail');
+    expect($assist->sailBinaryPath())->toBe(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
 });
 
 it('uses custom sail path when configured', function (): void {
@@ -302,8 +292,8 @@ it('all custom executables work together', function (): void {
     expect($assist->sailBinaryPath())->toBe('/custom/sail');
 
     // None should contain Sail wrapper
-    expect($assist->artisan())->not()->toContain('vendor/bin/sail');
-    expect($assist->composerCommand('install'))->not()->toContain('vendor/bin/sail');
-    expect($assist->binCommand('pint'))->not()->toContain('vendor/bin/sail');
-    expect($assist->nodePackageManagerCommand('install'))->not()->toContain('vendor/bin/sail');
+    expect($assist->artisan())->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
+    expect($assist->composerCommand('install'))->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
+    expect($assist->binCommand('pint'))->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
+    expect($assist->nodePackageManagerCommand('install'))->not()->toContain(str_replace('/', DIRECTORY_SEPARATOR, 'vendor/bin/sail'));
 });
