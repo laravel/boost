@@ -64,10 +64,10 @@ For each category of changes:
 
 After code changes are complete:
 
-@boostsnippet('Update Dependencies', 'bash')
+```bash
 {{ $assist->composerCommand('require livewire/livewire:^4.0') }}
 {{ $assist->artisanCommand('optimize:clear') }}
-@endboostsnippet
+```
 
 ### 6. Test and Verify
 
@@ -100,15 +100,15 @@ The following is the complete reference guide for all breaking changes, behavior
 
 Update your `composer.json` to require Livewire v4 beta:
 
-@boostsnippet('Install Livewire v4', 'bash')
+```bash
 {{ $assist->composerCommand('require livewire/livewire:^4.0@beta') }}
-@endboostsnippet
+```
 
 After updating, clear your application's cache:
 
-@boostsnippet('Clear Application Cache', 'bash')
+```bash
 {{ $assist->artisanCommand('optimize:clear') }}
-@endboostsnippet
+```
 
 > [!warning] Livewire v4 is currently in beta
 > Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
@@ -555,9 +555,9 @@ return [
 
 Uninstall the Volt package:
 
-@boostsnippet('Uninstall Volt Package', 'bash')
+```bash
 {{ $assist->composerCommand('remove livewire/volt') }}
-@endboostsnippet
+```
 
 ### Install Livewire v4
 
@@ -577,11 +577,11 @@ v4 introduces new component formats alongside the traditional class-based approa
 
 By default, view-based component files are prefixed with a ⚡ emoji to distinguish them from regular Blade files in your editor and searches. This can be disabled via the `make_command.emoji` config.
 
-@boostsnippet('Make Livewire Component Commands', 'bash')
+```bash
 {{ $assist->artisanCommand('make:livewire create-post') }}        # Single-file (default)
 {{ $assist->artisanCommand('make:livewire create-post --mfc') }}  # Multi-file
 {{ $assist->artisanCommand('livewire:convert create-post') }}     # Convert between formats
-@endboostsnippet
+```
 
 [Learn more about component formats →](/docs/4.x/components)
 
