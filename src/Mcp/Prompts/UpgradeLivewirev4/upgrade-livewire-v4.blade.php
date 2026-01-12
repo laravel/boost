@@ -2,6 +2,16 @@
 
 You are an expert Livewire upgrade specialist with deep knowledge of both Livewire v3 and v4. Your task is to systematically upgrade the application from Livewire v3 to v4 while ensuring all functionality remains intact. You understand the nuances of breaking changes and can identify affected code patterns with precision.
 
+## Core Principle: Documentation-First Approach
+
+**IMPORTANT:** Always use the `search-docs` tool whenever you need:
+- Specific code examples for implementing Livewire v4 features
+- Clarification on breaking changes or new syntax
+- Verification of upgrade patterns before applying them
+- Examples of correct usage for new directives or methods
+
+The official Livewire documentation is your primary source of truth. Consult it before making assumptions or implementing changes.
+
 ## Upgrade Process
 
 Follow this systematic process to upgrade the application:
@@ -45,18 +55,19 @@ Search the codebase for patterns affected by v4 changes:
 For each category of changes:
 
 1. **Search** for affected patterns using grep/search tools
-2. **List** all files that need modification
-3. **Apply** the fix consistently across all occurrences
-4. **Verify** each change doesn't break functionality
+2. **Consult documentation** - Use `search-docs` tool to verify correct upgrade patterns and examples
+3. **List** all files that need modification
+4. **Apply** the fix consistently across all occurrences
+5. **Verify** each change doesn't break functionality
 
 ### 5. Update Dependencies
 
 After code changes are complete:
 
-```bash
+@boostsnippet('Update Dependencies', 'bash')
 {{ $assist->composerCommand('require livewire/livewire:^4.0') }}
 {{ $assist->artisanCommand('optimize:clear') }}
-```
+@endboostsnippet
 
 ### 6. Test and Verify
 
@@ -89,15 +100,15 @@ The following is the complete reference guide for all breaking changes, behavior
 
 Update your `composer.json` to require Livewire v4 beta:
 
-```bash
+@boostsnippet('Install Livewire v4', 'bash')
 {{ $assist->composerCommand('require livewire/livewire:^4.0@beta') }}
-```
+@endboostsnippet
 
 After updating, clear your application's cache:
 
-```bash
+@boostsnippet('Clear Application Cache', 'bash')
 {{ $assist->artisanCommand('optimize:clear') }}
-```
+@endboostsnippet
 
 > [!warning] Livewire v4 is currently in beta
 > Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
@@ -121,32 +132,32 @@ Several configuration keys have been renamed, reorganized, or have new defaults.
 #### Renamed Configuration Keys
 
 **Layout configuration:**
-```php
+@boostsnippet('Layout Configuration Update', 'php')
 // Before (v3)
 'layout' => 'components.layouts.app',
 
 // After (v4)
 'component_layout' => 'layouts::app',
-```
+@endboostsnippet
 
 The layout now uses the `layouts::` namespace by default, pointing to `resources/views/layouts/app.blade.php`.
 
 **Placeholder configuration:**
-```php
+@boostsnippet('Placeholder Configuration Update', 'php')
 // Before (v3)
 'lazy_placeholder' => 'livewire.placeholder',
 
 // After (v4)
 'component_placeholder' => 'livewire.placeholder',
-```
+@endboostsnippet
 
 #### Changed Defaults
 
 **Smart wire:key behavior:**
-```php
+@boostsnippet('Smart Wire Key Default', 'php')
 // Now defaults to true (was false in v3)
 'smart_wire_keys' => true,
-```
+@endboostsnippet
 
 This helps prevent wire:key issues on deeply nested components. Note: You still need to add `wire:key` manually in loops—this setting doesn't eliminate that requirement.
 
@@ -155,39 +166,39 @@ This helps prevent wire:key issues on deeply nested components. Note: You still 
 #### New Configuration Options
 
 **Component locations:**
-```php
+@boostsnippet('Component Locations Configuration', 'php')
 'component_locations' => [
     resource_path('views/components'),
     resource_path('views/livewire'),
 ],
-```
+@endboostsnippet
 
 Defines where Livewire looks for single-file and multi-file (view-based) components.
 
 **Component namespaces:**
-```php
+@boostsnippet('Component Namespaces Configuration', 'php')
 'component_namespaces' => [
     'layouts' => resource_path('views/layouts'),
     'pages' => resource_path('views/pages'),
 ],
-```
+@endboostsnippet
 
 Creates custom namespaces for organizing view-based components (e.g., `<livewire:pages::dashboard />`).
 
 **Make command defaults:**
-```php
+@boostsnippet('Make Command Configuration', 'php')
 'make_command' => [
     'type' => 'sfc',  // Options: 'sfc', 'mfc', or 'class'
     'emoji' => true,   // Whether to use ⚡ emoji prefix
 ],
-```
+@endboostsnippet
 
 Configure default component format and emoji usage. Set `type` to `'class'` to match v3 behavior.
 
 **CSP-safe mode:**
-```php
+@boostsnippet('CSP Safe Mode Configuration', 'php')
 'csp_safe' => false,
-```
+@endboostsnippet
 
 Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enabled, Livewire uses the [Alpine CSP build](https://alpinejs.dev/advanced/csp). Note: This mode restricts complex JavaScript expressions in directives like `wire:click="addToCart($event.detail.productId)"` or global references like `window.location`.
 
@@ -195,7 +206,7 @@ Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enab
 
 For full-page components, the recommended routing approach has changed:
 
-```php
+@boostsnippet('Routing Changes', 'php')
 // Before (v3) - still works but not recommended
 Route::get('/dashboard', Dashboard::class);
 
@@ -204,7 +215,7 @@ Route::livewire('/dashboard', Dashboard::class);
 
 // For view-based components, you can use the component name
 Route::livewire('/dashboard', 'pages::dashboard');
-```
+@endboostsnippet
 
 Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
 
@@ -218,7 +229,7 @@ In v4, `wire:model` now only listens for events originating directly on the elem
 
 If you have code that relies on capturing events from child elements, add the `.bubble` modifier:
 
-```blade
+@boostsnippet('Wire Model Bubbling Behavior', 'blade')
 <!-- Before (v3) - listened to child events by default -->
 <div wire:model="value">
     <input type="text">
@@ -228,7 +239,7 @@ If you have code that relies on capturing events from child elements, add the `.
 <div wire:model.bubble="value">
     <input type="text">
 </div>
-```
+@endboostsnippet
 
 > [!tip] Most apps won't need changes
 > This change primarily affects non-standard uses of `wire:model` on container elements. Standard form input bindings (inputs, selects, textareas) are unaffected.
@@ -237,14 +248,14 @@ If you have code that relies on capturing events from child elements, add the `.
 
 When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead use `wire:navigate:scroll` in v4:
 
-```blade
+@boostsnippet('Wire Navigate Scroll', 'blade')
 @@persist('sidebar')
     <div class="overflow-y-scroll" wire:scroll> <!-- [tl! remove] -->
     <div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! add] -->
         <!-- ... -->
     </div>
 @@endpersist
-```
+@endboostsnippet
 
 ---
 
@@ -258,7 +269,7 @@ In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive,
 
 In v4, `wire:transition` uses the browser's native [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) instead. Basic usage still works—elements will fade in and out smoothly—but all modifiers have been removed.
 
-```blade
+@boostsnippet('Wire Transition Changes', 'blade')
 <!-- This still works in v4 -->
 <div wire:transition>...</div>
 
@@ -266,7 +277,7 @@ In v4, `wire:transition` uses the browser's native [View Transitions API](https:
 <div wire:transition.opacity>...</div> <!-- [tl! remove] -->
 <div wire:transition.scale.origin.top>...</div> <!-- [tl! remove] -->
 <div wire:transition.duration.500ms>...</div> <!-- [tl! remove] -->
-```
+@endboostsnippet
 
 [Learn more about wire:transition →](/docs/4.x/wire-transition)
 
@@ -297,23 +308,23 @@ If you're extending Livewire's core functionality or using these methods directl
 
 The `stream()` method parameter order has changed:
 
-```php
+@boostsnippet('Stream Method Named Parameters', 'php')
 // Before (v3)
 $this->stream(to: '#container', content: 'Hello', replace: true);
 
 // After (v4)
 $this->stream(content: 'Hello', replace: true, el: '#container');
-```
+@endboostsnippet
 
 If you're using named parameters (as shown above), note that `to:` has been renamed to `el:`. If you're using positional parameters, you'll need to update to the following:
 
-```php
+@boostsnippet('Stream Method Positional Parameters', 'php')
 // Before (v3) - positional parameters
 $this->stream('#container', 'Hello');
 
 // After (v4) - positional/named parameters
 $this->stream('Hello', el: '#container');
-```
+@endboostsnippet
 
 [Learn more about streaming →](/docs/4.x/wire-stream)
 
@@ -321,13 +332,13 @@ $this->stream('Hello', el: '#container');
 
 If you're extending `LivewireManager` or calling the `mount()` method directly:
 
-```php
+@boostsnippet('Component Mount Method Signature', 'php')
 // Before (v3)
 public function mount($name, $params = [], $key = null)
 
 // After (v4)
 public function mount($name, $params = [], $key = null, $slots = [])
-```
+@endboostsnippet
 
 This change adds support for passing slots when mounting components and generally won't affect most applications.
 
@@ -343,7 +354,7 @@ These changes only affect applications using advanced features or customization.
 
 The `$wire.$js()` method for defining JavaScript actions has been deprecated:
 
-```js
+@boostsnippet('Deprecated Wire JS Method', 'js')
 // Deprecated (v3)
 $wire.$js('bookmark', () => {
     // Toggle bookmark...
@@ -353,7 +364,7 @@ $wire.$js('bookmark', () => {
 $wire.$js.bookmark = () => {
     // Toggle bookmark...
 }
-```
+@endboostsnippet
 
 The new syntax is cleaner and more intuitive.
 
@@ -361,7 +372,7 @@ The new syntax is cleaner and more intuitive.
 
 The use of `$js` in scripts without `$wire.$js` or `this.$js` prefix has been deprecated:
 
-```js
+@boostsnippet('Deprecated JS Without Prefix', 'js')
 // Deprecated (v3)
 $js('bookmark', () => {
     // Toggle bookmark...
@@ -375,7 +386,7 @@ $wire.$js.bookmark = () => {
 this.$js.bookmark = () => {
     // Toggle bookmark...
 }
-```
+@endboostsnippet
 
 > [!tip] Old syntax still works
 > Both `$wire.$js('bookmark', ...)` and `$js('bookmark', ...)` will continue to work in v4 for backward compatibility, but you should migrate to the new syntax when convenient.
@@ -391,7 +402,7 @@ The `commit` and `request` hooks have been deprecated in favor of a new intercep
 
 The old `commit` hook:
 
-```js
+@boostsnippet('Old Commit Hook', 'js')
 // OLD - Deprecated
 Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
     respond(() => {
@@ -406,11 +417,11 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
         // Runs if request failed
     })
 })
-```
+@endboostsnippet
 
 Should be replaced with the new `interceptMessage`:
 
-```js
+@boostsnippet('New Intercept Message', 'js')
 // NEW - Recommended
 Livewire.interceptMessage(({ component, message, onFinish, onSuccess, onError, onFailure }) => {
     onFinish(() => {
@@ -431,13 +442,13 @@ Livewire.interceptMessage(({ component, message, onFinish, onSuccess, onError, o
         // Equivalent to fail() for network failures
     })
 })
-```
+@endboostsnippet
 
 #### Migrating from `request` Hook
 
 The old `request` hook:
 
-```js
+@boostsnippet('Old Request Hook', 'js')
 // OLD - Deprecated
 Livewire.hook('request', ({ url, options, payload, respond, succeed, fail }) => {
     respond(({ status, response }) => {
@@ -452,11 +463,11 @@ Livewire.hook('request', ({ url, options, payload, respond, succeed, fail }) => 
         // Runs on failed response
     })
 })
-```
+@endboostsnippet
 
 Should be replaced with the new `interceptRequest`:
 
-```js
+@boostsnippet('New Intercept Request', 'js')
 // NEW - Recommended
 Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure }) => {
     // Access url via request.uri
@@ -484,7 +495,7 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
         // Equivalent to fail() for network errors
     })
 })
-```
+@endboostsnippet
 
 #### Key Differences
 
@@ -505,7 +516,7 @@ Livewire v4 now supports single-file components, which use the same syntax as Vo
 
 Replace all instances of `Livewire\Volt\Component` with `Livewire\Component`:
 
-```php
+@boostsnippet('Update Volt Component Imports', 'php')
 // Before (Volt)
 use Livewire\Volt\Component;
 
@@ -515,19 +526,19 @@ new class extends Component { ... }
 use Livewire\Component;
 
 new class extends Component { ... }
-```
+@endboostsnippet
 
 ### Remove Volt Service Provider
 
 Delete the Volt service provider file:
 
-```bash
+@boostsnippet('Remove Volt Service Provider File', 'bash')
 rm app/Providers/VoltServiceProvider.php
-```
+@endboostsnippet
 
 Then remove it from the providers array in `bootstrap/providers.php`:
 
-```php
+@boostsnippet('Remove Volt From Providers Array', 'php')
 // Before
 return [
     App\Providers\AppServiceProvider::class,
@@ -538,15 +549,15 @@ return [
 return [
     App\Providers\AppServiceProvider::class,
 ];
-```
+@endboostsnippet
 
 ### Remove Volt Package
 
 Uninstall the Volt package:
 
-```bash
+@boostsnippet('Uninstall Volt Package', 'bash')
 {{ $assist->composerCommand('remove livewire/volt') }}
-```
+@endboostsnippet
 
 ### Install Livewire v4
 
@@ -566,11 +577,11 @@ v4 introduces new component formats alongside the traditional class-based approa
 
 By default, view-based component files are prefixed with a ⚡ emoji to distinguish them from regular Blade files in your editor and searches. This can be disabled via the `make_command.emoji` config.
 
-```bash
+@boostsnippet('Make Livewire Component Commands', 'bash')
 {{ $assist->artisanCommand('make:livewire create-post') }}        # Single-file (default)
 {{ $assist->artisanCommand('make:livewire create-post --mfc') }}  # Multi-file
 {{ $assist->artisanCommand('livewire:convert create-post') }}     # Convert between formats
-```
+@endboostsnippet
 
 [Learn more about component formats →](/docs/4.x/components)
 
@@ -584,7 +595,7 @@ Components now support slots and automatic attribute bag forwarding using `@{{ $
 
 View-based components can now include `<script>` tags without the `@script` wrapper. These scripts are served as separate cached files for better performance and automatic `$wire` binding:
 
-```blade
+@boostsnippet('JavaScript in View-Based Components', 'blade')
 <div>
     <!-- Your component template -->
 </div>
@@ -596,7 +607,7 @@ View-based components can now include `<script>` tags without the `@script` wrap
     // $wire is still available if preferred
     $wire.save()
 </script>
-```
+@endboostsnippet
 
 [Learn more about JavaScript in components →](/docs/4.x/javascript)
 
@@ -604,11 +615,11 @@ View-based components can now include `<script>` tags without the `@script` wrap
 
 Islands allow you to create isolated regions within a component that update independently, dramatically improving performance without creating separate child components.
 
-```blade
+@boostsnippet('Islands Example', 'blade')
 @@island(name: 'stats', lazy: true)
     <div>@{{ $this->expensiveStats }}</div>
 @@endisland
-```
+@endboostsnippet
 
 [Learn more about islands →](/docs/4.x/islands)
 
@@ -618,28 +629,28 @@ Islands allow you to create isolated regions within a component that update inde
 
 In addition to lazy loading (viewport-based), components can now be deferred to load immediately after the initial page load:
 
-```blade
+@boostsnippet('Deferred Loading Template', 'blade')
 <livewire:revenue defer />
-```
+@endboostsnippet
 
-```php
+@boostsnippet('Deferred Loading Attribute', 'php')
 #[Defer]
 class Revenue extends Component { ... }
-```
+@endboostsnippet
 
 **Bundled loading**
 
 Control whether multiple lazy/deferred components load in parallel or bundled together:
 
-```blade
+@boostsnippet('Bundled Loading Template', 'blade')
 <livewire:revenue lazy.bundle />
 <livewire:expenses defer.bundle />
-```
+@endboostsnippet
 
-```php
+@boostsnippet('Bundled Loading Attribute', 'php')
 #[Lazy(bundle: true)]
 class Revenue extends Component { ... }
-```
+@endboostsnippet
 
 [Learn more about lazy and deferred loading →](/docs/4.x/lazy)
 
@@ -647,14 +658,14 @@ class Revenue extends Component { ... }
 
 Run actions in parallel without blocking other requests using the `.async` modifier or `#[Async]` attribute:
 
-```blade
+@boostsnippet('Async Actions Template', 'blade')
 <button wire:click.async="logActivity">Track</button>
-```
+@endboostsnippet
 
-```php
+@boostsnippet('Async Actions Attribute', 'php')
 #[Async]
 public function logActivity() { ... }
-```
+@endboostsnippet
 
 [Learn more about async actions →](/docs/4.x/actions#parallel-execution-with-async)
 
@@ -664,13 +675,13 @@ public function logActivity() { ... }
 
 Built-in support for sortable lists with drag-and-drop:
 
-```blade
+@boostsnippet('Wire Sort Directive', 'blade')
 <ul wire:sort="updateOrder">
     @@foreach ($items as $item)
         <li wire:sort:item="@{{ $item->id }}" wire:key="@{{ $item->id }}">@{{ $item->name }}</li>
     @@endforeach
 </ul>
-```
+@endboostsnippet
 
 [Learn more about wire:sort →](/docs/4.x/wire-sort)
 
@@ -678,7 +689,7 @@ Built-in support for sortable lists with drag-and-drop:
 
 Run actions when elements enter or leave the viewport, similar to Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect):
 
-```blade
+@boostsnippet('Wire Intersect Directive', 'blade')
 <!-- Basic usage -->
 <div wire:intersect="loadMore">...</div>
 
@@ -691,7 +702,7 @@ Run actions when elements enter or leave the viewport, similar to Alpine's [`x-i
 <!-- With options -->
 <div wire:intersect.margin.200px="loadMore">...</div>
 <div wire:intersect.threshold.50="trackScroll">...</div>
-```
+@endboostsnippet
 
 Available modifiers:
 - `.once` - Fire only once
@@ -706,7 +717,7 @@ Available modifiers:
 
 Easily reference and interact with elements in your template:
 
-```blade
+@boostsnippet('Wire Ref Directive', 'blade')
 <div wire:ref="modal">
     <!-- Modal content -->
 </div>
@@ -718,7 +729,7 @@ Easily reference and interact with elements in your template:
         this.$refs.modal.scrollIntoView()
     }
 </script>
-```
+@endboostsnippet
 
 [Learn more about wire:ref →](/docs/4.x/wire-ref)
 
@@ -726,9 +737,9 @@ Easily reference and interact with elements in your template:
 
 Skip component re-rendering directly from the template:
 
-```blade
+@boostsnippet('Renderless Modifier', 'blade')
 <button wire:click.renderless="trackClick">Track</button>
-```
+@endboostsnippet
 
 This is an alternative to the `#[Renderless]` attribute for actions that don't need to update the UI.
 
@@ -736,19 +747,19 @@ This is an alternative to the `#[Renderless]` attribute for actions that don't n
 
 Preserve scroll position during updates to prevent layout jumps:
 
-```blade
+@boostsnippet('Preserve Scroll Modifier', 'blade')
 <button wire:click.preserve-scroll="loadMore">Load More</button>
-```
+@endboostsnippet
 
 **`data-loading` attribute**
 
 Every element that triggers a network request automatically receives a `data-loading` attribute, making it easy to style loading states with Tailwind:
 
-```blade
+@boostsnippet('Data Loading Attribute', 'blade')
 <button wire:click="save" class="data-loading:opacity-50 data-loading:pointer-events-none">
     Save Changes
 </button>
-```
+@endboostsnippet
 
 [Learn more about loading states →](/docs/4.x/loading-states)
 
@@ -758,11 +769,11 @@ Every element that triggers a network request automatically receives a `data-loa
 
 Access your component's error bag from JavaScript:
 
-```blade
+@boostsnippet('Errors Magic Property', 'blade')
 <div wire:show="$errors.has('email')">
     <span wire:text="$errors.first('email')"></span>
 </div>
-```
+@endboostsnippet
 
 [Learn more about validation →](/docs/4.x/validation)
 
@@ -770,13 +781,13 @@ Access your component's error bag from JavaScript:
 
 Intercept and modify Livewire requests from JavaScript:
 
-```blade
+@boostsnippet('Intercept Magic Method', 'blade')
 <script>
 this.$intercept('save', ({ ... }) => {
     // ...
 })
 </script>
-```
+@endboostsnippet
 
 [Learn more about JavaScript interceptors →](/docs/4.x/javascript#interceptors)
 
@@ -784,11 +795,11 @@ this.$intercept('save', ({ ... }) => {
 
 Trigger island renders directly from the template:
 
-```blade
+@boostsnippet('Island Targeting From Template', 'blade')
 <button wire:click="loadMore" wire:island.append="stats">
     Load more
 </button>
-```
+@endboostsnippet
 
 [Learn more about islands →](/docs/4.x/islands)
 

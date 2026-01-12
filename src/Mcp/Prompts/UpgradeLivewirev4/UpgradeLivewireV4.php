@@ -18,7 +18,7 @@ class UpgradeLivewireV4 extends Prompt
 
     protected string $title = 'upgrade_livewire_v4';
 
-    protected string $description = 'Provides step-by-step guidance for upgrading from Livewire v3 to v4, including breaking changes, new features, and migration instructions.';
+    protected string $description = 'Provides step-by-step guidance for upgrading from Livewire v3 to v4.';
 
     public function shouldRegister(Roster $roster): bool
     {
