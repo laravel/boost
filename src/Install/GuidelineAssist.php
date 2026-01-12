@@ -164,19 +164,40 @@ class GuidelineAssist
         return new Inertia($this->roster);
     }
 
+    protected function shouldUseSail(): bool
+    {
+        // Custom executables override Sail
+        if ($this->config->executables?->hasCustomPaths()) {
+            return false;
+        }
+
+        return $this->config->usesSail;
+    }
+
     public function nodePackageManager(): string
     {
+        // Priority: Custom config > Roster detection
+        if ($this->config->executables?->nodeManager) {
+            return $this->config->executables->nodeManager;
+        }
+
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
     }
 
     public function nodePackageManagerCommand(string $command): string
     {
         $manager = $this->nodePackageManager();
-        $nodePackageManagerCommand = $this->config->usesSail
-            ? Sail::nodePackageManagerCommand($manager)
-            : $manager;
 
-        return "{$nodePackageManagerCommand} {$command}";
+        // Check for custom node path
+        if ($this->config->executables?->nodePath) {
+            $nodeCommand = $this->config->executables->nodePath;
+        } elseif ($this->shouldUseSail()) {
+            $nodeCommand = Sail::nodePackageManagerCommand($manager);
+        } else {
+            $nodeCommand = $manager;
+        }
+
+        return "{$nodeCommand} {$command}";
     }
 
     public function artisanCommand(string $command): string
@@ -186,29 +207,47 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
-        $composerCommand = $this->config->usesSail
-            ? Sail::composerCommand()
-            : 'composer';
+        // Priority: Custom config > Sail > Default
+        if ($executables = $this->config->executables) {
+            $composer = $executables->composer;
+        } elseif ($this->shouldUseSail()) {
+            $composer = Sail::composerCommand();
+        } else {
+            $composer = 'composer';
+        }
 
-        return "{$composerCommand} {$command}";
+        return "{$composer} {$command}";
     }
 
     public function binCommand(string $command): string
     {
-        return $this->config->usesSail
+        $vendorBin = $this->config->executables?->vendorBin;
+
+        if ($vendorBin) {
+            return "{$vendorBin}/{$command}";
+        }
+
+        return $this->shouldUseSail()
             ? Sail::binCommand().$command
             : "vendor/bin/{$command}";
     }
 
     public function artisan(): string
     {
-        return $this->config->usesSail
-            ? Sail::artisanCommand()
-            : 'php artisan';
+        // Priority: Custom config > Sail > Default
+        if ($executables = $this->config->executables) {
+            return "{$executables->php} {$executables->artisan}";
+        }
+
+        if ($this->shouldUseSail()) {
+            return Sail::artisanCommand();
+        }
+
+        return 'php artisan';
     }
 
     public function sailBinaryPath(): string
     {
-        return Sail::BINARY_PATH;
+        return $this->config->executables?->sail ?? Sail::BINARY_PATH;
     }
 }

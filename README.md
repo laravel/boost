@@ -141,6 +141,79 @@ You may also automate this process by adding it to your Composer "post-update-cm
 }
 ```
 
+## Configuring Custom Executable Paths
+
+By default, Laravel Boost uses standard executable paths like `php`, `artisan`, `composer`, and `vendor/bin/*` in AI guidelines. However, if you're using Docker, custom PHP installations, or other non-standard setups, you can configure custom executable paths.
+
+### Interactive Configuration
+
+Run the install command with the `--configure-executables` flag to interactively configure custom paths:
+
+```bash
+php artisan boost:install --configure-executables
+```
+
+You'll be prompted to configure:
+
+- **PHP executable path** - Custom path to PHP binary (e.g., `/usr/local/bin/php8.3`)
+- **Artisan path** - Custom path to artisan (e.g., `artisan` or `/app/artisan`)
+- **Composer executable** - Custom path to Composer (e.g., `/usr/local/bin/composer`)
+- **Vendor bin directory** - Base path for vendor binaries (e.g., `vendor/bin` or `/app/vendor/bin`)
+- **Node package manager** - Override detected manager (npm, pnpm, yarn, bun) with custom path
+
+### Manual Configuration
+
+You can also manually edit the `boost.json` file to configure executable paths:
+
+```json
+{
+  "executables": {
+    "php": "/usr/local/bin/php8.3",
+    "artisan": "artisan",
+    "composer": "/usr/local/bin/composer",
+    "sail": "vendor/bin/sail",
+    "vendor_bin": "vendor/bin",
+    "node": {
+      "manager": "pnpm",
+      "path": null
+    }
+  }
+}
+```
+
+### Common Use Cases
+
+**Docker with exec commands:**
+```json
+{
+  "executables": {
+    "php": "docker exec app php",
+    "composer": "docker exec app composer"
+  }
+}
+```
+
+**Herd Pro with multiple PHP versions:**
+```json
+{
+  "executables": {
+    "php": "/opt/homebrew/bin/php8.3"
+  }
+}
+```
+
+**Custom vendor binary location:**
+```json
+{
+  "executables": {
+    "vendor_bin": "/custom/path/vendor/bin"
+  }
+}
+```
+
+> [!NOTE]
+> Custom executable paths automatically override Laravel Sail configuration. If you configure custom paths while Sail is enabled, your custom paths will be used in generated AI guidelines instead of Sail wrappers.
+
 ## Available Documentation
 
 | Package | Versions Supported |

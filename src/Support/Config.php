@@ -72,6 +72,21 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function getExecutables(): ?array
+    {
+        return $this->get('executables');
+    }
+
+    public function setExecutables(array $executables): void
+    {
+        $this->set('executables', $executables);
+    }
+
+    public function hasExecutablesConfig(): bool
+    {
+        return $this->get('executables') !== null;
+    }
+
     public function flush(): void
     {
         $path = base_path(self::FILE);

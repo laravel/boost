@@ -64,3 +64,34 @@ it('may store and retrieve herd mcp installation status', function (): void {
 
     expect($config->getHerdMcp())->toBeFalse();
 });
+
+it('may store and retrieve executables config', function (): void {
+    $config = new Config;
+
+    expect($config->getExecutables())->toBeNull();
+    expect($config->hasExecutablesConfig())->toBeFalse();
+
+    $executables = [
+        'php' => '/usr/local/bin/php8.3',
+        'artisan' => 'artisan',
+        'composer' => '/usr/local/bin/composer',
+        'sail' => 'vendor/bin/sail',
+        'vendor_bin' => 'vendor/bin',
+        'node' => [
+            'manager' => 'pnpm',
+            'path' => null,
+        ],
+    ];
+
+    $config->setExecutables($executables);
+
+    expect($config->getExecutables())->toEqual($executables);
+    expect($config->hasExecutablesConfig())->toBeTrue();
+});
+
+it('returns null when executables config is not set', function (): void {
+    $config = new Config;
+
+    expect($config->getExecutables())->toBeNull();
+    expect($config->hasExecutablesConfig())->toBeFalse();
+});

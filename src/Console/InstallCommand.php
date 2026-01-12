@@ -15,6 +15,7 @@ use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Cli\DisplayHelper;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
+use Laravel\Boost\Install\ExecutableConfig;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -30,12 +31,14 @@ use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\text;
 
 class InstallCommand extends Command
 {
     use Colors;
 
-    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
+    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration} {--configure-executables : Prompt for custom executable paths}';
 
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
@@ -157,6 +160,10 @@ class InstallCommand extends Command
         $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
         $this->selectedTargetAgents = $this->selectTargetAgents();
         $this->enforceTests = $this->determineTestEnforcement();
+
+        if ($this->shouldConfigureExecutables()) {
+            $this->configureExecutables();
+        }
     }
 
     protected function performInstallation(): void
@@ -459,6 +466,11 @@ class InstallCommand extends Command
         $guidelineConfig->aiGuidelines = $this->selectedAiGuidelines->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
 
+        // Load executable config if it exists
+        if ($executablesConfig = $this->config->getExecutables()) {
+            $guidelineConfig->executables = ExecutableConfig::fromConfig($executablesConfig);
+        }
+
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
         $guidelines = $composer->guidelines();
 
@@ -548,6 +560,111 @@ class InstallCommand extends Command
         }
 
         return $this->selectedBoostFeatures->contains('sail');
+    }
+
+    protected function shouldConfigureExecutables(): bool
+    {
+        // If flag is set, always prompt
+        if ($this->option('configure-executables')) {
+            return true;
+        }
+
+        // If config exists, skip prompts (re-running install)
+        if ($this->config->hasExecutablesConfig()) {
+            return false;
+        }
+
+        // For new installations, ask if they want to configure
+        return confirm(
+            label: 'Configure custom executable paths?',
+            default: false,
+            hint: 'Configure custom paths for php, composer, artisan, etc. (most users can skip this)'
+        );
+    }
+
+    protected function configureExecutables(): void
+    {
+        $this->newLine();
+        $this->info(' Configure Custom Executable Paths');
+        $this->line('  Leave blank to use defaults');
+        $this->newLine();
+
+        $existing = $this->config->getExecutables() ?? [];
+
+        $php = text(
+            label: 'PHP executable path',
+            default: $existing['php'] ?? 'php',
+            hint: 'Default: php'
+        );
+
+        $artisan = text(
+            label: 'Artisan path',
+            default: $existing['artisan'] ?? 'artisan',
+            hint: 'Default: artisan'
+        );
+
+        $composer = text(
+            label: 'Composer executable',
+            default: $existing['composer'] ?? 'composer',
+            hint: 'Default: composer'
+        );
+
+        $vendorBin = text(
+            label: 'Vendor bin directory',
+            default: $existing['vendor_bin'] ?? 'vendor/bin',
+            hint: 'Default: vendor/bin (used for pint, pest, phpstan, rector)'
+        );
+
+        // Only prompt for node if different from detected
+        $roster = app(\Laravel\Roster\Roster::class);
+        $detectedManager = $roster->nodePackageManager()?->value ?? 'npm';
+        $configureNode = confirm(
+            label: "Configure custom Node package manager? (detected: {$detectedManager})",
+            default: false,
+        );
+
+        $nodeManager = $detectedManager;
+        $nodePath = null;
+
+        if ($configureNode) {
+            $nodeManager = select(
+                label: 'Node package manager',
+                options: ['npm', 'pnpm', 'yarn', 'bun'],
+                default: $existing['node']['manager'] ?? $detectedManager,
+            );
+
+            $nodePathInput = text(
+                label: 'Custom node manager path (optional)',
+                default: $existing['node']['path'] ?? '',
+                hint: 'Leave blank to use detected manager executable',
+            );
+
+            $nodePath = empty($nodePathInput) ? null : $nodePathInput;
+        }
+
+        $executables = [
+            'php' => $php,
+            'artisan' => $artisan,
+            'composer' => $composer,
+            'sail' => $existing['sail'] ?? 'vendor/bin/sail',
+            'vendor_bin' => $vendorBin,
+            'node' => [
+                'manager' => $nodeManager,
+                'path' => $nodePath,
+            ],
+        ];
+
+        $this->config->setExecutables($executables);
+
+        // Show warning if Sail is enabled and custom paths are configured
+        if ($this->selectedBoostFeatures->contains('sail')) {
+            $execConfig = ExecutableConfig::fromConfig($executables);
+            if ($execConfig->hasCustomPaths()) {
+                $this->newLine();
+                $this->warn('⚠ Custom executable paths will override Sail configuration');
+                $this->line('  Commands in AI guidelines will use your custom paths instead of Sail wrappers');
+            }
+        }
     }
 
     protected function buildMcpCommand(McpClient $mcpClient): array
