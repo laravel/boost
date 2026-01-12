@@ -12,7 +12,6 @@ test('it has the correct name', function (): void {
     expect($this->prompt->name())->toBe('upgrade-livewire-v4');
 });
 
-
 test('it returns a valid response', function (): void {
     $response = $this->prompt->handle();
 
