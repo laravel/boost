@@ -82,6 +82,6 @@ class OpenCode extends CodeEnvironment implements Agent, McpClient, SkillsAgent
 
     public function skillsPath(): string
     {
-        return config('boost.code_environments.opencode.skills_path', '.opencode/skills');
+        return config('boost.code_environments.opencode.skills_path', '.opencode/skill');
     }
 }

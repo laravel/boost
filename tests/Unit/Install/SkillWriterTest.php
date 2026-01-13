@@ -178,3 +178,38 @@ test('it copies nested directory structure', function (): void {
 test('it throws exception when target directory cannot be created', function (): void {
     expect(true)->toBeTrue();
 })->todo();
+
+test('it renders blade templates to markdown', function (): void {
+    $sourceDir = sys_get_temp_dir().'/boost_skill_blade_'.uniqid();
+    mkdir($sourceDir.'/references', 0755, true);
+    file_put_contents($sourceDir.'/SKILL.blade.php', "---\nname: blade-skill\ndescription: Blade skill\n---\n# Blade Skill\n\nThe answer is {{ 1 + 1 }}.");
+    file_put_contents($sourceDir.'/references/ref.blade.php', "# Reference\n\n{{ 'Hello' }}");
+
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $agent = Mockery::mock(SkillsAgent::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'blade-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Blade skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($absoluteTarget.'/blade-skill/SKILL.md')->toBeFile()
+        ->and($absoluteTarget.'/blade-skill/references/ref.md')->toBeFile();
+
+    // Blade templates should be rendered to .md files
+    $content = file_get_contents($absoluteTarget.'/blade-skill/SKILL.md');
+    expect($content)->toContain('The answer is 2')
+        ->not->toContain('{{ 1 + 1 }}');
+
+    cleanupSkillDirectory($sourceDir);
+    cleanupSkillDirectory($absoluteTarget);
+});

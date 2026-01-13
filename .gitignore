@@ -9,3 +9,4 @@ composer.lock
 /phpunit.xml
 .phpunit.result.cache
 all.md
+.claude

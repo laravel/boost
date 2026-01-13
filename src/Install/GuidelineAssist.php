@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
+use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
@@ -17,8 +18,10 @@ class GuidelineAssist
     /** @var array<string, string> */
     protected array $modelPaths = [];
 
+    /** @var array<string, string> */
     protected array $controllerPaths = [];
 
+    /** @var array<string, string> */
     protected array $enumPaths = [];
 
     protected static array $classes = [];
@@ -121,10 +124,13 @@ class GuidelineAssist
             return $cache[$path] = false;
         }
 
-        if (stripos($code, 'class') === false
-            && stripos($code, 'interface') === false
-            && stripos($code, 'trait') === false
-            && stripos($code, 'enum') === false) {
+        // Quick string check before expensive tokenization
+        $containsClassKeyword = stripos($code, 'class') !== false
+            || stripos($code, 'interface') !== false
+            || stripos($code, 'trait') !== false
+            || stripos($code, 'enum') !== false;
+
+        if (! $containsClassKeyword) {
             return $cache[$path] = false;
         }
 
@@ -162,6 +168,28 @@ class GuidelineAssist
     public function inertia(): Inertia
     {
         return new Inertia($this->roster);
+    }
+
+    /**
+     * Check if the project uses a specific package.
+     */
+    public function hasPackage(Packages $package): bool
+    {
+        return $this->roster->packages()->contains(
+            fn ($pkg): bool => $pkg->package() === $package
+        );
+    }
+
+    /**
+     * Get the version of a package.
+     */
+    public function packageVersion(string $packageName): ?string
+    {
+        $package = $this->roster->packages()->first(
+            fn ($pkg): bool => $pkg->rawName() === $packageName
+        );
+
+        return $package?->version();
     }
 
     public function nodePackageManager(): string

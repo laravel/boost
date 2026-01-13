@@ -25,11 +25,48 @@ From a user's perspective, nothing changes:
 - The existing `.ai` override model continues to work
 - Customization behaves exactly as it does today
 
+### 1.4 Quick Start: Creating Skills
+
+**For step-by-step instructions on migrating guidelines to skills, see `migrate-skill.md`.**
+
+The migration guide includes:
+- When to create skills vs. keeping content in guidelines
+- File structure and naming conventions
+- Choosing between `.md` and `.blade.php` formats
+- Complete real-world migration examples
+- Checklist for successful migration
+
 ---
 
-## 2. Scope
+## 2. Getting Started with Skills Migration
 
-### 2.1 In Scope
+### 2.1 How to Use This Document
+
+This PRD provides the **strategic overview** and **technical architecture** for Laravel Boost v2 Skills. Before migrating guidelines to skills, you should:
+
+1. **Read this PRD** to understand:
+   - Why skills exist and how they differ from guidelines
+   - Which packages get skills vs. remaining as guidelines only
+   - The phased migration approach (Phase 1: Minimal → Phase 2: Refactored)
+   - Technical implementation details and architecture
+
+2. **Use `migrate-skill.md`** for practical implementation:
+   - Step-by-step migration process with checklists
+   - Real-world examples (MCP, Livewire, Inertia, etc.)
+   - When to use `.md` vs `.blade.php`
+   - Code snippet formatting and Blade features
+   - Complete before/after migration examples
+
+**Quick Links**:
+- **Creating your first skill?** → Start with `migrate-skill.md`
+- **Understanding the big picture?** → Continue reading this PRD
+- **Checking what's been done?** → See Section 15 (Timeline) and Section 5.1 (Skills Catalog)
+
+---
+
+## 3. Scope
+
+### 3.1 In Scope
 
 | Item | Description |
 |------|-------------|
@@ -38,11 +75,13 @@ From a user's perspective, nothing changes:
 | Blade rendering for skills | Render SKILL.blade.php to SKILL.md (same as guidelines) |
 | Lightweight guidelines | Refactor existing guidelines to be concise |
 | Skills activation guidance | Add activation hints to core guidelines |
-| Automatic skill installation | All available skills installed automatically |
+| Automatic skill installation | Skills for installed packages installed automatically |
+| Package filtering | Skills only included when their package exists in target app |
 | Third-party skill detection | Already implemented, needs documentation |
 | Skills override model | `.ai/skills/` for user customization |
+| Migration guide | `migrate-skill.md` with step-by-step instructions |
 
-### 2.2 Out of Scope (No-gos)
+### 3.2 Out of Scope (No-gos)
 
 | Item | Rationale |
 |------|-----------|
@@ -52,9 +91,9 @@ From a user's perspective, nothing changes:
 
 ---
 
-## 3. Agent Support Matrix
+## 4. Agent Support Matrix
 
-### 3.1 Skills-Capable Agents
+### 4.1 Skills-Capable Agents
 
 | Agent | Interface | Skills Path | Status |
 |-------|-----------|-------------|--------|
@@ -65,14 +104,14 @@ From a user's perspective, nothing changes:
 | OpenCode | `SkillsAgent` | `.opencode/skills/` | ✅ Supported |
 | Gemini | `SkillsAgent` | `.gemini/skills/` | ✅ Supported (needs implementation) |
 
-### 3.2 Guidelines-Only Agents
+### 4.2 Guidelines-Only Agents
 
 | Agent | Interface | Guidelines Path | Status |
 |-------|-----------|-----------------|--------|
 | PhpStorm (Junie) | `Agent` | `.junie/guidelines.md` | ✅ Guidelines only |
 | VS Code | `McpClient` only | N/A | MCP only (no guidelines) |
 
-### 3.3 Dropped Support
+### 4.3 Dropped Support
 
 | Agent | Reason | Migration Path |
 |-------|--------|----------------|
@@ -80,9 +119,9 @@ From a user's perspective, nothing changes:
 
 ---
 
-## 4. Skills Specification
+## 5. Skills Specification
 
-### 4.1 Specification Compliance
+### 5.1 Specification Compliance
 
 Skills MUST follow the [agentskills.io specification](https://agentskills.io/specification):
 
@@ -91,7 +130,7 @@ Skills MUST follow the [agentskills.io specification](https://agentskills.io/spe
 - **Blade rendering**: If `SKILL.blade.php` exists, it is compiled to `SKILL.md` during installation (same pipeline as guidelines)
 - **Frontmatter**: YAML with required `name` and `description` fields
 
-### 4.2 Naming Conventions
+### 5.2 Naming Conventions
 
 | Rule | Example | Rationale |
 |------|---------|-----------|
@@ -102,7 +141,9 @@ Skills MUST follow the [agentskills.io specification](https://agentskills.io/spe
 
 **Avoid**: `helper`, `utils`, `tools`, `misc` (too vague)
 
-### 4.3 Frontmatter Requirements
+### 5.3 Frontmatter Requirements
+
+**See `migrate-skill.md` Section "Frontmatter (Required)" for detailed examples.**
 
 ```yaml
 ---
@@ -113,9 +154,16 @@ description: >-                             # Required, max 1024 chars
 ---
 ```
 
-### 4.4 SKILL.md / SKILL.blade.php Structure
+**Key rules**:
+- `name`: Must match directory name exactly
+- `description`: 2-3 lines max, state what AND when to use
+- Both fields are required for skill discovery
+
+### 5.4 SKILL.md / SKILL.blade.php Structure
 
 Skills can be written as either `SKILL.md` (plain Markdown) or `SKILL.blade.php` (Blade template that renders to Markdown). Blade templates support the same rendering features as guidelines (version detection, package context, etc.).
+
+**See `migrate-skill.md` Section "Step 4: Choose File Format" for detailed guidance on when to use `.md` vs `.blade.php`.**
 
 ```markdown
 ---
@@ -164,7 +212,7 @@ description: Build reactive UI components with Livewire
 @endif
 ```
 
-### 4.5 Progressive Disclosure (Gemini Model)
+### 5.5 Progressive Disclosure (Gemini Model)
 
 Gemini CLI implements a **progressive disclosure** model for skills:
 
@@ -178,7 +226,7 @@ Gemini CLI implements a **progressive disclosure** model for skills:
 
 **Implication for Boost**: Skills should be written with clear, descriptive frontmatter since that's all the agent sees initially.
 
-### 4.6 Reference Files
+### 5.6 Reference Files
 
 Skills can include additional files in a `references/` subdirectory. Reference files can be either `.md` or `.blade.php`:
 
@@ -198,11 +246,13 @@ Skills can include additional files in a `references/` subdirectory. Reference f
 - One level deep only (no nested subdirectories)
 - Blade templates in references are also rendered to Markdown during installation
 
+**See `migrate-skill.md` for guidance on when to split content into reference files.**
+
 ---
 
-## 5. Skills Catalog
+## 6. Skills Catalog
 
-### 5.1 Skills to Create
+### 6.1 Skills to Create
 
 | Skill Name | Package | Priority | Source Guidelines |
 |------------|---------|----------|-------------------|
@@ -216,7 +266,7 @@ Skills can include additional files in a `references/` subdirectory. Reference f
 | `using-folio-routing` | folio | P2 | `.ai/folio/*.blade.php` |
 | `building-mcp-servers` | mcp | P2 | `.ai/mcp/*.blade.php` |
 
-### 5.2 Guidelines That Do NOT Become Skills
+### 6.2 Guidelines That Do NOT Become Skills
 
 These guidelines remain as lightweight guidelines only and are **NOT** split into skills:
 
@@ -232,7 +282,7 @@ These guidelines remain as lightweight guidelines only and are **NOT** split int
 
 These guidelines are kept lightweight and remain in guidelines because they contain essential, always-needed information that should be available in every context.
 
-### 5.3 Skills Content Guidelines
+### 6.3 Skills Content Guidelines
 
 **Move TO skills**:
 - Detailed implementation patterns (50+ lines)
@@ -247,11 +297,11 @@ These guidelines are kept lightweight and remain in guidelines because they cont
 - Pointers to skills (`Activate building-livewire-components for details`)
 - Always-needed context
 
-### 5.4 Guideline to Skill Migration Strategy
+### 6.4 Guideline to Skill Migration Strategy
 
 #### Overview
 
-Current guidelines in `.ai/` will be migrated to skills in phases:
+Current guidelines in `.ai/` will be migrated to skills in phases. **See `migrate-skill.md` for the complete step-by-step migration guide.**
 
 **Phase 1 (Initial - Minimal)**:
 - Create skill directories with minimal content from existing guidelines
@@ -265,23 +315,25 @@ Current guidelines in `.ai/` will be migrated to skills in phases:
 - Improve skill content with better organization and examples
 - Goal: Optimize context usage and improve activation guidance
 
+**Migration Process**: Follow the detailed checklist and examples in `migrate-skill.md`.
+
 #### Skill Structure Rule
 
-**Any folder inside `.ai/` that contains a skill directory is considered a skill.**
+**Skills live in `skill/` subdirectories within package directories.**
 
 Skills can exist at two levels:
-1. **Root level**: `.ai/{package}/{skill-name}/` - Applies to all versions
-2. **Version level**: `.ai/{package}/{version}/{skill-name}/` - Version-specific skill
+1. **Root level**: `.ai/{package}/skill/{skill-name}/` - Applies to all versions
+2. **Version level**: `.ai/{package}/{version}/skill/{skill-name}/` - Version-specific skill
 
-**Version-specific skills take precedence**: If a skill exists in a version directory (e.g., `3/building-livewire-components/`), it should be placed at the version level, not the root level. Only the skill matching the installed package version will be installed.
+**Version-specific skills take precedence**: If a skill exists in a version's skill directory (e.g., `3/skill/building-livewire-components/`), it takes precedence over root-level skills. Only the skill matching the installed package version will be installed.
 
 Examples:
-- `.ai/livewire/3/building-livewire-components/` → Version-specific skill (Livewire v3)
-- `.ai/livewire/2/building-livewire-components/` → Version-specific skill (Livewire v2)
-- `.ai/pest/testing-with-pest/` → Root-level skill (all Pest versions)
-- `.ai/inertia-vue/2/building-inertia-apps/` → Version-specific skill (Inertia v2)
+- `.ai/livewire/3/skill/building-livewire-components/` → Version-specific skill (Livewire v3)
+- `.ai/livewire/2/skill/building-livewire-components/` → Version-specific skill (Livewire v2)
+- `.ai/pest/skill/testing-with-pest/` → Root-level skill (all Pest versions)
+- `.ai/inertia-laravel/2/skill/building-inertia-apps/` → Version-specific skill (Inertia v2)
 
-The presence of a skill directory (containing `SKILL.md` or `SKILL.blade.php`) within a package folder or version folder indicates that package has skills available.
+The presence of a `skill/` subdirectory with skill directories (containing `SKILL.md` or `SKILL.blade.php`) indicates that package has skills available.
 
 #### Guidelines That Remain Unchanged
 
@@ -314,6 +366,8 @@ These guidelines will be split into lightweight guidelines + skills:
 | `mcp` | Package detection (~3 lines) | MCP server patterns, tool/resource creation |
 
 #### Migration Process Example: Livewire
+
+**Complete migration example available in `migrate-skill.md` Section "Real-World Example: MCP Migration".**
 
 **Phase 1 (Initial - Minimal)**:
 
@@ -360,6 +414,8 @@ This project uses Livewire {{ $assist->packageVersion('livewire/livewire') }}.
 
 #### Content Distribution Rules
 
+**See `migrate-skill.md` Sections "When to Create a Skill" and "Step 1: Identify Content for Extraction" for detailed criteria.**
+
 **Phase 1 (Initial - Minimal)**:
 - Skills will contain the same content as current guidelines
 - No refactoring or content splitting
@@ -387,11 +443,13 @@ This project uses Livewire {{ $assist->packageVersion('livewire/livewire') }}.
 
 #### Folder Structure Detection
 
-The skill discovery mechanism (`GuidelineComposer::getBoostSkills()`) scans `.ai/{package}/` directories:
-- If a subdirectory contains `SKILL.md` or `SKILL.blade.php`, it's a skill
-- Skills can exist at root level (`.ai/{package}/{skill}/`) or version level (`.ai/{package}/{version}/{skill}/`)
-- **Version-specific skills**: If a skill exists in a version directory, only install skills matching the installed package version
+The skill discovery mechanism (`GuidelineComposer::getBoostSkills()`) discovers skills for installed packages only:
+- **Package filtering**: Skills are only included for packages that exist in the target application (matching guidelines behavior)
+- Skills live in `skill/` subdirectories within package directories
+- Skills can exist at root level (`.ai/{package}/skill/{skill-name}/`) or version level (`.ai/{package}/{version}/skill/{skill-name}/`)
+- **Version-specific skills**: If a skill exists in a version's skill directory, only install skills matching the installed package version
 - **Root-level skills**: Install if no version-specific skill exists for that version
+- The discovery iterates over `$this->roster->packages()` (installed packages) rather than scanning all `.ai/` directories
 
 Example structure (version-specific skills):
 ```
@@ -399,16 +457,18 @@ Example structure (version-specific skills):
 ├── core.blade.php                    # Lightweight guideline
 ├── 2/
 │   ├── core.blade.php                # Version-specific guideline
-│   └── building-livewire-components/ # Version-specific skill (v2)
-│       ├── SKILL.md
-│       └── references/
-│           └── v2-patterns.md
+│   └── skill/                        # Version-specific skills subdirectory
+│       └── building-livewire-components/
+│           ├── SKILL.md
+│           └── references/
+│               └── v2-patterns.md
 └── 3/
     ├── core.blade.php                # Version-specific guideline
-    └── building-livewire-components/ # Version-specific skill (v3)
-        ├── SKILL.md
-        └── references/
-            └── v3-patterns.md
+    └── skill/                        # Version-specific skills subdirectory
+        └── building-livewire-components/
+            ├── SKILL.md
+            └── references/
+                └── v3-patterns.md
 ```
 
 Example structure (root-level skill):
@@ -416,17 +476,18 @@ Example structure (root-level skill):
 .ai/pest/
 ├── core.blade.php                    # Lightweight guideline
 ├── 4/core.blade.php                  # Version-specific guideline
-└── testing-with-pest/                # Root-level skill (all versions)
-    ├── SKILL.md
-    └── references/
-        └── assertions.md
+└── skill/                            # Root-level skills subdirectory
+    └── testing-with-pest/
+        ├── SKILL.md
+        └── references/
+            └── assertions.md
 ```
 
 ---
 
-## 6. Directory Structure
+## 7. Directory Structure
 
-### 6.1 Current Structure (Guidelines Only)
+### 7.1 Current Structure (Guidelines Only)
 
 ```
 .ai/
@@ -447,7 +508,7 @@ Example structure (root-level skill):
 └── ...
 ```
 
-### 6.2 Target Structure (Guidelines + Skills)
+### 7.2 Target Structure (Guidelines + Skills)
 
 ```
 .ai/
@@ -460,33 +521,36 @@ Example structure (root-level skill):
 │   ├── core.blade.php          # SLIM: ~15 lines, pointer to skill
 │   ├── 2/
 │   │   ├── core.blade.php      # Version-specific guideline
-│   │   └── building-livewire-components/   # Version-specific skill (v2)
-│   │       ├── SKILL.md                     # OR SKILL.blade.php
-│   │       └── references/
-│   │           └── v2-patterns.md
+│   │   └── skill/              # NEW: Version-specific skills subdirectory
+│   │       └── building-livewire-components/
+│   │           ├── SKILL.md                     # OR SKILL.blade.php
+│   │           └── references/
+│   │               └── v2-patterns.md
 │   └── 3/
 │       ├── core.blade.php      # Version-specific guideline
-│       └── building-livewire-components/   # Version-specific skill (v3)
-│           ├── SKILL.md                     # OR SKILL.blade.php
-│           └── references/
-│               └── v3-patterns.md
+│       └── skill/              # NEW: Version-specific skills subdirectory
+│           └── building-livewire-components/
+│               ├── SKILL.md                     # OR SKILL.blade.php
+│               └── references/
+│                   └── v3-patterns.md
 ├── pest/
 │   ├── core.blade.php          # SLIM: ~15 lines
-│   └── testing-with-pest/      # NEW: Skill directory
-│       ├── SKILL.md                     # OR SKILL.blade.php (rendered to SKILL.md)
-│       └── references/
-│           └── assertions.md            # OR .blade.php
+│   └── skill/                  # NEW: Root-level skills subdirectory
+│       └── testing-with-pest/
+│           ├── SKILL.md                     # OR SKILL.blade.php (rendered to SKILL.md)
+│           └── references/
+│               └── assertions.md            # OR .blade.php
 └── ...
 ```
 
 **Skill Detection Rule**: 
-- Any folder inside `.ai/{package}/` that contains `SKILL.md` or `SKILL.blade.php` is considered a skill directory
-- Skills can exist at root level (`.ai/{package}/{skill}/`) or version level (`.ai/{package}/{version}/{skill}/`)
-- **Version-specific skills**: If a skill exists in a version directory, only install skills matching the installed package version
+- Skills live in `skill/` subdirectories within package directories
+- Skills can exist at root level (`.ai/{package}/skill/{skill-name}/`) or version level (`.ai/{package}/{version}/skill/{skill-name}/`)
+- **Version-specific skills**: If a skill exists in a version's skill directory, only install skills matching the installed package version
 - **Root-level skills**: Install if no version-specific skill exists for that version
 - If skills are version-specific, they should be placed at the version level (not root level) to ensure correct version installation
 
-### 6.3 User Override Structure
+### 7.3 User Override Structure
 
 Users can override skills in three ways (in priority order):
 
@@ -506,8 +570,9 @@ Project Root/
 ├── .ai/
 │   └── livewire/
 │       └── 3/                  # Version-specific override
-│           └── building-livewire-components/
-│               └── SKILL.md    # Overrides Boost's v3 skill
+│           └── skill/
+│               └── building-livewire-components/
+│                   └── SKILL.md    # Overrides Boost's v3 skill
 ```
 
 **3. Root-level skill override** (in project's `.ai` folder):
@@ -518,48 +583,49 @@ Project Root/
 │   │   └── livewire/
 │   │       └── core.blade.php  # Overrides built-in guideline
 │   └── livewire/
-│       └── building-livewire-components/
-│           └── SKILL.md       # Overrides Boost's root-level skill
+│       └── skill/
+│           └── building-livewire-components/
+│               └── SKILL.md       # Overrides Boost's root-level skill
 ```
 
-**Note**: User overrides in `.ai/{package}/` take precedence over Boost built-in skills, but `.ai/skills/` overrides take highest priority.
+**Note**: User overrides in `.ai/{package}/skill/` take precedence over Boost built-in skills, but `.ai/skills/` overrides take highest priority.
 
 ---
 
-## 7. Override Model
+## 8. Override Model
 
-### 7.1 Priority Order (Highest to Lowest)
+### 8.1 Priority Order (Highest to Lowest)
 
 ```
-1. User explicit skills      (.ai/skills/{name}/)                    → custom: true (explicit override)
-2. User version skills       (.ai/{package}/{version}/{name}/)      → custom: true (user override in project)
-3. User root skills          (.ai/{package}/{name}/)                → custom: true (user override in project)
-4. Boost version skills       (package's .ai/{package}/{version}/{name}/) → custom: false (built-in version-specific)
-5. Boost root skills          (package's .ai/{package}/{name}/)     → custom: false (built-in root level)
-6. Third-party skills         (vendor/.../resources/boost/{name}/)  → custom: false
+1. User explicit skills      (.ai/skills/{name}/)                           → custom: true (explicit override)
+2. User version skills       (.ai/{package}/{version}/skill/{name}/)       → custom: true (user override in project)
+3. User root skills          (.ai/{package}/skill/{name}/)                 → custom: true (user override in project)
+4. Boost version skills      (package's .ai/{package}/{version}/skill/{name}/) → custom: false (built-in version-specific)
+5. Boost root skills         (package's .ai/{package}/skill/{name}/)       → custom: false (built-in root level)
+6. Third-party skills        (vendor/.../resources/boost/skill/{name}/)    → custom: false
 ```
 
-**Version Matching**: If a version-specific skill exists (e.g., `.ai/livewire/3/building-livewire-components/`), it takes precedence over root-level skills for that version. Only skills matching the installed package version are installed.
+**Version Matching**: If a version-specific skill exists (e.g., `.ai/livewire/3/skill/building-livewire-components/`), it takes precedence over root-level skills for that version. Only skills matching the installed package version are installed.
 
 **User Overrides**: Users can override skills by creating files in their project's `.ai` folder:
 - `.ai/skills/{name}/` - Explicit skill override directory (highest priority)
-- `.ai/{package}/{version}/{name}/` - Override version-specific skill in their project
-- `.ai/{package}/{name}/` - Override root-level skill in their project
+- `.ai/{package}/{version}/skill/{name}/` - Override version-specific skill in their project
+- `.ai/{package}/skill/{name}/` - Override root-level skill in their project
 
-### 7.2 Override Behavior
+### 8.2 Override Behavior
 
 | Scenario | Result |
 |----------|--------|
 | User creates `.ai/skills/testing-with-pest/SKILL.md` or `SKILL.blade.php` | User explicit skill used, all built-in ignored |
-| User creates `.ai/livewire/3/building-livewire-components/SKILL.md` in project | User version-specific skill used, Boost version skill ignored |
-| User creates `.ai/livewire/building-livewire-components/SKILL.md` in project | User root skill used, Boost root skill ignored |
-| Boost has `.ai/livewire/3/building-livewire-components/` and package is v3, no user override | Boost version-specific skill (v3) installed |
-| Boost has `.ai/livewire/building-livewire-components/` (root) and package is v3, no v3-specific skill | Boost root-level skill installed for v3 |
-| Third-party package provides `testing-with-pest` | Package skill used if no Boost or user skill |
+| User creates `.ai/livewire/3/skill/building-livewire-components/SKILL.md` in project | User version-specific skill used, Boost version skill ignored |
+| User creates `.ai/livewire/skill/building-livewire-components/SKILL.md` in project | User root skill used, Boost root skill ignored |
+| Boost has `.ai/livewire/3/skill/building-livewire-components/` and package is v3, no user override | Boost version-specific skill (v3) installed |
+| Boost has `.ai/livewire/skill/building-livewire-components/` (root) and package is v3, no v3-specific skill | Boost root-level skill installed for v3 |
+| Third-party package provides skill in `skill/` subdirectory | Package skill used if no Boost or user skill |
 | No override exists | Boost built-in skill used (version-specific preferred over root) |
 | `SKILL.blade.php` exists | Rendered to `SKILL.md` during installation |
 
-### 7.3 Guidelines Override (Unchanged)
+### 8.3 Guidelines Override (Unchanged)
 
 Existing `.ai/guidelines/` override model continues to work:
 
@@ -570,9 +636,9 @@ Existing `.ai/guidelines/` override model continues to work:
 
 ---
 
-## 8. Installation Flow
+## 9. Installation Flow
 
-### 8.1 Current Flow (v1)
+### 9.1 Current Flow (v1)
 
 ```
 boost:install
@@ -583,7 +649,7 @@ boost:install
 └── Configure MCP
 ```
 
-### 8.2 Target Flow (v2)
+### 9.2 Target Flow (v2)
 
 ```
 boost:install
@@ -595,25 +661,26 @@ boost:install
 └── Configure MCP
 ```
 
-### 8.3 Automatic Skill Installation
+### 9.3 Automatic Skill Installation
 
-All available skills are automatically installed to skills-capable agents:
-- Skills are discovered from Boost built-in (`.ai/{package}/{skill}/` or `.ai/{package}/{version}/{skill}/`)
-- **Version-specific skills**: If a skill exists in a version directory (e.g., `.ai/livewire/3/building-livewire-components/`), only install skills matching the installed package version
+Skills are automatically installed to skills-capable agents based on installed packages:
+- **Package filtering**: Skills are only installed for packages that exist in the target application's `composer.json` (matching guidelines behavior)
+- Skills are discovered from Boost built-in (`.ai/{package}/skill/{skill-name}/` or `.ai/{package}/{version}/skill/{skill-name}/`)
+- **Version-specific skills**: If a skill exists in a version's skill directory (e.g., `.ai/livewire/3/skill/building-livewire-components/`), only install skills matching the installed package version
 - **Root-level skills**: Install if no version-specific skill exists for that version
-- Skills are discovered from third-party packages (`vendor/*/resources/boost/{skill}/`)
+- Skills are discovered from third-party packages (`vendor/*/resources/boost/skill/{skill-name}/`) - only for packages in `composer.json`
 - User overrides in `.ai/skills/` take precedence
 - No user interaction required - installation behavior unchanged from v1
 
 ---
 
-## 9. Skills Activation Guidance
+## 10. Skills Activation Guidance
 
-### 9.1 Problem
+### 10.1 Problem
 
 Agents may not reliably determine when to activate which skill.
 
-### 9.2 Solution
+### 10.2 Solution
 
 Add explicit activation guidance to `foundation.blade.php`:
 
@@ -638,7 +705,7 @@ To determine the frontend stack, check for:
 - `inertiajs/inertia-laravel` in composer.json → Inertia project
 ```
 
-### 9.3 Activation Criteria in Skills
+### 10.3 Activation Criteria in Skills
 
 Each SKILL.md includes a "When to Use This Skill" section:
 
@@ -655,17 +722,20 @@ Activate this skill when:
 
 ---
 
-## 10. Third-Party Package Skills
+## 11. Third-Party Package Skills
 
-### 10.1 Discovery Mechanism
+### 11.1 Discovery Mechanism
 
 **Already implemented** in `Composer::packagesDirectoriesWithBoostSkills()`:
 
 ```php
 // Scans: vendor/{package}/resources/boost/{skill-name}/SKILL.md
+// Only scans packages listed in composer.json (require + require-dev)
 ```
 
-### 10.2 Package Author Requirements
+Third-party skills follow the same package filtering behavior as built-in skills - they are only included when their package is installed in the target application.
+
+### 11.2 Package Author Requirements
 
 Third-party packages can provide skills by:
 
@@ -674,7 +744,7 @@ Third-party packages can provide skills by:
 3. Including required frontmatter
 4. Blade templates are automatically rendered to Markdown during installation
 
-### 10.3 Documentation for Package Authors
+### 11.3 Documentation for Package Authors
 
 **To create**: Documentation guide for third-party package authors explaining:
 - Directory structure
@@ -684,35 +754,39 @@ Third-party packages can provide skills by:
 - Best practices
 - Testing their skills
 
+**Note**: Package authors can follow the same migration guide (`migrate-skill.md`) used for Boost built-in skills.
+
 ---
 
-## 11. Technical Implementation
+## 12. Technical Implementation
 
-### 11.1 Already Implemented (Current Branch)
+### 12.1 Already Implemented (Current Branch)
 
 | Component | File | Status |
 |-----------|------|--------|
 | Skill data class | `src/Install/Skill.php` | ✅ Complete |
 | SkillWriter | `src/Install/SkillWriter.php` | ⚠️ Needs Blade rendering support |
 | SkillsAgent interface | `src/Contracts/SkillsAgent.php` | ✅ Complete |
-| Skills discovery | `src/Install/GuidelineComposer.php` | ⚠️ Needs SKILL.blade.php detection + version-specific skill matching |
+| Skills discovery | `src/Install/GuidelineComposer.php` | ✅ Complete (filters by installed packages) |
+| Package filtering | `src/Install/GuidelineComposer.php` | ✅ Complete (only includes skills for installed packages) |
 | Third-party detection | `src/Support/Composer.php` | ✅ Complete |
 | Install command integration | `src/Console/InstallCommand.php` | ✅ Complete |
 | Agent implementations | 5 agents with `skillsPath()` | ✅ Complete |
 | Unit tests | `tests/Unit/Install/Skill*.php` | ✅ Complete |
 | Feature tests | `tests/Feature/Install/GuidelineComposerTest.php` | ✅ Complete |
 
-### 11.2 To Be Implemented
+### 12.2 To Be Implemented
 
 | Component | File | Priority |
 |-----------|------|----------|
-| Skill content files | `.ai/{package}/{skill}/SKILL.md` | P0 |
+| Skill content files | `.ai/{package}/{skill}/SKILL.md` or `SKILL.blade.php` | P0 |
 | Activation guidance | `.ai/foundation.blade.php` | P0 |
 | Gemini SkillsAgent implementation | `src/Install/CodeEnvironment/Gemini.php` | P0 |
 | Lightweight guidelines | `.ai/{package}/core.blade.php` | P1 |
+| Migration guide | `migrate-skill.md` | ✅ Complete |
 | Package author docs | `docs/skills-for-packages.md` | P2 |
 
-### 11.3 Code Changes Required
+### 12.3 Code Changes Required
 
 #### `src/Install/SkillWriter.php`
 
@@ -725,6 +799,7 @@ Add Blade rendering support:
 #### `src/Install/GuidelineComposer.php`
 
 Update `getBoostSkills()` and `parseSkill()` methods:
+- ✅ **Package filtering**: Iterate over `$this->roster->packages()` (installed packages only) instead of scanning all directories
 - Check for both `SKILL.md` and `SKILL.blade.php`
 - Prefer `SKILL.blade.php` if both exist (same precedence as guidelines)
 - **Version-specific skill detection**: Scan version directories (e.g., `2/`, `3/`) for skills
@@ -742,16 +817,16 @@ Add skills activation section (see Section 9.2).
 
 ---
 
-## 12. Migration & Breaking Changes
+## 13. Migration & Breaking Changes
 
-### 12.1 Breaking Changes
+### 13.1 Breaking Changes
 
 | Change | Impact | Migration |
 |--------|--------|-----------|
 | Guidelines become shorter | Less context by default | Skills provide details on demand |
 | Skills folder created | New files in project | Add to `.gitignore` if desired |
 
-### 12.2 Backward Compatibility
+### 13.2 Backward Compatibility
 
 | Feature | Status |
 |---------|--------|
@@ -760,7 +835,7 @@ Add skills activation section (see Section 9.2).
 | MCP configuration | ✅ Unchanged |
 | Agent detection | ✅ Unchanged |
 
-### 12.3 Migration Guide
+### 13.3 Migration Guide
 
 For users upgrading from v1:
 
@@ -770,9 +845,9 @@ For users upgrading from v1:
 
 ---
 
-## 13. Risks & Mitigations
+## 14. Risks & Mitigations
 
-### 13.1 Skill Activation Reliability
+### 14.1 Skill Activation Reliability
 
 **Risk**: Agents may not reliably activate the right skill at the right time.
 
@@ -782,7 +857,7 @@ For users upgrading from v1:
 - Descriptive skill names and descriptions
 - Package detection hints (check composer.json)
 
-### 13.2 Context Reduction Quality Impact
+### 14.2 Context Reduction Quality Impact
 
 **Risk**: Shorter guidelines may reduce output quality initially.
 
@@ -792,7 +867,7 @@ For users upgrading from v1:
 - Clear skill activation triggers
 - User can override to add back content
 
-### 13.3 Skill Discovery Edge Cases
+### 14.3 Skill Discovery Edge Cases
 
 **Risk**: Skills not discovered from unconventional package structures.
 
@@ -803,9 +878,9 @@ For users upgrading from v1:
 
 ---
 
-## 14. Success Metrics
+## 15. Success Metrics
 
-### 14.1 Quantitative
+### 15.1 Quantitative
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
@@ -827,6 +902,8 @@ For users upgrading from v1:
 
 ### Phase 1: P0 Skills (Week 1-2)
 
+- [x] Create migration guide (`migrate-skill.md`)
+- [x] Create `building-mcp-servers` skill (completed as example)
 - [ ] Create `building-livewire-components` skill
 - [ ] Create `testing-with-pest` skill
 - [ ] Create `building-inertia-apps` skill
@@ -835,15 +912,15 @@ For users upgrading from v1:
 
 ### Phase 2: P1 Skills + Guidelines (Week 3-4)
 
-- [ ] Create P1 skills (Tailwind, Pennant, FluxUI)
+- [ ] Create P1 skills (Tailwind, Pennant, FluxUI) using migration guide
 - [ ] Refactor guidelines to lightweight versions
 - [ ] Update tests
 
 ### Phase 3: P2 Skills + Docs (Week 5-6)
 
-- [ ] Create P2 skills (Volt, Folio, MCP)
-- [ ] Create package author documentation
-- [ ] CHANGELOG and migration guide
+- [ ] Create P2 skills (Volt, Folio) using migration guide
+- [ ] Create package author documentation (reference migrate-skill.md)
+- [ ] CHANGELOG and migration guide for end users
 - [ ] Final testing and release
 
 ---
@@ -883,9 +960,24 @@ For users upgrading from v1:
 
 | File | Purpose |
 |------|---------|
+| `migrate-skill.md` | **Step-by-step migration guide for creating skills** |
 | `src/Install/Skill.php` | Skill data object |
 | `src/Install/SkillWriter.php` | Writes skills to agent paths |
 | `src/Install/GuidelineComposer.php` | Discovers skills and guidelines |
 | `src/Contracts/SkillsAgent.php` | Interface for skill-capable agents |
 | `src/Console/InstallCommand.php` | Installation orchestration |
 | `.ai/foundation.blade.php` | Core guidelines (needs activation section) |
+
+### D. Document Relationship
+
+This PRD (`skills-plan.md`) and the migration guide (`migrate-skill.md`) serve different purposes:
+
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| `skills-plan.md` | Strategic plan, requirements, architecture, timeline | Project planning, stakeholders, contributors |
+| `migrate-skill.md` | Step-by-step how-to guide with examples and checklists | Developers actively migrating guidelines to skills |
+
+**Workflow**:
+1. Read `skills-plan.md` to understand the overall strategy and architecture
+2. Use `migrate-skill.md` as a practical guide when actually creating skills
+3. Refer back to `skills-plan.md` for context on priorities and decisions

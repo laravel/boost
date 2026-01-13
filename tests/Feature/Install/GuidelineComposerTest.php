@@ -392,7 +392,11 @@ test('includes laravel/mcp guidelines when directly required', function (): void
     $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
     $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
 
-    expect($this->composer->compose())->toContain('Mcp::web');
+    // MCP guidelines should be included, but not skill content
+    expect($this->composer->compose())
+        ->toContain('Laravel MCP')
+        ->toContain('building-mcp-servers')
+        ->not->toContain('Mcp::web'); // This is in the skill, not the guideline
 });
 
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
@@ -471,9 +475,12 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('=== .ai/test-blade-with-assist rules ===')
         ->toContain('Run `npm install` to install dependencies')
         ->toContain('Package manager: npm install')
-        // Preserves @volt directives in blade templates
-        ->toContain('`@volt`')
-        ->toContain('@endvolt')
+        // Volt guidelines should be included but not skill content
+        ->toContain('Livewire Volt')
+        ->toContain('using-volt-components')
+        // Skill content should NOT be in guidelines (it's in the skill file)
+        ->not->toContain('`@volt`') // This is in the skill, not the guideline
+        ->not->toContain('@endvolt')
         ->not->toContain('volt-anonymous-fragment')
         ->not->toContain('@livewire');
 });
@@ -781,6 +788,7 @@ test('skills returns collection of Skill objects', function (): void {
 test('skills discovers Boost built-in skills from .ai directory', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -795,6 +803,7 @@ test('skills discovers Boost built-in skills from .ai directory', function (): v
 test('skill has proper structure with name description and path', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -826,6 +835,7 @@ test('skills caches result after first call', function (): void {
 test('user skills override built-in skills', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -846,7 +856,7 @@ test('user skills override built-in skills', function (): void {
     }
 })->skip(fn (): bool => ! is_writable(base_path('.ai/skills') ?: base_path()));
 
-test('skills ignores directories without SKILL.md', function (): void {
+test('skills ignores directories without SKILL.md or SKILL.blade.php', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
@@ -856,6 +866,23 @@ test('skills ignores directories without SKILL.md', function (): void {
     $skills = $this->composer->skills();
 
     foreach ($skills as $skill) {
-        expect(file_exists($skill->path.'/SKILL.md'))->toBeTrue();
+        $hasSkillFile = file_exists($skill->path.'/SKILL.md') || file_exists($skill->path.'/SKILL.blade.php');
+        expect($hasSkillFile)->toBeTrue();
     }
+});
+
+test('skills only includes skills for installed packages', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        // Livewire is NOT included
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = $this->composer->skills();
+
+    $skillNames = $skills->pluck('name')->toArray();
+
+    // Should NOT contain Livewire skill since Livewire is not installed
+    expect($skillNames)->not->toContain('building-livewire-components');
 });
