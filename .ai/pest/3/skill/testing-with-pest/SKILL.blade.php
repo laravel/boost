@@ -1,8 +1,10 @@
 ---
 name: testing-with-pest
 description: >-
-  Write and run tests using Pest 3 PHP testing framework.
-  Use when creating tests, debugging test failures, or working with architecture testing.
+  Write tests with Pest 3 PHP framework. MUST activate when writing tests, creating unit or feature
+  tests, adding assertions, testing Livewire components, architecture testing, debugging test failures,
+  working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion,
+  coverage, or needs to verify functionality works.
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */

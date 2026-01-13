@@ -1,8 +1,10 @@
 ---
 name: using-volt-components
 description: >-
-  Build single-file Livewire components with Volt.
-  Use when creating, testing, or modifying Volt components.
+  Build single-file Livewire components with Volt. MUST activate when creating Volt components,
+  converting Livewire to Volt, working with @volt directive, functional or class-based Volt APIs;
+  or when the user mentions Volt, single-file components, functional Livewire, or inline component
+  logic in Blade files.
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */

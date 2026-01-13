@@ -1,8 +1,10 @@
 ---
 name: building-inertia-apps
 description: >-
-  Build single-page applications with Inertia.js v1 and Laravel.
-  Use when working with Inertia pages, forms, navigation, or client-side state.
+  Build Inertia.js v1 SPA applications. MUST activate when creating Inertia pages, forms,
+  navigation, or Vue/React components; working with props or client-side routing; using Link
+  or router; or when the user mentions Inertia, SPA, single-page app, Vue pages, React pages,
+  or client-side navigation.
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */

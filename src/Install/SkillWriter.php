@@ -53,7 +53,7 @@ class SkillWriter
             return false;
         }
 
-        if (! is_dir($target) && ! @mkdir($target, 0755, true)) {
+        if (! $this->ensureDirectoryExists($target)) {
             throw new RuntimeException("Failed to create directory: {$target}");
         }
 
@@ -75,13 +75,13 @@ class SkillWriter
     {
         $relativePath = $file->getRelativePathname();
         $targetFile = $targetDir.'/'.$relativePath;
-        $targetFileDir = dirname($targetFile);
 
-        if (! is_dir($targetFileDir) && ! @mkdir($targetFileDir, 0755, true)) {
+        if (! $this->ensureDirectoryExists(dirname($targetFile))) {
             return false;
         }
 
-        if (str_ends_with($relativePath, '.blade.php')) {
+        $isBladeFile = str_ends_with($relativePath, '.blade.php');
+        if ($isBladeFile) {
             $renderedContent = $this->renderBladeSkillFile($file->getRealPath());
             $targetFile = preg_replace('/\.blade\.php$/', '.md', $targetFile);
 
@@ -89,6 +89,11 @@ class SkillWriter
         }
 
         return @copy($file->getRealPath(), $targetFile);
+    }
+
+    protected function ensureDirectoryExists(string $path): bool
+    {
+        return is_dir($path) || @mkdir($path, 0755, true);
     }
 
     /**

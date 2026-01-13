@@ -329,7 +329,7 @@ class GuidelineComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config);
+        return new GuidelineAssist($this->roster, $this->config, $this->skills());
     }
 
     protected function prependPackageGuidelinePath(string $path): string
@@ -400,58 +400,64 @@ class GuidelineComposer
      */
     protected function getBoostSkills(): Collection
     {
-        $skills = collect();
         $aiPath = __DIR__.'/../../.ai/';
 
-        foreach ($this->roster->packages() as $package) {
-            $packageDirName = str_replace('_', '-', strtolower($package->name()));
-            $packagePath = $aiPath.$packageDirName;
+        return $this->roster->packages()
+            ->map(function ($package) use ($aiPath): array {
+                $packageDirName = str_replace('_', '-', strtolower($package->name()));
 
-            if (! is_dir($packagePath)) {
-                continue;
-            }
-
-            $skills = $skills->merge($this->discoverSkillsFromPath($packagePath, $packageDirName, $package->majorVersion()));
-        }
-
-        return $skills;
+                return [
+                    'path' => $aiPath.$packageDirName,
+                    'name' => $packageDirName,
+                    'version' => $package->majorVersion(),
+                ];
+            })
+            ->filter(fn (array $pkg): bool => is_dir($pkg['path']))
+            ->flatMap(fn (array $pkg): Collection => $this->discoverSkillsFromPath(
+                $pkg['path'],
+                $pkg['name'],
+                $pkg['version']
+            ));
     }
 
     /**
      * Discover skills from a package path, handling version-specific and root-level skills.
      *
+     * Version-specific skills take precedence over root-level skills with the same name.
+     *
      * @return Collection<string, Skill>
      */
     protected function discoverSkillsFromPath(string $packagePath, string $packageName, ?string $installedVersion): Collection
     {
-        $skills = collect();
-        $versionSpecificSkills = collect();
+        $versionSpecificSkills = $this->discoverSkillsFromDirectory(
+            $packagePath.'/'.$installedVersion.'/skill',
+            $packageName
+        );
 
-        // Collect version-specific skills first (they take precedence)
-        if ($installedVersion !== null) {
-            $versionSkillPath = $packagePath.'/'.$installedVersion.'/skill';
-            if (is_dir($versionSkillPath)) {
-                foreach (glob($versionSkillPath.'/*', GLOB_ONLYDIR) as $skillDir) {
-                    $skill = $this->parseSkill($skillDir, $packageName);
-                    if ($skill instanceof Skill) {
-                        $versionSpecificSkills->put($skill->name, $skill);
-                    }
-                }
-            }
+        $rootSkills = $this->discoverSkillsFromDirectory(
+            $packagePath.'/skill',
+            $packageName
+        );
+
+        // Version-specific skills override root skills with the same name
+        return $rootSkills->merge($versionSpecificSkills);
+    }
+
+    /**
+     * Discover skills from a specific directory.
+     *
+     * @return Collection<string, Skill>
+     */
+    protected function discoverSkillsFromDirectory(string $skillPath, string $packageName): Collection
+    {
+        if (! is_dir($skillPath)) {
+            return collect();
         }
 
-        // Collect root-level skills (only if no version-specific skill with same name exists)
-        $rootSkillPath = $packagePath.'/skill';
-        if (is_dir($rootSkillPath)) {
-            foreach (glob($rootSkillPath.'/*', GLOB_ONLYDIR) as $skillDir) {
-                $skill = $this->parseSkill($skillDir, $packageName);
-                if ($skill instanceof Skill && ! $versionSpecificSkills->has($skill->name)) {
-                    $skills->put($skill->name, $skill);
-                }
-            }
-        }
-
-        return $skills->merge($versionSpecificSkills);
+        return collect(glob($skillPath.'/*', GLOB_ONLYDIR))
+            ->map(fn (string $skillDir): ?Skill => $this->parseSkill($skillDir, $packageName))
+            ->filter()
+            ->keyBy(fn (Skill $skill): string => $skill->name);
     }
 
     /**
@@ -497,7 +503,7 @@ class GuidelineComposer
         }
 
         return collect(glob($userSkillsPath.'/*', GLOB_ONLYDIR))
-            ->map(fn (string $skillPath): ?Skill => $this->parseSkill($skillPath, 'user', true))
+            ->map(fn (string $skillPath): ?Skill => $this->parseSkill($skillPath, 'user', custom: true))
             ->filter()
             ->keyBy(fn (Skill $skill): string => $skill->name);
     }
@@ -534,14 +540,11 @@ class GuidelineComposer
      */
     protected function findSkillFile(string $skillPath): ?string
     {
-        $bladePath = $skillPath.'/SKILL.blade.php';
-        if (file_exists($bladePath)) {
-            return $bladePath;
-        }
-
-        $mdPath = $skillPath.'/SKILL.md';
-        if (file_exists($mdPath)) {
-            return $mdPath;
+        foreach (['SKILL.blade.php', 'SKILL.md'] as $filename) {
+            $path = $skillPath.'/'.$filename;
+            if (file_exists($path)) {
+                return $path;
+            }
         }
 
         return null;

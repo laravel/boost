@@ -1,8 +1,10 @@
 ---
 name: using-fluxui
 description: >-
-  Build UIs with Flux UI Pro components for Livewire.
-  Use when creating interfaces with Flux components.
+  Build UIs with Flux UI Pro components. MUST activate when creating buttons, forms, modals,
+  inputs, tables, charts, date pickers, or UI components; replacing HTML elements with Flux;
+  working with flux: components; or when the user mentions Flux, component library, UI components,
+  form fields, or asks about available Flux components.
 ---
 # Using Flux UI
 

@@ -19,39 +19,39 @@ Application purpose: {!! config('boost.purpose') !!}
 @endif
 ## Skills Activation
 
-This project has domain-specific skills available. Activate the relevant skill when you need detailed patterns and guidance for that domain.
+This project has domain-specific skills available. **You MUST activate the relevant skill** whenever you work in that domain—don't wait until you're stuck.
 
 ### Frontend Development
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::LIVEWIRE))
-- **`building-livewire-components`** — Activate when creating, modifying, or testing Livewire components; debugging reactivity issues; or working with wire: directives.
+- **`building-livewire-components`** — ALWAYS activate when working with Livewire. This includes: creating/updating components, wire: directives (wire:model, wire:click, wire:loading), real-time updates, loading states, reactivity, component tests, or any App\Livewire namespace code.
 @endif
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::INERTIA_LARAVEL) || $assist->hasPackage(\Laravel\Roster\Enums\Packages::INERTIA_VUE) || $assist->hasPackage(\Laravel\Roster\Enums\Packages::INERTIA_REACT) || $assist->hasPackage(\Laravel\Roster\Enums\Packages::INERTIA_SVELTE))
-- **`building-inertia-apps`** — Activate when working with Inertia pages, forms, navigation, deferred props, or any SPA-specific patterns.
+- **`building-inertia-apps`** — ALWAYS activate when working with Inertia. This includes: creating pages, forms, navigation, Vue/React components, props, useForm, Link, router, or any SPA patterns.
 @endif
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::TAILWINDCSS))
-- **`using-tailwindcss`** — Activate when adding styles, working on responsive design, implementing dark mode, or extracting component patterns.
+- **`using-tailwindcss`** — ALWAYS activate when styling. This includes: adding/changing CSS classes, responsive design, dark mode, gradients, spacing, layout, flex, grid, or any visual/UI changes.
 @endif
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::VOLT))
-- **`using-volt-components`** — Activate when creating or modifying Volt single-file components (functional or class-based).
+- **`using-volt-components`** — ALWAYS activate when working with Volt. This includes: creating Volt components, @volt directive, functional or class-based APIs, or single-file component patterns.
 @endif
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::FOLIO))
-- **`using-folio-routing`** — Activate when creating new pages, working with file-based routes, or adding middleware to Folio pages.
+- **`using-folio-routing`** — ALWAYS activate when working with pages. This includes: creating Folio pages, file-based routes, route parameters, model binding, middleware, or resources/views/pages directory.
 @endif
 
 ### Testing
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::PEST))
-- **`testing-with-pest`** — Activate when writing new tests, debugging test failures, or learning Pest patterns like datasets and mocking.
+- **`testing-with-pest`** — ALWAYS activate when testing. This includes: writing tests, unit/feature tests, assertions, Livewire tests, datasets, mocking, debugging failures, or verifying functionality.
 @endif
 
 ### Features & Integrations
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::PENNANT))
-- **`using-pennant-features`** — Activate when creating, checking, or managing feature flags.
+- **`using-pennant-features`** — ALWAYS activate when working with feature flags. This includes: creating/checking flags, @feature directive, conditional features, A/B testing, or gradual rollouts.
 @endif
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::FLUXUI_PRO) || $assist->hasPackage(\Laravel\Roster\Enums\Packages::FLUXUI_FREE))
-- **`using-fluxui`** — Activate when building UI with Flux components or checking available Flux component options.
+- **`using-fluxui`** — ALWAYS activate when building UI components. This includes: flux: components, buttons, forms, modals, inputs, or replacing HTML elements with Flux.
 @endif
 @if($assist->hasPackage(\Laravel\Roster\Enums\Packages::MCP))
-- **`building-mcp-servers`** — Activate when creating MCP tools, resources, prompts, or debugging MCP connections.
+- **`building-mcp-servers`** — ALWAYS activate when working with MCP. This includes: creating tools/resources/prompts, routes/ai.php, AI integrations, or debugging MCP connections.
 @endif
 
 ## Conventions

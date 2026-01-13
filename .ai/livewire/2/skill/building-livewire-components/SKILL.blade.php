@@ -1,8 +1,10 @@
 ---
 name: building-livewire-components
 description: >-
-  Build reactive UI components with Livewire 2.
-  Use when creating, modifying, testing, or debugging Livewire components.
+  Build reactive Livewire 2 components. MUST activate when creating, updating, or modifying
+  Livewire components; working with wire:model, wire:click, wire:loading, or any wire: directives;
+  adding real-time updates, loading states, or reactivity; debugging component behavior;
+  writing Livewire tests; or when the user mentions Livewire, component, counter, or reactive UI.
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */

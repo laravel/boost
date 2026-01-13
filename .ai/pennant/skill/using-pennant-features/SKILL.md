@@ -1,8 +1,10 @@
 ---
 name: using-pennant-features
 description: >-
-  Manage feature flags using Laravel Pennant.
-  Use when implementing, checking, or managing feature toggles.
+  Manage feature flags with Laravel Pennant. MUST activate when creating, checking, or toggling
+  feature flags; showing or hiding features conditionally; implementing A/B testing; working with
+  @feature directive; or when the user mentions feature flags, feature toggles, Pennant, conditional
+  features, rollouts, or gradually enabling features.
 ---
 # Using Pennant Features
 

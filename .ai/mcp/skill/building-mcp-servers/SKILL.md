@@ -1,8 +1,10 @@
 ---
 name: building-mcp-servers
 description: >-
-  Build MCP (Model Context Protocol) servers, tools, resources, and prompts.
-  Use when working with AI integrations via MCP.
+  Build MCP servers, tools, resources, and prompts. MUST activate when creating MCP tools,
+  resources, or prompts; setting up AI integrations; debugging MCP connections; working with
+  routes/ai.php; or when the user mentions MCP, Model Context Protocol, AI tools, AI server,
+  or building tools for AI assistants.
 ---
 # Building MCP Servers
 
