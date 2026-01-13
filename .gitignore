@@ -10,3 +10,4 @@ composer.lock
 .phpunit.result.cache
 all.md
 .claude
+CLAUDE.md

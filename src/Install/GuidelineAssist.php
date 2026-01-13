@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
@@ -26,8 +27,12 @@ class GuidelineAssist
 
     protected static array $classes = [];
 
-    public function __construct(public Roster $roster, public GuidelineConfig $config)
+    /** @var Collection<string, Skill> */
+    protected Collection $skills;
+
+    public function __construct(public Roster $roster, public GuidelineConfig $config, ?Collection $skills = null)
     {
+        $this->skills = $skills ?? collect();
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
@@ -238,5 +243,15 @@ class GuidelineAssist
     public function sailBinaryPath(): string
     {
         return Sail::BINARY_PATH;
+    }
+
+    /**
+     * Get the discovered skills collection.
+     *
+     * @return Collection<string, Skill>
+     */
+    public function skills(): Collection
+    {
+        return $this->skills;
     }
 }
