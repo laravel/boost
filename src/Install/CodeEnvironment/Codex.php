@@ -6,11 +6,11 @@ namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Contracts\SkillsAgent;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Codex extends CodeEnvironment implements Agent, McpClient, SkillsAgent
+class Codex extends CodeEnvironment implements Agent, McpClient, SupportSkills
 {
     public function name(): string
     {

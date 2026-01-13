@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Unit\Install;
 
 use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\SkillsAgent;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\Enums\Platform;
 
-class ExampleSkillsCodeEnvironment extends CodeEnvironment implements Agent, SkillsAgent
+class ExampleSupportSkillsCodeEnvironment extends CodeEnvironment implements Agent, SupportSkills
 {
     public function name(): string
     {

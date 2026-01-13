@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Contracts;
 
-interface SkillsAgent
+interface SupportSkills
 {
     public function skillsPath(): string;
 }

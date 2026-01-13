@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
-use Laravel\Boost\Contracts\SkillsAgent;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use RuntimeException;
 use Symfony\Component\Finder\Finder;
@@ -21,7 +21,7 @@ class SkillWriter
 
     public const FAILED = 2;
 
-    public function __construct(protected SkillsAgent $agent) {}
+    public function __construct(protected SupportSkills $agent) {}
 
     public function write(Skill $skill): int
     {
@@ -111,11 +111,7 @@ class SkillWriter
         }
 
         // Reject empty names or names with only whitespace
-        if (trim($name) === '') {
-            return false;
-        }
-
-        return true;
+        return trim($name) !== '';
     }
 
     /**

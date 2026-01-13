@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Contracts\SkillsAgent;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\Cli\DisplayHelper;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
@@ -538,7 +538,7 @@ class InstallCommand extends Command
     protected function installSkills(GuidelineComposer $composer): void
     {
         $skillsAgents = $this->selectedTargetAgents
-            ->filter(fn ($agent): bool => $agent instanceof SkillsAgent);
+            ->filter(fn ($agent): bool => $agent instanceof SupportSkills);
 
         if ($skillsAgents->isEmpty()) {
             return;
@@ -560,7 +560,7 @@ class InstallCommand extends Command
 
         $longestAgentName = max(1, ...$skillsAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
 
-        /** @var SkillsAgent&Agent $agent */
+        /** @var SupportSkills&Agent $agent */
         foreach ($skillsAgents as $agent) {
             $agentName = $agent->agentName();
             $displayAgentName = str_pad((string) $agentName, $longestAgentName);

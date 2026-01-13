@@ -175,26 +175,11 @@ class GuidelineAssist
         return new Inertia($this->roster);
     }
 
-    /**
-     * Check if the project uses a specific package.
-     */
     public function hasPackage(Packages $package): bool
     {
         return $this->roster->packages()->contains(
             fn ($pkg): bool => $pkg->package() === $package
         );
-    }
-
-    /**
-     * Get the version of a package.
-     */
-    public function packageVersion(string $packageName): ?string
-    {
-        $package = $this->roster->packages()->first(
-            fn ($pkg): bool => $pkg->rawName() === $packageName
-        );
-
-        return $package?->version();
     }
 
     public function nodePackageManager(): string
@@ -246,8 +231,6 @@ class GuidelineAssist
     }
 
     /**
-     * Get the discovered skills collection.
-     *
      * @return Collection<string, Skill>
      */
     public function skills(): Collection

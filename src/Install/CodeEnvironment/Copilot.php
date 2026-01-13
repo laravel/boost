@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\SkillsAgent;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Copilot extends CodeEnvironment implements Agent, SkillsAgent
+class Copilot extends CodeEnvironment implements Agent, SupportSkills
 {
     public function name(): string
     {
