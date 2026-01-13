@@ -25,7 +25,6 @@ use Laravel\Boost\Prompts\Grid;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
-use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 
 use function Laravel\Prompts\confirm;
