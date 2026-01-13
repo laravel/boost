@@ -402,7 +402,8 @@ class GuidelineComposer
     {
         $aiPath = __DIR__.'/../../.ai/';
 
-        return $this->roster->packages()
+        /** @var Collection<int, array{path: string, name: string, version: string}> $packages */
+        $packages = $this->roster->packages()
             ->map(function ($package) use ($aiPath): array {
                 $packageDirName = str_replace('_', '-', strtolower($package->name()));
 
@@ -412,6 +413,9 @@ class GuidelineComposer
                     'version' => $package->majorVersion(),
                 ];
             })
+            ->collect();
+
+        return $packages
             ->filter(fn (array $pkg): bool => is_dir($pkg['path']))
             ->flatMap(fn (array $pkg): Collection => $this->discoverSkillsFromPath(
                 $pkg['path'],
@@ -429,10 +433,12 @@ class GuidelineComposer
      */
     protected function discoverSkillsFromPath(string $packagePath, string $packageName, ?string $installedVersion): Collection
     {
-        $versionSpecificSkills = $this->discoverSkillsFromDirectory(
-            $packagePath.'/'.$installedVersion.'/skill',
-            $packageName
-        );
+        $versionSpecificSkills = $installedVersion !== null
+            ? $this->discoverSkillsFromDirectory(
+                $packagePath.'/'.$installedVersion.'/skill',
+                $packageName
+            )
+            : collect();
 
         $rootSkills = $this->discoverSkillsFromDirectory(
             $packagePath.'/skill',

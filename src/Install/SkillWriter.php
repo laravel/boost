@@ -25,6 +25,10 @@ class SkillWriter
 
     public function write(Skill $skill): int
     {
+        if (! $this->isValidSkillName($skill->name)) {
+            throw new RuntimeException("Invalid skill name: {$skill->name}");
+        }
+
         $targetPath = base_path($this->agent->skillsPath().'/'.$skill->name);
 
         $existed = is_dir($targetPath);
@@ -97,11 +101,33 @@ class SkillWriter
     }
 
     /**
+     * Validate skill name to prevent path traversal attacks.
+     */
+    protected function isValidSkillName(string $name): bool
+    {
+        // Reject names containing path traversal characters
+        if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '\\')) {
+            return false;
+        }
+
+        // Reject empty names or names with only whitespace
+        if (trim($name) === '') {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Render a Blade skill file to Markdown.
      */
     protected function renderBladeSkillFile(string $path): string
     {
         $content = file_get_contents($path);
+        if ($content === false) {
+            throw new RuntimeException("Failed to read skill file: {$path}");
+        }
+
         $content = $this->processBoostSnippets($content);
 
         $rendered = $this->renderContent($content, $path);

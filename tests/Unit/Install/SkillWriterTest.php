@@ -175,6 +175,34 @@ test('it copies nested directory structure', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
+test('it throws an exception for path traversal in skill name', function (string $maliciousName): void {
+    [$sourceDir, $cleanup] = createTestSkillDir();
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+
+    $agent = Mockery::mock(SkillsAgent::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $maliciousName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Malicious skill',
+    );
+
+    $writer = new SkillWriter($agent);
+
+    expect(fn () => $writer->write($skill))
+        ->toThrow(RuntimeException::class, 'Invalid skill name');
+
+    $cleanup();
+})->with([
+    '../../../etc/passwd',
+    '../../.bashrc',
+    'skill/with/slash',
+    'skill\\with\\backslash',
+    '../parent',
+]);
+
 test('it throws exception when target directory cannot be created', function (): void {
     expect(true)->toBeTrue();
 })->todo();
