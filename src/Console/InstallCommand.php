@@ -13,7 +13,6 @@ use InvalidArgumentException;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Contracts\SupportSkills;
-use Laravel\Boost\Install\Cli\DisplayHelper;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
 use Laravel\Boost\Install\GuidelineComposer;
@@ -22,6 +21,7 @@ use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\SkillWriter;
+use Laravel\Boost\Prompts\Grid;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
@@ -64,6 +64,7 @@ class InstallCommand extends Command
     /** @var array<non-empty-string> */
     private array $systemInstalledCodeEnvironments = [];
 
+    /** @var array<non-empty-string> */
     private array $projectInstalledCodeEnvironments = [];
 
     private bool $enforceTests = true;
@@ -174,27 +175,6 @@ class InstallCommand extends Command
         }
     }
 
-    protected function discoverTools(): array
-    {
-        $tools = [];
-        $toolDir = implode(DIRECTORY_SEPARATOR, [__DIR__, '..', 'Mcp', 'Tools']);
-        $finder = Finder::create()
-            ->in($toolDir)
-            ->files()
-            ->name('*.php');
-
-        foreach ($finder as $toolFile) {
-            $fullyClassifiedClassName = 'Laravel\\Boost\\Mcp\\Tools\\'.$toolFile->getBasename('.php');
-            if (class_exists($fullyClassifiedClassName, false)) {
-                $tools[$fullyClassifiedClassName] = Str::headline($toolFile->getBasename('.php'));
-            }
-        }
-
-        ksort($tools);
-
-        return $tools;
-    }
-
     protected function outro(): void
     {
         $label = 'https://boost.laravel.com/installed';
@@ -229,6 +209,16 @@ class InstallCommand extends Command
     protected function hyperlink(string $label, string $url): string
     {
         return "\033]8;;{$url}\007{$label}\033]8;;\033\\";
+    }
+
+    protected function displayGrid(Collection $items, callable $mapper): void
+    {
+        (new Grid($items
+            ->map($mapper)
+            ->sort()
+            ->values()
+            ->toArray(), $this->terminal->cols()))
+            ->display();
     }
 
     /**
@@ -466,14 +456,7 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
-        DisplayHelper::grid(
-            $guidelines
-                ->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))
-                ->values()
-                ->sort()
-                ->toArray(),
-            $this->terminal->cols()
-        );
+        $this->displayGrid($guidelines, fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''));
         $this->newLine();
         usleep(750000);
 
@@ -552,10 +535,7 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(' Installing %d skills for skills-capable agents', $skills->count()));
-        DisplayHelper::grid(
-            $skills->map(fn ($skill): string => $skill->name)->values()->sort()->toArray(),
-            $this->terminal->cols()
-        );
+        $this->displayGrid($skills, fn ($skill): string => $skill->name);
         $this->newLine();
 
         $longestAgentName = max(1, ...$skillsAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
