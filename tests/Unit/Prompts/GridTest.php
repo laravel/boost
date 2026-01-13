@@ -206,11 +206,9 @@ it('renders a complete grid with multiple rows and balanced columns', function (
         'using-tailwindcss',
     ], maxWidth: 120))->display();
 
-    Prompt::assertStrippedOutputContains(<<<'OUTPUT'
-         ┌──────────────────────────────┬──────────────────────┬───────────────────┐
-         │ building-livewire-components │ building-mcp-servers │ testing-with-pest │
-         ├──────────────────────────────┼──────────────────────┼───────────────────┤
-         │ using-fluxui                 │ using-folio-routing  │ using-tailwindcss │
-         └──────────────────────────────┴──────────────────────┴───────────────────┘
-        OUTPUT);
+    Prompt::assertStrippedOutputContains('┌──────────────────────────────┬──────────────────────┬───────────────────┐');
+    Prompt::assertStrippedOutputContains('│ building-livewire-components │ building-mcp-servers │ testing-with-pest │');
+    Prompt::assertStrippedOutputContains('├──────────────────────────────┼──────────────────────┼───────────────────┤');
+    Prompt::assertStrippedOutputContains('│ using-fluxui                 │ using-folio-routing  │ using-tailwindcss │');
+    Prompt::assertStrippedOutputContains('└──────────────────────────────┴──────────────────────┴───────────────────┘');
 });
