@@ -7,4 +7,4 @@
 - Run tests: `{{ $assist->artisanCommand('test --compact') }}` or filter: `{{ $assist->artisanCommand('test --compact --filter=testName') }}`.
 - Do NOT delete tests without approval.
 - Use `search-docs` tool for Pest patterns and documentation.
-- Use/activate 'testing-with-pest' whenever writing or debugging tests.
+- Use/activate 'pest-testing' whenever writing or debugging tests.

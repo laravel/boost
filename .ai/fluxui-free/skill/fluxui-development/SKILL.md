@@ -1,12 +1,12 @@
 ---
-name: using-fluxui
+name: fluxui-development
 description: >-
-  Build UIs with Flux UI Free components. MUST activate when creating buttons, forms, modals,
+  Develop UIs with Flux UI Free components. MUST activate when creating buttons, forms, modals,
   inputs, dropdowns, checkboxes, or UI components; replacing HTML form elements with Flux;
   working with flux: components; or when the user mentions Flux, component library, UI components,
   form fields, or asks about available Flux components.
 ---
-# Using Flux UI
+# Flux UI Development
 
 ## When to Use This Skill
 

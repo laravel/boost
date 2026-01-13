@@ -1,7 +1,7 @@
 ---
-name: building-livewire-components
+name: livewire-development
 description: >-
-  Build reactive Livewire 2 components. MUST activate when creating, updating, or modifying
+  Develop reactive Livewire 3 components. MUST activate when creating, updating, or modifying
   Livewire components; working with wire:model, wire:click, wire:loading, or any wire: directives;
   adding real-time updates, loading states, or reactivity; debugging component behavior;
   writing Livewire tests; or when the user mentions Livewire, component, counter, or reactive UI.
@@ -9,7 +9,7 @@ description: >-
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Building Livewire Components
+# Livewire Development
 
 ## When to Use This Skill
 
@@ -33,12 +33,20 @@ Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Art
 - All Livewire requests hit the Laravel backend; they're like regular HTTP requests. Always validate form data and run authorization checks in Livewire actions.
 - Use the `search-docs` tool to find exact version-specific documentation for how to write Livewire and Livewire tests.
 
-## Livewire 2 Specifics
+## Livewire 3 Specifics
 
-- `wire:model` is live by default (real-time updates without modifier).
-- Components typically exist in the `App\Http\Livewire` namespace.
-- Use `emit()`, `emitTo()`, `emitSelf()`, and `dispatchBrowserEvent()` for events.
-- Alpine is included separately from Livewire.
+### Key Changes From Livewire 2
+- Use `wire:model.live` for real-time updates, `wire:model` is now deferred by default.
+- Components now use the `App\Livewire` namespace (not `App\Http\Livewire`).
+- Use `$this->dispatch()` to dispatch events (not `emit` or `dispatchBrowserEvent`).
+- Use the `components.layouts.app` view as the typical layout path (not `layouts.app`).
+
+### New Directives
+- `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target` are available for use. Use the documentation to find usage examples.
+
+### Alpine Integration
+- Alpine is now included with Livewire; don't manually include Alpine.js.
+- Plugins included with Alpine: persist, intersect, collapse, and focus.
 
 ## Best Practices
 
@@ -69,15 +77,19 @@ public function updatedSearch() { $this->resetPage(); }
 
 ## JavaScript Hooks
 
-You can listen for `livewire:load` to hook into Livewire initialization, and `Livewire.onPageExpired` for when the page expires:
+You can listen for `livewire:init` to hook into Livewire initialization, and `fail.status === 419` for the page expiring:
 @verbatim
-<code-snippet name="Livewire Load Hook Example" lang="js">
-document.addEventListener('livewire:load', function () {
-    Livewire.onPageExpired(() => {
-        alert('Your session expired');
+<code-snippet name="Livewire Init Hook Example" lang="js">
+document.addEventListener('livewire:init', function () {
+    Livewire.hook('request', ({ fail }) => {
+        if (fail && fail.status === 419) {
+            alert('Your session expired');
+        }
     });
 
-    Livewire.onError(status => console.error(status));
+    Livewire.hook('message.failed', (message, component) => {
+        console.error(message);
+    });
 });
 </code-snippet>
 @endverbatim
@@ -105,5 +117,6 @@ $this->get('/posts/create')
 ## Common Pitfalls
 
 - Forgetting `wire:key` in loops causes unexpected behavior when items change
+- Using `wire:model` expecting real-time updates (use `wire:model.live` instead in v3)
 - Not validating/authorizing in Livewire actions (treat them like HTTP requests)
-- Forgetting that `wire:model` is live by default in v2 (may cause performance issues)
+- Including Alpine.js separately when it's already bundled with Livewire 3

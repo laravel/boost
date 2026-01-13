@@ -134,9 +134,9 @@ Skills MUST follow the [agentskills.io specification](https://agentskills.io/spe
 
 | Rule | Example | Rationale |
 |------|---------|-----------|
-| Gerund form | `building-livewire-components` | Describes action being performed |
-| Lowercase kebab-case | `testing-with-pest` | URL-safe, consistent |
-| Max 64 characters | `using-pennant-features` | Spec requirement |
+| Gerund form | `livewire-development` | Describes action being performed |
+| Lowercase kebab-case | `pest-testing` | URL-safe, consistent |
+| Max 64 characters | `pennant-features` | Spec requirement |
 | Directory name = skill name | Match exactly | Validation requirement |
 
 **Avoid**: `helper`, `utils`, `tools`, `misc` (too vague)
@@ -147,7 +147,7 @@ Skills MUST follow the [agentskills.io specification](https://agentskills.io/spe
 
 ```yaml
 ---
-name: building-livewire-components          # Required, lowercase kebab-case, max 64 chars
+name: livewire-development          # Required, lowercase kebab-case, max 64 chars
 description: >-                             # Required, max 1024 chars
   Build reactive UI components with Livewire.
   Use when creating, modifying, or debugging Livewire components.
@@ -197,7 +197,7 @@ description: <what AND when to use>
 **Blade template example**:
 ```blade
 ---
-name: building-livewire-components
+name: livewire-development
 description: Build reactive UI components with Livewire
 ---
 
@@ -231,7 +231,7 @@ Gemini CLI implements a **progressive disclosure** model for skills:
 Skills can include additional files in a `references/` subdirectory. Reference files can be either `.md` or `.blade.php`:
 
 ```
-.ai/livewire/building-livewire-components/
+.ai/livewire/livewire-development/
 ├── SKILL.md                      # Main skill file (< 500 lines)
 │   # OR SKILL.blade.php (rendered to SKILL.md)
 └── references/
@@ -256,15 +256,15 @@ Skills can include additional files in a `references/` subdirectory. Reference f
 
 | Skill Name | Package | Priority | Source Guidelines |
 |------------|---------|----------|-------------------|
-| `building-livewire-components` | livewire | P0 | `.ai/livewire/*.blade.php` |
-| `testing-with-pest` | pest | P0 | `.ai/pest/*.blade.php` |
+| `livewire-development` | livewire | P0 | `.ai/livewire/*.blade.php` |
+| `pest-testing` | pest | P0 | `.ai/pest/*.blade.php` |
 | `building-inertia-apps` | inertia-laravel | P0 | `.ai/inertia-*/*.blade.php` |
-| `using-tailwindcss` | tailwindcss | P1 | `.ai/tailwindcss/*.blade.php` |
+| `tailwindcss-development` | tailwindcss | P1 | `.ai/tailwindcss/*.blade.php` |
 | `using-pennant-package` | pennant | P1 | `.ai/pennant/*.blade.php` |
-| `using-fluxui` | fluxui-pro/free | P1 | `.ai/fluxui-*/*.blade.php` |
-| `using-volt-components` | volt | P2 | `.ai/volt/*.blade.php` |
-| `using-folio-routing` | folio | P2 | `.ai/folio/*.blade.php` |
-| `building-mcp-servers` | mcp | P2 | `.ai/mcp/*.blade.php` |
+| `fluxui-development` | fluxui-pro/free | P1 | `.ai/fluxui-*/*.blade.php` |
+| `volt-development` | volt | P2 | `.ai/volt/*.blade.php` |
+| `folio-routing` | folio | P2 | `.ai/folio/*.blade.php` |
+| `mcp-development` | mcp | P2 | `.ai/mcp/*.blade.php` |
 
 ### 6.2 Guidelines That Do NOT Become Skills
 
@@ -294,7 +294,7 @@ These guidelines are kept lightweight and remain in guidelines because they cont
 **Keep IN guidelines**:
 - Package presence detection (`This project uses Livewire 3`)
 - Key conventions (< 10 lines)
-- Pointers to skills (`Activate building-livewire-components for details`)
+- Pointers to skills (`Activate livewire-development for details`)
 - Always-needed context
 
 ### 6.4 Guideline to Skill Migration Strategy
@@ -325,12 +325,12 @@ Skills can exist at two levels:
 1. **Root level**: `.ai/{package}/skill/{skill-name}/` - Applies to all versions
 2. **Version level**: `.ai/{package}/{version}/skill/{skill-name}/` - Version-specific skill
 
-**Version-specific skills take precedence**: If a skill exists in a version's skill directory (e.g., `3/skill/building-livewire-components/`), it takes precedence over root-level skills. Only the skill matching the installed package version will be installed.
+**Version-specific skills take precedence**: If a skill exists in a version's skill directory (e.g., `3/skill/livewire-development/`), it takes precedence over root-level skills. Only the skill matching the installed package version will be installed.
 
 Examples:
-- `.ai/livewire/3/skill/building-livewire-components/` → Version-specific skill (Livewire v3)
-- `.ai/livewire/2/skill/building-livewire-components/` → Version-specific skill (Livewire v2)
-- `.ai/pest/skill/testing-with-pest/` → Root-level skill (all Pest versions)
+- `.ai/livewire/3/skill/livewire-development/` → Version-specific skill (Livewire v3)
+- `.ai/livewire/2/skill/livewire-development/` → Version-specific skill (Livewire v2)
+- `.ai/pest/skill/pest-testing/` → Root-level skill (all Pest versions)
 - `.ai/inertia-laravel/2/skill/building-inertia-apps/` → Version-specific skill (Inertia v2)
 
 The presence of a `skill/` subdirectory with skill directories (containing `SKILL.md` or `SKILL.blade.php`) indicates that package has skills available.
@@ -379,7 +379,7 @@ These guidelines will be split into lightweight guidelines + skills:
 - Testing patterns (detailed examples)
 - Wire directives (detailed)
 
-**New `.ai/livewire/3/building-livewire-components/SKILL.md`** - Minimal skill (version-specific):
+**New `.ai/livewire/3/livewire-development/SKILL.md`** - Minimal skill (version-specific):
 - Copy of current guideline content (49 lines)
 - Same content, minimal changes
 - Placed at version level (3/) since Livewire has version-specific patterns
@@ -397,10 +397,10 @@ This project uses Livewire {{ $assist->packageVersion('livewire/livewire') }}.
 - State lives on the server; UI reflects it.
 - All Livewire requests hit Laravel backend; validate and authorize in actions.
 
-**For detailed Livewire patterns**, activate the `building-livewire-components` skill.
+**For detailed Livewire patterns**, activate the `livewire-development` skill.
 ```
 
-**`.ai/livewire/3/building-livewire-components/SKILL.md` (~300+ lines)** - Refactored skill (version-specific):
+**`.ai/livewire/3/livewire-development/SKILL.md` (~300+ lines)** - Refactored skill (version-specific):
 - Component creation patterns (v3-specific)
 - State management strategies
 - Lifecycle hooks (detailed)
@@ -410,7 +410,7 @@ This project uses Livewire {{ $assist->packageVersion('livewire/livewire') }}.
 - Common pitfalls
 - Version 3 specific guidance
 
-**Note**: If skills are version-specific, they should be placed at the version level (e.g., `3/building-livewire-components/`), not at the root level. This ensures only the correct version's skills are installed.
+**Note**: If skills are version-specific, they should be placed at the version level (e.g., `3/livewire-development/`), not at the root level. This ensures only the correct version's skills are installed.
 
 #### Content Distribution Rules
 
@@ -458,14 +458,14 @@ Example structure (version-specific skills):
 ├── 2/
 │   ├── core.blade.php                # Version-specific guideline
 │   └── skill/                        # Version-specific skills subdirectory
-│       └── building-livewire-components/
+│       └── livewire-development/
 │           ├── SKILL.md
 │           └── references/
 │               └── v2-patterns.md
 └── 3/
     ├── core.blade.php                # Version-specific guideline
     └── skill/                        # Version-specific skills subdirectory
-        └── building-livewire-components/
+        └── livewire-development/
             ├── SKILL.md
             └── references/
                 └── v3-patterns.md
@@ -477,7 +477,7 @@ Example structure (root-level skill):
 ├── core.blade.php                    # Lightweight guideline
 ├── 4/core.blade.php                  # Version-specific guideline
 └── skill/                            # Root-level skills subdirectory
-    └── testing-with-pest/
+    └── pest-testing/
         ├── SKILL.md
         └── references/
             └── assertions.md
@@ -522,21 +522,21 @@ Example structure (root-level skill):
 │   ├── 2/
 │   │   ├── core.blade.php      # Version-specific guideline
 │   │   └── skill/              # NEW: Version-specific skills subdirectory
-│   │       └── building-livewire-components/
+│   │       └── livewire-development/
 │   │           ├── SKILL.md                     # OR SKILL.blade.php
 │   │           └── references/
 │   │               └── v2-patterns.md
 │   └── 3/
 │       ├── core.blade.php      # Version-specific guideline
 │       └── skill/              # NEW: Version-specific skills subdirectory
-│           └── building-livewire-components/
+│           └── livewire-development/
 │               ├── SKILL.md                     # OR SKILL.blade.php
 │               └── references/
 │                   └── v3-patterns.md
 ├── pest/
 │   ├── core.blade.php          # SLIM: ~15 lines
 │   └── skill/                  # NEW: Root-level skills subdirectory
-│       └── testing-with-pest/
+│       └── pest-testing/
 │           ├── SKILL.md                     # OR SKILL.blade.php (rendered to SKILL.md)
 │           └── references/
 │               └── assertions.md            # OR .blade.php
@@ -559,7 +559,7 @@ Users can override skills in three ways (in priority order):
 Project Root/
 ├── .ai/
 │   └── skills/                 # Explicit skill override directory
-│       └── building-livewire-components/
+│       └── livewire-development/
 │           └── SKILL.md        # Overrides all built-in skills with this name
 │           # OR SKILL.blade.php (rendered to SKILL.md)
 ```
@@ -571,7 +571,7 @@ Project Root/
 │   └── livewire/
 │       └── 3/                  # Version-specific override
 │           └── skill/
-│               └── building-livewire-components/
+│               └── livewire-development/
 │                   └── SKILL.md    # Overrides Boost's v3 skill
 ```
 
@@ -584,7 +584,7 @@ Project Root/
 │   │       └── core.blade.php  # Overrides built-in guideline
 │   └── livewire/
 │       └── skill/
-│           └── building-livewire-components/
+│           └── livewire-development/
 │               └── SKILL.md       # Overrides Boost's root-level skill
 ```
 
@@ -605,7 +605,7 @@ Project Root/
 6. Third-party skills        (vendor/.../resources/boost/skill/{name}/)    → custom: false
 ```
 
-**Version Matching**: If a version-specific skill exists (e.g., `.ai/livewire/3/skill/building-livewire-components/`), it takes precedence over root-level skills for that version. Only skills matching the installed package version are installed.
+**Version Matching**: If a version-specific skill exists (e.g., `.ai/livewire/3/skill/livewire-development/`), it takes precedence over root-level skills for that version. Only skills matching the installed package version are installed.
 
 **User Overrides**: Users can override skills by creating files in their project's `.ai` folder:
 - `.ai/skills/{name}/` - Explicit skill override directory (highest priority)
@@ -616,11 +616,11 @@ Project Root/
 
 | Scenario | Result |
 |----------|--------|
-| User creates `.ai/skills/testing-with-pest/SKILL.md` or `SKILL.blade.php` | User explicit skill used, all built-in ignored |
-| User creates `.ai/livewire/3/skill/building-livewire-components/SKILL.md` in project | User version-specific skill used, Boost version skill ignored |
-| User creates `.ai/livewire/skill/building-livewire-components/SKILL.md` in project | User root skill used, Boost root skill ignored |
-| Boost has `.ai/livewire/3/skill/building-livewire-components/` and package is v3, no user override | Boost version-specific skill (v3) installed |
-| Boost has `.ai/livewire/skill/building-livewire-components/` (root) and package is v3, no v3-specific skill | Boost root-level skill installed for v3 |
+| User creates `.ai/skills/pest-testing/SKILL.md` or `SKILL.blade.php` | User explicit skill used, all built-in ignored |
+| User creates `.ai/livewire/3/skill/livewire-development/SKILL.md` in project | User version-specific skill used, Boost version skill ignored |
+| User creates `.ai/livewire/skill/livewire-development/SKILL.md` in project | User root skill used, Boost root skill ignored |
+| Boost has `.ai/livewire/3/skill/livewire-development/` and package is v3, no user override | Boost version-specific skill (v3) installed |
+| Boost has `.ai/livewire/skill/livewire-development/` (root) and package is v3, no v3-specific skill | Boost root-level skill installed for v3 |
 | Third-party package provides skill in `skill/` subdirectory | Package skill used if no Boost or user skill |
 | No override exists | Boost built-in skill used (version-specific preferred over root) |
 | `SKILL.blade.php` exists | Rendered to `SKILL.md` during installation |
@@ -666,7 +666,7 @@ boost:install
 Skills are automatically installed to skills-capable agents based on installed packages:
 - **Package filtering**: Skills are only installed for packages that exist in the target application's `composer.json` (matching guidelines behavior)
 - Skills are discovered from Boost built-in (`.ai/{package}/skill/{skill-name}/` or `.ai/{package}/{version}/skill/{skill-name}/`)
-- **Version-specific skills**: If a skill exists in a version's skill directory (e.g., `.ai/livewire/3/skill/building-livewire-components/`), only install skills matching the installed package version
+- **Version-specific skills**: If a skill exists in a version's skill directory (e.g., `.ai/livewire/3/skill/livewire-development/`), only install skills matching the installed package version
 - **Root-level skills**: Install if no version-specific skill exists for that version
 - Skills are discovered from third-party packages (`vendor/*/resources/boost/skill/{skill-name}/`) - only for packages in `composer.json`
 - User overrides in `.ai/skills/` take precedence
@@ -690,15 +690,15 @@ Add explicit activation guidance to `foundation.blade.php`:
 When working on this project, determine which domain-specific skills are relevant:
 
 ### Frontend Development
-- **Livewire project**: Activate `building-livewire-components` for component work
+- **Livewire project**: Activate `livewire-development` for component work
 - **Inertia project**: Activate `building-inertia-apps` for SPA patterns
-- **Styling work**: Activate `using-tailwindcss` for CSS/design tasks
+- **Styling work**: Activate `tailwindcss-development` for CSS/design tasks
 
 ### Testing
-- **Test creation/modification**: Activate `testing-with-pest`
+- **Test creation/modification**: Activate `pest-testing`
 
 ### Features & Flags
-- **Feature toggles**: Activate `using-pennant-features`
+- **Feature toggles**: Activate `pennant-features`
 
 To determine the frontend stack, check for:
 - `livewire/livewire` in composer.json → Livewire project
@@ -903,9 +903,9 @@ For users upgrading from v1:
 ### Phase 1: P0 Skills (Week 1-2)
 
 - [x] Create migration guide (`migrate-skill.md`)
-- [x] Create `building-mcp-servers` skill (completed as example)
-- [ ] Create `building-livewire-components` skill
-- [ ] Create `testing-with-pest` skill
+- [x] Create `mcp-development` skill (completed as example)
+- [ ] Create `livewire-development` skill
+- [ ] Create `pest-testing` skill
 - [ ] Create `building-inertia-apps` skill
 - [ ] Add skills activation guidance to `foundation.blade.php`
 - [ ] Test skill activation in Claude Code
@@ -940,7 +940,7 @@ For users upgrading from v1:
 ### B. Skills File Structure Example
 
 ```
-.ai/livewire/building-livewire-components/
+.ai/livewire/livewire-development/
 ├── SKILL.md (300 lines)                    # OR SKILL.blade.php
 │   ├── Frontmatter (name, description)
 │   ├── When to Use This Skill

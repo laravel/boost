@@ -1,7 +1,7 @@
 ---
-name: testing-with-pest
+name: pest-testing
 description: >-
-  Write tests with Pest 4 PHP framework. MUST activate when writing tests, creating unit or feature
+  Test with Pest 4 PHP framework. MUST activate when writing tests, creating unit or feature
   tests, adding assertions, testing Livewire components, browser testing, debugging test failures,
   working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion,
   coverage, or needs to verify functionality works.
@@ -9,7 +9,7 @@ description: >-
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Testing with Pest 4
+# Pest Testing 4
 
 ## When to Use This Skill
 

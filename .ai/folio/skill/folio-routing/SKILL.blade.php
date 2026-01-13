@@ -1,5 +1,5 @@
 ---
-name: using-folio-routing
+name: folio-routing
 description: >-
   Create file-based routes with Laravel Folio. MUST activate when creating new pages, setting up
   routes, working with route parameters or model binding, adding middleware to pages, working with
@@ -9,7 +9,7 @@ description: >-
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Using Folio Routing
+# Folio Routing
 
 ## When to Use This Skill
 

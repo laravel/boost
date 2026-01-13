@@ -4,4 +4,4 @@
 - Use gap utilities for spacing between siblings (not margins).
 - Match dark mode patterns (`dark:`) if the project uses them.
 - Use `search-docs` for Tailwind documentation.
-- Use/activate 'using-tailwindcss' for styling patterns and dark mode.
+- Use/activate 'tailwindcss-development' for styling patterns and dark mode.

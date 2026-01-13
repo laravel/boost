@@ -352,7 +352,7 @@ test('includes laravel/mcp guidelines when directly required', function (): void
     // MCP guidelines should be included, but not skill content
     expect($this->composer->compose())
         ->toContain('Laravel MCP')
-        ->toContain('building-mcp-servers')
+        ->toContain('mcp-development')
         ->not->toContain('Mcp::web'); // This is in the skill, not the guideline
 });
 
@@ -434,7 +434,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('Package manager: npm install')
         // Volt guidelines should be included but not skill content
         ->toContain('Livewire Volt')
-        ->toContain('using-volt-components')
+        ->toContain('volt-development')
         // Skill content should NOT be in guidelines (it's in the skill file)
         ->not->toContain('`@volt`') // This is in the skill, not the guideline
         ->not->toContain('@endvolt')
@@ -754,7 +754,7 @@ test('skills discovers Boost built-in skills from .ai directory', function (): v
 
     $skillNames = $skills->pluck('name')->toArray();
 
-    expect($skillNames)->toContain('building-livewire-components');
+    expect($skillNames)->toContain('livewire-development');
 });
 
 test('skill has proper structure with name description and path', function (): void {
@@ -767,10 +767,10 @@ test('skill has proper structure with name description and path', function (): v
 
     $skills = $this->composer->skills();
 
-    $livewireSkill = $skills->get('building-livewire-components');
+    $livewireSkill = $skills->get('livewire-development');
 
     expect($livewireSkill)->not->toBeNull()
-        ->and($livewireSkill->name)->toBe('building-livewire-components')
+        ->and($livewireSkill->name)->toBe('livewire-development')
         ->and($livewireSkill->description)->not->toBeEmpty()
         ->and($livewireSkill->path)->toBeDirectory()
         ->and($livewireSkill->custom)->toBeFalse();
@@ -797,14 +797,14 @@ test('user skills override built-in skills', function (): void {
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    $userSkillPath = base_path('.ai/skills/building-livewire-components');
+    $userSkillPath = base_path('.ai/skills/livewire-development');
 
     if (! is_dir($userSkillPath)) {
         @mkdir($userSkillPath, 0755, true);
-        file_put_contents($userSkillPath.'/SKILL.md', "---\nname: building-livewire-components\ndescription: Custom user skill\n---\n# Custom");
+        file_put_contents($userSkillPath.'/SKILL.md', "---\nname: livewire-development\ndescription: Custom user skill\n---\n# Custom");
 
         $skills = $this->composer->skills();
-        $skill = $skills->get('building-livewire-components');
+        $skill = $skills->get('livewire-development');
 
         expect($skill->custom)->toBeTrue();
 
@@ -841,5 +841,5 @@ test('skills only includes skills for installed packages', function (): void {
     $skillNames = $skills->pluck('name')->toArray();
 
     // Should NOT contain Livewire skill since Livewire is not installed
-    expect($skillNames)->not->toContain('building-livewire-components');
+    expect($skillNames)->not->toContain('livewire-development');
 });
