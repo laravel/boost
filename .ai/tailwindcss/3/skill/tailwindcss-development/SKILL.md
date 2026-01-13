@@ -1,12 +1,12 @@
 ---
-name: using-tailwindcss
+name: tailwindcss-development
 description: >-
   Style with Tailwind CSS v3 utilities. MUST activate when adding styles, restyling components,
   working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors,
   typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle,
   hero section, cards, buttons, or any visual/UI changes.
 ---
-# Using Tailwind CSS
+# Tailwind CSS Development
 
 ## When to Use This Skill
 
