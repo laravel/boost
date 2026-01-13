@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\Skill;
 
-test('it creates skill with all properties', function (): void {
+it('creates skill with all properties', function (): void {
     $skill = new Skill(
         name: 'building-livewire-components',
         package: 'livewire',
@@ -20,7 +20,7 @@ test('it creates skill with all properties', function (): void {
         ->and($skill->custom)->toBeFalse();
 });
 
-test('it defaults custom to false', function (): void {
+it('defaults custom to false', function (): void {
     $skill = new Skill(
         name: 'testing-with-pest',
         package: 'pest',
@@ -31,7 +31,7 @@ test('it defaults custom to false', function (): void {
     expect($skill->custom)->toBeFalse();
 });
 
-test('it can be marked as custom', function (): void {
+it('can be marked as custom', function (): void {
     $skill = new Skill(
         name: 'my-custom-skill',
         package: 'user',

@@ -21,7 +21,7 @@ class GridRenderer extends Renderer
 
         $items = collect($grid->items);
         $maxWidth = $grid->maxWidth - 2;
-        $cellWidth = $items->max(fn ($item): int => mb_strlen((string) $item)) + 4;
+        $cellWidth = $items->max(fn ($item): int => mb_strlen($item)) + 4;
         $maxColumns = max(1, (int) floor(($maxWidth - 1) / ($cellWidth + 1)));
         $columns = $this->balancedColumnCount($items->count(), $maxColumns);
 

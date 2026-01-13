@@ -33,17 +33,11 @@ class GuidelineComposer
     protected GuidelineConfig $config;
 
     /**
-     * Package priority system to handle conflicts between packages.
-     * When a higher-priority package is present, lower-priority packages are excluded from guidelines.
-     *
      * @var array<string, string[]>
      */
     protected array $packagePriorities;
 
     /**
-     * Only include guidelines for these package names if they're a direct requirement.
-     * This fixes every Boost user getting the MCP guidelines due to indirect import.
-     *
      * @var array<int, Packages>
      * */
     protected array $mustBeDirect = [
@@ -51,9 +45,6 @@ class GuidelineComposer
     ];
 
     /**
-     * Packages that should be excluded from automatic guideline inclusion.
-     * These packages require explicit configuration to be included.
-     *
      * @var array<int, Packages>
      */
     protected array $optInPackages = [
@@ -76,9 +67,6 @@ class GuidelineComposer
         return $this;
     }
 
-    /**
-     * Auto discovers the guideline files and composes them into one string.
-     */
     public function compose(): string
     {
         return self::composeGuidelines($this->guidelines());
@@ -90,9 +78,6 @@ class GuidelineComposer
     }
 
     /**
-     * Static method to compose guidelines from a collection.
-     * Can be used without Laravel dependencies.
-     *
      * @param  Collection<string, array{content: string, name: string, path: ?string, custom: bool}>  $guidelines
      */
     public static function composeGuidelines(Collection $guidelines): string
@@ -237,9 +222,6 @@ class GuidelineComposer
         );
     }
 
-    /**
-     * Determines if a package should be excluded from guidelines based on priority rules.
-     */
     protected function shouldExcludePackage(Package $package): bool
     {
         if (in_array($package->package(), $this->optInPackages, true)) {
@@ -306,7 +288,7 @@ class GuidelineComposer
 
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
 
-        $this->storedSnippets = []; // Clear for next use
+        $this->storedSnippets = [];
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -425,10 +407,6 @@ class GuidelineComposer
     }
 
     /**
-     * Discover skills from a package path, handling version-specific and root-level skills.
-     *
-     * Version-specific skills take precedence over root-level skills with the same name.
-     *
      * @return Collection<string, Skill>
      */
     protected function discoverSkillsFromPath(string $packagePath, string $packageName, ?string $installedVersion): Collection
@@ -445,13 +423,10 @@ class GuidelineComposer
             $packageName
         );
 
-        // Version-specific skills override root skills with the same name
         return $rootSkills->merge($versionSpecificSkills);
     }
 
     /**
-     * Discover skills from a specific directory.
-     *
      * @return Collection<string, Skill>
      */
     protected function discoverSkillsFromDirectory(string $skillPath, string $packageName): Collection
@@ -466,9 +441,6 @@ class GuidelineComposer
             ->keyBy(fn (Skill $skill): string => $skill->name);
     }
 
-    /**
-     * Determines if a directory name represents a version (e.g., 3, 11, 8.2).
-     */
     protected function isVersionDirectory(string $dirName): bool
     {
         return preg_match('/^\d+(\.\d+)?$/', $dirName) === 1;
@@ -487,9 +459,6 @@ class GuidelineComposer
             ));
     }
 
-    /**
-     * Get the major version of an installed package by its composer name (vendor/package).
-     */
     protected function getPackageMajorVersion(string $composerName): ?string
     {
         $package = $this->roster->packages()->first(fn ($pkg): bool => $pkg->rawName() === $composerName);

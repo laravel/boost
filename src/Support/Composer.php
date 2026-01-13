@@ -48,8 +48,6 @@ class Composer
     }
 
     /**
-     * Get package directories containing a Boost subpath.
-     *
      * @param  string|null  $subpath  Optional subpath under resources/boost/ (e.g., 'guidelines')
      */
     private static function packagesDirectoriesWithBoostSubpath(?string $subpath = null): array
