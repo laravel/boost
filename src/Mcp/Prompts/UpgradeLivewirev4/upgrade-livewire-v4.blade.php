@@ -40,6 +40,7 @@ Search the codebase for patterns affected by v4 changes:
 - `Route::get` with Livewire components - May need `Route::livewire()`
 - `wire:model` on container elements (divs, modals) - Check for bubbling behavior
 - `wire:scroll` - Needs rename to `wire:navigate:scroll`
+- `<livewire:` tags - Must be properly closed (self-closing or with closing tag)
 
 **Medium Priority Searches:**
 - `wire:transition` with modifiers (`.opacity`, `.scale`, `.duration`) - Modifiers removed
@@ -96,18 +97,15 @@ When upgrading, maximize efficiency by:
 
 Livewire v4 introduces several improvements and optimizations while maintaining backward compatibility wherever possible. This guide will help you upgrade from Livewire v3 to v4.
 
-> [!warning] Livewire v4 is currently in beta
-> Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
-
 > [!tip] Smooth upgrade path
 > Most applications can upgrade to v4 with minimal changes. The breaking changes are primarily configuration updates and method signature changes that only affect advanced usage.
 
 ## Installation
 
-Update your `composer.json` to require Livewire v4 beta:
+Update your `composer.json` to require Livewire v4:
 
 @boostsnippet('Installation', 'bash')
-composer require livewire/livewire:^4.0@beta
+composer require livewire/livewire:^4.0
 @endboostsnippet
 
 After updating, clear your application's cache:
@@ -117,18 +115,18 @@ php artisan optimize:clear
 @endboostsnippet
 
 > [!info] View all changes on GitHub
-> For a complete overview of all code changes between v3 and v4, you can review the full diff on GitHub: [Compare 3.x to main](https://github.com/livewire/livewire/compare/3.x...main)
+> For a complete overview of all code changes between v3 and v4, you can review the full diff on GitHub: [Compare 3.x to main →](https://github.com/livewire/livewire/compare/3.x...main)
 
 ## High-impact changes
 
 These changes are most likely to affect your application and should be reviewed carefully.
 
-### Config File Updates
+### Config file updates
 
 Several configuration keys have been renamed, reorganized, or have new defaults. Update your `config/livewire.php` file:
 
 > [!tip] View the full config file
-> For reference, you can view the complete v4 config file on GitHub: [livewire.php](https://github.com/livewire/livewire/blob/main/config/livewire.php)
+> For reference, you can view the complete v4 config file on GitHub: [livewire.php →](https://github.com/livewire/livewire/blob/main/config/livewire.php)
 
 #### Renamed configuration keys
 
@@ -163,9 +161,9 @@ The layout now uses the `layouts::` namespace by default, pointing to `resources
 'smart_wire_keys' => true,
 @endboostsnippet
 
-This helps prevent wire:key issues on deeply nested components. Note: You still need to add `wire:key` manually in loops - this setting doesn't eliminate that requirement.
+This helps prevent wire:key issues on deeply nested components. Note: You still need to add `wire:key` manually in loops—this setting doesn't eliminate that requirement.
 
-[Learn more about wire:key](/docs/4.x/nesting#rendering-children-in-a-loop)
+[Learn more about wire:key →](/docs/4.x/nesting#rendering-children-in-a-loop)
 
 #### New configuration options
 
@@ -189,14 +187,14 @@ Defines where Livewire looks for single-file and multi-file (view-based) compone
 ],
 @endboostsnippet
 
-Creates custom namespaces for organizing view-based components (e.g., `pages::dashboard`).
+Creates custom namespaces for organizing view-based components (e.g., `<livewire:pages::dashboard />`).
 
 **Make command defaults:**
 
 @boostsnippet('Make Command Defaults', 'php')
 'make_command' => [
     'type' => 'sfc',  // Options: 'sfc', 'mfc', or 'class'
-    'emoji' => true,   // Whether to use emoji prefix
+    'emoji' => true,   // Whether to use ⚡ emoji prefix
 ],
 @endboostsnippet
 
@@ -227,23 +225,23 @@ Route::livewire('/dashboard', 'pages::dashboard');
 
 Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
 
-[Learn more about routing](/docs/4.x/components#page-components)
+[Learn more about routing →](/docs/4.x/components#page-components)
 
-### `wire:model` Now Ignores Child Events by Default
+### `wire:model` now ignores child events by default
 
-In v3, `wire:model` would respond to input/change events that bubbled up from child elements. This caused unexpected behavior when using `wire:model` on container elements (like modals or accordions) that contained form inputs - clearing an input inside would bubble up and potentially close the modal.
+In v3, `wire:model` would respond to input/change events that bubbled up from child elements. This caused unexpected behavior when using `wire:model` on container elements (like modals or accordions) that contained form inputs—clearing an input inside would bubble up and potentially close the modal.
 
 In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior).
 
-If you have code that relies on capturing events from child elements, add the `.bubble` modifier:
+If you have code that relies on capturing events from child elements, add the `.deep` modifier:
 
-@boostsnippet('Wire Model Bubble', 'blade')
+@boostsnippet('Wire Model Deep', 'blade')
 <!-- Before (v3) - listened to child events by default -->
 <div wire:model="value">
     <input type="text">
 </div>
 
-<!-- After (v4) - add .bubble to restore old behavior -->
+<!-- After (v4) - add .deep to restore old behavior -->
 <div wire:model.deep="value">
     <input type="text">
 </div>
@@ -258,12 +256,28 @@ When using `wire:scroll` to preserve scroll in a scrollable container across `wi
 
 @boostsnippet('Wire Navigate Scroll', 'blade')
 @@persist('sidebar')
-    <div class="overflow-y-scroll" wire:scroll> <!-- Remove this -->
-    <div class="overflow-y-scroll" wire:navigate:scroll> <!-- Use this instead -->
-        <!-- scrollable content -->
+    <div class="overflow-y-scroll" wire:scroll> <!-- [tl! remove] -->
+    <div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! add] -->
+        <!-- ... -->
     </div>
 @@endpersist
 @endboostsnippet
+
+### Component tags must be closed
+
+In v3, Livewire component tags would render even without being properly closed. In v4, with the addition of slot support, component tags must be properly closed—otherwise Livewire interprets subsequent content as slot content and the component won't render:
+
+@boostsnippet('Component Tags Closed', 'blade')
+<!-- Before (v3) - unclosed tag -->
+<livewire:component-name>
+
+<!-- After (v4) - Self-closing tag -->
+<livewire:component-name />
+@endboostsnippet
+
+[Learn more about rendering components →](/docs/4.x/components#rendering-components)
+
+[Learn more about slots →](/docs/4.x/nesting#slots)
 
 ## Medium-impact changes
 
@@ -273,19 +287,19 @@ These changes may affect certain parts of your application depending on which fe
 
 In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive, supporting modifiers like `.opacity`, `.scale`, `.duration.200ms`, and `.origin.top`.
 
-In v4, `wire:transition` uses the browser's native [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) instead. Basic usage still works - elements will fade in and out smoothly - but all modifiers have been removed.
+In v4, `wire:transition` uses the browser's native [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) instead. Basic usage still works—elements will fade in and out smoothly—but all modifiers have been removed.
 
 @boostsnippet('Wire Transition', 'blade')
 <!-- This still works in v4 -->
-<div wire:transition>Content here</div>
+<div wire:transition>...</div>
 
-<!-- These modifiers are no longer supported - remove these -->
-<div wire:transition.opacity></div>
-<div wire:transition.scale.origin.top></div>
-<div wire:transition.duration.500ms></div>
+<!-- These modifiers are no longer supported -->
+<div wire:transition.opacity>...</div> <!-- [tl! remove] -->
+<div wire:transition.scale.origin.top>...</div> <!-- [tl! remove] -->
+<div wire:transition.duration.500ms>...</div> <!-- [tl! remove] -->
 @endboostsnippet
 
-[Learn more about wire:transition](/docs/4.x/wire-transition)
+[Learn more about wire:transition →](/docs/4.x/wire-transition)
 
 ### Performance improvements
 
@@ -294,13 +308,13 @@ Livewire v4 includes significant performance improvements to the request handlin
 - **Non-blocking polling**: `wire:poll` no longer blocks other requests or is blocked by them
 - **Parallel live updates**: `wire:model.live` requests now run in parallel, allowing faster typing and quicker results
 
-These improvements happen automatically - no changes needed to your code.
+These improvements happen automatically—no changes needed to your code.
 
 ### Update hooks consolidate array/object changes
 
 When replacing an entire array or object from the frontend (e.g., `$wire.items = ['new', 'values']`), Livewire now sends a single consolidated update instead of granular updates for each index.
 
-**Before:** Setting `$wire.items = ['a', 'b']` on an array of 4 items would fire `updatingItems`/`updatedItems` hooks multiple times - once for each index change plus `__rm__` removals.
+**Before:** Setting `$wire.items = ['a', 'b']` on an array of 4 items would fire `updatingItems`/`updatedItems` hooks multiple times—once for each index change plus `__rm__` removals.
 
 **After:** The same operation fires the hooks once with the full new array value, matching v2 behavior.
 
@@ -332,7 +346,7 @@ $this->stream('#container', 'Hello');
 $this->stream('Hello', el: '#container');
 @endboostsnippet
 
-[Learn more about streaming](/docs/4.x/wire-stream)
+[Learn more about streaming →](/docs/4.x/wire-stream)
 
 **Component mounting (internal):**
 
@@ -575,7 +589,7 @@ Livewire v4 introduces several powerful new features you can start using immedia
 
 v4 introduces new component formats alongside the traditional class-based approach. Single-file components combine PHP and Blade in one file, while multi-file components organize PHP, Blade, JavaScript, and tests in a directory.
 
-By default, view-based component files are prefixed with an emoji to distinguish them from regular Blade files in your editor and searches. This can be disabled via the `make_command.emoji` config.
+By default, view-based component files are prefixed with a ⚡ emoji to distinguish them from regular Blade files in your editor and searches. This can be disabled via the `make_command.emoji` config.
 
 @boostsnippet('Make Livewire Commands', 'bash')
 php artisan make:livewire create-post        # Single-file (default)
@@ -583,13 +597,13 @@ php artisan make:livewire create-post --mfc  # Multi-file
 php artisan livewire:convert create-post     # Convert between formats
 @endboostsnippet
 
-[Learn more about component formats](/docs/4.x/components)
+[Learn more about component formats →](/docs/4.x/components)
 
 **Slots and attribute forwarding**
 
 Components now support slots and automatic attribute bag forwarding using `@{{ $attributes }}`, making component composition more flexible.
 
-[Learn more about nesting components](/docs/4.x/nesting)
+[Learn more about nesting components →](/docs/4.x/nesting)
 
 **JavaScript in view-based components**
 
@@ -609,7 +623,7 @@ View-based components can now include `<script>` tags without the `@@script` wra
 </script>
 @endboostsnippet
 
-[Learn more about JavaScript in components](/docs/4.x/javascript)
+[Learn more about JavaScript in components →](/docs/4.x/javascript)
 
 ### Islands
 
@@ -617,11 +631,11 @@ Islands allow you to create isolated regions within a component that update inde
 
 @boostsnippet('Islands Example', 'blade')
 @@island(name: 'stats', lazy: true)
-    <div>{{ $this->expensiveStats }}</div>
+    <div>@{{ $this->expensiveStats }}</div>
 @@endisland
 @endboostsnippet
 
-[Learn more about islands](/docs/4.x/islands)
+[Learn more about islands →](/docs/4.x/islands)
 
 ### Loading improvements
 
@@ -652,7 +666,7 @@ Control whether multiple lazy/deferred components load in parallel or bundled to
 class Revenue extends Component { ... }
 @endboostsnippet
 
-[Learn more about lazy and deferred loading](/docs/4.x/lazy)
+[Learn more about lazy and deferred loading →](/docs/4.x/lazy)
 
 ### Async actions
 
@@ -667,7 +681,7 @@ Run actions in parallel without blocking other requests using the `.async` modif
 public function logActivity() { ... }
 @endboostsnippet
 
-[Learn more about async actions](/docs/4.x/actions#parallel-execution-with-async)
+[Learn more about async actions →](/docs/4.x/actions#parallel-execution-with-async)
 
 ### New directives and modifiers
 
@@ -678,12 +692,12 @@ Built-in support for sortable lists with drag-and-drop:
 @boostsnippet('Wire Sort', 'blade')
 <ul wire:sort="updateOrder">
     @@foreach ($items as $item)
-        <li wire:sort:item="{{ $item->id }}" wire:key="{{ $item->id }}">{{ $item->name }}</li>
+        <li wire:sort:item="@{{ $item->id }}" wire:key="@{{ $item->id }}">@{{ $item->name }}</li>
     @@endforeach
 </ul>
 @endboostsnippet
 
-[Learn more about wire:sort](/docs/4.x/wire-sort)
+[Learn more about wire:sort →](/docs/4.x/wire-sort)
 
 **`wire:intersect` - Viewport intersection**
 
@@ -691,17 +705,17 @@ Run actions when elements enter or leave the viewport, similar to Alpine's [`x-i
 
 @boostsnippet('Wire Intersect', 'blade')
 <!-- Basic usage -->
-<div wire:intersect="loadMore">Content</div>
+<div wire:intersect="loadMore">...</div>
 
 <!-- With modifiers -->
-<div wire:intersect.once="trackView">Content</div>
-<div wire:intersect:leave="pauseVideo">Content</div>
-<div wire:intersect.half="loadMore">Content</div>
-<div wire:intersect.full="startAnimation">Content</div>
+<div wire:intersect.once="trackView">...</div>
+<div wire:intersect:leave="pauseVideo">...</div>
+<div wire:intersect.half="loadMore">...</div>
+<div wire:intersect.full="startAnimation">...</div>
 
 <!-- With options -->
-<div wire:intersect.margin.200px="loadMore">Content</div>
-<div wire:intersect.threshold.50="trackScroll">Content</div>
+<div wire:intersect.margin.200px="loadMore">...</div>
+<div wire:intersect.threshold.50="trackScroll">...</div>
 @endboostsnippet
 
 Available modifiers:
@@ -711,7 +725,7 @@ Available modifiers:
 - `.threshold.X` - Custom visibility percentage (0-100)
 - `.margin.Xpx` or `.margin.X%` - Intersection margin
 
-[Learn more about wire:intersect](/docs/4.x/wire-intersect)
+[Learn more about wire:intersect →](/docs/4.x/wire-intersect)
 
 **`wire:ref` - Element references**
 
@@ -731,7 +745,7 @@ Easily reference and interact with elements in your template:
 </script>
 @endboostsnippet
 
-[Learn more about wire:ref](/docs/4.x/wire-ref)
+[Learn more about wire:ref →](/docs/4.x/wire-ref)
 
 **`.renderless` modifier**
 
@@ -761,7 +775,7 @@ Every element that triggers a network request automatically receives a `data-loa
 </button>
 @endboostsnippet
 
-[Learn more about loading states](/docs/4.x/loading-states)
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ### JavaScript improvements
 
@@ -775,7 +789,7 @@ Access your component's error bag from JavaScript:
 </div>
 @endboostsnippet
 
-[Learn more about validation](/docs/4.x/validation)
+[Learn more about validation →](/docs/4.x/validation)
 
 **`$intercept` magic**
 
@@ -789,7 +803,7 @@ this.$intercept('save', ({ ... }) => {
 </script>
 @endboostsnippet
 
-[Learn more about JavaScript interceptors](/docs/4.x/javascript#interceptors)
+[Learn more about JavaScript interceptors →](/docs/4.x/javascript#interceptors)
 
 **Island targeting from JavaScript**
 
@@ -801,7 +815,7 @@ Trigger island renders directly from the template:
 </button>
 @endboostsnippet
 
-[Learn more about islands](/docs/4.x/islands)
+[Learn more about islands →](/docs/4.x/islands)
 
 ## Getting help
 
