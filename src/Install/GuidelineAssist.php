@@ -129,7 +129,6 @@ class GuidelineAssist
             return $cache[$path] = false;
         }
 
-        // Quick string check before expensive tokenization
         $containsClassKeyword = stripos($code, 'class') !== false
             || stripos($code, 'interface') !== false
             || stripos($code, 'trait') !== false

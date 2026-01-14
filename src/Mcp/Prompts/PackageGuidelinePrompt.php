@@ -23,7 +23,7 @@ class PackageGuidelinePrompt extends Prompt
 
     public function handle(): Response
     {
-        $content = $this->renderGuidelineFile($this->bladePath);
+        $content = $this->renderBladeFile($this->bladePath);
 
         return Response::text($content);
     }

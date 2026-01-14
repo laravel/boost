@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
@@ -16,7 +15,6 @@ use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
-use Symfony\Component\Yaml\Yaml;
 
 class GuidelineComposer
 {
@@ -27,17 +25,22 @@ class GuidelineComposer
     /** @var Collection<string, array> */
     protected Collection $guidelines;
 
-    /** @var Collection<string, Skill> */
-    protected Collection $skills;
-
     protected GuidelineConfig $config;
 
+    protected ?SkillComposer $skillComposer = null;
+
     /**
+     * Package priority system to handle conflicts between packages.
+     * When a higher-priority package is present, lower-priority packages are excluded from guidelines.
+     *
      * @var array<string, string[]>
      */
     protected array $packagePriorities;
 
     /**
+     * Only include guidelines for these package names if they're a direct requirement.
+     * This fixes every Boost user getting the MCP guidelines due to indirect import.
+     *
      * @var array<int, Packages>
      * */
     protected array $mustBeDirect = [
@@ -45,6 +48,9 @@ class GuidelineComposer
     ];
 
     /**
+     * Packages that should be excluded from automatic guideline inclusion.
+     * These packages require explicit configuration to be included.
+     *
      * @var array<int, Packages>
      */
     protected array $optInPackages = [
@@ -67,6 +73,9 @@ class GuidelineComposer
         return $this;
     }
 
+    /**
+     * Auto discovers the guideline files and composes them into one string.
+     */
     public function compose(): string
     {
         return self::composeGuidelines($this->guidelines());
@@ -281,14 +290,7 @@ class GuidelineComposer
             ];
         }
 
-        $content = file_get_contents($path);
-        $content = $this->processBoostSnippets($content);
-
-        $rendered = $this->renderContent($content, $path);
-
-        $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
-
-        $this->storedSnippets = [];
+        $rendered = $this->renderBladeFile($path);
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -311,7 +313,12 @@ class GuidelineComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config, $this->skills());
+        return new GuidelineAssist($this->roster, $this->config, $this->getSkillComposer()->skills());
+    }
+
+    protected function getSkillComposer(): SkillComposer
+    {
+        return $this->skillComposer ??= new SkillComposer($this->roster, $this->config);
     }
 
     protected function prependPackageGuidelinePath(string $path): string
@@ -360,195 +367,5 @@ class GuidelineComposer
         $customPath = $this->prependUserGuidelinePath($relativePath);
 
         return file_exists($customPath) ? $customPath : $path;
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    public function skills(): Collection
-    {
-        if (! empty($this->skills)) {
-            return $this->skills;
-        }
-
-        return $this->skills = collect()
-            ->merge($this->getBoostSkills())
-            ->merge($this->getThirdPartySkills())
-            ->merge($this->getUserSkills());
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    protected function getBoostSkills(): Collection
-    {
-        $aiPath = __DIR__.'/../../.ai/';
-
-        /** @var Collection<int, array{path: string, name: string, version: string}> $packages */
-        $packages = $this->roster->packages()
-            ->map(function ($package) use ($aiPath): array {
-                $packageDirName = str_replace('_', '-', strtolower($package->name()));
-
-                return [
-                    'path' => $aiPath.$packageDirName,
-                    'name' => $packageDirName,
-                    'version' => $package->majorVersion(),
-                ];
-            })
-            ->collect();
-
-        return $packages
-            ->filter(fn (array $pkg): bool => is_dir($pkg['path']))
-            ->flatMap(fn (array $pkg): Collection => $this->discoverSkillsFromPath(
-                $pkg['path'],
-                $pkg['name'],
-                $pkg['version']
-            ));
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    protected function discoverSkillsFromPath(string $packagePath, string $packageName, ?string $installedVersion): Collection
-    {
-        $versionSpecificSkills = $installedVersion !== null
-            ? $this->discoverSkillsFromDirectory(
-                $packagePath.'/'.$installedVersion.'/skill',
-                $packageName
-            )
-            : collect();
-
-        $rootSkills = $this->discoverSkillsFromDirectory(
-            $packagePath.'/skill',
-            $packageName
-        );
-
-        return $rootSkills->merge($versionSpecificSkills);
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    protected function discoverSkillsFromDirectory(string $skillPath, string $packageName): Collection
-    {
-        if (! is_dir($skillPath)) {
-            return collect();
-        }
-
-        return collect(glob($skillPath.'/*', GLOB_ONLYDIR))
-            ->map(fn (string $skillDir): ?Skill => $this->parseSkill($skillDir, $packageName))
-            ->filter()
-            ->keyBy(fn (Skill $skill): string => $skill->name);
-    }
-
-    protected function isVersionDirectory(string $dirName): bool
-    {
-        return preg_match('/^\d+(\.\d+)?$/', $dirName) === 1;
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    protected function getThirdPartySkills(): Collection
-    {
-        return collect(Composer::packagesDirectoriesWithBoostSkills())
-            ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromPath(
-                $path,
-                $package,
-                $this->getPackageMajorVersion($package)
-            ));
-    }
-
-    protected function getPackageMajorVersion(string $composerName): ?string
-    {
-        $package = $this->roster->packages()->first(fn ($pkg): bool => $pkg->rawName() === $composerName);
-
-        return $package?->majorVersion();
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    protected function getUserSkills(): Collection
-    {
-        $userSkillsPath = base_path('.ai/skills');
-
-        if (! is_dir($userSkillsPath)) {
-            return collect();
-        }
-
-        return collect(glob($userSkillsPath.'/*', GLOB_ONLYDIR))
-            ->map(fn (string $skillPath): ?Skill => $this->parseSkill($skillPath, 'user', custom: true))
-            ->filter()
-            ->keyBy(fn (Skill $skill): string => $skill->name);
-    }
-
-    protected function parseSkill(string $skillPath, string $package = '', bool $custom = false): ?Skill
-    {
-        $skillFile = $this->findSkillFile($skillPath);
-        if ($skillFile === null) {
-            return null;
-        }
-
-        $content = file_get_contents($skillFile);
-        $frontmatter = $this->parseSkillFrontmatter($content);
-
-        if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
-            return null;
-        }
-
-        if ($package === '') {
-            $package = $this->determinePackageFromPath($skillPath);
-        }
-
-        return new Skill(
-            name: $frontmatter['name'],
-            package: $package,
-            path: $skillPath,
-            description: $frontmatter['description'],
-            custom: $custom,
-        );
-    }
-
-    /**
-     * Find the skill file in a directory, preferring SKILL.blade.php over SKILL.md.
-     */
-    protected function findSkillFile(string $skillPath): ?string
-    {
-        foreach (['SKILL.blade.php', 'SKILL.md'] as $filename) {
-            $path = $skillPath.'/'.$filename;
-            if (file_exists($path)) {
-                return $path;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Determine package name from the skill path structure.
-     *
-     * Handles paths like .ai/{package}/skill/ or .ai/{package}/{version}/skill/
-     */
-    protected function determinePackageFromPath(string $skillPath): string
-    {
-        $parentDir = basename(dirname($skillPath));
-
-        return $this->isVersionDirectory($parentDir)
-            ? basename(dirname($skillPath, 2))
-            : $parentDir;
-    }
-
-    protected function parseSkillFrontmatter(string $content): array
-    {
-        if (! preg_match('/^---\s*\n(.*?)\n---\s*\n/s', $content, $matches)) {
-            return [];
-        }
-
-        try {
-            return Yaml::parse($matches[1]) ?? [];
-        } catch (Exception) {
-            return [];
-        }
     }
 }

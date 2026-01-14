@@ -20,6 +20,7 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\Sail;
+use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Prompts\Grid;
 use Laravel\Boost\Support\Config;
@@ -459,26 +460,13 @@ class InstallCommand extends Command
         $this->newLine();
         usleep(750000);
 
-        $failed = [];
         $composedAiGuidelines = $composer->compose();
 
-        $longestAgentName = max(1, ...$this->selectedTargetAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
-        /** @var CodeEnvironment $agent */
-        foreach ($this->selectedTargetAgents as $agent) {
-            $agentName = $agent->agentName();
-            $displayAgentName = str_pad((string) $agentName, $longestAgentName);
-            $this->output->write("  {$displayAgentName}... ");
-            /** @var Agent $agent */
-            try {
-                (new GuidelineWriter($agent))
-                    ->write($composedAiGuidelines);
-
-                $this->line($this->greenTick);
-            } catch (Exception $e) {
-                $failed[$agentName] = $e->getMessage();
-                $this->line($this->redCross);
-            }
-        }
+        $failed = $this->processWithProgress(
+            $this->selectedTargetAgents,
+            fn (Agent $agent): string => $agent->agentName(),
+            fn (Agent $agent): int => (new GuidelineWriter($agent))->write($composedAiGuidelines),
+        );
 
         $this->newLine();
 
@@ -492,7 +480,8 @@ class InstallCommand extends Command
             }
         }
 
-        $this->installSkills($composer);
+        $skillComposer = app(SkillComposer::class)->config($guidelineConfig);
+        $this->installSkills($skillComposer);
 
         if ($this->installMcpConfig) {
             $this->config->setSail(
@@ -517,7 +506,7 @@ class InstallCommand extends Command
         );
     }
 
-    protected function installSkills(GuidelineComposer $composer): void
+    protected function installSkills(SkillComposer $skillComposer): void
     {
         $skillsAgents = $this->selectedTargetAgents
             ->filter(fn ($agent): bool => $agent instanceof SupportSkills);
@@ -526,7 +515,7 @@ class InstallCommand extends Command
             return;
         }
 
-        $skills = $composer->skills();
+        $skills = $skillComposer->skills();
 
         if ($skills->isEmpty()) {
             return;
@@ -537,21 +526,12 @@ class InstallCommand extends Command
         $this->displayGrid($skills, fn ($skill): string => $skill->name);
         $this->newLine();
 
-        $longestAgentName = max(1, ...$skillsAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
-
-        /** @var SupportSkills&Agent $agent */
-        foreach ($skillsAgents as $agent) {
-            $agentName = $agent->agentName();
-            $displayAgentName = str_pad((string) $agentName, $longestAgentName);
-            $this->output->write("  {$displayAgentName}... ");
-
-            try {
-                (new SkillWriter($agent))->writeAll($skills);
-                $this->line($this->greenTick);
-            } catch (Exception) {
-                $this->line($this->redCross);
-            }
-        }
+        /** @var Collection<int, SupportSkills&Agent> $skillsAgents */
+        $this->processWithProgress(
+            $skillsAgents,
+            fn (SupportSkills&Agent $agent): string => $agent->agentName(),
+            fn (SupportSkills&Agent $agent): array => (new SkillWriter($agent))->writeAll($skills),
+        );
 
         $this->newLine();
     }
@@ -568,11 +548,9 @@ class InstallCommand extends Command
 
     protected function shouldUseSail(): bool
     {
-        if ($this->selectedBoostFeatures->isEmpty()) {
-            return $this->config->getSail();
-        }
-
-        return $this->selectedBoostFeatures->contains('sail');
+        return $this->selectedBoostFeatures->isEmpty()
+            ? $this->config->getSail()
+            : $this->selectedBoostFeatures->contains('sail');
     }
 
     protected function buildMcpCommand(McpClient $mcpClient): array
@@ -680,6 +658,40 @@ class InstallCommand extends Command
                 }
             }
         }
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Collection<int, T>  $items
+     * @param  callable(T): string  $nameGetter
+     * @param  callable(T): mixed  $processor
+     * @return array<string, string>
+     */
+    protected function processWithProgress(
+        Collection $items,
+        callable $nameGetter,
+        callable $processor,
+    ): array {
+        $failed = [];
+
+        $longestName = max(1, ...$items->map(fn ($item) => Str::length($nameGetter($item)))->toArray());
+
+        foreach ($items as $item) {
+            $name = $nameGetter($item);
+            $displayName = str_pad($name, $longestName);
+            $this->output->write("  {$displayName}... ");
+
+            try {
+                $processor($item);
+                $this->line($this->greenTick);
+            } catch (Exception $e) {
+                $failed[$name] = $e->getMessage();
+                $this->line($this->redCross);
+            }
+        }
+
+        return $failed;
     }
 
     /**

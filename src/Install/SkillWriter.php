@@ -86,7 +86,7 @@ class SkillWriter
 
         $isBladeFile = str_ends_with($relativePath, '.blade.php');
         if ($isBladeFile) {
-            $renderedContent = $this->renderBladeSkillFile($file->getRealPath());
+            $renderedContent = trim($this->renderBladeFile($file->getRealPath()));
             $targetFile = preg_replace('/\.blade\.php$/', '.md', $targetFile);
 
             return file_put_contents($targetFile, $renderedContent) !== false;
@@ -100,38 +100,10 @@ class SkillWriter
         return is_dir($path) || @mkdir($path, 0755, true);
     }
 
-    /**
-     * Validate skill name to prevent path traversal attacks.
-     */
     protected function isValidSkillName(string $name): bool
     {
-        // Reject names containing path traversal characters
-        if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '\\')) {
-            return false;
-        }
+        $hasPathTraversal = str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '\\');
 
-        // Reject empty names or names with only whitespace
-        return trim($name) !== '';
-    }
-
-    /**
-     * Render a Blade skill file to Markdown.
-     */
-    protected function renderBladeSkillFile(string $path): string
-    {
-        $content = file_get_contents($path);
-        if ($content === false) {
-            throw new RuntimeException("Failed to read skill file: {$path}");
-        }
-
-        $content = $this->processBoostSnippets($content);
-
-        $rendered = $this->renderContent($content, $path);
-
-        $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
-
-        $this->storedSnippets = [];
-
-        return trim($rendered);
+        return ! $hasPathTraversal && trim($name) !== '';
     }
 }
