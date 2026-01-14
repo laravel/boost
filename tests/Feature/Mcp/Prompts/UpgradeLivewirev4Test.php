@@ -25,8 +25,8 @@ test('it contains core upgrade content', function (): void {
 
     expect($response)->isToolResult()
         ->toolTextContains('Livewire v3 to v4 Upgrade Specialist')
-        ->toolTextContains('Config File Updates')
-        ->toolTextContains('`wire:model` Now Ignores Child Events by Default')
+        ->toolTextContains('Config file updates')
+        ->toolTextContains('`wire:model` now ignores child events by default')
         ->toolTextContains('`wire:navigate:scroll`')
         ->toolTextContains('`wire:transition`')
         ->toolTextContains('Islands');
