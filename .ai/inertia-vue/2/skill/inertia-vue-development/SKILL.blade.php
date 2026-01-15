@@ -28,7 +28,7 @@ Vue page components should be placed in the `resources/js/Pages` directory.
 
 ### Page Component Structure
 
-**Important**: Vue components must have a single root element.
+Important: Vue components must have a single root element.
 
 @verbatim
 @boostsnippet("Basic Vue Page Component", "vue")
@@ -243,7 +243,7 @@ import { Form } from '@inertiajs/vue3'
 @endboostsnippet
 @endverbatim
 @else
-**Note:** This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
+Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
 @endif
 
 Forms can also be built using the `useForm` composable for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
@@ -253,7 +253,7 @@ Forms can also be built using the `useForm` composable for more programmatic con
 ### useForm Composable
 
 @if($assist->inertia()->hasFormComponent() === false)
-**For Inertia v2.0.x:** Build forms using the `useForm` composable as the `<Form>` component is not available until v2.1.0+.
+For Inertia v2.0.x: Build forms using the `useForm` composable as the `<Form>` component is not available until v2.1.0+.
 @else
 For more programmatic control or to follow existing conventions, use the `useForm` composable:
 @endif

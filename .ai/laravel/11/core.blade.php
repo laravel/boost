@@ -3,10 +3,10 @@
 @endphp
 ## Laravel 11
 
-- **CRITICAL**: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
+- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
 @if (file_exists(base_path('app/Http/Kernel.php')))
 - This project upgraded from Laravel 10 without migrating to the new streamlined Laravel 11 file structure.
-- This is **perfectly fine** and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the Laravel 11 structure unless the user explicitly requests it.
+- This is perfectly fine and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the Laravel 11 structure unless the user explicitly requests it.
 
 ### Laravel 10 Structure
 - Middleware typically lives in `app/Http/Middleware/` and service providers in `app/Providers/`.
@@ -23,8 +23,8 @@
 - Middleware are configured declaratively in `bootstrap/app.php` using `Application::configure()->withMiddleware()`.
 - `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
 - `bootstrap/providers.php` contains application specific service providers.
-- **No app\Console\Kernel.php** - use `bootstrap/app.php` or `routes/console.php` for console configuration.
-- **Commands auto-register** - files in `app/Console/Commands/` are automatically available and do not require manual registration.
+- No app\Console\Kernel.php - use `bootstrap/app.php` or `routes/console.php` for console configuration.
+- Commands auto-register - files in `app/Console/Commands/` are automatically available and do not require manual registration.
 @endif
 
 ### Database

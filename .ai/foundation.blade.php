@@ -19,11 +19,11 @@ Application purpose: {!! config('boost.purpose') !!}
 @endif
 ## Skills Activation
 
-This project has domain-specific skills available. **You MUST activate the relevant skill** whenever you work in that domain—don't wait until you're stuck.
+This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
 @if($assist->skills()->isNotEmpty())
 @foreach($assist->skills() as $skill)
-- **`{{ $skill->name }}`** — {{ $skill->description }}
+- `{{ $skill->name }}` — {{ $skill->description }}
 @endforeach
 @endif
 

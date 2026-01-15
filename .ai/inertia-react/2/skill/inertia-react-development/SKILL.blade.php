@@ -202,7 +202,7 @@ import { Form } from '@inertiajs/react'
 </Form>
 @endboostsnippet
 @else
-**Note:** This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
+Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
 @endif
 
 Forms can also be built using the `useForm` helper for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
@@ -212,7 +212,7 @@ Forms can also be built using the `useForm` helper for more programmatic control
 ### useForm Hook
 
 @if($assist->inertia()->hasFormComponent() === false)
-**For Inertia v2.0.x:** Build forms using the `useForm` helper as the `<Form>` component is not available until v2.1.0+.
+For Inertia v2.0.x: Build forms using the `useForm` helper as the `<Form>` component is not available until v2.1.0+.
 @else
 For more programmatic control or to follow existing conventions, use the `useForm` hook:
 @endif

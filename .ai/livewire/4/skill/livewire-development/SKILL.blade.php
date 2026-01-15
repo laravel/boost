@@ -49,7 +49,7 @@ Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert b
 | Class-based | `--class` | Traditional v3 style class |
 | View-based | ⚡ prefix | Blade-only with functional state |
 
-**Single-file component (default in v4):**
+Single-file component (default in v4):
 @boostsnippet("Single-File Component Example", "php")
 <?php
 use Livewire\Component;

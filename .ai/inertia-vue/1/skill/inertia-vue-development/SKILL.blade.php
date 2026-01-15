@@ -26,7 +26,7 @@ Vue page components should be placed in the `resources/js/Pages` directory.
 
 ### Page Component Structure
 
-**Important**: Vue components must have a single root element.
+Important: Vue components must have a single root element.
 
 @boostsnippet("Basic Vue Page Component", "vue")
 <script setup>
@@ -145,7 +145,7 @@ function handleSubmit() {
 
 ## Inertia v1 Limitations
 
-Inertia v1 does **not** support these v2 features:
+Inertia v1 does not support these v2 features:
 - `<Form>` component
 - Deferred props
 - Prefetching

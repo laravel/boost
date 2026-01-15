@@ -1,6 +1,6 @@
 ## Laravel 10
 
-- **CRITICAL**: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
+- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
 - Middleware typically live in `app/Http/Middleware/` and service providers in `app/Providers/`.
 - Laravel 10 has a `bootstrap/app.php` file that creates the application instance and binds kernel contracts, but does not use it for application configuration like Laravel 11:
     - Middleware registration is in `app/Http/Kernel.php`

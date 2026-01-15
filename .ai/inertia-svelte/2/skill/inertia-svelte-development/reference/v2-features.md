@@ -58,4 +58,4 @@ Prefetch pages on hover:
 <Link href="/users" prefetch>Users</Link>
 ```
 
-**IMPORTANT**: Always use the `search-docs` tool to get the latest documentation and code examples for Inertia.
+IMPORTANT: Always use the `search-docs` tool to get the latest documentation and code examples for Inertia.

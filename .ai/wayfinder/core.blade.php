@@ -6,7 +6,7 @@
 Wayfinder generates TypeScript functions and types for Laravel controllers and routes which you can import into your client-side code. It provides type safety and automatic synchronization between backend routes and frontend code.
 
 ### Development Guidelines
-- **CRITICAL**: ALWAYS use `search-docs` tool for version-specific Wayfinder documentation and updated code examples.
+- CRITICAL: ALWAYS use `search-docs` tool for version-specific Wayfinder documentation and updated code examples.
 - Always prefer named imports for tree-shaking (e.g., `import { show } from '@/actions/...'`).
 - Avoid default controller imports (prevents tree-shaking).
 - Run `{{ $assist->artisanCommand('wayfinder:generate') }}` after route changes if Vite plugin isn't installed.

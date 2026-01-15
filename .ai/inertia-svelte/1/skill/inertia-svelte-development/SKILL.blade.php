@@ -126,7 +126,7 @@ function handleSubmit() {
 
 ## Inertia v1 Limitations
 
-Inertia v1 does **not** support these v2 features:
+Inertia v1 does not support these v2 features:
 - `<Form>` component
 - Deferred props
 - Prefetching

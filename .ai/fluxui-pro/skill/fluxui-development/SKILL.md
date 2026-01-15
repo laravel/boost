@@ -18,7 +18,7 @@ Activate this skill when:
 
 ## Core Pattern
 
-This project is using the **Pro version** of Flux UI. It has full access to the free components and variants, as well as full access to the Pro components and variants.
+This project is using the Pro version of Flux UI. It has full access to the free components and variants, as well as full access to the Pro components and variants.
 
 Flux UI is a component library for Livewire. It's built using Tailwind CSS and provides a set of components that are easy to use and customize.
 
@@ -36,7 +36,7 @@ If available, use the `search-docs` tool to get the exact documentation and code
 
 ## Available Components (Pro Edition)
 
-**Full list:** accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, toast, tooltip
+Full list: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, toast, tooltip
 
 ## Common Patterns
 

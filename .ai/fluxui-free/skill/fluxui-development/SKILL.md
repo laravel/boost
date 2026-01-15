@@ -16,7 +16,7 @@ description: >-
 
 ## Core Pattern
 
-This project is using the **free edition** of Flux UI. It has full access to the free components and variants, but does not have access to the Pro components.
+This project is using the free edition of Flux UI. It has full access to the free components and variants, but does not have access to the Pro components.
 
 Flux UI is a component library for Livewire. It's built using Tailwind CSS and provides a set of components that are easy to use and customize.
 
@@ -34,7 +34,7 @@ Use the `search-docs` tool to get the exact documentation and code snippets avai
 
 ## Available Components (Free Edition)
 
-**Available:** avatar, badge, brand, breadcrumbs, button, callout, checkbox, dropdown, field, heading, icon, input, modal, navbar, otp-input, profile, radio, select, separator, skeleton, switch, text, textarea, tooltip
+Available: avatar, badge, brand, breadcrumbs, button, callout, checkbox, dropdown, field, heading, icon, input, modal, navbar, otp-input, profile, radio, select, separator, skeleton, switch, text, textarea, tooltip
 
 ## Common Patterns
 

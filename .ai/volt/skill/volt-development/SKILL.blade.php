@@ -21,7 +21,7 @@ description: >-
 
 Create components with `{{ $assist->artisanCommand('make:volt [name] [--test] [--pest]') }}`.
 
-**Important:** Check existing Volt components to determine if they use functional or class-based style before creating new ones.
+Important: Check existing Volt components to determine if they use functional or class-based style before creating new ones.
 
 ## Functional Components
 

@@ -2,5 +2,5 @@
 
 - Single-file Livewire components: PHP logic and Blade templates in one file.
 - Always check existing Volt components to determine functional vs class-based style.
-- **CRITICAL**: ALWAYS use `search-docs` tool for version-specific Volt documentation and updated code examples.
-- **IMPORTANT**: Activate `volt-development` every time you're working with volt/single-file component related task.
+- CRITICAL: ALWAYS use `search-docs` tool for version-specific Volt documentation and updated code examples.
+- IMPORTANT: Activate `volt-development` every time you're working with volt/single-file component related task.
