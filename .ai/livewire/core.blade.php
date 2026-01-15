@@ -1,10 +1,6 @@
-@php
-/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
-@endphp
 ## Livewire
 
-- **CRITICAL**: ALWAYS use `search-docs` tool for version-specific Livewire documentation and updated code examples.
-- Create components: `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}`.
+- Livewire allows you to build dynamic, reactive interfaces using only PHP — no JavaScript required.
+- Instead of writing frontend code in JavaScript frameworks, you write is using Alpine.JS to build the UI when client side interactions are required.
 - State lives on server; UI reflects it. Validate and authorize in actions (they're like HTTP requests).
-- Always add `wire:key` in loops. Use `wire:loading` for loading states.
-- Use/activate 'livewire-development' every time you're working with livewire related task.
+- **IMPORTANT**: Activate `livewire-development` every time you're working with livewire related task.

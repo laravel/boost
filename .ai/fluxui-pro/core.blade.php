@@ -1,6 +1,4 @@
 ## Flux UI Pro
-
-- **CRITICAL**: ALWAYS use `search-docs` tool for version-specific Flux Pro documentation and updated code examples.
-- Using Flux UI (Pro edition). Use `<flux:*>` components when available.
-- Full access to all Flux components including Pro-only ones.
-- Use/activate 'fluxui-development' for component usage and available components list.
+- Flux UI is the official Livewire component library - It has full access to the free components and variants, as well as full access to the Pro components and variants.
+- use `<flux:*>` components when available - they are the recommended way to build Livewire interfaces.
+- **IMPORTANT**: Activate 'fluxui-development' when working with Flux UI components, including all free and pro components and variants.

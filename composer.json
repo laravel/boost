@@ -20,7 +20,7 @@
         "illuminate/routing": "^10.49.0|^11.45.3|^12.41.1",
         "illuminate/support": "^10.49.0|^11.45.3|^12.41.1",
         "laravel/mcp": "^0.5.1",
-        "laravel/prompts": "^0.3.10",
+        "laravel/prompts": "^0.1.9|^0.3.10",
         "laravel/roster": "^0.2.9"
     },
     "require-dev": {

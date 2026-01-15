@@ -19,7 +19,7 @@ description: >-
 
 ## Documentation
 
-use the `search-docs` tool to use Inertia Full Capabilities.
+Always use the `search-docs` tool to get the latest documentation and code examples for Inertia.
 
 
 ## Core Pattern
