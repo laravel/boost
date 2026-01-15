@@ -1,7 +1,7 @@
 ---
 name: inertia-vue-development
 description: >-
-  Develop Inertia.js v1 Vue client-side applications. MUST activate when creating
+  Develops Inertia.js v1 Vue client-side applications. Activates when creating
   Vue pages, forms, or navigation; using Link or router; or when user mentions
   Vue with Inertia, Vue pages, Vue forms, or Vue navigation.
 ---

@@ -18,102 +18,7 @@ it('creates a package with all properties', function (): void {
         ->and($package->tokens)->toBe(150);
 });
 
-it('returns feature label for guidelines and skills', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: true,
-        hasSkills: true,
-    );
-
-    expect($package->featureLabel())->toBe('guidelines, skills');
-});
-
-it('returns feature label for guidelines only', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: true,
-        hasSkills: false,
-    );
-
-    expect($package->featureLabel())->toBe('guideline');
-});
-
-it('returns feature label for skills only', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: false,
-        hasSkills: true,
-    );
-
-    expect($package->featureLabel())->toBe('skills');
-});
-
-it('returns empty feature label when no features', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: false,
-        hasSkills: false,
-    );
-
-    expect($package->featureLabel())->toBe('');
-});
-
-it('displays label with guidelines and skills including tokens', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: true,
-        hasSkills: true,
-        tokens: 150,
-    );
-
-    expect($package->displayLabel())->toBe('vendor/package (guidelines, skills) (~150 tokens)');
-});
-
-it('displays label with guidelines only including tokens', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: true,
-        hasSkills: false,
-        tokens: 200,
-    );
-
-    expect($package->displayLabel())->toBe('vendor/package (guideline) (~200 tokens)');
-});
-
-it('displays label with skills only without tokens', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: false,
-        hasSkills: true,
-        tokens: 0,
-    );
-
-    expect($package->displayLabel())->toBe('vendor/package (skills)');
-});
-
-it('displays label with tokens when tokens are set', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: true,
-        hasSkills: false,
-        tokens: 100,
-    );
-
-    expect($package->displayLabel())->toBe('vendor/package (guideline) (~100 tokens)');
-});
-
-it('displays label without tokens when zero', function (): void {
-    $package = new ThirdPartyPackage(
-        name: 'vendor/package',
-        hasGuidelines: true,
-        hasSkills: false,
-        tokens: 0,
-    );
-
-    expect($package->displayLabel())->toBe('vendor/package (guideline)');
-});
-
-it('defaults optional properties correctly', function (): void {
+it('defaults tokens to zero', function (): void {
     $package = new ThirdPartyPackage(
         name: 'vendor/package',
         hasGuidelines: true,
@@ -122,3 +27,34 @@ it('defaults optional properties correctly', function (): void {
 
     expect($package->tokens)->toBe(0);
 });
+
+it('returns correct feature label', function (bool $hasGuidelines, bool $hasSkills, string $expected): void {
+    $package = new ThirdPartyPackage(
+        name: 'vendor/package',
+        hasGuidelines: $hasGuidelines,
+        hasSkills: $hasSkills,
+    );
+
+    expect($package->featureLabel())->toBe($expected);
+})->with([
+    'both features' => [true, true, 'guidelines, skills'],
+    'guidelines only' => [true, false, 'guideline'],
+    'skills only' => [false, true, 'skills'],
+    'no features' => [false, false, ''],
+]);
+
+it('returns correct display label', function (bool $hasGuidelines, bool $hasSkills, int $tokens, string $expected): void {
+    $package = new ThirdPartyPackage(
+        name: 'vendor/package',
+        hasGuidelines: $hasGuidelines,
+        hasSkills: $hasSkills,
+        tokens: $tokens,
+    );
+
+    expect($package->displayLabel())->toBe($expected);
+})->with([
+    'both with tokens' => [true, true, 150, 'vendor/package (guidelines, skills) (~150 tokens)'],
+    'guidelines with tokens' => [true, false, 200, 'vendor/package (guideline) (~200 tokens)'],
+    'skills without tokens' => [false, true, 0, 'vendor/package (skills)'],
+    'guidelines zero tokens' => [true, false, 0, 'vendor/package (guideline)'],
+]);

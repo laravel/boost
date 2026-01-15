@@ -13,36 +13,19 @@ function cleanupSkillDirectory(string $path): void
     }
 
     $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+        new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
         RecursiveIteratorIterator::CHILD_FIRST
     );
 
     foreach ($files as $file) {
-        if ($file->isDir()) {
-            rmdir($file->getRealPath());
-        } else {
-            unlink($file->getRealPath());
-        }
+        $file->isDir() ? @rmdir($file->getRealPath()) : @unlink($file->getRealPath());
     }
 
-    rmdir($path);
+    @rmdir($path);
 }
 
-function createTestSkillDir(): array
-{
-    $tempDir = sys_get_temp_dir().'/boost_skill_source_'.uniqid();
-    mkdir($tempDir, 0755, true);
-    mkdir($tempDir.'/references', 0755, true);
-    file_put_contents($tempDir.'/SKILL.md', "---\nname: test-skill\ndescription: Test skill\n---\n# Test");
-    file_put_contents($tempDir.'/references/example.md', '# Example reference');
-
-    return [$tempDir, function () use ($tempDir): void {
-        cleanupSkillDirectory($tempDir);
-    }];
-}
-
-it('writes skill to target directory', function (): void {
-    [$sourceDir, $cleanup] = createTestSkillDir();
+it('writes skill to a target directory', function (): void {
+    $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
@@ -64,12 +47,11 @@ it('writes skill to target directory', function (): void {
         ->and($absoluteTarget.'/test-skill/SKILL.md')->toBeFile()
         ->and($absoluteTarget.'/test-skill/references/example.md')->toBeFile();
 
-    $cleanup();
     cleanupSkillDirectory($absoluteTarget);
 });
 
 it('returns UPDATED when skill directory already exists', function (): void {
-    [$sourceDir, $cleanup] = createTestSkillDir();
+    $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
     $targetSkill = $absoluteTarget.'/test-skill';
@@ -94,7 +76,6 @@ it('returns UPDATED when skill directory already exists', function (): void {
     $content = file_get_contents($targetSkill.'/SKILL.md');
     expect($content)->toContain('name: test-skill');
 
-    $cleanup();
     cleanupSkillDirectory($absoluteTarget);
 });
 
@@ -118,8 +99,7 @@ it('returns FAILED when source directory does not exist', function (): void {
 });
 
 it('writes all skills', function (): void {
-    [$sourceDir1, $cleanup1] = createTestSkillDir();
-    [$sourceDir2, $cleanup2] = createTestSkillDir();
+    $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
@@ -127,8 +107,8 @@ it('writes all skills', function (): void {
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skills = collect([
-        new Skill('skill-one', 'boost', $sourceDir1, 'First skill'),
-        new Skill('skill-two', 'boost', $sourceDir2, 'Second skill'),
+        new Skill('skill-one', 'boost', $sourceDir, 'First skill'),
+        new Skill('skill-two', 'boost', $sourceDir, 'Second skill'),
     ]);
 
     $writer = new SkillWriter($agent);
@@ -138,18 +118,11 @@ it('writes all skills', function (): void {
         ->and($results['skill-one'])->toBe(SkillWriter::SUCCESS)
         ->and($results['skill-two'])->toBe(SkillWriter::SUCCESS);
 
-    $cleanup1();
-    $cleanup2();
     cleanupSkillDirectory($absoluteTarget);
 });
 
 it('copies nested directory structure', function (): void {
-    $sourceDir = sys_get_temp_dir().'/boost_skill_nested_'.uniqid();
-    mkdir($sourceDir.'/references/deep/nested', 0755, true);
-    file_put_contents($sourceDir.'/SKILL.md', '# Skill');
-    file_put_contents($sourceDir.'/references/ref.md', '# Ref');
-    file_put_contents($sourceDir.'/references/deep/nested/file.md', '# Deep');
-
+    $sourceDir = fixture('skills/nested-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
@@ -171,12 +144,11 @@ it('copies nested directory structure', function (): void {
         ->and($absoluteTarget.'/nested-skill/references/ref.md')->toBeFile()
         ->and($absoluteTarget.'/nested-skill/references/deep/nested/file.md')->toBeFile();
 
-    cleanupSkillDirectory($sourceDir);
     cleanupSkillDirectory($absoluteTarget);
 });
 
 it('throws an exception for path traversal in skill name', function (string $maliciousName): void {
-    [$sourceDir, $cleanup] = createTestSkillDir();
+    $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
     $agent = Mockery::mock(SupportSkills::class);
@@ -193,8 +165,6 @@ it('throws an exception for path traversal in skill name', function (string $mal
 
     expect(fn (): int => $writer->write($skill))
         ->toThrow(RuntimeException::class, 'Invalid skill name');
-
-    $cleanup();
 })->with([
     '../../../etc/passwd',
     '../../.bashrc',
@@ -203,16 +173,8 @@ it('throws an exception for path traversal in skill name', function (string $mal
     '../parent',
 ]);
 
-it('throws an exception when the target directory cannot be created', function (): void {
-    expect(true)->toBeTrue();
-})->todo();
-
 it('renders blade templates to markdown', function (): void {
-    $sourceDir = sys_get_temp_dir().'/boost_skill_blade_'.uniqid();
-    mkdir($sourceDir.'/references', 0755, true);
-    file_put_contents($sourceDir.'/SKILL.blade.php', "---\nname: blade-skill\ndescription: Blade skill\n---\n# Blade Skill\n\nThe answer is {{ 1 + 1 }}.");
-    file_put_contents($sourceDir.'/references/ref.blade.php', "# Reference\n\n{{ 'Hello' }}");
-
+    $sourceDir = fixture('skills/blade-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
@@ -233,11 +195,9 @@ it('renders blade templates to markdown', function (): void {
         ->and($absoluteTarget.'/blade-skill/SKILL.md')->toBeFile()
         ->and($absoluteTarget.'/blade-skill/references/ref.md')->toBeFile();
 
-    // Blade templates should be rendered to .md files
     $content = file_get_contents($absoluteTarget.'/blade-skill/SKILL.md');
     expect($content)->toContain('The answer is 2')
         ->not->toContain('{{ 1 + 1 }}');
 
-    cleanupSkillDirectory($sourceDir);
     cleanupSkillDirectory($absoluteTarget);
 });

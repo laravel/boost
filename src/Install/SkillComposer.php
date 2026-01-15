@@ -231,13 +231,6 @@ class SkillComposer
             : $parentDir;
     }
 
-    protected function getPackageMajorVersion(string $composerName): ?string
-    {
-        $package = $this->roster->packages()->first(fn ($pkg): bool => $pkg->rawName() === $composerName);
-
-        return $package?->majorVersion();
-    }
-
     protected function getGuidelineAssist(): GuidelineAssist
     {
         return new GuidelineAssist($this->roster, $this->config, $this->skills());

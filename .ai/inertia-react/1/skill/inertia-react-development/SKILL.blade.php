@@ -1,7 +1,7 @@
 ---
 name: inertia-react-development
 description: >-
-  Develop Inertia.js v1 React client-side applications. MUST activate when creating
+  Develops Inertia.js v1 React client-side applications. Activates when creating
   React pages, forms, or navigation; using Link or router; or when user mentions
   React with Inertia, React pages, React forms, or React navigation.
 ---

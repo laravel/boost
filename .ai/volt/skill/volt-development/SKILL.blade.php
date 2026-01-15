@@ -1,7 +1,7 @@
 ---
 name: volt-development
 description: >-
-  Develop single-file Livewire components with Volt. MUST activate when creating Volt components,
+  Develops single-file Livewire components with Volt. Activates when creating Volt components,
   converting Livewire to Volt, working with @volt directive, functional or class-based Volt APIs;
   or when the user mentions Volt, single-file components, functional Livewire, or inline component
   logic in Blade files.

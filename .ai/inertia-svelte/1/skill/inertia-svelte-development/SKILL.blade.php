@@ -1,7 +1,7 @@
 ---
 name: inertia-svelte-development
 description: >-
-  Develop Inertia.js v1 Svelte client-side applications. MUST activate when creating
+  Develops Inertia.js v1 Svelte client-side applications. Activates when creating
   Svelte pages, forms, or navigation; using Link or router; or when user mentions
   Svelte with Inertia, Svelte pages, Svelte forms, or Svelte navigation.
 ---

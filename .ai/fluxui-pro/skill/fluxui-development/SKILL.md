@@ -1,7 +1,7 @@
 ---
 name: fluxui-development
 description: >-
-  Develop UIs with Flux UI Pro components. MUST activate when creating buttons, forms, modals,
+  Develops UIs with Flux UI Pro components. Activates when creating buttons, forms, modals,
   inputs, tables, charts, date pickers, or UI components; replacing HTML elements with Flux;
   working with flux: components; or when the user mentions Flux, component library, UI components,
   form fields, or asks about available Flux components.

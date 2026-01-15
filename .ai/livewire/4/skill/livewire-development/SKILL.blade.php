@@ -1,7 +1,7 @@
 ---
 name: livewire-development
 description: >-
-  Develop reactive Livewire 4 components. MUST activate when creating, updating, or modifying
+  Develops reactive Livewire 4 components. Activates when creating, updating, or modifying
   Livewire components; working with wire:model, wire:click, wire:loading, or any wire: directives;
   adding real-time updates, loading states, or reactivity; debugging component behavior;
   writing Livewire tests; or when the user mentions Livewire, component, counter, or reactive UI.

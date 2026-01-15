@@ -213,13 +213,6 @@ class InstallCommand extends Command
         return "\033]8;;{$url}\007{$label}\033]8;;\033\\";
     }
 
-    protected function displayGrid(Collection $items, callable $mapper): void
-    {
-        grid(
-            $items->map($mapper)->sort()->values()->toArray()
-        );
-    }
-
     /**
      * We shouldn't add an AI guideline enforcing tests if they don't have a basic test setup.
      * This would likely just create headaches for them or be a waste of time as they
@@ -451,7 +444,7 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
-        $this->displayGrid($guidelines, fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''));
+        grid($guidelines->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))->sort()->values()->toArray());
         $this->newLine();
         usleep(750000);
 
@@ -497,19 +490,15 @@ class InstallCommand extends Command
         $skillsAgents = $this->selectedTargetAgents
             ->filter(fn ($agent): bool => $agent instanceof SupportSkills);
 
-        if ($skillsAgents->isEmpty()) {
-            return;
-        }
-
         $skills = $skillComposer->skills();
 
-        if ($skills->isEmpty()) {
+        if ($skillsAgents->isEmpty() || $skills->isEmpty()) {
             return;
         }
 
         $this->newLine();
         $this->info(sprintf(' Installing %d skills for skills-capable agents', $skills->count()));
-        $this->displayGrid($skills, fn (Skill $skill): string => $skill->displayName());
+        grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray());
         $this->newLine();
 
         /** @var Collection<int, SupportSkills&Agent> $skillsAgents */

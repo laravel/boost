@@ -349,11 +349,10 @@ test('includes laravel/mcp guidelines when directly required', function (): void
     $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
     $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
 
-    // MCP guidelines should be included, but not skill content
     expect($this->composer->compose())
         ->toContain('Laravel MCP')
         ->toContain('mcp-development')
-        ->not->toContain('Mcp::web'); // This is in the skill, not the guideline
+        ->not->toContain('Mcp::web');
 });
 
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
