@@ -219,14 +219,9 @@ class SkillComposer
     {
         $parentDir = basename(dirname($skillPath));
 
-        return $this->isVersionDirectory($parentDir)
+        return preg_match('/^\d+(\.\d+)?$/', $parentDir) === 1
             ? basename(dirname($skillPath, 2))
             : $parentDir;
-    }
-
-    protected function isVersionDirectory(string $dirName): bool
-    {
-        return preg_match('/^\d+(\.\d+)?$/', $dirName) === 1;
     }
 
     protected function getPackageMajorVersion(string $composerName): ?string

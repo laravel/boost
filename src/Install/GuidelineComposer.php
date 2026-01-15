@@ -94,6 +94,9 @@ class GuidelineComposer
     }
 
     /**
+     * Static method to compose guidelines from a collection.
+     * Can be used without Laravel dependencies.
+     *
      * @param  Collection<string, array{content: string, name: string, path: ?string, custom: bool}>  $guidelines
      */
     public static function composeGuidelines(Collection $guidelines): string
@@ -238,6 +241,9 @@ class GuidelineComposer
         );
     }
 
+    /**
+     * Determines if a package should be excluded from guidelines based on priority rules.
+     */
     protected function shouldExcludePackage(Package $package): bool
     {
         if (in_array($package->package(), $this->optInPackages, true)) {
@@ -321,12 +327,9 @@ class GuidelineComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config, $this->getSkillComposer()->skills());
-    }
+        $skillsComposer = $this->skillComposer ??= new SkillComposer($this->roster, $this->config);
 
-    protected function getSkillComposer(): SkillComposer
-    {
-        return $this->skillComposer ??= new SkillComposer($this->roster, $this->config);
+        return new GuidelineAssist($this->roster, $this->config, $skillsComposer->skills());
     }
 
     protected function prependPackageGuidelinePath(string $path): string
