@@ -1,5 +1,5 @@
 ---
-name: pennant-features
+name: pennant-development
 description: >-
   Manage feature flags with Laravel Pennant. MUST activate when creating, checking, or toggling
   feature flags; showing or hiding features conditionally; implementing A/B testing; working with
