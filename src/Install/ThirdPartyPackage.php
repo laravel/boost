@@ -66,7 +66,7 @@ class ThirdPartyPackage
     }
 
     /**
-     * @return array<string, array{description: string, tokens: int}>
+     * @return array<string, array{tokens: int}>
      */
     protected static function getThirdPartyGuidelineInfo(GuidelineComposer $guidelineComposer): array
     {

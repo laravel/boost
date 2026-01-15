@@ -67,4 +67,4 @@ class MyTool extends Tool
 - Using HTTPS locally with Node-based MCP clients
 - Not using `search-docs` for the latest MCP documentation
 - Not registering MCP server routes in `routes/ai.php`
-- Do not mention ai.php in the booststrap.php file it's already registered.
+- Do not mention ai.php in the bootstrap.php file; it's already registered.

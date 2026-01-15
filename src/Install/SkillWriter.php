@@ -87,9 +87,13 @@ class SkillWriter
         $isBladeFile = str_ends_with($relativePath, '.blade.php');
         if ($isBladeFile) {
             $renderedContent = trim($this->renderBladeFile($file->getRealPath()));
-            $targetFile = preg_replace('/\.blade\.php$/', '.md', $targetFile);
+            $replacedTargetFile = preg_replace('/\.blade\.php$/', '.md', $targetFile);
 
-            return file_put_contents($targetFile, $renderedContent) !== false;
+            if ($replacedTargetFile === null) {
+                $replacedTargetFile = substr($targetFile, 0, -10).'.md';
+            }
+
+            return file_put_contents($replacedTargetFile, $renderedContent) !== false;
         }
 
         return @copy($file->getRealPath(), $targetFile);

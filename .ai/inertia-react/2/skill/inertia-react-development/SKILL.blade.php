@@ -43,8 +43,6 @@ export default function UsersIndex({ users }) {
 }
 @endboostsnippet
 
-## Navigation
-
 ## Client-Side Navigation
 
 ### Basic Link Component

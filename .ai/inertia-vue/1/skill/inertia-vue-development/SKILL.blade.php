@@ -162,7 +162,7 @@ Server-side patterns (Inertia::render, props, middleware) are covered in inertia
 ## Common Pitfalls
 
 - Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
-- Forgetting that Vue components must have a single root element
+- Using multiple root elements in Vue components (while Vue 3 supports this, a single root is recommended for Inertia v1 compatibility)
 - Trying to use Inertia v2 features (deferred props, `<Form>` component, etc.) in v1 projects
 - Using `<form>` without preventing default submission (use `@submit.prevent`)
 - Not handling loading states during form submission

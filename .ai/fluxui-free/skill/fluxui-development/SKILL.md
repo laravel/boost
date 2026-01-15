@@ -30,7 +30,7 @@ You should use Flux UI components when available. Fallback to standard Blade com
 
 ### Documentation
 
-use the `search-docs` tool to get the exact documentation and code snippets available for this project.
+Use the `search-docs` tool to get the exact documentation and code snippets available for this project.
 
 ## Available Components (Free Edition)
 
