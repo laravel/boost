@@ -77,12 +77,10 @@ class SkillComposer
             ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package)
             );
 
-        if (! isset($this->config->aiGuidelines)) {
-            return $skills;
-        }
+        $selectedPackages = $this->config->aiGuidelines ?? [];
 
         return $skills->filter(
-            fn (Skill $skill): bool => in_array($skill->package, $this->config->aiGuidelines, true)
+            fn (Skill $skill): bool => in_array($skill->package, $selectedPackages, true)
         );
     }
 

@@ -283,7 +283,7 @@ test('user package skills only discovered for installed packages', function (): 
     expect($skills->has('livewire-development'))->toBeFalse();
 });
 
-test('it excludes all third-party skills when aiGuidelines is empty array', function (): void {
+test('it excludes all third-party skills when aiGuidelines is an empty array', function (): void {
     $originalRequires = getComposerRequires();
     $vendorPath = createThirdPartyPackageWithSkill('test-vendor/test-package', 'test-third-party-skill', 'Test third-party skill');
 
@@ -305,9 +305,9 @@ test('it excludes all third-party skills when aiGuidelines is empty array', func
     expect($skills->has('test-third-party-skill'))->toBeFalse();
 });
 
-test('includes all third-party skills when aiGuidelines is not set', function (): void {
+test('it excludes all third-party skills when aiGuidelines is not set', function (): void {
     $originalRequires = getComposerRequires();
-    $vendorPath = createThirdPartyPackageWithSkill('test-vendor-2/test-package-2', 'test-third-party-skill-2', 'Test third-party skill for backward compatibility');
+    $vendorPath = createThirdPartyPackageWithSkill('test-vendor-2/test-package-2', 'test-third-party-skill-2', 'Test third-party skill');
 
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -323,10 +323,10 @@ test('includes all third-party skills when aiGuidelines is not set', function ()
     cleanupThirdPartyPackage($vendorPath);
     restoreComposerJson($originalRequires);
 
-    expect($skills->has('test-third-party-skill-2'))->toBeTrue();
+    expect($skills->has('test-third-party-skill-2'))->toBeFalse();
 });
 
-test('includes only third-party skills from selected packages', function (): void {
+test('it includes only third-party skills from selected packages', function (): void {
     $originalRequires = getComposerRequires();
     $vendorPath1 = createThirdPartyPackageWithSkill('selected-vendor/selected-package', 'selected-third-party-skill', 'This skill should be included');
     $vendorPath2 = createThirdPartyPackageWithSkill('unselected-vendor/unselected-package', 'unselected-third-party-skill', 'This skill should be excluded');
