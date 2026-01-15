@@ -12,6 +12,7 @@ description: >-
 
 ## When to Apply
 
+Activate this skill when:
 - Creating or modifying React page components for Inertia
 - Working with forms in React (using `router.post` or `useForm` if available)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -19,10 +20,11 @@ description: >-
 
 ## Documentation
 
-Always use the `search-docs` tool to get the latest documentation and code examples for Inertia.
+Use `search-docs` for detailed Inertia v1 React patterns and documentation.
 
+## Basic Usage
 
-## Core Pattern
+### Page Components Location
 
 React page components should be placed in the `resources/js/Pages` directory.
 
@@ -40,6 +42,8 @@ export default function UsersIndex({ users }) {
     )
 }
 @endboostsnippet
+
+### Client-Side Navigation
 
 Use `<Link>` for client-side navigation (not `<a>` tags):
 

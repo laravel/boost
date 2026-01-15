@@ -20,26 +20,31 @@ Activate this skill when:
 - Working with browser testing or smoke testing
 - Writing architecture tests or visual regression tests
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Pest 4 patterns and documentation.
+
+## Basic Usage
 
 ### Creating Tests
 
 All tests must be written using Pest. Use `{{ $assist->artisanCommand('make:test --pest {name}') }}`.
 
 ### Test Organization
+
 - Unit/Feature tests: `tests/Feature` and `tests/Unit` directories.
 - Browser tests: `tests/Browser/` directory.
 - Do NOT remove tests without approval - these are core application code.
 
 ### Basic Test Structure
 
-<code-snippet name="Basic Pest Test Example" lang="php">
+@boostsnippet("Basic Pest Test Example", "php")
 it('is true', function () {
     expect(true)->toBeTrue();
 });
-</code-snippet>
+@endboostsnippet
 
-## Running Tests
+### Running Tests
 
 - Run minimal tests with filter before finalizing: `{{ $assist->artisanCommand('test --compact --filter=testName') }}`.
 - Run all tests: `{{ $assist->artisanCommand('test --compact') }}`.
@@ -49,11 +54,11 @@ it('is true', function () {
 
 Use specific assertions (`assertSuccessful()`, `assertNotFound()`) instead of `assertStatus()`:
 
-<code-snippet name="Pest Response Assertion" lang="php">
+@boostsnippet("Pest Response Assertion", "php")
 it('returns all', function () {
     $this->postJson('/api/docs', [])->assertSuccessful();
 });
-</code-snippet>
+@endboostsnippet
 
 | Use | Instead of |
 |-----|------------|
@@ -65,19 +70,18 @@ it('returns all', function () {
 
 Import mock function before use: `use function Pest\Laravel\mock;`
 
-
 ## Datasets
 
 Use datasets for repetitive tests (validation rules, etc.):
 
-<code-snippet name="Pest Dataset Example" lang="php">
+@boostsnippet("Pest Dataset Example", "php")
 it('has emails', function (string $email) {
     expect($email)->not->toBeEmpty();
 })->with([
     'james' => 'james@laravel.com',
     'taylor' => 'taylor@laravel.com',
 ]);
-</code-snippet>
+@endboostsnippet
 
 ## Pest 4 Features
 
@@ -101,8 +105,7 @@ Browser tests run in real browsers for full integration testing:
 - Switch color schemes (light/dark mode) when appropriate.
 - Take screenshots or pause tests for debugging.
 
-@verbatim
-<code-snippet name="Pest Browser Test Example" lang="php">
+@boostsnippet("Pest Browser Test Example", "php")
 it('may reset the password', function () {
     Notification::fake();
 
@@ -119,20 +122,18 @@ it('may reset the password', function () {
 
     Notification::assertSent(ResetPassword::class);
 });
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ### Smoke Testing
 
 Quickly validate multiple pages have no JavaScript errors:
 
-@verbatim
-<code-snippet name="Pest Smoke Testing Example" lang="php">
+
+@boostsnippet("Pest Smoke Testing Example", "php")
 $pages = visit(['/', '/about', '/contact']);
 
 $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ### Visual Regression Testing
 
@@ -146,16 +147,12 @@ Split tests across parallel processes for faster CI runs.
 
 Pest 4 includes architecture testing (from Pest 3):
 
-<code-snippet name="Architecture Test Example" lang="php">
+@boostsnippet("Architecture Test Example", "php")
 arch('controllers')
     ->expect('App\Http\Controllers')
     ->toExtendNothing()
     ->toHaveSuffix('Controller');
-</code-snippet>
-
-## Documentation
-
-Use `search-docs` for detailed Pest 4 patterns and documentation.
+@endboostsnippet
 
 ## Common Pitfalls
 

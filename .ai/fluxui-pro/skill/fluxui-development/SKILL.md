@@ -16,23 +16,21 @@ Activate this skill when:
 - Styling components with Flux UI patterns
 - Checking available Flux components
 
-## Core Pattern
+## Documentation
+
+Use `search-docs` for detailed Flux UI patterns and documentation.
+
+## Basic Usage
 
 This project is using the Pro version of Flux UI. It has full access to the free components and variants, as well as full access to the Pro components and variants.
 
 Flux UI is a component library for Livewire. It's built using Tailwind CSS and provides a set of components that are easy to use and customize.
 
-### Basic Usage
-
 You should use Flux UI components when available. Fallback to standard Blade components if Flux is unavailable.
 
-```blade
+<code-snippet name="Basic Button" lang="blade">
 <flux:button variant="primary">Click me</flux:button>
-```
-
-### Documentation
-
-If available, use the `search-docs` tool to get the exact documentation and code snippets available for this project.
+</code-snippet>
 
 ## Available Components (Pro Edition)
 
@@ -42,17 +40,17 @@ Full list: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, c
 
 ### Form Fields
 
-```blade
+<code-snippet name="Form Field" lang="blade">
 <flux:field>
     <flux:label>Email</flux:label>
     <flux:input type="email" wire:model="email" />
     <flux:error name="email" />
 </flux:field>
-```
+</code-snippet>
 
 ### Tables
 
-```blade
+<code-snippet name="Table" lang="blade">
 <flux:table>
     <flux:table.head>
         <flux:table.row>
@@ -60,7 +58,7 @@ Full list: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, c
         </flux:table.row>
     </flux:table.head>
 </flux:table>
-```
+</code-snippet>
 
 ## Verification
 

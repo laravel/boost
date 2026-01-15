@@ -13,11 +13,16 @@ description: >-
 
 ## When to Apply
 
+Activate this skill when:
 - Creating Volt single-file components
 - Converting traditional Livewire components to Volt
 - Testing Volt components
 
-## Core Pattern
+## Documentation
+
+Use `search-docs` for detailed Volt patterns and documentation.
+
+## Basic Usage
 
 Create components with `{{ $assist->artisanCommand('make:volt [name] [--test] [--pest]') }}`.
 
@@ -26,7 +31,7 @@ Important: Check existing Volt components to determine if they use functional or
 ## Functional Components
 
 @boostsnippet("Volt Functional Component", "php")
-@volt
+@@volt
 <?php
 use function Livewire\Volt\{state, computed};
 
@@ -37,10 +42,10 @@ $double = computed(fn () => $this->count * 2);
 ?>
 
 <div>
-    <h1>Count: {{ $count }} (Double: {{ $this->double }})</h1>
+    <h1>Count: @{{ $count }} (Double: @{{ $this->double }})</h1>
     <button wire:click="increment">+</button>
 </div>
-@endvolt
+@@endvolt
 @endboostsnippet
 
 ## Class-Based Components
@@ -58,7 +63,7 @@ new class extends Component {
 } ?>
 
 <div>
-    <h1>{{ $count }}</h1>
+    <h1>@{{ $count }}</h1>
     <button wire:click="increment">+</button>
 </div>
 @endboostsnippet
@@ -82,7 +87,6 @@ test('counter increments', function () {
 
 1. Check existing components for functional vs class-based style
 2. Test component with `Volt::test()`
-3. Use `search-docs` with "volt" for more patterns
 
 ## Common Pitfalls
 

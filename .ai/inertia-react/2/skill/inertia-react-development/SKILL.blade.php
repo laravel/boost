@@ -13,6 +13,7 @@ description: >-
 
 ## When to Apply
 
+Activate this skill when:
 - Creating or modifying React page components for Inertia
 - Working with forms in React (using `<Form>` or `useForm`)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -20,9 +21,10 @@ description: >-
 - Building React-specific features with the Inertia protocol
 
 ## Documentation
-Always use the `search-docs` tool to get the latest documentation and code examples for Inertia.
 
-## Core Patterns
+Use `search-docs` for detailed Inertia v2 React patterns and documentation.
+
+## Basic Usage
 
 ### Page Components Location
 
@@ -345,7 +347,6 @@ export default function UsersList({ users }) {
     )
 }
 @endboostsnippet
-
 
 ## Common Pitfalls
 

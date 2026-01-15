@@ -21,7 +21,11 @@ Activate this skill when:
 - Adding Alpine.js interactivity to components
 - Working with wire: directives
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Livewire 3 patterns and documentation.
+
+## Basic Usage
 
 ### Creating Components
 
@@ -31,56 +35,56 @@ Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Art
 
 - State should live on the server, with the UI reflecting it.
 - All Livewire requests hit the Laravel backend; they're like regular HTTP requests. Always validate form data and run authorization checks in Livewire actions.
-- Use the `search-docs` tool to find exact version-specific documentation for how to write Livewire and Livewire tests.
 
 ## Livewire 3 Specifics
 
 ### Key Changes From Livewire 2
-- These things changed in Livewire 3, but may not have been updated in this application. Verify this application's setup to ensure you conform with application conventions.
-    - Use `wire:model.live` for real-time updates, `wire:model` is now deferred by default.
-    - Components now use the `App\Livewire` namespace (not `App\Http\Livewire`).
-    - Use `$this->dispatch()` to dispatch events (not `emit` or `dispatchBrowserEvent`).
-    - Use the `components.layouts.app` view as the typical layout path (not `layouts.app`).
+
+These things changed in Livewire 3, but may not have been updated in this application. Verify this application's setup to ensure you conform with application conventions.
+- Use `wire:model.live` for real-time updates, `wire:model` is now deferred by default.
+- Components now use the `App\Livewire` namespace (not `App\Http\Livewire`).
+- Use `$this->dispatch()` to dispatch events (not `emit` or `dispatchBrowserEvent`).
+- Use the `components.layouts.app` view as the typical layout path (not `layouts.app`).
 
 ### New Directives
-- `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target` are available for use. Use the documentation to find usage examples.
+
+- `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target` are available for use.
 
 ### Alpine Integration
+
 - Alpine is now included with Livewire; don't manually include Alpine.js.
 - Plugins included with Alpine: persist, intersect, collapse, and focus.
 
 ## Best Practices
 
 ### Component Structure
+
 - Livewire components require a single root element.
 - Use `wire:loading` and `wire:dirty` for delightful loading states.
 
 ### Using Keys in Loops
-Add `wire:key` in loops:
-@verbatim
-```blade
+@boostsnippet("Wire Key in Loops", "blade")
 @foreach ($items as $item)
     <div wire:key="item-{{ $item->id }}">
         {{ $item->name }}
     </div>
 @endforeach
-```
-@endverbatim
+@endboostsnippet
 
 ### Lifecycle Hooks
+
 Prefer lifecycle hooks like `mount()`, `updatedFoo()` for initialization and reactive side effects:
-@verbatim
-<code-snippet name="Lifecycle Hook Examples" lang="php">
+
+@boostsnippet("Lifecycle Hook Examples", "php")
 public function mount(User $user) { $this->user = $user; }
 public function updatedSearch() { $this->resetPage(); }
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ## JavaScript Hooks
 
-You can listen for `livewire:init` to hook into Livewire initialization, and `fail.status === 419` for the page expiring:
-@verbatim
-<code-snippet name="Livewire Init Hook Example" lang="js">
+You can listen for `livewire:init` to hook into Livewire initialization:
+
+@boostsnippet("Livewire Init Hook Example", "js")
 document.addEventListener('livewire:init', function () {
     Livewire.hook('request', ({ fail }) => {
         if (fail && fail.status === 419) {
@@ -92,28 +96,23 @@ document.addEventListener('livewire:init', function () {
         console.error(message);
     });
 });
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ## Testing
 
-@verbatim
-<code-snippet name="Example Livewire Component Test" lang="php">
+@boostsnippet("Example Livewire Component Test", "php")
 Livewire::test(Counter::class)
     ->assertSet('count', 0)
     ->call('increment')
     ->assertSet('count', 1)
     ->assertSee(1)
     ->assertStatus(200);
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
-@verbatim
-<code-snippet name="Testing Livewire Component Exists on Page" lang="php">
+@boostsnippet("Testing Livewire Component Exists on Page", "php")
 $this->get('/posts/create')
     ->assertSeeLivewire(CreatePost::class);
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ## Common Pitfalls
 

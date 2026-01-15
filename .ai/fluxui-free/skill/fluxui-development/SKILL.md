@@ -10,27 +10,26 @@ description: >-
 
 ## When to Apply
 
+Activate this skill when:
 - Creating UI components or pages
 - Working with forms, modals, or interactive elements
 - Checking available Flux components
 
-## Core Pattern
+## Documentation
+
+Use `search-docs` for detailed Flux UI patterns and documentation.
+
+## Basic Usage
 
 This project is using the free edition of Flux UI. It has full access to the free components and variants, but does not have access to the Pro components.
 
 Flux UI is a component library for Livewire. It's built using Tailwind CSS and provides a set of components that are easy to use and customize.
 
-### Basic Usage
-
 You should use Flux UI components when available. Fallback to standard Blade components if Flux is unavailable.
 
-```blade
+<code-snippet name="Basic Button" lang="blade">
 <flux:button variant="primary">Click me</flux:button>
-```
-
-### Documentation
-
-Use the `search-docs` tool to get the exact documentation and code snippets available for this project.
+</code-snippet>
 
 ## Available Components (Free Edition)
 
@@ -40,22 +39,22 @@ Available: avatar, badge, brand, breadcrumbs, button, callout, checkbox, dropdow
 
 ### Form Fields
 
-```blade
+<code-snippet name="Form Field" lang="blade">
 <flux:field>
     <flux:label>Email</flux:label>
     <flux:input type="email" wire:model="email" />
     <flux:error name="email" />
 </flux:field>
-```
+</code-snippet>
 
 ### Modals
 
-```blade
+<code-snippet name="Modal" lang="blade">
 <flux:modal wire:model="showModal">
     <flux:heading>Title</flux:heading>
     <p>Content</p>
 </flux:modal>
-```
+</code-snippet>
 
 ## Verification
 

@@ -6,42 +6,48 @@ description: >-
   routes/ai.php; or when the user mentions MCP, Model Context Protocol, AI tools, AI server,
   or building tools for AI assistants.
 ---
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 # MCP Development
 
 ## When to Apply
 
+Activate this skill when:
 - Creating MCP tools, resources, or prompts
 - Setting up MCP server routes
 - Debugging MCP connection issues
 
-## Core Pattern
+## Documentation
+
+Use `search-docs` for detailed Laravel MCP patterns and documentation.
+
+## Basic Usage
 
 Register MCP servers in `routes/ai.php`:
 
-```php
+@boostsnippet("Register MCP Server", "php")
 use Laravel\Mcp\Facades\Mcp;
 
 Mcp::web();
-```
-
-Use `search-docs` with "laravel mcp" for detailed documentation.
+@endboostsnippet
 
 ## Creating MCP Primitives
 
 Create MCP tools, resources, prompts, and servers using artisan commands:
 
-```bash
+@boostsnippet("MCP Artisan Commands", "bash")
 {{ $assist->artisanCommand('make:mcp-tool ToolName') }}        # Create a tool
 {{ $assist->artisanCommand('make:mcp-resource ResourceName') }} # Create a resource
 {{ $assist->artisanCommand('make:mcp-prompt PromptName') }}    # Create a prompt
 {{ $assist->artisanCommand('make:mcp-server ServerName') }}    # Create a server
-```
+@endboostsnippet
 
 After creating primitives, register them in your server's `$tools`, `$resources`, or `$prompts` properties.
 
 ## Tools
 
-```php
+@boostsnippet("MCP Tool Example", "php")
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Request;
 use Laravel\Mcp\Server\Response;
@@ -53,13 +59,12 @@ class MyTool extends Tool
         return new Response(['result' => 'success']);
     }
 }
-```
+@endboostsnippet
 
 ## Verification
 
 1. Check `routes/ai.php` for proper registration
 2. Test tool via MCP client
-3. Use `search-docs` with "mcp testing" for test patterns
 
 ## Common Pitfalls
 

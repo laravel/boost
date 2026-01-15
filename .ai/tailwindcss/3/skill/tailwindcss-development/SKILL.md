@@ -17,64 +17,69 @@ Activate this skill when:
 - Extracting repeated patterns into components
 - Debugging spacing or layout issues
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Tailwind CSS v3 patterns and documentation.
+
+## Basic Usage
 
 - Use Tailwind CSS classes to style HTML; check and use existing Tailwind conventions within the project before writing your own.
 - Offer to extract repeated patterns into components that match the project's conventions (i.e. Blade, JSX, Vue, etc.).
 - Think through class placement, order, priority, and defaults. Remove redundant classes, add classes to parent or child carefully to limit repetition, and group elements logically.
-- You can use the `search-docs` tool to get exact examples from the official documentation when needed.
 
-## Tailwind CSS v3 Specific
+## Tailwind CSS v3 Specifics
 
 - Always use Tailwind CSS v3; verify you're using only classes supported by this version.
 - Configuration is done in `tailwind.config.js` file.
 - Import using `@tailwind` directives:
 
-```css
+<code-snippet name="v3 Import Syntax" lang="css">
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-```
+</code-snippet>
 
 ## Spacing
 
 When listing items, use gap utilities for spacing; don't use margins.
 
-```html
+<code-snippet name="Gap Utilities" lang="html">
 <div class="flex gap-8">
     <div>Item 1</div>
     <div>Item 2</div>
 </div>
-```
+</code-snippet>
 
 ## Dark Mode
 
 If existing pages and components support dark mode, new pages and components must support dark mode in a similar way, typically using `dark:` variant:
 
-```html
+<code-snippet name="Dark Mode" lang="html">
 <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
     Content adapts to color scheme
 </div>
-```
+</code-snippet>
 
 ## Common Patterns
 
 ### Flexbox Layout
-```html
+
+<code-snippet name="Flexbox Layout" lang="html">
 <div class="flex items-center justify-between gap-4">
     <div>Left content</div>
     <div>Right content</div>
 </div>
-```
+</code-snippet>
 
 ### Grid Layout
-```html
+
+<code-snippet name="Grid Layout" lang="html">
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <div>Card 1</div>
     <div>Card 2</div>
     <div>Card 3</div>
 </div>
-```
+</code-snippet>
 
 ## Verification
 

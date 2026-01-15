@@ -20,42 +20,45 @@ Activate this skill when:
 - Working with datasets, mocking, or test organization
 - Writing architecture tests
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Pest 3 patterns and documentation.
+
+## Basic Usage
 
 ### Creating Tests
 
 All tests must be written using Pest. Use `{{ $assist->artisanCommand('make:test --pest {name}') }}`.
 
 ### Test Organization
+
 - Tests live in the `tests/Feature` and `tests/Unit` directories.
 - Do NOT remove tests without approval - these are core application code.
 - Test happy paths, failure paths, and edge cases.
 
 ### Basic Test Structure
 
-<code-snippet name="Basic Pest Test Example" lang="php">
+@boostsnippet("Basic Pest Test Example", "php")
 it('is true', function () {
     expect(true)->toBeTrue();
 });
-</code-snippet>
+@endboostsnippet
 
-## Running Tests
+### Running Tests
 
-```bash
-{{ $assist->artisanCommand('test --compact --filter=testName') }}  # Filtered
-{{ $assist->artisanCommand('test --compact') }}                    # All tests
-{{ $assist->artisanCommand('test --compact tests/Feature/ExampleTest.php') }}  # Single file
-```
+- Run minimal tests with filter before finalizing: `{{ $assist->artisanCommand('test --compact --filter=testName') }}`.
+- Run all tests: `{{ $assist->artisanCommand('test --compact') }}`.
+- Run file: `{{ $assist->artisanCommand('test --compact tests/Feature/ExampleTest.php') }}`.
 
 ## Assertions
 
 Use specific assertions (`assertSuccessful()`, `assertNotFound()`) instead of `assertStatus()`:
 
-<code-snippet name="Pest Response Assertion" lang="php">
+@boostsnippet("Pest Response Assertion", "php")
 it('returns all', function () {
     $this->postJson('/api/docs', [])->assertSuccessful();
 });
-</code-snippet>
+@endboostsnippet
 
 | Use | Instead of |
 |-----|------------|
@@ -71,14 +74,14 @@ Import mock function before use: `use function Pest\Laravel\mock;`
 
 Use datasets for repetitive tests (validation rules, etc.):
 
-<code-snippet name="Pest Dataset Example" lang="php">
+@boostsnippet("Pest Dataset Example", "php")
 it('has emails', function (string $email) {
     expect($email)->not->toBeEmpty();
 })->with([
     'james' => 'james@laravel.com',
     'taylor' => 'taylor@laravel.com',
 ]);
-</code-snippet>
+@endboostsnippet
 
 ## Pest 3 Features
 
@@ -86,7 +89,7 @@ it('has emails', function (string $email) {
 
 Pest 3 includes architecture testing to enforce code conventions:
 
-<code-snippet name="Architecture Test Example" lang="php">
+@boostsnippet("Architecture Test Example", "php")
 arch('controllers')
     ->expect('App\Http\Controllers')
     ->toExtendNothing()
@@ -99,15 +102,11 @@ arch('models')
 arch('no debugging')
     ->expect(['dd', 'dump', 'ray'])
     ->not->toBeUsed();
-</code-snippet>
+@endboostsnippet
 
 ### Type Coverage
 
 Pest 3 provides improved type coverage analysis. Run with `--type-coverage` flag.
-
-## Documentation
-
-Use `search-docs` for detailed Pest 3 patterns and documentation.
 
 ## Common Pitfalls
 

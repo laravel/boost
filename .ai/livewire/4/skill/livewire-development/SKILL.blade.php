@@ -13,12 +13,17 @@ description: >-
 
 ## When to Apply
 
+Activate this skill when:
 - Creating or modifying Livewire components
 - Using wire: directives (model, click, loading, sort, intersect)
 - Implementing islands or async actions
 - Writing Livewire component tests
 
-## Core Pattern
+## Documentation
+
+Use `search-docs` for detailed Livewire 4 patterns and documentation.
+
+## Basic Usage
 
 ### Creating Components
 
@@ -49,7 +54,8 @@ Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert b
 | Class-based | `--class` | Traditional v3 style class |
 | View-based | ⚡ prefix | Blade-only with functional state |
 
-Single-file component (default in v4):
+### Single-File Component Example
+
 @boostsnippet("Single-File Component Example", "php")
 <?php
 use Livewire\Component;
@@ -65,20 +71,21 @@ new class extends Component {
 ?>
 
 <div>
-    <button wire:click="increment">Count: {{ $count }}</button>
+    <button wire:click="increment">Count: @{{ $count }}</button>
 </div>
 @endboostsnippet
 
-## Key v4 Changes
+## Livewire 4 Specifics
 
 ### Key Changes From Livewire 3
-- These things changed in Livewire 4, but may not have been updated in this application. Verify this application's setup to ensure you conform with application conventions.
-    - Use `Route::livewire()` for full-page components; config keys renamed: `layout` → `component_layout`, `lazy_placeholder` → `component_placeholder`.
-    - `wire:model` now ignores child events by default (use `wire:model.deep` for old behavior); `wire:scroll` renamed to `wire:navigate:scroll`.
-    - Component tags must be properly closed; `wire:transition` now uses View Transitions API (modifiers removed).
-    - JavaScript: `$wire.$js('name', fn)` → `$wire.$js.name = fn`; `commit`/`request` hooks → `interceptMessage()`/`interceptRequest()`.
 
-## New Features
+These things changed in Livewire 4, but may not have been updated in this application. Verify this application's setup to ensure you conform with application conventions.
+- Use `Route::livewire()` for full-page components; config keys renamed: `layout` → `component_layout`, `lazy_placeholder` → `component_placeholder`.
+- `wire:model` now ignores child events by default (use `wire:model.deep` for old behavior); `wire:scroll` renamed to `wire:navigate:scroll`.
+- Component tags must be properly closed; `wire:transition` now uses View Transitions API (modifiers removed).
+- JavaScript: `$wire.$js('name', fn)` → `$wire.$js.name = fn`; `commit`/`request` hooks → `interceptMessage()`/`interceptRequest()`.
+
+### New Features
 
 - Component formats: single-file (SFC), multi-file (MFC), view-based components.
 - Islands (`@island`) for isolated updates; async actions (`wire:click.async`, `#[Async]`) for parallel execution.
@@ -91,11 +98,9 @@ new class extends Component {
 | Deferred | `defer` attribute | Load after page render |
 | Bundled | `lazy.bundle` | Load multiple together |
 
-Use `search-docs` with "livewire 4 islands" or "livewire async" for detailed examples.
+### New Directives
 
-## New Directives
-
-- `wire:sort`, `wire:intersect`, `wire:ref`, `.renderless`, `.preserve-scroll` are available for use. Use the documentation to find usage examples.
+- `wire:sort`, `wire:intersect`, `wire:ref`, `.renderless`, `.preserve-scroll` are available for use.
 - `data-loading` attribute automatically added to elements triggering network requests.
 
 | Directive | Purpose |
@@ -133,14 +138,11 @@ Livewire::test(Counter::class)
     ->assertSet('count', 1);
 @endboostsnippet
 
-Use `search-docs` with "livewire testing" for comprehensive testing patterns.
-
 ## Verification
 
 1. Browser console: Check for JS errors
 2. Network tab: Verify Livewire requests return 200
 3. Ensure `wire:key` on all `@foreach` loops
-4. Use `search-docs` with "livewire debugging" for troubleshooting
 
 ## Common Pitfalls
 

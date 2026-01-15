@@ -20,7 +20,11 @@ Activate this skill when:
 - Using v2 features: deferred props, prefetching, or polling
 - Building Svelte-specific features with the Inertia protocol
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Inertia v2 Svelte patterns and documentation.
+
+## Basic Usage
 
 ### Page Components Location
 
@@ -28,7 +32,7 @@ Svelte page components should be placed in the `resources/js/Pages` directory.
 
 ### Page Component Structure
 
-<code-snippet name="Basic Svelte Page Component" lang="svelte">
+@boostsnippet("Basic Svelte Page Component", "svelte")
 <script>
 export let users
 </script>
@@ -41,11 +45,7 @@ export let users
         {/each}
     </ul>
 </div>
-</code-snippet>
-
-### Documentation
-
-Use the `search-docs` tool for accurate guidance on all things Inertia.
+@endboostsnippet
 
 ## Client-Side Navigation
 
@@ -53,7 +53,7 @@ Use the `search-docs` tool for accurate guidance on all things Inertia.
 
 Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 
-<code-snippet name="Inertia Svelte Navigation" lang="svelte">
+@boostsnippet("Inertia Svelte Navigation", "svelte")
 <script>
 import { Link } from '@inertiajs/svelte'
 </script>
@@ -61,33 +61,33 @@ import { Link } from '@inertiajs/svelte'
 <Link href="/">Home</Link>
 <Link href="/users">Users</Link>
 <Link href={`/users/${user.id}`}>View User</Link>
-</code-snippet>
+@endboostsnippet
 
 ### Link with Method
 
-<code-snippet name="Link with POST Method" lang="svelte">
+@boostsnippet("Link with POST Method", "svelte")
 <script>
 import { Link } from '@inertiajs/svelte'
 </script>
 
 <Link href="/logout" method="post">Logout</Link>
-</code-snippet>
+@endboostsnippet
 
 ### Prefetching
 
 Prefetch pages to improve perceived performance:
 
-<code-snippet name="Prefetch on Hover" lang="svelte">
+@boostsnippet("Prefetch on Hover", "svelte")
 <script>
 import { Link } from '@inertiajs/svelte'
 </script>
 
 <Link href="/users" prefetch>Users</Link>
-</code-snippet>
+@endboostsnippet
 
 ### Programmatic Navigation
 
-<code-snippet name="Router Visit" lang="svelte">
+@boostsnippet("Router Visit", "svelte")
 <script>
 import { router } from '@inertiajs/svelte'
 
@@ -104,7 +104,7 @@ function createUser() {
     })
 }
 </script>
-</code-snippet>
+@endboostsnippet
 
 ## Form Handling
 
@@ -113,7 +113,7 @@ function createUser() {
 
 The recommended way to build forms is with the `<Form>` component:
 
-<code-snippet name="Form Component Example" lang="svelte">
+@boostsnippet("Form Component Example", "svelte")
 <script>
 import { Form } from '@inertiajs/svelte'
 </script>
@@ -137,7 +137,7 @@ import { Form } from '@inertiajs/svelte'
         <div>User created!</div>
     {/if}
 </Form>
-</code-snippet>
+@endboostsnippet
 
 @if($assist->inertia()->hasFormComponentResets())
 ### Form Component Reset Props
@@ -150,7 +150,7 @@ The `<Form>` component supports automatic resetting:
 
 Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
 
-<code-snippet name="Form with Reset Props" lang="svelte">
+@boostsnippet("Form with Reset Props", "svelte")
 <script>
 import { Form } from '@inertiajs/svelte'
 </script>
@@ -173,7 +173,7 @@ import { Form } from '@inertiajs/svelte'
         Submit
     </button>
 </Form>
-</code-snippet>
+@endboostsnippet
 @else
 Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
 @endif
@@ -190,7 +190,7 @@ For Inertia v2.0.x: Build forms using the `useForm` hook as the `<Form>` compone
 For more programmatic control or to follow existing conventions, use the `useForm` hook:
 @endif
 
-<code-snippet name="useForm Example" lang="svelte">
+@boostsnippet("useForm Example", "svelte")
 <script>
 import { useForm } from '@inertiajs/svelte'
 
@@ -227,7 +227,7 @@ function submit() {
         Create User
     </button>
 </form>
-</code-snippet>
+@endboostsnippet
 
 ## Inertia v2 Features
 
@@ -235,7 +235,7 @@ function submit() {
 
 Use deferred props to load data after initial page render:
 
-<code-snippet name="Deferred Props with Empty State" lang="svelte">
+@boostsnippet("Deferred Props with Empty State", "svelte")
 <script>
 export let users
 </script>
@@ -255,13 +255,13 @@ export let users
         </ul>
     {/if}
 </div>
-</code-snippet>
+@endboostsnippet
 
 ### Polling
 
 Automatically refresh data at intervals:
 
-<code-snippet name="Polling Example" lang="svelte">
+@boostsnippet("Polling Example", "svelte")
 <script>
 import { router } from '@inertiajs/svelte'
 import { onMount, onDestroy } from 'svelte'
@@ -285,7 +285,7 @@ onDestroy(() => {
     <h1>Dashboard</h1>
     <div>Active Users: {stats.activeUsers}</div>
 </div>
-</code-snippet>
+@endboostsnippet
 
 ## Server-Side Patterns
 

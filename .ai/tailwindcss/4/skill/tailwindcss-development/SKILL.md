@@ -17,14 +17,17 @@ Activate this skill when:
 - Extracting repeated patterns into components
 - Debugging spacing or layout issues
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Tailwind CSS v4 patterns and documentation.
+
+## Basic Usage
 
 - Use Tailwind CSS classes to style HTML; check and use existing Tailwind conventions within the project before writing your own.
 - Offer to extract repeated patterns into components that match the project's conventions (i.e. Blade, JSX, Vue, etc.).
 - Think through class placement, order, priority, and defaults. Remove redundant classes, add classes to parent or child carefully to limit repetition, and group elements logically.
-- You can use the `search-docs` tool to get exact examples from the official documentation when needed.
 
-## Tailwind CSS v4 Specific
+## Tailwind CSS v4 Specifics
 
 - Always use Tailwind CSS v4; do not use the deprecated utilities.
 - `corePlugins` is not supported in Tailwind v4.
@@ -33,22 +36,22 @@ Activate this skill when:
 
 In Tailwind v4, configuration is CSS-first using the `@theme` directive — no separate `tailwind.config.js` file is needed:
 
-```css
+<code-snippet name="CSS-First Config" lang="css">
 @theme {
   --color-brand: oklch(0.72 0.11 178);
 }
-```
+</code-snippet>
 
 ### Import Syntax
 
 In Tailwind v4, you import Tailwind using a regular CSS `@import` statement, not using the `@tailwind` directives used in v3:
 
-```diff
+<code-snippet name="v4 Import Syntax" lang="diff">
 - @tailwind base;
 - @tailwind components;
 - @tailwind utilities;
 + @import "tailwindcss";
-```
+</code-snippet>
 
 ### Replaced Utilities
 
@@ -72,41 +75,43 @@ Tailwind v4 removed deprecated utilities. Do not use the deprecated option; use 
 
 Use `gap` utilities instead of margins between siblings:
 
-```html
+<code-snippet name="Gap Utilities" lang="html">
 <div class="flex gap-8">
     <div>Item 1</div>
     <div>Item 2</div>
 </div>
-```
+</code-snippet>
 
 ## Dark Mode
 
 If existing pages and components support dark mode, new pages and components must support dark mode in a similar way, typically using `dark:` variant:
 
-```html
+<code-snippet name="Dark Mode" lang="html">
 <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
     Content adapts to color scheme
 </div>
-```
+</code-snippet>
 
 ## Common Patterns
 
 ### Flexbox Layout
-```html
+
+<code-snippet name="Flexbox Layout" lang="html">
 <div class="flex items-center justify-between gap-4">
     <div>Left content</div>
     <div>Right content</div>
 </div>
-```
+</code-snippet>
 
 ### Grid Layout
-```html
+
+<code-snippet name="Grid Layout" lang="html">
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <div>Card 1</div>
     <div>Card 2</div>
     <div>Card 3</div>
 </div>
-```
+</code-snippet>
 
 ## Common Pitfalls
 

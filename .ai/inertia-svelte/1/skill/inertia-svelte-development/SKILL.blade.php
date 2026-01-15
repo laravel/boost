@@ -18,7 +18,11 @@ Activate this skill when:
 - Implementing client-side navigation with `<Link>` or `router`
 - Building Svelte-specific features with the Inertia protocol
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Inertia v1 Svelte patterns and documentation.
+
+## Basic Usage
 
 ### Page Components Location
 
@@ -26,7 +30,7 @@ Svelte page components should be placed in the `resources/js/Pages` directory.
 
 ### Page Component Structure
 
-<code-snippet name="Basic Svelte Page Component" lang="svelte">
+@boostsnippet("Basic Svelte Page Component", "svelte")
 <script>
 export let users
 </script>
@@ -39,11 +43,7 @@ export let users
         {/each}
     </ul>
 </div>
-</code-snippet>
-
-### Documentation
-
-Use the `search-docs` tool for accurate guidance on all things Inertia.
+@endboostsnippet
 
 ## Client-Side Navigation
 
@@ -51,7 +51,7 @@ Use the `search-docs` tool for accurate guidance on all things Inertia.
 
 Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 
-<code-snippet name="Inertia Svelte Navigation" lang="svelte">
+@boostsnippet("Inertia Svelte Navigation", "svelte")
 <script>
 import { Link } from '@inertiajs/svelte'
 </script>
@@ -59,21 +59,21 @@ import { Link } from '@inertiajs/svelte'
 <Link href="/">Home</Link>
 <Link href="/users">Users</Link>
 <Link href={`/users/${user.id}`}>View User</Link>
-</code-snippet>
+@endboostsnippet
 
 ### Link with Method
 
-<code-snippet name="Link with POST Method" lang="svelte">
+@boostsnippet("Link with POST Method", "svelte")
 <script>
 import { Link } from '@inertiajs/svelte'
 </script>
 
 <Link href="/logout" method="post">Logout</Link>
-</code-snippet>
+@endboostsnippet
 
 ### Programmatic Navigation
 
-<code-snippet name="Router Visit" lang="svelte">
+@boostsnippet("Router Visit", "svelte")
 <script>
 import { router } from '@inertiajs/svelte'
 
@@ -90,13 +90,13 @@ function createUser() {
     })
 }
 </script>
-</code-snippet>
+@endboostsnippet
 
 ## Form Handling
 
 ### Using router.post
 
-<code-snippet name="Form with router.post" lang="svelte">
+@boostsnippet("Form with router.post", "svelte")
 <script>
 import { router } from '@inertiajs/svelte'
 
@@ -122,7 +122,7 @@ function handleSubmit() {
         Create User
     </button>
 </form>
-</code-snippet>
+@endboostsnippet
 
 ## Inertia v1 Limitations
 

@@ -18,7 +18,11 @@ Activate this skill when:
 - Implementing client-side navigation with `<Link>` or `router`
 - Building Vue-specific features with the Inertia protocol
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Inertia v1 Vue patterns and documentation.
+
+## Basic Usage
 
 ### Page Components Location
 
@@ -40,16 +44,12 @@ defineProps({
         <h1>Users</h1>
         <ul>
             <li v-for="user in users" :key="user.id">
-                {{ user.name }}
+                @{{ user.name }}
             </li>
         </ul>
     </div>
 </template>
 @endboostsnippet
-
-### Documentation
-
-Use the `search-docs` tool for accurate guidance on all things Inertia.
 
 ## Client-Side Navigation
 
@@ -141,7 +141,6 @@ function handleSubmit() {
     </form>
 </template>
 @endboostsnippet
-
 
 ## Inertia v1 Limitations
 

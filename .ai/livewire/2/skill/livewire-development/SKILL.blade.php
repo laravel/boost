@@ -21,7 +21,11 @@ Activate this skill when:
 - Adding Alpine.js interactivity to components
 - Working with wire: directives
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Livewire 2 patterns and documentation.
+
+## Basic Usage
 
 ### Creating Components
 
@@ -31,7 +35,6 @@ Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Art
 
 - State should live on the server, with the UI reflecting it.
 - All Livewire requests hit the Laravel backend; they're like regular HTTP requests. Always validate form data and run authorization checks in Livewire actions.
-- Use the `search-docs` tool to find exact version-specific documentation for how to write Livewire and Livewire tests.
 
 ## Livewire 2 Specifics
 
@@ -43,35 +46,34 @@ Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Art
 ## Best Practices
 
 ### Component Structure
+
 - Livewire components require a single root element.
 - Use `wire:loading` and `wire:dirty` for delightful loading states.
 
 ### Using Keys in Loops
-Add `wire:key` in loops:
-@verbatim
-```blade
+
+@boostsnippet("Wire Key in Loops", "blade")
 @foreach ($items as $item)
     <div wire:key="item-{{ $item->id }}">
         {{ $item->name }}
     </div>
 @endforeach
-```
-@endverbatim
+@endboostsnippet
 
 ### Lifecycle Hooks
+
 Prefer lifecycle hooks like `mount()`, `updatedFoo()` for initialization and reactive side effects:
-@verbatim
-<code-snippet name="Lifecycle Hook Examples" lang="php">
+
+@boostsnippet("Lifecycle Hook Examples", "php")
 public function mount(User $user) { $this->user = $user; }
 public function updatedSearch() { $this->resetPage(); }
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ## JavaScript Hooks
 
-You can listen for `livewire:load` to hook into Livewire initialization, and `Livewire.onPageExpired` for when the page expires:
-@verbatim
-<code-snippet name="Livewire Load Hook Example" lang="js">
+You can listen for `livewire:load` to hook into Livewire initialization:
+
+@boostsnippet("Livewire Load Hook Example", "js")
 document.addEventListener('livewire:load', function () {
     Livewire.onPageExpired(() => {
         alert('Your session expired');
@@ -79,28 +81,23 @@ document.addEventListener('livewire:load', function () {
 
     Livewire.onError(status => console.error(status));
 });
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
-## Testing Livewire Components
+## Testing
 
-@verbatim
-<code-snippet name="Example Livewire Component Test" lang="php">
+@boostsnippet("Example Livewire Component Test", "php")
 Livewire::test(Counter::class)
     ->assertSet('count', 0)
     ->call('increment')
     ->assertSet('count', 1)
     ->assertSee(1)
     ->assertStatus(200);
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
-@verbatim
-<code-snippet name="Testing Livewire Component Exists on Page" lang="php">
+@boostsnippet("Testing Livewire Component Exists on Page", "php")
 $this->get('/posts/create')
     ->assertSeeLivewire(CreatePost::class);
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ## Common Pitfalls
 

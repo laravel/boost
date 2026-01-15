@@ -10,25 +10,30 @@ description: >-
 
 ## When to Apply
 
+Activate this skill when:
 - Creating or checking feature flags
 - Managing feature rollouts
 - Implementing A/B testing
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Pennant patterns and documentation.
+
+## Basic Usage
 
 ### Defining Features
 
-```php
+<code-snippet name="Defining Features" lang="php">
 use Laravel\Pennant\Feature;
 
 Feature::define('new-dashboard', function (User $user) {
     return $user->isAdmin();
 });
-```
+</code-snippet>
 
 ### Checking Features
 
-```php
+<code-snippet name="Checking Features" lang="php">
 if (Feature::active('new-dashboard')) {
     // Feature is active
 }
@@ -37,30 +42,29 @@ if (Feature::active('new-dashboard')) {
 if (Feature::for($user)->active('new-dashboard')) {
     // Feature is active for this user
 }
-```
+</code-snippet>
 
 ### Blade Directive
 
-```blade
+<code-snippet name="Blade Directive" lang="blade">
 @feature('new-dashboard')
     <x-new-dashboard />
 @else
     <x-old-dashboard />
 @endfeature
-```
+</code-snippet>
 
 ### Activating/Deactivating
 
-```php
+<code-snippet name="Activating Features" lang="php">
 Feature::activate('new-dashboard');
 Feature::for($user)->activate('new-dashboard');
-```
+</code-snippet>
 
 ## Verification
 
 1. Check feature flag is defined
 2. Test with different scopes/users
-3. Use `search-docs` with "pennant" for more patterns
 
 ## Common Pitfalls
 

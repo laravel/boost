@@ -20,7 +20,11 @@ Activate this skill when:
 - Using v2 features: deferred props, prefetching, or polling
 - Building Vue-specific features with the Inertia protocol
 
-## Core Patterns
+## Documentation
+
+Use `search-docs` for detailed Inertia v2 Vue patterns and documentation.
+
+## Basic Usage
 
 ### Page Components Location
 
@@ -50,10 +54,6 @@ defineProps({
 </template>
 @endboostsnippet
 @endverbatim
-
-### Documentation
-
-Use the `search-docs` tool for accurate guidance on all things Inertia.
 
 ## Client-Side Navigation
 
@@ -92,7 +92,6 @@ import { Link } from '@inertiajs/vue3'
 ### Prefetching
 
 Prefetch pages to improve perceived performance:
-
 
 @boostsnippet("Prefetch on Hover", "vue")
 <script setup>
@@ -165,7 +164,6 @@ import { Form } from '@inertiajs/vue3'
 
 ### Form Component with All Props
 
-
 @boostsnippet("Form Component Full Example", "vue")
 <script setup>
 import { Form } from '@inertiajs/vue3'
@@ -192,14 +190,14 @@ import { Form } from '@inertiajs/vue3'
         }"
     >
         <input type="text" name="name" :value="defaults.name" />
-        <div v-if="errors.name">{{ errors.name }}</div>
+        <div v-if="errors.name">@{{ errors.name }}</div>
 
         <button type="submit" :disabled="processing">
-            {{ processing ? 'Saving...' : 'Save' }}
+            @{{ processing ? 'Saving...' : 'Save' }}
         </button>
 
         <progress v-if="progress" :value="progress.percentage" max="100">
-            {{ progress.percentage }}%
+            @{{ progress.percentage }}%
         </progress>
 
         <div v-if="wasSuccessful">Saved!</div>
@@ -278,13 +276,13 @@ function submit() {
 <template>
     <form @submit.prevent="submit">
         <input type="text" v-model="form.name" />
-        <div v-if="form.errors.name">{{ form.errors.name }}</div>
+        <div v-if="form.errors.name">@{{ form.errors.name }}</div>
 
         <input type="email" v-model="form.email" />
-        <div v-if="form.errors.email">{{ form.errors.email }}</div>
+        <div v-if="form.errors.email">@{{ form.errors.email }}</div>
 
         <input type="password" v-model="form.password" />
-        <div v-if="form.errors.password">{{ form.errors.password }}</div>
+        <div v-if="form.errors.password">@{{ form.errors.password }}</div>
 
         <button type="submit" :disabled="form.processing">
             Create User
@@ -298,7 +296,6 @@ function submit() {
 ### Deferred Props
 
 Use deferred props to load data after initial page render:
-
 
 @boostsnippet("Deferred Props with Empty State", "vue")
 <script setup>
@@ -316,7 +313,7 @@ defineProps({
         </div>
         <ul v-else>
             <li v-for="user in users" :key="user.id">
-                {{ user.name }}
+                @{{ user.name }}
             </li>
         </ul>
     </div>
@@ -352,7 +349,7 @@ onUnmounted(() => {
 <template>
     <div>
         <h1>Dashboard</h1>
-        <div>Active Users: {{ stats.activeUsers }}</div>
+        <div>Active Users: @{{ stats.activeUsers }}</div>
     </div>
 </template>
 @endboostsnippet
@@ -373,7 +370,7 @@ defineProps({
 <template>
     <div>
         <div v-for="user in users.data" :key="user.id">
-            {{ user.name }}
+            @{{ user.name }}
         </div>
 
         <WhenVisible
