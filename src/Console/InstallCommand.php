@@ -23,6 +23,7 @@ use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
+use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Prompts\Grid;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
@@ -157,7 +158,7 @@ class InstallCommand extends Command
     protected function collectInstallationPreferences(): void
     {
         $this->selectedBoostFeatures = $this->selectBoostFeatures();
-        $this->selectedAiGuidelines = $this->selectAiGuidelines();
+        $this->selectedAiGuidelines = $this->selectThirdPartyPackages();
         $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
         $this->selectedTargetAgents = $this->selectTargetAgents();
         $this->enforceTests = $this->determineTestEnforcement();
@@ -294,27 +295,23 @@ class InstallCommand extends Command
     /**
      * @return Collection<int, string>
      */
-    protected function selectAiGuidelines(): Collection
+    protected function selectThirdPartyPackages(): Collection
     {
         if (! $this->installGuidelines) {
             return collect();
         }
 
-        $options = app(GuidelineComposer::class)->guidelines()
-            ->reject(fn (array $guideline): bool => $guideline['third_party'] === false);
+        $packages = ThirdPartyPackage::discover(app(GuidelineComposer::class));
 
-        if ($options->isEmpty()) {
+        if ($packages->isEmpty()) {
             return collect();
         }
 
         return collect(multiselect(
-            label: 'Which third-party AI guidelines do you want to install?',
-            // @phpstan-ignore-next-line
-            options: $options->mapWithKeys(function (array $guideline, string $name): array {
-                $humanName = str_replace('/core', '', $name);
-
-                return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
-            }),
+            label: 'Which third-party AI guidelines/skills do you want to install?',
+            options: $packages->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [
+                $name => $pkg->displayLabel(),
+            ])->toArray(),
             default: collect($this->config->getGuidelines()),
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
