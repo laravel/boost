@@ -66,8 +66,7 @@ test('the display label includes all relevant information', function (): void {
 
     expect($label)->toContain('vendor/package')
         ->and($label)->toContain('(guidelines, skills)')
-        ->and($label)->toContain('(~100 tokens)')
-        ->and($label)->toContain('Test description');
+        ->and($label)->toContain('(~100 tokens)');
 });
 
 test('the display label excludes tokens for skill-only packages', function (): void {
@@ -82,6 +81,5 @@ test('the display label excludes tokens for skill-only packages', function (): v
 
     expect($label)->toContain('vendor/package')
         ->and($label)->toContain('(skills)')
-        ->and($label)->not->toContain('tokens')
-        ->and($label)->toContain('Test description');
+        ->and($label)->not->toContain('tokens');
 });

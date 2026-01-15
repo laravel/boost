@@ -15,7 +15,6 @@ it('creates a package with all properties', function (): void {
     expect($package->name)->toBe('vendor/package-name')
         ->and($package->hasGuidelines)->toBeTrue()
         ->and($package->hasSkills)->toBeTrue()
-        ->and($package->description)->toBe('Package description')
         ->and($package->tokens)->toBe(150);
 });
 
@@ -67,7 +66,7 @@ it('displays label with guidelines and skills including tokens', function (): vo
         tokens: 150,
     );
 
-    expect($package->displayLabel())->toBe('vendor/package (guidelines, skills) (~150 tokens) Auth tools');
+    expect($package->displayLabel())->toBe('vendor/package (guidelines, skills) (~150 tokens)');
 });
 
 it('displays label with guidelines only including tokens', function (): void {
@@ -78,7 +77,7 @@ it('displays label with guidelines only including tokens', function (): void {
         tokens: 200,
     );
 
-    expect($package->displayLabel())->toBe('vendor/package (guideline) (~200 tokens) API helpers');
+    expect($package->displayLabel())->toBe('vendor/package (guideline) (~200 tokens)');
 });
 
 it('displays label with skills only without tokens', function (): void {
@@ -89,10 +88,10 @@ it('displays label with skills only without tokens', function (): void {
         tokens: 0,
     );
 
-    expect($package->displayLabel())->toBe('vendor/package (skills) Code generation');
+    expect($package->displayLabel())->toBe('vendor/package (skills)');
 });
 
-it('it displays a label without description when empty', function (): void {
+it('displays label with tokens when tokens are set', function (): void {
     $package = new ThirdPartyPackage(
         name: 'vendor/package',
         hasGuidelines: true,
@@ -111,7 +110,7 @@ it('displays label without tokens when zero', function (): void {
         tokens: 0,
     );
 
-    expect($package->displayLabel())->toBe('vendor/package (guideline) Some description');
+    expect($package->displayLabel())->toBe('vendor/package (guideline)');
 });
 
 it('defaults optional properties correctly', function (): void {
@@ -121,6 +120,5 @@ it('defaults optional properties correctly', function (): void {
         hasSkills: false,
     );
 
-    expect($package->description)->toBe('')
-        ->and($package->tokens)->toBe(0);
+    expect($package->tokens)->toBe(0);
 });

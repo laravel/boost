@@ -74,5 +74,3 @@ Prefetch pages on hover:
 ```jsx
 <Link href="/users" prefetch>Users</Link>
 ```
-
-Use `search-docs` with "inertia prefetching" for cache strategies.

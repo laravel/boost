@@ -16,7 +16,6 @@ use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
-use Laravel\Boost\Prompts\Grid;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\Roster;
 
@@ -75,8 +74,6 @@ class BoostServiceProvider extends ServiceProvider
         if (! $this->shouldRun()) {
             return;
         }
-
-        Grid::register();
 
         Mcp::local('laravel-boost', Boost::class);
 

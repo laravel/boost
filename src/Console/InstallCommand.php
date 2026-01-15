@@ -24,13 +24,13 @@ use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\ThirdPartyPackage;
-use Laravel\Boost\Prompts\Grid;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
 use Symfony\Component\Process\Process;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\grid;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
@@ -215,12 +215,9 @@ class InstallCommand extends Command
 
     protected function displayGrid(Collection $items, callable $mapper): void
     {
-        (new Grid($items
-            ->map($mapper)
-            ->sort()
-            ->values()
-            ->toArray(), $this->terminal->cols()))
-            ->display();
+        grid(
+            $items->map($mapper)->sort()->values()->toArray()
+        );
     }
 
     /**
