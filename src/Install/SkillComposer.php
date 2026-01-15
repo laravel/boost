@@ -165,7 +165,13 @@ class SkillComposer
             return null;
         }
 
-        $frontmatter = $this->parseSkillFrontmatter(file_get_contents($skillFile));
+        $content = file_get_contents($skillFile);
+
+        if ($content === false) {
+            return null;
+        }
+
+        $frontmatter = $this->parseSkillFrontmatter($content);
 
         if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
             return null;

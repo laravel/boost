@@ -463,23 +463,14 @@ class InstallCommand extends Command
 
         $composedAiGuidelines = $composer->compose();
 
-        $failed = $this->processWithProgress(
+        $this->processWithProgress(
             $this->selectedTargetAgents,
             fn (Agent $agent): string => $agent->agentName(),
             fn (Agent $agent): int => (new GuidelineWriter($agent))->write($composedAiGuidelines),
+            'guidelines',
         );
 
         $this->newLine();
-
-        if ($failed !== []) {
-            $this->error(sprintf('✗ Failed to install guidelines to %d agent%s:',
-                count($failed),
-                count($failed) === 1 ? '' : 's'
-            ));
-            foreach ($failed as $agentName => $error) {
-                $this->line("  - {$agentName}: {$error}");
-            }
-        }
 
         $skillComposer = app(SkillComposer::class)->config($guidelineConfig);
         $this->installSkills($skillComposer);
@@ -532,6 +523,7 @@ class InstallCommand extends Command
             $skillsAgents,
             fn (SupportSkills&Agent $agent): string => $agent->agentName(),
             fn (SupportSkills&Agent $agent): array => (new SkillWriter($agent))->writeAll($skills),
+            'skills',
         );
 
         $this->newLine();
@@ -665,21 +657,21 @@ class InstallCommand extends Command
      * @template T
      *
      * @param  Collection<int, T>  $items
-     * @param  callable(T): string  $nameGetter
+     * @param  callable(T): string  $nameResolver
      * @param  callable(T): mixed  $processor
-     * @return array<string, string>
      */
     protected function processWithProgress(
         Collection $items,
-        callable $nameGetter,
+        callable $nameResolver,
         callable $processor,
-    ): array {
+        string $entityName,
+    ): void {
         $failed = [];
 
-        $longestName = max(1, ...$items->map(fn ($item) => Str::length($nameGetter($item)))->toArray());
+        $longestName = max(1, ...$items->map(fn ($item) => Str::length($nameResolver($item)))->toArray());
 
         foreach ($items as $item) {
-            $name = $nameGetter($item);
+            $name = $nameResolver($item);
             $displayName = str_pad($name, $longestName);
             $this->output->write("  {$displayName}... ");
 
@@ -692,7 +684,17 @@ class InstallCommand extends Command
             }
         }
 
-        return $failed;
+        if ($failed !== []) {
+            $this->newLine();
+            $this->error(sprintf('✗ Failed to install %s to %d agent%s:',
+                $entityName,
+                count($failed),
+                count($failed) === 1 ? '' : 's'
+            ));
+            foreach ($failed as $agentName => $error) {
+                $this->line("  - {$agentName}: {$error}");
+            }
+        }
     }
 
     /**

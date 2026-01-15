@@ -41,7 +41,7 @@ function createTestSkillDir(): array
     }];
 }
 
-test('it writes skill to target directory', function (): void {
+it('writes skill to target directory', function (): void {
     [$sourceDir, $cleanup] = createTestSkillDir();
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
@@ -68,7 +68,7 @@ test('it writes skill to target directory', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
-test('it returns UPDATED when skill directory already exists', function (): void {
+it('returns UPDATED when skill directory already exists', function (): void {
     [$sourceDir, $cleanup] = createTestSkillDir();
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
@@ -98,7 +98,7 @@ test('it returns UPDATED when skill directory already exists', function (): void
     cleanupSkillDirectory($absoluteTarget);
 });
 
-test('it returns FAILED when source directory does not exist', function (): void {
+it('returns FAILED when source directory does not exist', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
     $agent = Mockery::mock(SupportSkills::class);
@@ -117,7 +117,7 @@ test('it returns FAILED when source directory does not exist', function (): void
     expect($result)->toBe(SkillWriter::FAILED);
 });
 
-test('it writes all skills', function (): void {
+it('writes all skills', function (): void {
     [$sourceDir1, $cleanup1] = createTestSkillDir();
     [$sourceDir2, $cleanup2] = createTestSkillDir();
     $relativeTarget = '.boost-test-skills-'.uniqid();
@@ -143,7 +143,7 @@ test('it writes all skills', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
-test('it copies nested directory structure', function (): void {
+it('copies nested directory structure', function (): void {
     $sourceDir = sys_get_temp_dir().'/boost_skill_nested_'.uniqid();
     mkdir($sourceDir.'/references/deep/nested', 0755, true);
     file_put_contents($sourceDir.'/SKILL.md', '# Skill');
@@ -175,7 +175,7 @@ test('it copies nested directory structure', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
-test('it throws an exception for path traversal in skill name', function (string $maliciousName): void {
+it('throws an exception for path traversal in skill name', function (string $maliciousName): void {
     [$sourceDir, $cleanup] = createTestSkillDir();
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
@@ -203,11 +203,11 @@ test('it throws an exception for path traversal in skill name', function (string
     '../parent',
 ]);
 
-test('it throws exception when target directory cannot be created', function (): void {
+it('throws an exception when the target directory cannot be created', function (): void {
     expect(true)->toBeTrue();
 })->todo();
 
-test('it renders blade templates to markdown', function (): void {
+it('renders blade templates to markdown', function (): void {
     $sourceDir = sys_get_temp_dir().'/boost_skill_blade_'.uniqid();
     mkdir($sourceDir.'/references', 0755, true);
     file_put_contents($sourceDir.'/SKILL.blade.php', "---\nname: blade-skill\ndescription: Blade skill\n---\n# Blade Skill\n\nThe answer is {{ 1 + 1 }}.");
