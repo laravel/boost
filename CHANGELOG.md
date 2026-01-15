@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.9...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.10...main)
+
+## [v1.8.10](https://github.com/laravel/boost/compare/v1.8.9...v1.8.10) - 2026-01-14
+
+### What's Changed
+
+* Add Laravel Code Simplifier Prompt by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/416
+* Update README installation instructions by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/417
+* Add Livewire v4 upgrade prompt by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/424
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.9...v1.8.10
 
 ## [v1.8.9](https://github.com/laravel/boost/compare/v1.8.8...v1.8.9) - 2026-01-07
 
