@@ -44,7 +44,7 @@ class Composer
 
     public static function packagesDirectoriesWithBoostSkills(): array
     {
-        return self::packagesDirectoriesWithBoostSubpath();
+        return self::packagesDirectoriesWithBoostSubpath('skills');
     }
 
     /**

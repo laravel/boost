@@ -138,3 +138,132 @@ test('skills only includes skills for installed packages', function (): void {
     // Should NOT contain Livewire skill since Livewire is not installed
     expect($skillNames)->not->toContain('livewire-development');
 });
+
+test('user package-specific skills override built-in skills', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $userSkillPath = base_path('.ai/livewire/skill/livewire-development');
+
+    if (! is_dir($userSkillPath)) {
+        @mkdir($userSkillPath, 0755, true);
+        file_put_contents(
+            $userSkillPath.'/SKILL.md',
+            "---\nname: livewire-development\ndescription: User package override\n---\n# Override"
+        );
+
+        $skills = $this->skillComposer->skills();
+        $skill = $skills->get('livewire-development');
+
+        expect($skill->custom)->toBeTrue()
+            ->and($skill->description)->toContain('User package override');
+
+        unlink($userSkillPath.'/SKILL.md');
+        rmdir($userSkillPath);
+        @rmdir(base_path('.ai/livewire/skill'));
+        @rmdir(base_path('.ai/livewire'));
+    }
+})->skip(fn (): bool => ! is_writable(base_path('.ai') ?: base_path()));
+
+test('user version-specific skills override package root skills', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $rootSkillPath = base_path('.ai/livewire/skill/livewire-development');
+    $versionSkillPath = base_path('.ai/livewire/3/skill/livewire-development');
+
+    @mkdir($rootSkillPath, 0755, true);
+    @mkdir($versionSkillPath, 0755, true);
+
+    file_put_contents(
+        $rootSkillPath.'/SKILL.md',
+        "---\nname: livewire-development\ndescription: Root override\n---\n# Root"
+    );
+    file_put_contents(
+        $versionSkillPath.'/SKILL.md',
+        "---\nname: livewire-development\ndescription: Version 3 override\n---\n# V3"
+    );
+
+    $skills = $this->skillComposer->skills();
+    $skill = $skills->get('livewire-development');
+
+    expect($skill->custom)->toBeTrue()
+        ->and($skill->description)->toContain('Version 3 override');
+
+    unlink($versionSkillPath.'/SKILL.md');
+    rmdir($versionSkillPath);
+    @rmdir(base_path('.ai/livewire/3/skill'));
+    @rmdir(base_path('.ai/livewire/3'));
+    unlink($rootSkillPath.'/SKILL.md');
+    rmdir($rootSkillPath);
+    @rmdir(base_path('.ai/livewire/skill'));
+    @rmdir(base_path('.ai/livewire'));
+})->skip(fn (): bool => ! is_writable(base_path('.ai') ?: base_path()));
+
+test('explicit user skills take highest priority', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $explicitPath = base_path('.ai/skills/livewire-development');
+    $packagePath = base_path('.ai/livewire/3/skill/livewire-development');
+
+    @mkdir($explicitPath, 0755, true);
+    @mkdir($packagePath, 0755, true);
+
+    file_put_contents(
+        $explicitPath.'/SKILL.md',
+        "---\nname: livewire-development\ndescription: Explicit override\n---\n# Explicit"
+    );
+    file_put_contents(
+        $packagePath.'/SKILL.md',
+        "---\nname: livewire-development\ndescription: Package override\n---\n# Package"
+    );
+
+    $skills = $this->skillComposer->skills();
+    $skill = $skills->get('livewire-development');
+
+    expect($skill->custom)->toBeTrue()
+        ->and($skill->description)->toContain('Explicit override');
+
+    unlink($explicitPath.'/SKILL.md');
+    rmdir($explicitPath);
+    unlink($packagePath.'/SKILL.md');
+    rmdir($packagePath);
+    @rmdir(base_path('.ai/livewire/3/skill'));
+    @rmdir(base_path('.ai/livewire/3'));
+    @rmdir(base_path('.ai/livewire'));
+})->skip(fn (): bool => ! is_writable(base_path('.ai') ?: base_path()));
+
+test('user package skills only discovered for installed packages', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $userSkillPath = base_path('.ai/livewire/skill/livewire-development');
+
+    @mkdir($userSkillPath, 0755, true);
+    file_put_contents(
+        $userSkillPath.'/SKILL.md',
+        "---\nname: livewire-development\ndescription: Should not be discovered\n---\n# No"
+    );
+
+    $skills = $this->skillComposer->skills();
+
+    expect($skills->has('livewire-development'))->toBeFalse();
+
+    unlink($userSkillPath.'/SKILL.md');
+    rmdir($userSkillPath);
+    @rmdir(base_path('.ai/livewire/skill'));
+    @rmdir(base_path('.ai/livewire'));
+})->skip(fn (): bool => ! is_writable(base_path('.ai') ?: base_path()));

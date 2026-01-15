@@ -20,6 +20,7 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\Sail;
+use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Prompts\Grid;
@@ -523,7 +524,7 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(' Installing %d skills for skills-capable agents', $skills->count()));
-        $this->displayGrid($skills, fn ($skill): string => $skill->name);
+        $this->displayGrid($skills, fn (Skill $skill): string => $skill->displayName());
         $this->newLine();
 
         /** @var Collection<int, SupportSkills&Agent> $skillsAgents */
