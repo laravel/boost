@@ -8,7 +8,7 @@ description: >-
 ---
 # Tailwind CSS Development
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Adding styles to components or pages
@@ -18,8 +18,6 @@ Activate this skill when:
 - Debugging spacing or layout issues
 
 ## Core Patterns
-
-### General Guidelines
 
 - Use Tailwind CSS classes to style HTML; check and use existing Tailwind conventions within the project before writing your own.
 - Offer to extract repeated patterns into components that match the project's conventions (i.e. Blade, JSX, Vue, etc.).
@@ -44,9 +42,8 @@ When listing items, use gap utilities for spacing; don't use margins.
 
 ```html
 <div class="flex gap-8">
-    <div>Superior</div>
-    <div>Michigan</div>
-    <div>Erie</div>
+    <div>Item 1</div>
+    <div>Item 2</div>
 </div>
 ```
 
@@ -79,12 +76,11 @@ If existing pages and components support dark mode, new pages and components mus
 </div>
 ```
 
-### Responsive Design
-```html
-<div class="w-full md:w-1/2 lg:w-1/3">
-    Responsive width
-</div>
-```
+## Verification
+
+1. Check browser for visual rendering
+2. Test responsive breakpoints
+3. Verify dark mode if project uses it
 
 ## Common Pitfalls
 

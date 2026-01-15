@@ -10,7 +10,7 @@ description: >-
 @endphp
 # Inertia Vue Development
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating or modifying Vue page components for Inertia
@@ -28,7 +28,6 @@ Vue page components should be placed in the `resources/js/Pages` directory.
 
 **Important**: Vue components must have a single root element.
 
-@verbatim
 @boostsnippet("Basic Vue Page Component", "vue")
 <script setup>
 defineProps({
@@ -47,7 +46,6 @@ defineProps({
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### Documentation
 
@@ -59,7 +57,6 @@ Use the `search-docs` tool for accurate guidance on all things Inertia.
 
 Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 
-@verbatim
 @boostsnippet("Inertia Vue Navigation", "vue")
 <script setup>
 import { Link } from '@inertiajs/vue3'
@@ -73,11 +70,9 @@ import { Link } from '@inertiajs/vue3'
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### Link with Method
 
-@verbatim
 @boostsnippet("Link with POST Method", "vue")
 <script setup>
 import { Link } from '@inertiajs/vue3'
@@ -89,11 +84,9 @@ import { Link } from '@inertiajs/vue3'
     </Link>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### Programmatic Navigation
 
-@verbatim
 @boostsnippet("Router Visit", "vue")
 <script setup>
 import { router } from '@inertiajs/vue3'
@@ -112,13 +105,11 @@ function createUser() {
 }
 </script>
 @endboostsnippet
-@endverbatim
 
 ## Form Handling
 
 ### Using router.post
 
-@verbatim
 @boostsnippet("Form with router.post", "vue")
 <script setup>
 import { router } from '@inertiajs/vue3'
@@ -150,7 +141,7 @@ function handleSubmit() {
     </form>
 </template>
 @endboostsnippet
-@endverbatim
+
 
 ## Inertia v1 Limitations
 

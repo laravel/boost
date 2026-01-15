@@ -11,36 +11,21 @@ description: >-
 @endphp
 # Volt Development
 
-## When to Use This Skill
+## When to Apply
 
-Activate this skill when:
-- Creating new Volt single-file components
+- Creating Volt single-file components
 - Converting traditional Livewire components to Volt
 - Testing Volt components
-- Working with functional or class-based Volt APIs
 
-## Core Patterns
+## Core Pattern
 
-### Overview
+Create components with `{{ $assist->artisanCommand('make:volt [name] [--test] [--pest]') }}`.
 
-This project uses Livewire Volt for interactivity within its pages. New pages requiring interactivity must also use Livewire Volt.
-
-Volt is a class-based and functional API for Livewire that supports single-file components, allowing a component's PHP logic and Blade templates to coexist in the same file.
-
-### Creating Components
-
-Make new Volt components using `{{ $assist->artisanCommand('make:volt [name] [--test] [--pest]') }}`.
-
-### Component Style
-
-Livewire Volt allows PHP logic and Blade templates in one file. Components use the @verbatim`@volt`@endverbatim directive.
-
-**Important:** You must check existing Volt components to determine if they're functional or class-based. If you can't detect that, ask the user which they prefer before writing a Volt component.
+**Important:** Check existing Volt components to determine if they use functional or class-based style before creating new ones.
 
 ## Functional Components
 
-@verbatim
-<code-snippet name="Volt Functional Component Example" lang="php">
+@boostsnippet("Volt Functional Component", "php")
 @volt
 <?php
 use function Livewire\Volt\{state, computed};
@@ -48,33 +33,25 @@ use function Livewire\Volt\{state, computed};
 state(['count' => 0]);
 
 $increment = fn () => $this->count++;
-$decrement = fn () => $this->count--;
-
 $double = computed(fn () => $this->count * 2);
 ?>
 
 <div>
-    <h1>Count: {{ $count }}</h1>
-    <h2>Double: {{ $this->double }}</h2>
+    <h1>Count: {{ $count }} (Double: {{ $this->double }})</h1>
     <button wire:click="increment">+</button>
-    <button wire:click="decrement">-</button>
 </div>
 @endvolt
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ## Class-Based Components
 
-To get started, define an anonymous class that extends Livewire\Volt\Component. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
-
-@verbatim
-<code-snippet name="Volt Class-based Component Example" lang="php">
+@boostsnippet("Volt Class-based Component", "php")
 use Livewire\Volt\Component;
 
 new class extends Component {
-    public $count = 0;
+    public int $count = 0;
 
-    public function increment()
+    public function increment(): void
     {
         $this->count++;
     }
@@ -84,14 +61,13 @@ new class extends Component {
     <h1>{{ $count }}</h1>
     <button wire:click="increment">+</button>
 </div>
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
-## Testing Volt Components
+## Testing
 
-Use the existing directory for tests if it already exists. Otherwise, fallback to `tests/Feature/Volt`.
+Tests go in existing Volt test directory or `tests/Feature/Volt`:
 
-<code-snippet name="Livewire Test Example" lang="php">
+@boostsnippet("Volt Test Example", "php")
 use Livewire\Volt\Volt;
 
 test('counter increments', function () {
@@ -100,81 +76,16 @@ test('counter increments', function () {
         ->call('increment')
         ->assertSee('Count: 1');
 });
-</code-snippet>
+@endboostsnippet
 
-@verbatim
-<code-snippet name="Volt Component Test Using Pest" lang="php">
-declare(strict_types=1);
+## Verification
 
-use App\Models\{User, Product};
-use Livewire\Volt\Volt;
-
-test('product form creates product', function () {
-    $user = User::factory()->create();
-
-    Volt::test('pages.products.create')
-        ->actingAs($user)
-        ->set('form.name', 'Test Product')
-        ->set('form.description', 'Test Description')
-        ->set('form.price', 99.99)
-        ->call('create')
-        ->assertHasNoErrors();
-
-    expect(Product::where('name', 'Test Product')->exists())->toBeTrue();
-});
-</code-snippet>
-@endverbatim
-
-## Common Patterns
-
-### CRUD Operations
-
-@verbatim
-<code-snippet name="CRUD With Volt" lang="php">
-<?php
-
-use App\Models\Product;
-use function Livewire\Volt\{state, computed};
-
-state(['editing' => null, 'search' => '']);
-
-$products = computed(fn() => Product::when($this->search,
-    fn($q) => $q->where('name', 'like', "%{$this->search}%")
-)->get());
-
-$edit = fn(Product $product) => $this->editing = $product->id;
-$delete = fn(Product $product) => $product->delete();
-
-?>
-
-<!-- HTML / UI Here -->
-</code-snippet>
-@endverbatim
-
-### Real-Time Search
-
-@verbatim
-<code-snippet name="Real-Time Search With Volt" lang="php">
-    <flux:input
-        wire:model.live.debounce.300ms="search"
-        placeholder="Search..."
-    />
-</code-snippet>
-@endverbatim
-
-### Loading States
-
-@verbatim
-<code-snippet name="Loading States With Volt" lang="php">
-    <flux:button wire:click="save" wire:loading.attr="disabled">
-        <span wire:loading.remove>Save</span>
-        <span wire:loading>Saving...</span>
-    </flux:button>
-</code-snippet>
-@endverbatim
+1. Check existing components for functional vs class-based style
+2. Test component with `Volt::test()`
+3. Use `search-docs` with "volt" for more patterns
 
 ## Common Pitfalls
 
-- Not checking existing components to determine functional vs class-based style
-- Forgetting to wrap Volt components with the `@volt` directive
-- Not using the `--test` or `--pest` flag when creating components that need tests
+- Not checking existing style (functional vs class-based) before creating
+- Forgetting `@volt` directive wrapper
+- Missing `--test` or `--pest` flag when tests are needed

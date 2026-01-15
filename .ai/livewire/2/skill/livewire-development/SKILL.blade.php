@@ -11,7 +11,7 @@ description: >-
 @endphp
 # Livewire Development
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating new Livewire components

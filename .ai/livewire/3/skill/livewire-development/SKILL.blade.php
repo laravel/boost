@@ -11,7 +11,7 @@ description: >-
 @endphp
 # Livewire Development
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating new Livewire components
@@ -94,7 +94,7 @@ document.addEventListener('livewire:init', function () {
 </code-snippet>
 @endverbatim
 
-## Testing Livewire Components
+## Testing
 
 @verbatim
 <code-snippet name="Example Livewire Component Test" lang="php">

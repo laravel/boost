@@ -11,7 +11,7 @@ description: >-
 @endphp
 # Pest Testing 4
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating new tests (unit, feature, or browser)
@@ -55,9 +55,16 @@ it('returns all', function () {
 });
 </code-snippet>
 
+| Use | Instead of |
+|-----|------------|
+| `assertSuccessful()` | `assertStatus(200)` |
+| `assertNotFound()` | `assertStatus(404)` |
+| `assertForbidden()` | `assertStatus(403)` |
+
 ## Mocking
 
 Import mock function before use: `use function Pest\Laravel\mock;`
+
 
 ## Datasets
 
@@ -74,12 +81,17 @@ it('has emails', function (string $email) {
 
 ## Pest 4 Features
 
-Pest 4 offers: browser testing, smoke testing, visual regression testing, test sharding, and faster type coverage.
+| Feature | Purpose |
+|---------|---------|
+| Browser Testing | Full integration tests in real browsers |
+| Smoke Testing | Validate multiple pages quickly |
+| Visual Regression | Compare screenshots for visual changes |
+| Test Sharding | Parallel CI runs |
+| Architecture Testing | Enforce code conventions |
 
-### Browser Testing
+### Browser Test Example
 
 Browser tests run in real browsers for full integration testing:
-
 - Browser tests live in `tests/Browser/`.
 - Use Laravel features like `Event::fake()`, `assertAuthenticated()`, and model factories.
 - Use `RefreshDatabase` for clean state per test.

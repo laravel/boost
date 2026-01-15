@@ -11,7 +11,7 @@ description: >-
 @endphp
 # Inertia Svelte Development
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating or modifying Svelte page components for Inertia

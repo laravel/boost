@@ -11,7 +11,7 @@ description: >-
 @endphp
 # Pest Testing 3
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating new tests (unit or feature)
@@ -41,9 +41,11 @@ it('is true', function () {
 
 ## Running Tests
 
-- Run minimal tests with filter before finalizing: `{{ $assist->artisanCommand('test --compact --filter=testName') }}`.
-- Run all tests: `{{ $assist->artisanCommand('test --compact') }}`.
-- Run file: `{{ $assist->artisanCommand('test --compact tests/Feature/ExampleTest.php') }}`.
+```bash
+{{ $assist->artisanCommand('test --compact --filter=testName') }}  # Filtered
+{{ $assist->artisanCommand('test --compact') }}                    # All tests
+{{ $assist->artisanCommand('test --compact tests/Feature/ExampleTest.php') }}  # Single file
+```
 
 ## Assertions
 
@@ -54,6 +56,12 @@ it('returns all', function () {
     $this->postJson('/api/docs', [])->assertSuccessful();
 });
 </code-snippet>
+
+| Use | Instead of |
+|-----|------------|
+| `assertSuccessful()` | `assertStatus(200)` |
+| `assertNotFound()` | `assertStatus(404)` |
+| `assertForbidden()` | `assertStatus(403)` |
 
 ## Mocking
 

@@ -11,14 +11,16 @@ description: >-
 @endphp
 # Inertia React Development
 
-## When to Use This Skill
+## When to Apply
 
-Activate this skill when:
 - Creating or modifying React page components for Inertia
 - Working with forms in React (using `<Form>` or `useForm`)
 - Implementing client-side navigation with `<Link>` or `router`
 - Using v2 features: deferred props, prefetching, or polling
 - Building React-specific features with the Inertia protocol
+
+## Documentation
+use the `search-docs` tool to use Inertia Full Capabilities.
 
 ## Core Patterns
 
@@ -34,18 +36,14 @@ export default function UsersIndex({ users }) {
         <div>
             <h1>Users</h1>
             <ul>
-                {users.map(user => (
-                    <li key={user.id}>{user.name}</li>
-                ))}
+                {users.map(user => <li key={user.id}>{user.name}</li>)}
             </ul>
         </div>
     )
 }
 @endboostsnippet
 
-### Documentation
-
-Use the `search-docs` tool for accurate guidance on all things Inertia.
+## Navigation
 
 ## Client-Side Navigation
 
@@ -54,7 +52,7 @@ Use the `search-docs` tool for accurate guidance on all things Inertia.
 Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 
 @boostsnippet("Inertia React Navigation", "react")
-import { Link } from '@inertiajs/react'
+import { Link, router } from '@inertiajs/react'
 
 <Link href="/">Home</Link>
 <Link href="/users">Users</Link>
@@ -350,9 +348,6 @@ export default function UsersList({ users }) {
 }
 @endboostsnippet
 
-## Server-Side Patterns
-
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
 
 ## Common Pitfalls
 

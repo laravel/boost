@@ -11,7 +11,7 @@ description: >-
 @endphp
 # Inertia Vue Development
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating or modifying Vue page components for Inertia
@@ -61,7 +61,6 @@ Use the `search-docs` tool for accurate guidance on all things Inertia.
 
 Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
 
-@verbatim
 @boostsnippet("Inertia Vue Navigation", "vue")
 <script setup>
 import { Link } from '@inertiajs/vue3'
@@ -75,11 +74,9 @@ import { Link } from '@inertiajs/vue3'
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### Link with Method
 
-@verbatim
 @boostsnippet("Link with POST Method", "vue")
 <script setup>
 import { Link } from '@inertiajs/vue3'
@@ -91,13 +88,12 @@ import { Link } from '@inertiajs/vue3'
     </Link>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### Prefetching
 
 Prefetch pages to improve perceived performance:
 
-@verbatim
+
 @boostsnippet("Prefetch on Hover", "vue")
 <script setup>
 import { Link } from '@inertiajs/vue3'
@@ -109,11 +105,9 @@ import { Link } from '@inertiajs/vue3'
     </Link>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### Programmatic Navigation
 
-@verbatim
 @boostsnippet("Router Visit", "vue")
 <script setup>
 import { router } from '@inertiajs/vue3'
@@ -127,12 +121,16 @@ function createUser() {
     router.visit('/users', {
         method: 'post',
         data: { name: 'John' },
-        onSuccess: () => console.log('Success!'),
+        onSuccess: () => console.log('Done'),
     })
 }
 </script>
+
+<template>
+    <Link href="/users">Users</Link>
+    <Link href="/logout" method="post" as="button">Logout</Link>
+</template>
 @endboostsnippet
-@endverbatim
 
 ## Form Handling
 
@@ -167,7 +165,7 @@ import { Form } from '@inertiajs/vue3'
 
 ### Form Component with All Props
 
-@verbatim
+
 @boostsnippet("Form Component Full Example", "vue")
 <script setup>
 import { Form } from '@inertiajs/vue3'
@@ -208,7 +206,6 @@ import { Form } from '@inertiajs/vue3'
     </Form>
 </template>
 @endboostsnippet
-@endverbatim
 
 @if($assist->inertia()->hasFormComponentResets())
 ### Form Component Reset Props
@@ -261,7 +258,6 @@ Forms can also be built using the `useForm` composable for more programmatic con
 For more programmatic control or to follow existing conventions, use the `useForm` composable:
 @endif
 
-@verbatim
 @boostsnippet("useForm Composable Example", "vue")
 <script setup>
 import { useForm } from '@inertiajs/vue3'
@@ -296,7 +292,6 @@ function submit() {
     </form>
 </template>
 @endboostsnippet
-@endverbatim
 
 ## Inertia v2 Features
 
@@ -304,7 +299,7 @@ function submit() {
 
 Use deferred props to load data after initial page render:
 
-@verbatim
+
 @boostsnippet("Deferred Props with Empty State", "vue")
 <script setup>
 defineProps({
@@ -327,13 +322,11 @@ defineProps({
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### Polling
 
 Automatically refresh data at intervals:
 
-@verbatim
 @boostsnippet("Polling Example", "vue")
 <script setup>
 import { router } from '@inertiajs/vue3'
@@ -363,13 +356,11 @@ onUnmounted(() => {
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
 ### WhenVisible (Infinite Scroll)
 
 Load more data when user scrolls to a specific element:
 
-@verbatim
 @boostsnippet("Infinite Scroll with WhenVisible", "vue")
 <script setup>
 import { WhenVisible } from '@inertiajs/vue3'
@@ -397,7 +388,6 @@ defineProps({
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
 ## Server-Side Patterns
 

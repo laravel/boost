@@ -8,7 +8,7 @@ description: >-
 ---
 # Flux UI Development
 
-## When to Use This Skill
+## When to Apply
 
 Activate this skill when:
 - Creating new UI components or pages
@@ -16,9 +16,7 @@ Activate this skill when:
 - Styling components with Flux UI patterns
 - Checking available Flux components
 
-## Core Patterns
-
-### Overview
+## Core Pattern
 
 This project is using the **Pro version** of Flux UI. It has full access to the free components and variants, as well as full access to the Pro components and variants.
 
@@ -29,29 +27,18 @@ Flux UI is a component library for Livewire. It's built using Tailwind CSS and p
 You should use Flux UI components when available. Fallback to standard Blade components if Flux is unavailable.
 
 ```blade
-<flux:button variant="primary"/>
+<flux:button variant="primary">Click me</flux:button>
 ```
 
 ### Documentation
 
 If available, use the `search-docs` tool to get the exact documentation and code snippets available for this project.
 
-## Available Components
+## Available Components (Pro Edition)
 
-This is correct as of Boost installation, but there may be additional components within the codebase.
-
-**Full component list:**
-accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, toast, tooltip
+**Full list:** accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, toast, tooltip
 
 ## Common Patterns
-
-### Buttons
-
-```blade
-<flux:button variant="primary">Primary</flux:button>
-<flux:button variant="secondary">Secondary</flux:button>
-<flux:button variant="danger">Delete</flux:button>
-```
 
 ### Form Fields
 
@@ -63,15 +50,23 @@ accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, ca
 </flux:field>
 ```
 
-### Modals
+### Tables
 
 ```blade
-<flux:modal wire:model="showModal">
-    <flux:heading>Modal Title</flux:heading>
-    <p>Modal content here</p>
-    <flux:button wire:click="$set('showModal', false)">Close</flux:button>
-</flux:modal>
+<flux:table>
+    <flux:table.head>
+        <flux:table.row>
+            <flux:table.cell>Name</flux:table.cell>
+        </flux:table.row>
+    </flux:table.head>
+</flux:table>
 ```
+
+## Verification
+
+1. Check component renders correctly
+2. Test interactive states
+3. Verify mobile responsiveness
 
 ## Common Pitfalls
 

@@ -11,17 +11,13 @@ description: >-
 @endphp
 # Folio Routing
 
-## When to Use This Skill
+## When to Apply
 
-Activate this skill when:
-- Creating new pages with file-based routing
+- Creating pages with file-based routing
 - Working with route parameters and model binding
 - Adding middleware to Folio pages
-- Understanding the file-to-route mapping
 
-## Core Patterns
-
-### Overview
+## Core Pattern
 
 Laravel Folio is a file-based router. With Laravel Folio, a new route is created for every Blade file within the configured Folio directory.
 
@@ -38,6 +34,7 @@ You may list available Folio routes using `{{ $assist->artisanCommand('folio:lis
 
 Always create new `folio` pages and routes using `{{ $assist->artisanCommand('folio:page [name]') }}` following existing naming conventions.
 
+@verbatim
 <code-snippet name="Example folio:page Commands for Automatic Routing" lang="shell">
 // Creates: resources/views/pages/products.blade.php → /products
 {!! $assist->artisanCommand('folio:page "products"') !!}
@@ -45,36 +42,36 @@ Always create new `folio` pages and routes using `{{ $assist->artisanCommand('fo
 // Creates: resources/views/pages/products/[id].blade.php → /products/{id}
 {!! $assist->artisanCommand('folio:page "products/[id]"') !!}
 </code-snippet>
+@endverbatim
 
 ## Named Routes
 
 Add a 'name' to each new Folio page at the very top of the file so it has a named route available for other parts of the codebase to use.
 
-@verbatim
-<code-snippet name="Adding Named Route to Folio Page" lang="php">
+@boostsnippet("Named Routes Example", "php")
 use function Laravel\Folio\name;
 
 name('products.index');
-</code-snippet>
-@endverbatim
+@endboostsnippet
 
 ## Middleware
 
-Folio supports: middleware, serving pages from multiple paths, subdomain routing, named routes, nested routes, index routes, route parameters, and route model binding.
-
-@verbatim
-<code-snippet name="Folio Middleware Example" lang="php">
+@boostsnippet("Middleware Example", "php")
 use function Laravel\Folio\{name, middleware};
 
 name('admin.products');
-middleware(['auth', 'verified', 'can:manage-products']);
-?>
-</code-snippet>
-@endverbatim
+middleware(['auth', 'verified']);
+@endboostsnippet
+
+## Verification
+
+1. Run `{{ $assist->artisanCommand('folio:list') }}` to verify route registered
+2. Test page loads at expected URL
+
 
 ## Documentation
 
-If available, use the `search-docs` tool to use Folio to its full potential and help the user effectively.
+use the `search-docs` tool to use Folio to its full potential and help the user effectively.
 
 ## Common Pitfalls
 

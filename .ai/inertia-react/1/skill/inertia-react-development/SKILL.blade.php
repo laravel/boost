@@ -10,17 +10,19 @@ description: >-
 @endphp
 # Inertia React Development
 
-## When to Use This Skill
+## When to Apply
 
-Activate this skill when:
 - Creating or modifying React page components for Inertia
 - Working with forms in React (using `router.post` or `useForm` if available)
 - Implementing client-side navigation with `<Link>` or `router`
 - Building React-specific features with the Inertia protocol
 
-## Core Patterns
+## Documentation
 
-### Page Components Location
+use the `search-docs` tool to use Inertia Full Capabilities.
+
+
+## Core Pattern
 
 React page components should be placed in the `resources/js/Pages` directory.
 
@@ -32,24 +34,14 @@ export default function UsersIndex({ users }) {
         <div>
             <h1>Users</h1>
             <ul>
-                {users.map(user => (
-                    <li key={user.id}>{user.name}</li>
-                ))}
+                {users.map(user => <li key={user.id}>{user.name}</li>)}
             </ul>
         </div>
     )
 }
 @endboostsnippet
 
-### Documentation
-
-Use the `search-docs` tool for accurate guidance on all things Inertia.
-
-## Client-Side Navigation
-
-### Basic Link Component
-
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
+Use `<Link>` for client-side navigation (not `<a>` tags):
 
 @boostsnippet("Inertia React Navigation", "react")
 import { Link } from '@inertiajs/react'
@@ -183,10 +175,6 @@ Inertia v1 does **not** support these v2 features:
 - Merging props
 
 Do not use these features in v1 projects.
-
-## Server-Side Patterns
-
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
 
 ## Common Pitfalls
 
