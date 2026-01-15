@@ -80,4 +80,4 @@ Prefetch pages on hover for faster navigation:
 <Link href="/users" prefetch>Users</Link>
 ```
 
-Use `search-docs` with "inertia prefetching" for cache strategies and options.
+**IMPORTANT**: Always use the `search-docs` tool to get the latest documentation and code examples for Inertia.
