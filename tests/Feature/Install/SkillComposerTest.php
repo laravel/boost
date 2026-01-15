@@ -46,6 +46,56 @@ function cleanupTestSkillDirectories(): void
     @rmdir($path);
 }
 
+function createThirdPartyPackageWithSkill(string $packageName, string $skillName, string $description): string
+{
+    $vendorPath = base_path("vendor/{$packageName}/resources/boost/skills/{$skillName}");
+    @mkdir($vendorPath, 0755, true);
+
+    $skillContent = <<<SKILL
+---
+name: {$skillName}
+description: {$description}
+---
+# Test Skill
+SKILL;
+
+    file_put_contents($vendorPath.'/SKILL.md', $skillContent);
+
+    // Add package to composer.json
+    $composerPath = base_path('composer.json');
+    $composerData = json_decode((string) file_get_contents($composerPath), true);
+    $composerData['require'][$packageName] = '*';
+    file_put_contents($composerPath, json_encode($composerData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return $vendorPath;
+}
+
+function cleanupThirdPartyPackage(string $vendorPath): void
+{
+    @unlink($vendorPath.'/SKILL.md');
+    @rmdir($vendorPath);
+    @rmdir(dirname($vendorPath));
+    @rmdir(dirname($vendorPath, 2));
+    @rmdir(dirname($vendorPath, 3));
+    @rmdir(dirname($vendorPath, 4));
+}
+
+function restoreComposerJson(array $originalRequires): void
+{
+    $composerPath = base_path('composer.json');
+    $composerData = json_decode((string) file_get_contents($composerPath), true);
+    $composerData['require'] = $originalRequires;
+    file_put_contents($composerPath, json_encode($composerData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+function getComposerRequires(): array
+{
+    $composerPath = base_path('composer.json');
+    $composerData = json_decode((string) file_get_contents($composerPath), true);
+
+    return $composerData['require'] ?? [];
+}
+
 beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
     $this->nodePackageManager = NodePackageManager::NPM;
@@ -231,4 +281,72 @@ test('user package skills only discovered for installed packages', function (): 
     $skills = $this->skillComposer->skills();
 
     expect($skills->has('livewire-development'))->toBeFalse();
+});
+
+test('it excludes all third-party skills when aiGuidelines is empty array', function (): void {
+    $originalRequires = getComposerRequires();
+    $vendorPath = createThirdPartyPackageWithSkill('test-vendor/test-package', 'test-third-party-skill', 'Test third-party skill');
+
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = [];
+
+    $skillComposer = new SkillComposer($this->roster, $config);
+    $skills = $skillComposer->skills();
+
+    cleanupThirdPartyPackage($vendorPath);
+    restoreComposerJson($originalRequires);
+
+    expect($skills->has('test-third-party-skill'))->toBeFalse();
+});
+
+test('includes all third-party skills when aiGuidelines is not set', function (): void {
+    $originalRequires = getComposerRequires();
+    $vendorPath = createThirdPartyPackageWithSkill('test-vendor-2/test-package-2', 'test-third-party-skill-2', 'Test third-party skill for backward compatibility');
+
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+
+    $skillComposer = new SkillComposer($this->roster, $config);
+    $skills = $skillComposer->skills();
+
+    cleanupThirdPartyPackage($vendorPath);
+    restoreComposerJson($originalRequires);
+
+    expect($skills->has('test-third-party-skill-2'))->toBeTrue();
+});
+
+test('includes only third-party skills from selected packages', function (): void {
+    $originalRequires = getComposerRequires();
+    $vendorPath1 = createThirdPartyPackageWithSkill('selected-vendor/selected-package', 'selected-third-party-skill', 'This skill should be included');
+    $vendorPath2 = createThirdPartyPackageWithSkill('unselected-vendor/unselected-package', 'unselected-third-party-skill', 'This skill should be excluded');
+
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = ['selected-vendor/selected-package'];
+
+    $skillComposer = new SkillComposer($this->roster, $config);
+    $skills = $skillComposer->skills();
+
+    cleanupThirdPartyPackage($vendorPath1);
+    cleanupThirdPartyPackage($vendorPath2);
+    restoreComposerJson($originalRequires);
+
+    expect($skills->has('selected-third-party-skill'))->toBeTrue()
+        ->and($skills->has('unselected-third-party-skill'))->toBeFalse();
 });
