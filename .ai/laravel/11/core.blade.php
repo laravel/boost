@@ -3,7 +3,7 @@
 @endphp
 ## Laravel 11
 
-- Use the `search-docs` tool to get version-specific documentation.
+- **CRITICAL**: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
 @if (file_exists(base_path('app/Http/Kernel.php')))
 - This project upgraded from Laravel 10 without migrating to the new streamlined Laravel 11 file structure.
 - This is **perfectly fine** and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the Laravel 11 structure unless the user explicitly requests it.

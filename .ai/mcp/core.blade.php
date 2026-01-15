@@ -1,4 +1,4 @@
 ## Laravel MCP
 
-- MCP (Model Context Protocol) is very new. You must use the `search-docs` tool to get documentation for how to write and test Laravel MCP servers, tools, resources, and prompts effectively.
+- **CRITICAL**: laravel/mcp is very new. ALWAYS use the `search-docs` tool for authoritative documentation on writing and testing Laravel MCP servers, tools, resources, and prompts.
 - Use/activate 'mcp-development' to properly build MCP servers.
