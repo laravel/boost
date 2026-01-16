@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
+use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
@@ -162,6 +163,11 @@ class GuidelineAssist
     public function inertia(): Inertia
     {
         return new Inertia($this->roster);
+    }
+
+    public function supportsPintAgentFormatter(): bool
+    {
+        return $this->roster->usesVersion(Packages::PINT, '1.27.0', '>=');
     }
 
     public function nodePackageManager(): string
