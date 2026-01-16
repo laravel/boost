@@ -173,6 +173,11 @@ class GuidelineAssist
         return new Inertia($this->roster);
     }
 
+    public function supportsPintAgentFormatter(): bool
+    {
+        return $this->roster->usesVersion(Packages::PINT, '1.27.0', '>=');
+    }
+
     public function hasPackage(Packages $package): bool
     {
         return $this->roster->packages()->contains(
@@ -180,9 +185,14 @@ class GuidelineAssist
         );
     }
 
-    protected function detectedNodePackageManager(): string
+    public function nodePackageManager(): string
     {
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
+    }
+
+    protected function detectedNodePackageManager(): string
+    {
+        return $this->nodePackageManager();
     }
 
     public function nodePackageManagerCommand(string $command): string
