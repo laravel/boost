@@ -14,6 +14,7 @@ use Laravel\Boost\Install\CodeEnvironment\Gemini;
 use Laravel\Boost\Install\CodeEnvironment\OpenCode;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
+use Laravel\Boost\Install\CodeEnvironment\Windsurf;
 
 class BoostManager
 {
@@ -22,6 +23,7 @@ class BoostManager
         'phpstorm' => PhpStorm::class,
         'vscode' => VSCode::class,
         'cursor' => Cursor::class,
+        'windsurf' => Windsurf::class,
         'claudecode' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
