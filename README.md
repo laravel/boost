@@ -76,7 +76,7 @@ Once Laravel Boost has been installed, you're ready to start coding with Cursor,
 #### Windsurf
 
 1. Open the command palette (`Cmd+Shift+P` or `Ctrl+Shift+P`)
-2. Press `enter` on "/open MCP Settings"
+2. Press `enter` on "/open MCP Marketplace"
 3. Turn the toggle on for `laravel-boost`
 
 #### Gemini
