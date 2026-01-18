@@ -416,6 +416,40 @@ test('getPhpPath maintains default behavior when forceAbsolutePath is false', fu
     expect($environment->getPhpPath(false))->toBe('php');
 });
 
+test('getPhpPath returns versioned php command when platform php is configured', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    withPlatformPhp('8.3.0', fn () => expect($environment->getPhpPath(false))->toBe('php8.3'));
+});
+
+test('getPhpPath returns versioned php command for two-part version', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    withPlatformPhp('8.2', fn () => expect($environment->getPhpPath(false))->toBe('php8.2'));
+});
+
+test('getPhpPath ignores platform php when forceAbsolutePath is true', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    withPlatformPhp('8.3.0', fn () => expect($environment->getPhpPath(true))->toBe(PHP_BINARY));
+});
+
+function withPlatformPhp(string $version, callable $callback): void
+{
+    $composerJson = base_path('composer.json');
+    $original = file_get_contents($composerJson);
+
+    $config = json_decode($original, true);
+    $config['config']['platform']['php'] = $version;
+    file_put_contents($composerJson, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    try {
+        $callback();
+    } finally {
+        file_put_contents($composerJson, $original);
+    }
+}
+
 test('getArtisanPath uses absolute path when forceAbsolutePath is true', function (): void {
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getArtisanPath(true))->toBe(base_path('artisan'));
