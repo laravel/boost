@@ -48,4 +48,21 @@ class Composer
             ]))->filter(fn (string $path): bool => is_dir($path))
             ->toArray();
     }
+
+    public static function platformPhpVersion(): ?string
+    {
+        $composerJsonPath = base_path('composer.json');
+
+        if (! file_exists($composerJsonPath)) {
+            return null;
+        }
+
+        $composerData = json_decode(file_get_contents($composerJsonPath), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return null;
+        }
+
+        return $composerData['config']['platform']['php'] ?? null;
+    }
 }

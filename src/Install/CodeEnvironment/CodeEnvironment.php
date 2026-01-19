@@ -12,6 +12,7 @@ use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Laravel\Boost\Install\Mcp\FileWriter;
+use Laravel\Boost\Support\Composer;
 
 abstract class CodeEnvironment
 {
@@ -40,6 +41,16 @@ abstract class CodeEnvironment
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
+        $platformPhpVersion = Composer::platformPhpVersion();
+
+        if ($platformPhpVersion !== null && ! $this->useAbsolutePathForMcp() && ! $forceAbsolutePath) {
+            $versionParts = explode('.', $platformPhpVersion);
+
+            if (count($versionParts) >= 2) {
+                return 'php'.$versionParts[0].'.'.$versionParts[1];
+            }
+        }
+
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
     }
 
