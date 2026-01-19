@@ -72,6 +72,11 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function exists(): bool
+    {
+        return file_exists(base_path(self::FILE));
+    }
+
     public function flush(): void
     {
         $path = base_path(self::FILE);

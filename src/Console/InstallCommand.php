@@ -39,7 +39,7 @@ class InstallCommand extends Command
 {
     use Colors;
 
-    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
+    protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration} {--force : Skip the existing installation check and force a fresh install}';
 
     private CodeEnvironmentsDetector $codeEnvironmentsDetector;
 
@@ -99,6 +99,18 @@ class InstallCommand extends Command
             $this->error('You cannot ignore both guidelines and MCP config. Please select at least one option to proceed.');
 
             return self::FAILURE;
+        }
+
+        if ($this->config->exists() && ! $this->option('force') && ! $this->option('no-interaction')) {
+            $this->components->warn('Laravel Boost is already installed.');
+            $this->newLine();
+            $this->line('  To update guidelines without overwriting your configuration, run:');
+            $this->line('  <comment>php artisan boost:update</comment>');
+            $this->newLine();
+
+            if (! confirm('Are you sure you want to run a fresh install? This will overwrite existing settings.', default: false)) {
+                return self::SUCCESS;
+            }
         }
 
         $this->bootstrap($codeEnvironmentsDetector, $herd, $sail, $terminal);
