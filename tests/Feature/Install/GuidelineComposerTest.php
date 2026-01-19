@@ -473,13 +473,8 @@ test('includes wayfinder guidelines with inertia integration when both packages 
 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
-        ->toContain('Wayfinder + Inertia')
-        ->toContain('Wayfinder Form Component (React)')
-        ->toContain('<Form {...store.form()}>')
         ->toContain('## Laravel Wayfinder')
-        ->not->toContain('Wayfinder Form Component (Vue)')
-        ->not->toContain('Wayfinder Form Component (Svelte)')
-        ->not->toContain('<Form v-bind="store.form()">');
+        ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
@@ -514,12 +509,8 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
-        ->toContain('Wayfinder + Inertia')
-        ->toContain('Wayfinder Form Component (Vue)')
-        ->toContain('<Form v-bind="store.form()">')
         ->toContain('## Laravel Wayfinder')
-        ->not->toContain('Wayfinder Form Component (React)')
-        ->not->toContain('Wayfinder Form Component (Svelte)');
+        ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
@@ -554,13 +545,8 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
-        ->toContain('Wayfinder + Inertia')
-        ->toContain('Wayfinder Form Component (Svelte)')
-        ->toContain('<Form {...store.form()}>')
         ->toContain('## Laravel Wayfinder')
-        ->not->toContain('Wayfinder Form Component (React)')
-        ->not->toContain('Wayfinder Form Component (Vue)')
-        ->not->toContain('<Form v-bind="store.form()">');
+        ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
 
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
@@ -594,9 +580,9 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('## Laravel Wayfinder')
-        ->toContain("import { show, store, update } from '@/actions/App/Http/Controllers/PostController'")
-        ->not->toContain('Wayfinder + Inertia')
-        ->not->toContain('Wayfinder Form Component');
+        ->toContain('Invokable Controllers')
+        ->toContain('Parameter Binding')
+        ->not->toContain('Inertia:');
 });
 
 test('the guidelines are in correct order', function (): void {
