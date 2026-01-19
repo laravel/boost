@@ -64,3 +64,19 @@ it('may store and retrieve herd mcp installation status', function (): void {
 
     expect($config->getHerdMcp())->toBeFalse();
 });
+
+it('returns false for exists when boost.json does not exist', function (): void {
+    $config = new Config;
+
+    $config->flush();
+
+    expect($config->exists())->toBeFalse();
+});
+
+it('returns true for exists when boost.json exists', function (): void {
+    $config = new Config;
+
+    $config->setGuidelines(['test']);
+
+    expect($config->exists())->toBeTrue();
+});
