@@ -7,14 +7,11 @@ namespace Laravel\Boost\Contracts;
 /**
  * Contract for code editors that support MCP (Model Context Protocol).
  */
-interface McpClient
+interface SupportMCP
 {
     public function name(): string;
 
-    /**
-     * Get the display name of the MCP (Model Context Protocol) client.
-     */
-    public function mcpClientName(): ?string;
+    public function displayName(): string;
 
     /**
      * Whether to use absolute paths for MCP commands.

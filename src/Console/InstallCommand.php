@@ -10,11 +10,11 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Contracts\SupportGuidelines;
+use Laravel\Boost\Contracts\SupportMCP;
 use Laravel\Boost\Contracts\SupportSkills;
-use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
-use Laravel\Boost\Install\CodeEnvironmentsDetector;
+use Laravel\Boost\Install\Agent\Agent;
+use Laravel\Boost\Install\AgentDetector;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -41,7 +41,7 @@ class InstallCommand extends Command
 
     protected $signature = 'boost:install {--ignore-guidelines : Skip installing AI guidelines} {--ignore-mcp : Skip installing MCP server configuration}';
 
-    private CodeEnvironmentsDetector $codeEnvironmentsDetector;
+    private AgentDetector $agentDetector;
 
     private Herd $herd;
 
@@ -49,10 +49,10 @@ class InstallCommand extends Command
 
     private Terminal $terminal;
 
-    /** @var Collection<int, Agent> */
+    /** @var Collection<int, SupportGuidelines> */
     private Collection $selectedTargetAgents;
 
-    /** @var Collection<int, McpClient> */
+    /** @var Collection<int, SupportMCP> */
     private Collection $selectedTargetMcpClient;
 
     /** @var Collection<int, string> */
@@ -64,10 +64,10 @@ class InstallCommand extends Command
     private string $projectName;
 
     /** @var array<non-empty-string> */
-    private array $systemInstalledCodeEnvironments = [];
+    private array $systemInstalledAgents = [];
 
     /** @var array<non-empty-string> */
-    private array $projectInstalledCodeEnvironments = [];
+    private array $projectInstalledAgents = [];
 
     private bool $enforceTests = true;
 
@@ -87,7 +87,7 @@ class InstallCommand extends Command
     }
 
     public function handle(
-        CodeEnvironmentsDetector $codeEnvironmentsDetector,
+        AgentDetector $agentDetector,
         Herd $herd,
         Sail $sail,
         Terminal $terminal,
@@ -101,7 +101,7 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        $this->bootstrap($codeEnvironmentsDetector, $herd, $sail, $terminal);
+        $this->bootstrap($agentDetector, $herd, $sail, $terminal);
         $this->displayBoostHeader();
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
@@ -111,9 +111,9 @@ class InstallCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Sail $sail, Terminal $terminal): void
+    protected function bootstrap(AgentDetector $agentDetector, Herd $herd, Sail $sail, Terminal $terminal): void
     {
-        $this->codeEnvironmentsDetector = $codeEnvironmentsDetector;
+        $this->agentDetector = $agentDetector;
         $this->herd = $herd;
         $this->sail = $sail;
         $this->terminal = $terminal;
@@ -151,8 +151,8 @@ class InstallCommand extends Command
 
     protected function discoverEnvironment(): void
     {
-        $this->systemInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverSystemInstalledCodeEnvironments();
-        $this->projectInstalledCodeEnvironments = $this->codeEnvironmentsDetector->discoverProjectInstalledCodeEnvironments(base_path());
+        $this->systemInstalledAgents = $this->agentDetector->discoverSystemInstalledAgents();
+        $this->projectInstalledAgents = $this->agentDetector->discoverProjectInstalledAgents(base_path());
     }
 
     protected function collectInstallationPreferences(): void
@@ -181,9 +181,9 @@ class InstallCommand extends Command
     {
         $label = 'https://boost.laravel.com/installed';
 
-        $ideNames = $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => 'i:'.$mcpClient->mcpClientName())
+        $ideNames = $this->selectedTargetMcpClient->map(fn (SupportMCP $mcpClient): string => 'i:'.$mcpClient->name())
             ->toArray();
-        $agentNames = $this->selectedTargetAgents->map(fn (Agent $agent): string => 'a:'.$agent->agentName())->toArray();
+        $agentNames = $this->selectedTargetAgents->map(fn (SupportGuidelines $agent): string => 'a:'.$agent->name())->toArray();
         $boostFeatures = $this->selectedBoostFeatures->map(fn ($feature): string => 'b:'.$feature)->toArray();
 
         $guidelines = [];
@@ -309,7 +309,7 @@ class InstallCommand extends Command
     }
 
     /**
-     * @return Collection<int, CodeEnvironment>
+     * @return Collection<int, Agent>
      */
     protected function selectTargetMcpClients(): Collection
     {
@@ -317,15 +317,15 @@ class InstallCommand extends Command
             return collect();
         }
 
-        return $this->selectCodeEnvironments(
-            McpClient::class,
+        return $this->selectAgents(
+            SupportMCP::class,
             sprintf('Which code editors do you use to work on %s?', $this->projectName),
             $this->config->getEditors(),
         );
     }
 
     /**
-     * @return Collection<int, CodeEnvironment>
+     * @return Collection<int, Agent>
      */
     protected function selectTargetAgents(): Collection
     {
@@ -337,14 +337,14 @@ class InstallCommand extends Command
 
         if ($this->selectedTargetMcpClient->isNotEmpty()) {
             $defaults = $this->selectedTargetMcpClient
-                ->filter(fn (McpClient $client): bool => $client instanceof Agent)
-                ->map(fn (McpClient $client): string => $client->name())
+                ->filter(fn (SupportMCP $client): bool => $client instanceof SupportGuidelines)
+                ->map(fn (SupportMCP $client): string => $client->name())
                 ->values()
                 ->toArray();
         }
 
-        return $this->selectCodeEnvironments(
-            Agent::class,
+        return $this->selectAgents(
+            SupportGuidelines::class,
             sprintf('Which agents need AI guidelines for %s?', $this->projectName),
             $defaults,
         );
@@ -358,68 +358,68 @@ class InstallCommand extends Command
     protected function getSelectionConfig(string $contractClass): array
     {
         return match ($contractClass) {
-            Agent::class => ['required' => false, 'displayMethod' => 'agentName'],
-            McpClient::class => ['required' => true, 'displayMethod' => 'displayName'],
+            SupportGuidelines::class => ['required' => false, 'displayMethod' => 'displayName'],
+            SupportMCP::class => ['required' => true, 'displayMethod' => 'displayName'],
             default => throw new InvalidArgumentException("Unsupported contract class: {$contractClass}"),
         };
     }
 
     /**
      * @param  array<int, string>  $defaults
-     * @return Collection<int, CodeEnvironment>
+     * @return Collection<int, Agent>
      */
-    protected function selectCodeEnvironments(string $contractClass, string $label, array $defaults): Collection
+    protected function selectAgents(string $contractClass, string $label, array $defaults): Collection
     {
-        $allEnvironments = $this->codeEnvironmentsDetector->getCodeEnvironments();
+        $allAgents = $this->agentDetector->getAgents();
         $config = $this->getSelectionConfig($contractClass);
 
-        $availableEnvironments = $allEnvironments->filter(fn (CodeEnvironment $environment): bool => $environment instanceof $contractClass);
+        $availableAgents = $allAgents->filter(fn (Agent $agent): bool => $agent instanceof $contractClass);
 
-        if ($availableEnvironments->isEmpty()) {
+        if ($availableAgents->isEmpty()) {
             return collect();
         }
 
-        $options = $availableEnvironments->mapWithKeys(function (CodeEnvironment $environment) use ($config): array {
+        $options = $availableAgents->mapWithKeys(function (Agent $agent) use ($config): array {
             $displayMethod = $config['displayMethod'];
-            $displayText = $environment->{$displayMethod}();
+            $displayText = $agent->{$displayMethod}();
 
-            return [$environment->name() => $displayText];
+            return [$agent->name() => $displayText];
         })->sort();
 
-        $installedEnvNames = array_unique(array_merge(
-            $this->projectInstalledCodeEnvironments,
-            $this->systemInstalledCodeEnvironments
+        $installedAgentNames = array_unique(array_merge(
+            $this->projectInstalledAgents,
+            $this->systemInstalledAgents
         ));
 
         $detectedDefaults = [];
 
         if ($defaults === []) {
-            foreach ($installedEnvNames as $envKey) {
-                $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
-                if ($matchingEnv) {
-                    $detectedDefaults[] = $matchingEnv->name();
+            foreach ($installedAgentNames as $agentKey) {
+                $matchingAgent = $availableAgents->first(fn (Agent $agent): bool => strtolower((string) $agentKey) === strtolower($agent->name()));
+                if ($matchingAgent) {
+                    $detectedDefaults[] = $matchingAgent->name();
                 }
             }
         }
 
-        $selectedCodeEnvironments = collect(multiselect(
+        $selectedAgents = collect(multiselect(
             label: $label,
             options: $options->toArray(),
             default: $defaults === [] ? $detectedDefaults : $defaults,
             scroll: $options->count(),
             required: $config['required'],
             hint: $defaults === [] || $detectedDefaults === [] ? '' : sprintf('Auto-detected %s for you',
-                Arr::join(array_map(function ($className) use ($availableEnvironments, $config) {
-                    $env = $availableEnvironments->first(fn ($env): bool => $env->name() === $className);
+                Arr::join(array_map(function ($className) use ($availableAgents, $config) {
+                    $agent = $availableAgents->first(fn ($agent): bool => $agent->name() === $className);
                     $displayMethod = $config['displayMethod'];
 
-                    return $env->{$displayMethod}();
+                    return $agent->{$displayMethod}();
                 }, $detectedDefaults), ', ', ' & ')
             )
         ))->sort();
 
-        return $selectedCodeEnvironments->map(
-            fn (string $name) => $availableEnvironments->first(fn ($env): bool => $env->name() === $name),
+        return $selectedAgents->map(
+            fn (string $name) => $availableAgents->first(fn ($agent): bool => $agent->name() === $name),
         )->filter()->values();
     }
 
@@ -452,8 +452,8 @@ class InstallCommand extends Command
 
         $this->processWithProgress(
             $this->selectedTargetAgents,
-            fn (Agent $agent): string => $agent->agentName(),
-            fn (Agent $agent): int => (new GuidelineWriter($agent))->write($composedAiGuidelines),
+            fn (SupportGuidelines $agent): string => $agent->displayName(),
+            fn (SupportGuidelines $agent): int => (new GuidelineWriter($agent))->write($composedAiGuidelines),
             'guidelines',
         );
 
@@ -472,12 +472,12 @@ class InstallCommand extends Command
             );
 
             $this->config->setEditors(
-                $this->selectedTargetMcpClient->map(fn (McpClient $mcpClient): string => $mcpClient->name())->values()->toArray()
+                $this->selectedTargetMcpClient->map(fn (SupportMCP $mcpClient): string => $mcpClient->name())->values()->toArray()
             );
         }
 
         $this->config->setAgents(
-            $this->selectedTargetAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray()
+            $this->selectedTargetAgents->map(fn (SupportGuidelines $agent): string => $agent->name())->values()->toArray()
         );
 
         $this->config->setGuidelines(
@@ -501,11 +501,11 @@ class InstallCommand extends Command
         grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray());
         $this->newLine();
 
-        /** @var Collection<int, SupportSkills&Agent> $skillsAgents */
+        /** @var Collection<int, SupportSkills&SupportGuidelines> $skillsAgents */
         $this->processWithProgress(
             $skillsAgents,
-            fn (SupportSkills&Agent $agent): string => $agent->agentName(),
-            fn (SupportSkills&Agent $agent): array => (new SkillWriter($agent))->writeAll($skills),
+            fn (SupportSkills&SupportGuidelines $agent): string => $agent->displayName(),
+            fn (SupportSkills&SupportGuidelines $agent): array => (new SkillWriter($agent))->writeAll($skills),
             'skills',
         );
 
@@ -529,7 +529,7 @@ class InstallCommand extends Command
             : $this->selectedBoostFeatures->contains('sail');
     }
 
-    protected function buildMcpCommand(McpClient $mcpClient): array
+    protected function buildMcpCommand(SupportMCP $mcpClient): array
     {
         $serverName = 'laravel-boost';
 
@@ -566,20 +566,20 @@ class InstallCommand extends Command
         $longestIdeName = max(
             1,
             ...$this->selectedTargetMcpClient->map(
-                fn (McpClient $mcpClient) => Str::length($mcpClient->mcpClientName())
+                fn (SupportMCP $agent) => Str::length($agent->name())
             )->toArray()
         );
 
-        foreach ($this->selectedTargetMcpClient as $mcpClient) {
-            $ideName = $mcpClient->mcpClientName();
-            $ideDisplay = str_pad((string) $ideName, $longestIdeName);
-            $this->output->write("  {$ideDisplay}... ");
+        foreach ($this->selectedTargetMcpClient as $agent) {
+            $agentName = $agent->displayName();
+            $agentDisplayName = str_pad((string) $agentName, $longestIdeName);
+            $this->output->write("  {$agentDisplayName}... ");
             $results = [];
 
-            $mcp = $this->buildMcpCommand($mcpClient);
+            $mcp = $this->buildMcpCommand($agent);
 
             try {
-                $result = $mcpClient->installMcp(
+                $result = $agent->installMcp(
                     array_shift($mcp),
                     array_shift($mcp),
                     $mcp
@@ -589,19 +589,19 @@ class InstallCommand extends Command
                     $results[] = $this->greenTick.' Boost';
                 } else {
                     $results[] = $this->redCross.' Boost';
-                    $failed[$ideName]['boost'] = 'Failed to write configuration';
+                    $failed[$agentName]['boost'] = 'Failed to write configuration';
                 }
             } catch (Exception $e) {
                 $results[] = $this->redCross.' Boost';
-                $failed[$ideName]['boost'] = $e->getMessage();
+                $failed[$agentName]['boost'] = $e->getMessage();
             }
 
             // Install Herd MCP if enabled
             if ($this->shouldInstallHerdMcp()) {
-                $php = $mcpClient->getPhpPath();
+                $php = $agent->getPhpPath();
 
                 try {
-                    $result = $mcpClient->installMcp(
+                    $result = $agent->installMcp(
                         key: 'herd',
                         command: $php,
                         args: [$this->herd->mcpPath()],
@@ -612,11 +612,11 @@ class InstallCommand extends Command
                         $results[] = $this->greenTick.' Herd';
                     } else {
                         $results[] = $this->redCross.' Herd';
-                        $failed[$ideName]['herd'] = 'Failed to write configuration';
+                        $failed[$agentName]['herd'] = 'Failed to write configuration';
                     }
                 } catch (Exception $e) {
                     $results[] = $this->redCross.' Herd';
-                    $failed[$ideName]['herd'] = $e->getMessage();
+                    $failed[$agentName]['herd'] = $e->getMessage();
                 }
             }
 
@@ -628,9 +628,9 @@ class InstallCommand extends Command
         if ($failed !== []) {
             $this->error(sprintf('%s Some MCP servers failed to install:', $this->redCross));
 
-            foreach ($failed as $ideName => $errors) {
+            foreach ($failed as $agentName => $errors) {
                 foreach ($errors as $server => $error) {
-                    $this->line("  - {$ideName} ({$server}): {$error}");
+                    $this->line("  - {$agentName} ({$server}): {$error}");
                 }
             }
         }

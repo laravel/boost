@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agent;
 
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Contracts\SupportGuidelines;
+use Laravel\Boost\Contracts\SupportMCP;
 use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Codex extends CodeEnvironment implements Agent, McpClient, SupportSkills
+class Codex extends Agent implements SupportGuidelines, SupportMCP, SupportSkills
 {
     public function name(): string
     {
@@ -19,7 +19,7 @@ class Codex extends CodeEnvironment implements Agent, McpClient, SupportSkills
 
     public function displayName(): string
     {
-        return 'Codex';
+        return 'Codex CLI';
     }
 
     public function systemDetectionConfig(Platform $platform): array

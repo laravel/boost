@@ -2,21 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agent;
 
-use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Contracts\SupportGuidelines;
+use Laravel\Boost\Contracts\SupportMCP;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class VSCode extends CodeEnvironment implements McpClient
+class Copilot extends Agent implements SupportGuidelines, SupportMCP, SupportSkills
 {
     public function name(): string
     {
-        return 'vscode';
+        return 'copilot';
     }
 
     public function displayName(): string
     {
-        return 'VS Code';
+        return 'GitHub Copilot';
     }
 
     public function systemDetectionConfig(Platform $platform): array
@@ -41,6 +43,7 @@ class VSCode extends CodeEnvironment implements McpClient
     {
         return [
             'paths' => ['.vscode'],
+            'files' => ['.github/copilot-instructions.md'],
         ];
     }
 
@@ -52,5 +55,15 @@ class VSCode extends CodeEnvironment implements McpClient
     public function mcpConfigKey(): string
     {
         return 'servers';
+    }
+
+    public function guidelinesPath(): string
+    {
+        return config('boost.code_environments.copilot.guidelines_path', '.github/copilot-instructions.md');
+    }
+
+    public function skillsPath(): string
+    {
+        return config('boost.code_environments.copilot.skills_path', '.github/copilot/skills');
     }
 }

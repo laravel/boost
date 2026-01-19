@@ -2,24 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agent;
 
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Contracts\SupportGuidelines;
+use Laravel\Boost\Contracts\SupportMCP;
 use Laravel\Boost\Install\Enums\Platform;
 
-class PhpStorm extends CodeEnvironment implements Agent, McpClient
+class Junie extends Agent implements SupportGuidelines, SupportMCP
 {
-    public bool $useAbsolutePathForMcp = true;
-
     public function name(): string
     {
-        return 'phpstorm';
+        return 'junie';
     }
 
     public function displayName(): string
     {
-        return 'PhpStorm';
+        return 'Junie';
     }
 
     public function systemDetectionConfig(Platform $platform): array
@@ -46,16 +44,16 @@ class PhpStorm extends CodeEnvironment implements Agent, McpClient
         };
     }
 
+    public function useAbsolutePathForMcp(): bool
+    {
+        return true;
+    }
+
     public function projectDetectionConfig(): array
     {
         return [
             'paths' => ['.idea', '.junie'],
         ];
-    }
-
-    public function agentName(): string
-    {
-        return 'Junie';
     }
 
     public function mcpConfigPath(): string

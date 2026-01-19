@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Install\CodeEnvironment\Cursor;
-use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
+use Laravel\Boost\Install\Agent\Cursor;
+use Laravel\Boost\Install\Agent\Junie;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 
 test('PhpStorm returns absolute PHP_BINARY path', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
-    $phpStorm = new PhpStorm($strategyFactory);
+    $phpStorm = new Junie($strategyFactory);
 
     expect($phpStorm->getPhpPath())->toBe(PHP_BINARY);
 });
 
 test('PhpStorm returns absolute artisan path', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
-    $phpStorm = new PhpStorm($strategyFactory);
+    $phpStorm = new Junie($strategyFactory);
 
     $artisanPath = $phpStorm->getArtisanPath();
 
@@ -38,7 +38,7 @@ test('Cursor returns relative artisan path', function (): void {
     expect($cursor->getArtisanPath())->toBe('artisan');
 });
 
-test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', function (): void {
+test('Agent returns absolute paths when forceAbsolutePath is true', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -47,7 +47,7 @@ test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', fu
         ->not->toBe('artisan');
 });
 
-test('CodeEnvironment maintains relative paths when forceAbsolutePath is false', function (): void {
+test('Agent maintains relative paths when forceAbsolutePath is false', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -57,7 +57,7 @@ test('CodeEnvironment maintains relative paths when forceAbsolutePath is false',
 
 test('PhpStorm paths remain absolute regardless of forceAbsolutePath parameter', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
-    $phpStorm = new PhpStorm($strategyFactory);
+    $phpStorm = new Junie($strategyFactory);
 
     // PhpStorm always uses absolute paths, so forceAbsolutePath shouldn't change behavior
     expect($phpStorm->getPhpPath(true))->toBe(PHP_BINARY);

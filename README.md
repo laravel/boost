@@ -39,16 +39,16 @@ Feel free to add the generated MCP configuration file, guideline files (`.mcp.js
 
 Once Laravel Boost has been installed, you're ready to start coding with Cursor, Claude Code, or your AI agent of choice.
 
-### Set up Your Code Editors
+### Set up Your Agents
 
-#### PhpStorm
+#### Junie
 
 1. Press `shift` twice to open the command palette
 2. Search "MCP Settings" and press `enter`
 3. Check the box next to `laravel-boost`
 4. Click "Apply" at the bottom right
 
-#### VS Code
+#### GitHub Copilot
 
 1. Open the command palette (`Cmd+Shift+P` or `Ctrl+Shift+P`)
 2. Press `enter` on "MCP: List Servers"
@@ -67,13 +67,13 @@ Once Laravel Boost has been installed, you're ready to start coding with Cursor,
 2. Open a shell in the project's directory
 3. Run `claude mcp add -s local -t stdio laravel-boost php artisan boost:mcp`
 
-#### Codex
+#### Codex CLI
 
 1. Codex support is typically enabled automatically, but if you find it isn't
 2. Open a shell in the project's directory
 3. Run `codex mcp add -- php artisan boost:mcp`
 
-#### Gemini
+#### Gemini CLI
 
 1. Gemini support is typically enabled automatically, but if you find it isn't
 2. Open a shell in the project's directory
@@ -212,12 +212,13 @@ JSON Example:
 
 ## Adding Support for Other IDEs / AI Agents
 
-Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn't supported yet, you can create your own code environment and integrate it with Boost. To do this, create a class that extends `Laravel\Boost\Install\CodeEnvironment\CodeEnvironment` and implement one or both of the following contracts depending on what you need:
+Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn't supported yet, you can create your own agent and integrate it with Boost. To do this, create a class that extends `Laravel\Boost\Install\Agent\Agent` and implement one or both of the following contracts depending on what you need:
 
-- `Laravel\Boost\Contracts\Agent` - Adds support for AI guidelines.
-- `Laravel\Boost\Contracts\McpClient` - Adds support for MCP.
+- `Laravel\Boost\Contracts\SupportGuidelines` - Adds support for AI guidelines.
+- `Laravel\Boost\Contracts\SupportMCP` - Adds support for MCP.
+- `Laravel\Boost\Contracts\SupportSkills` - Adds support for Skills.
 
-### Writing the Code Environment
+### Writing the Agent
 
 ```php
 <?php
@@ -226,32 +227,32 @@ declare(strict_types=1);
 
 namespace App;
 
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+use Laravel\Boost\Contracts\SupportGuidelines;
+use Laravel\Boost\Contracts\SupportMCP;
+use Laravel\Boost\Install\Agent\Agent;
 
-class OpenCode extends CodeEnvironment implements Agent, McpClient
+class CustomAgent extends Agent implements SupportGuidelines, SupportMCP
 {
     // Your implementation...
 }
 ```
 
-For an example implementation, see [ClaudeCode.php](https://github.com/laravel/boost/blob/main/src/Install/CodeEnvironment/ClaudeCode.php).
+For an example implementation, see [ClaudeCode.php](https://github.com/laravel/boost/blob/main/src/Install/Agent/ClaudeCode.php).
 
-### Registering the Code Environment
+### Registering the Agent
 
-Register your custom code environment in the `boot` method of your application's `App\Providers\AppServiceProvider`:
+Register your custom agent in the `boot` method of your application's `App\Providers\AppServiceProvider`:
 
 ```php
 use Laravel\Boost\Boost;
 
 public function boot(): void
 {
-    Boost::registerCodeEnvironment('opencode', OpenCode::class);
+    Boost::registerAgent('customagent', CustomAgent::class);
 }
 ```
 
-Once registered, your code environment will be available for selection when running `php artisan boost:install`.
+Once registered, your agent will be available for selection when running `php artisan boost:install`.
 
 ## Contributing
 
