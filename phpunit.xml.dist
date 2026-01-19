@@ -14,5 +14,6 @@
     <php>
         <env name="APP_KEY" value="base64:uz4B1RtFO57QGzbZX1kRYX9hIRB50+QzqFeg9zbFJlY="/>
         <env name="APP_DEBUG" value="true"/>
+        <env name="CACHE_STORE" value="array"/>
     </php>
 </phpunit>

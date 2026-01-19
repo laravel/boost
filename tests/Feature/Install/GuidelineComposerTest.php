@@ -28,66 +28,25 @@ beforeEach(function (): void {
     $this->composer = new GuidelineComposer($this->roster, $this->herd);
 });
 
-test('includes Inertia React conditional guidelines based on version', function (string $version, bool $shouldIncludeForm, bool $shouldInclude212Features): void {
+test('includes Inertia React conditional guidelines based on version', function (string $version): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', $version),
-        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', $shouldInclude212Features ? '2.1.2' : '2.1.0'),
+        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', $version),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, '2.1.0', '>=')
-        ->andReturn($shouldIncludeForm);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, '2.1.0', '>=')
-        ->andReturn($shouldIncludeForm);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, '2.1.0', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, '2.1.0', '>=')
-        ->andReturn(false);
-
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, '2.1.2', '>=')
-        ->andReturn($shouldInclude212Features);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, '2.1.2', '>=')
-        ->andReturn($shouldInclude212Features);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, '2.1.2', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, '2.1.2', '>=')
-        ->andReturn(false);
 
     $guidelines = $this->composer->compose();
 
-    // Use test markers to verify conditional logic without depending on actual content
-    if ($shouldIncludeForm) {
-        expect($guidelines)
-            ->toContain('`<Form>` Component Example');
-
-        if ($shouldInclude212Features) {
-            expect($guidelines)
-                ->toContain('form component resetting')
-                ->not->toContain('does not support');
-        } else {
-            expect($guidelines)
-                ->toContain('does not support')
-                ->not->toContain('form component resetting');
-        }
-    } else {
-        expect($guidelines)
-            ->toContain('`useForm` helper')
-            ->not->toContain('Example form using the `<Form>` component');
-    }
+    // Verify core guidelines reference the skill (detailed examples are in skills now)
+    expect($guidelines)
+        ->toContain('inertia-react-development');
 })->with([
-    'version 2.0.9 (no features)' => ['2.0.9', false, false],
-    'version 2.1.0 (Form component only)' => ['2.1.0', true, false],
-    'version 2.1.2 (all features)' => ['2.1.2', true, true],
-    'version 2.2.0 (all features)' => ['2.2.0', true, true],
+    'version 2.0.9' => ['2.0.9'],
+    'version 2.1.0' => ['2.1.0'],
+    'version 2.1.2' => ['2.1.2'],
+    'version 2.2.0' => ['2.2.0'],
 ]);
 
 test('includes package guidelines only for installed packages', function (): void {
@@ -257,9 +216,7 @@ test('handles multiple package versions correctly', function (): void {
 
     expect($guidelines)
         ->toContain('=== inertia-react/core rules ===')
-        ->toContain('=== inertia-react/v2/forms rules ===')
         ->toContain('=== inertia-vue/core rules ===')
-        ->toContain('=== inertia-vue/v2/forms rules ===')
         ->toContain('=== pest/core rules ===');
 });
 
@@ -392,7 +349,10 @@ test('includes laravel/mcp guidelines when directly required', function (): void
     $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
     $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
 
-    expect($this->composer->compose())->toContain('Mcp::web');
+    expect($this->composer->compose())
+        ->toContain('Laravel MCP')
+        ->toContain('mcp-development')
+        ->not->toContain('Mcp::web');
 });
 
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
@@ -471,9 +431,12 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('=== .ai/test-blade-with-assist rules ===')
         ->toContain('Run `npm install` to install dependencies')
         ->toContain('Package manager: npm install')
-        // Preserves @volt directives in blade templates
-        ->toContain('`@volt`')
-        ->toContain('@endvolt')
+        // Volt guidelines should be included but not skill content
+        ->toContain('Livewire Volt')
+        ->toContain('volt-development')
+        // Skill content should NOT be in guidelines (it's in the skill file)
+        ->not->toContain('`@volt`') // This is in the skill, not the guideline
+        ->not->toContain('@endvolt')
         ->not->toContain('volt-anonymous-fragment')
         ->not->toContain('@livewire');
 });
@@ -510,13 +473,8 @@ test('includes wayfinder guidelines with inertia integration when both packages 
 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
-        ->toContain('Wayfinder + Inertia')
-        ->toContain('Wayfinder Form Component (React)')
-        ->toContain('<Form {...store.form()}>')
         ->toContain('## Laravel Wayfinder')
-        ->not->toContain('Wayfinder Form Component (Vue)')
-        ->not->toContain('Wayfinder Form Component (Svelte)')
-        ->not->toContain('<Form v-bind="store.form()">');
+        ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
@@ -551,12 +509,8 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
-        ->toContain('Wayfinder + Inertia')
-        ->toContain('Wayfinder Form Component (Vue)')
-        ->toContain('<Form v-bind="store.form()">')
         ->toContain('## Laravel Wayfinder')
-        ->not->toContain('Wayfinder Form Component (React)')
-        ->not->toContain('Wayfinder Form Component (Svelte)');
+        ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
@@ -591,13 +545,8 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
-        ->toContain('Wayfinder + Inertia')
-        ->toContain('Wayfinder Form Component (Svelte)')
-        ->toContain('<Form {...store.form()}>')
         ->toContain('## Laravel Wayfinder')
-        ->not->toContain('Wayfinder Form Component (React)')
-        ->not->toContain('Wayfinder Form Component (Vue)')
-        ->not->toContain('<Form v-bind="store.form()">');
+        ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
 
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
@@ -631,9 +580,9 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('## Laravel Wayfinder')
-        ->toContain("import { show, store, update } from '@/actions/App/Http/Controllers/PostController'")
-        ->not->toContain('Wayfinder + Inertia')
-        ->not->toContain('Wayfinder Form Component');
+        ->toContain('Invokable Controllers')
+        ->toContain('Parameter Binding')
+        ->not->toContain('Inertia:');
 });
 
 test('the guidelines are in correct order', function (): void {

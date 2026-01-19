@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Enums\Packages;
@@ -18,14 +19,17 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class GuidelineComposer
 {
+    use DiscoverPackagePaths;
     use RendersBladeGuidelines;
 
     protected string $userGuidelineDir = '.ai/guidelines';
 
-    /** @var Collection<string, array> */
-    protected Collection $guidelines;
+    /** @var Collection<string, array>|null */
+    protected ?Collection $guidelines = null;
 
     protected GuidelineConfig $config;
+
+    protected ?SkillComposer $skillComposer = null;
 
     /**
      * Package priority system to handle conflicts between packages.
@@ -62,6 +66,11 @@ class GuidelineComposer
             Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
         ];
         $this->config = new GuidelineConfig;
+    }
+
+    protected function getRoster(): Roster
+    {
+        return $this->roster;
     }
 
     public function config(GuidelineConfig $config): self
@@ -112,7 +121,7 @@ class GuidelineComposer
      */
     public function guidelines(): Collection
     {
-        if (! empty($this->guidelines)) {
+        if ($this->guidelines instanceof Collection) {
             return $this->guidelines;
         }
 
@@ -193,7 +202,7 @@ class GuidelineComposer
         return $this->roster->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function ($package): Collection {
-                $guidelineDir = str_replace('_', '-', strtolower($package->name()));
+                $guidelineDir = $this->normalizePackageName($package->name());
                 $guidelines = collect([$guidelineDir.'/core' => $this->guideline($guidelineDir.'/core')]);
                 $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
 
@@ -217,20 +226,18 @@ class GuidelineComposer
     {
         $guidelines = collect();
 
-        collect(Composer::packagesDirectoriesWithBoostGuidelines())
-            ->each(function (string $path, string $package) use ($guidelines): void {
-                $packageGuidelines = $this->guidelinesDir($path, true);
+        foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
+            foreach ($this->guidelinesDir($path, true) as $guideline) {
+                $guidelines->put($package, $guideline);
+            }
+        }
 
-                foreach ($packageGuidelines as $guideline) {
-                    $guidelines->put($package, $guideline);
-                }
-            });
+        if (! isset($this->config->aiGuidelines)) {
+            return $guidelines;
+        }
 
-        return $guidelines->when(
-            isset($this->config->aiGuidelines),
-            fn (Collection $collection): Collection => $collection->filter(
-                fn (mixed $guideline, string $name): bool => in_array($name, $this->config->aiGuidelines, true),
-            )
+        return $guidelines->filter(
+            fn (mixed $guideline, string $name): bool => in_array($name, $this->config->aiGuidelines, true),
         );
     }
 
@@ -260,13 +267,14 @@ class GuidelineComposer
     protected function guidelinesDir(string $dirPath, bool $thirdParty = false): array
     {
         if (! is_dir($dirPath)) {
-            $dirPath = str_replace('/', DIRECTORY_SEPARATOR, __DIR__.'/../../.ai/'.$dirPath);
+            $dirPath = str_replace('/', DIRECTORY_SEPARATOR, $this->getBoostAiPath().'/'.$dirPath);
         }
 
         try {
             $finder = Finder::create()
                 ->files()
                 ->in($dirPath)
+                ->exclude('skill')
                 ->name('*.blade.php')
                 ->name('*.md');
         } catch (DirectoryNotFoundException) {
@@ -284,7 +292,8 @@ class GuidelineComposer
     protected function guideline(string $path, bool $thirdParty = false): array
     {
         $path = $this->guidelinePath($path);
-        if (is_null($path)) {
+
+        if ($path === null) {
             return [
                 'content' => '',
                 'description' => '',
@@ -295,14 +304,7 @@ class GuidelineComposer
             ];
         }
 
-        $content = file_get_contents($path);
-        $content = $this->processBoostSnippets($content);
-
-        $rendered = $this->renderContent($content, $path);
-
-        $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
-
-        $this->storedSnippets = []; // Clear for next use
+        $rendered = $this->renderBladeFile($path);
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -325,12 +327,14 @@ class GuidelineComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config);
+        $skillsComposer = $this->skillComposer ??= new SkillComposer($this->roster, $this->config);
+
+        return new GuidelineAssist($this->roster, $this->config, $skillsComposer->skills());
     }
 
     protected function prependPackageGuidelinePath(string $path): string
     {
-        return $this->prependGuidelinePath($path, __DIR__.'/../../.ai/');
+        return $this->prependGuidelinePath($path, $this->getBoostAiPath().'/');
     }
 
     protected function prependUserGuidelinePath(string $path): string

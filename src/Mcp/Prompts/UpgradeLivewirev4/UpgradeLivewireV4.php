@@ -27,7 +27,7 @@ class UpgradeLivewireV4 extends Prompt
 
     public function handle(): Response
     {
-        $content = $this->renderGuidelineFile(__DIR__.'/upgrade-livewire-v4.blade.php');
+        $content = $this->renderBladeFile(__DIR__.'/upgrade-livewire-v4.blade.php');
 
         return Response::text($content);
     }

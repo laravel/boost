@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Copilot extends CodeEnvironment implements Agent
+class Copilot extends CodeEnvironment implements Agent, SupportSkills
 {
     public function name(): string
     {
@@ -47,5 +48,10 @@ class Copilot extends CodeEnvironment implements Agent
     public function guidelinesPath(): string
     {
         return config('boost.code_environments.copilot.guidelines_path', '.github/copilot-instructions.md');
+    }
+
+    public function skillsPath(): string
+    {
+        return config('boost.code_environments.copilot.skills_path', '.github/copilot/skills');
     }
 }

@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Install\Cli\DisplayHelper;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
 use Laravel\Boost\Install\GuidelineComposer;
@@ -20,13 +20,17 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\Sail;
+use Laravel\Boost\Install\Skill;
+use Laravel\Boost\Install\SkillComposer;
+use Laravel\Boost\Install\SkillWriter;
+use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
-use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\grid;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
@@ -62,6 +66,7 @@ class InstallCommand extends Command
     /** @var array<non-empty-string> */
     private array $systemInstalledCodeEnvironments = [];
 
+    /** @var array<non-empty-string> */
     private array $projectInstalledCodeEnvironments = [];
 
     private bool $enforceTests = true;
@@ -153,7 +158,7 @@ class InstallCommand extends Command
     protected function collectInstallationPreferences(): void
     {
         $this->selectedBoostFeatures = $this->selectBoostFeatures();
-        $this->selectedAiGuidelines = $this->selectAiGuidelines();
+        $this->selectedAiGuidelines = $this->selectThirdPartyPackages();
         $this->selectedTargetMcpClient = $this->selectTargetMcpClients();
         $this->selectedTargetAgents = $this->selectTargetAgents();
         $this->enforceTests = $this->determineTestEnforcement();
@@ -170,27 +175,6 @@ class InstallCommand extends Command
         if ($this->installMcpConfig && $this->selectedTargetMcpClient->isNotEmpty()) {
             $this->installMcpServerConfig();
         }
-    }
-
-    protected function discoverTools(): array
-    {
-        $tools = [];
-        $toolDir = implode(DIRECTORY_SEPARATOR, [__DIR__, '..', 'Mcp', 'Tools']);
-        $finder = Finder::create()
-            ->in($toolDir)
-            ->files()
-            ->name('*.php');
-
-        foreach ($finder as $toolFile) {
-            $fullyClassifiedClassName = 'Laravel\\Boost\\Mcp\\Tools\\'.$toolFile->getBasename('.php');
-            if (class_exists($fullyClassifiedClassName, false)) {
-                $tools[$fullyClassifiedClassName] = Str::headline($toolFile->getBasename('.php'));
-            }
-        }
-
-        ksort($tools);
-
-        return $tools;
     }
 
     protected function outro(): void
@@ -301,27 +285,23 @@ class InstallCommand extends Command
     /**
      * @return Collection<int, string>
      */
-    protected function selectAiGuidelines(): Collection
+    protected function selectThirdPartyPackages(): Collection
     {
         if (! $this->installGuidelines) {
             return collect();
         }
 
-        $options = app(GuidelineComposer::class)->guidelines()
-            ->reject(fn (array $guideline): bool => $guideline['third_party'] === false);
+        $packages = ThirdPartyPackage::discover(app(GuidelineComposer::class));
 
-        if ($options->isEmpty()) {
+        if ($packages->isEmpty()) {
             return collect();
         }
 
         return collect(multiselect(
-            label: 'Which third-party AI guidelines do you want to install?',
-            // @phpstan-ignore-next-line
-            options: $options->mapWithKeys(function (array $guideline, string $name): array {
-                $humanName = str_replace('/core', '', $name);
-
-                return [$name => "{$humanName} (~{$guideline['tokens']} tokens) {$guideline['description']}"];
-            }),
+            label: 'Which third-party AI guidelines/skills do you want to install?',
+            options: $packages->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [
+                $name => $pkg->displayLabel(),
+            ])->toArray(),
             default: collect($this->config->getGuidelines()),
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
@@ -464,49 +444,23 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()));
-        DisplayHelper::grid(
-            $guidelines
-                ->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))
-                ->values()
-                ->sort()
-                ->toArray(),
-            $this->terminal->cols()
-        );
+        grid($guidelines->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))->sort()->values()->toArray());
         $this->newLine();
         usleep(750000);
 
-        $failed = [];
         $composedAiGuidelines = $composer->compose();
 
-        $longestAgentName = max(1, ...$this->selectedTargetAgents->map(fn ($agent) => Str::length($agent->agentName()))->toArray());
-        /** @var CodeEnvironment $agent */
-        foreach ($this->selectedTargetAgents as $agent) {
-            $agentName = $agent->agentName();
-            $displayAgentName = str_pad((string) $agentName, $longestAgentName);
-            $this->output->write("  {$displayAgentName}... ");
-            /** @var Agent $agent */
-            try {
-                (new GuidelineWriter($agent))
-                    ->write($composedAiGuidelines);
-
-                $this->line($this->greenTick);
-            } catch (Exception $e) {
-                $failed[$agentName] = $e->getMessage();
-                $this->line($this->redCross);
-            }
-        }
+        $this->processWithProgress(
+            $this->selectedTargetAgents,
+            fn (Agent $agent): string => $agent->agentName(),
+            fn (Agent $agent): int => (new GuidelineWriter($agent))->write($composedAiGuidelines),
+            'guidelines',
+        );
 
         $this->newLine();
 
-        if ($failed !== []) {
-            $this->error(sprintf('✗ Failed to install guidelines to %d agent%s:',
-                count($failed),
-                count($failed) === 1 ? '' : 's'
-            ));
-            foreach ($failed as $agentName => $error) {
-                $this->line("  - {$agentName}: {$error}");
-            }
-        }
+        $skillComposer = app(SkillComposer::class)->config($guidelineConfig);
+        $this->installSkills($skillComposer);
 
         if ($this->installMcpConfig) {
             $this->config->setSail(
@@ -531,6 +485,33 @@ class InstallCommand extends Command
         );
     }
 
+    protected function installSkills(SkillComposer $skillComposer): void
+    {
+        $skillsAgents = $this->selectedTargetAgents
+            ->filter(fn ($agent): bool => $agent instanceof SupportSkills);
+
+        $skills = $skillComposer->skills();
+
+        if ($skillsAgents->isEmpty() || $skills->isEmpty()) {
+            return;
+        }
+
+        $this->newLine();
+        $this->info(sprintf(' Installing %d skills for skills-capable agents', $skills->count()));
+        grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray());
+        $this->newLine();
+
+        /** @var Collection<int, SupportSkills&Agent> $skillsAgents */
+        $this->processWithProgress(
+            $skillsAgents,
+            fn (SupportSkills&Agent $agent): string => $agent->agentName(),
+            fn (SupportSkills&Agent $agent): array => (new SkillWriter($agent))->writeAll($skills),
+            'skills',
+        );
+
+        $this->newLine();
+    }
+
     protected function shouldInstallStyleGuidelines(): bool
     {
         return false;
@@ -543,11 +524,9 @@ class InstallCommand extends Command
 
     protected function shouldUseSail(): bool
     {
-        if ($this->selectedBoostFeatures->isEmpty()) {
-            return $this->config->getSail();
-        }
-
-        return $this->selectedBoostFeatures->contains('sail');
+        return $this->selectedBoostFeatures->isEmpty()
+            ? $this->config->getSail()
+            : $this->selectedBoostFeatures->contains('sail');
     }
 
     protected function buildMcpCommand(McpClient $mcpClient): array
@@ -653,6 +632,50 @@ class InstallCommand extends Command
                 foreach ($errors as $server => $error) {
                     $this->line("  - {$ideName} ({$server}): {$error}");
                 }
+            }
+        }
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Collection<int, T>  $items
+     * @param  callable(T): string  $nameResolver
+     * @param  callable(T): mixed  $processor
+     */
+    protected function processWithProgress(
+        Collection $items,
+        callable $nameResolver,
+        callable $processor,
+        string $entityName,
+    ): void {
+        $failed = [];
+
+        $longestName = max(1, ...$items->map(fn ($item) => Str::length($nameResolver($item)))->toArray());
+
+        foreach ($items as $item) {
+            $name = $nameResolver($item);
+            $displayName = str_pad($name, $longestName);
+            $this->output->write("  {$displayName}... ");
+
+            try {
+                $processor($item);
+                $this->line($this->greenTick);
+            } catch (Exception $e) {
+                $failed[$name] = $e->getMessage();
+                $this->line($this->redCross);
+            }
+        }
+
+        if ($failed !== []) {
+            $this->newLine();
+            $this->error(sprintf('✗ Failed to install %s to %d agent%s:',
+                $entityName,
+                count($failed),
+                count($failed) === 1 ? '' : 's'
+            ));
+            foreach ($failed as $agentName => $error) {
+                $this->line("  - {$agentName}: {$error}");
             }
         }
     }

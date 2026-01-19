@@ -51,7 +51,7 @@ trait RendersBladeGuidelines
         }, $content);
     }
 
-    protected function renderGuidelineFile(string $bladePath): string
+    protected function renderBladeFile(string $bladePath): string
     {
         if (! file_exists($bladePath)) {
             return '';

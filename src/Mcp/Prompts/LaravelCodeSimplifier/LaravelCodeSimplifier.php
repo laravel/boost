@@ -20,7 +20,7 @@ class LaravelCodeSimplifier extends Prompt
 
     public function handle(): Response
     {
-        $content = $this->renderGuidelineFile(__DIR__.'/laravel-code-simplifier.blade.php');
+        $content = $this->renderBladeFile(__DIR__.'/laravel-code-simplifier.blade.php');
 
         return Response::text($content);
     }

@@ -6,9 +6,10 @@ namespace Laravel\Boost\Install\CodeEnvironment;
 
 use Laravel\Boost\Contracts\Agent;
 use Laravel\Boost\Contracts\McpClient;
+use Laravel\Boost\Contracts\SupportSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Gemini extends CodeEnvironment implements Agent, McpClient
+class Gemini extends CodeEnvironment implements Agent, McpClient, SupportSkills
 {
     public function name(): string
     {
@@ -48,5 +49,10 @@ class Gemini extends CodeEnvironment implements Agent, McpClient
     public function guidelinesPath(): string
     {
         return config('boost.code_environments.gemini.guidelines_path', 'GEMINI.md');
+    }
+
+    public function skillsPath(): string
+    {
+        return config('boost.code_environments.gemini.skills_path', '.gemini/skills');
     }
 }
