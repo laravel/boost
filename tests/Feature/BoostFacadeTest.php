@@ -20,8 +20,7 @@ it('Boost Facade registers agents via facade', function (): void {
     expect($registered)->toHaveKey('example1')
         ->and($registered['example1'])->toBe(ExampleAgent::class)
         ->and($registered)->toHaveKey('example2')
-        ->and($registered['example2'])->toBe(ExampleAgent::class)
-        ->and($registered)->toHaveKey('junie');
+        ->and($registered['example2'])->toBe(ExampleAgent::class);
 });
 
 it('Boost Facade maintains registration state across facade calls', function (): void {

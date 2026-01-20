@@ -12,7 +12,7 @@ interface SupportsSkills
     /**
      * Get the file path where agent skills should be written.
      *
-     * @return string The relative or absolute path to the guideline file
+     * @return string The relative or absolute path to the skills file
      */
     public function skillsPath(): string;
 }

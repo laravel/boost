@@ -5,6 +5,11 @@ declare(strict_types=1);
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Install\McpWriter;
 
+afterEach(function (): void {
+    putenv('WSL_DISTRO_NAME');
+    putenv('IS_WSL');
+});
+
 test('isRunningInsideWsl returns true when WSL_DISTRO_NAME is set', function (): void {
     putenv('WSL_DISTRO_NAME=Ubuntu');
 

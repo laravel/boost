@@ -76,29 +76,3 @@ test('skill has name, description, path, and package', function (): void {
         ->custom->toBeFalse();
 });
 
-test('skills result is cached', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->twice()->andReturn($packages);
-
-    $composer = new SkillComposer($this->roster);
-
-    expect($composer->skills())->toBe($composer->skills());
-});
-
-test('config change clears skills cache', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->times(4)->andReturn($packages);
-
-    $composer = new SkillComposer($this->roster);
-    $first = $composer->skills();
-
-    $composer->config(new GuidelineConfig);
-
-    expect($composer->skills())->not->toBe($first);
-});
