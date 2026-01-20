@@ -40,7 +40,11 @@ abstract class CodeEnvironment
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
-        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
+        if ($this->useAbsolutePathForMcp() || $forceAbsolutePath) {
+            return PHP_BINARY;
+        }
+
+        return config('boost.default_php_bin', 'php');
     }
 
     public function getArtisanPath(bool $forceAbsolutePath = false): string

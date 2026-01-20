@@ -31,6 +31,24 @@ test('Cursor returns relative php string', function (): void {
     expect($cursor->getPhpPath())->toBe('php');
 });
 
+test('Cursor uses configured default_php_bin when not forcing absolute path', function (): void {
+    config(['boost.default_php_bin' => '/custom/path/to/php']);
+
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $cursor = new Cursor($strategyFactory);
+
+    expect($cursor->getPhpPath())->toBe('/custom/path/to/php');
+});
+
+test('Cursor uses PHP_BINARY when forceAbsolutePath is true regardless of config', function (): void {
+    config(['boost.default_php_bin' => '/custom/path/to/php']);
+
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $cursor = new Cursor($strategyFactory);
+
+    expect($cursor->getPhpPath(true))->toBe(PHP_BINARY);
+});
+
 test('Cursor returns relative artisan path', function (): void {
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);

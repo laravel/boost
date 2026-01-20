@@ -194,7 +194,7 @@ class GuidelineAssist
     {
         $composerCommand = $this->config->usesSail
             ? Sail::composerCommand()
-            : 'composer';
+            : config('boost.default_composer_bin', 'composer');
 
         return "{$composerCommand} {$command}";
     }
@@ -208,9 +208,13 @@ class GuidelineAssist
 
     public function artisan(): string
     {
-        return $this->config->usesSail
-            ? Sail::artisanCommand()
-            : 'php artisan';
+        if ($this->config->usesSail) {
+            return Sail::artisanCommand();
+        }
+
+        $phpBin = config('boost.default_php_bin', 'php');
+
+        return "{$phpBin} artisan";
     }
 
     public function sailBinaryPath(): string
