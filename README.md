@@ -212,7 +212,7 @@ JSON Example:
 
 ## Adding Support for Other IDEs / AI Agents
 
-Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn't supported yet, you can create your own agent and integrate it with Boost. To do this, create a class that extends `Laravel\Boost\Install\Agent\Agent` and implement one or both of the following contracts depending on what you need:
+Boost works with many popular IDEs and AI agents out of the box. If your coding tool isn't supported yet, you can create your own agent and integrate it with Boost. To do this, create a class that extends `Laravel\Boost\Install\Agents\Agent` and implement one or both of the following contracts depending on what you need:
 
 - `Laravel\Boost\Contracts\SupportsGuidelines` - Adds support for AI guidelines.
 - `Laravel\Boost\Contracts\SupportsMcp` - Adds support for MCP.

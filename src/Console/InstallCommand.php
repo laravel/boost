@@ -365,8 +365,8 @@ class InstallCommand extends Command
 
         $this->installFeature(
             agents: $guidelinesAgents,
-            emptyMessage: ' No agents are selected for guideline installation.',
-            headerMessage: sprintf(' Adding %d guidelines to your selected agents', $guidelines->count()),
+            emptyMessage: 'No agents are selected for guideline installation.',
+            headerMessage: sprintf('Adding %d guidelines to your selected agents', $guidelines->count()),
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: fn (Agent&SupportsGuidelines $agent): int => (new GuidelineWriter($agent))->write($composedAiGuidelines),
             featureName: 'guidelines',
@@ -388,8 +388,8 @@ class InstallCommand extends Command
         /** @var Collection<int, SupportsSkills&Agent> $skillsAgents */
         $this->installFeature(
             agents: $skillsAgents,
-            emptyMessage: ' No agents are selected for skill installation.',
-            headerMessage: sprintf(' Installing %d skills for skills-capable agents', $skills->count()),
+            emptyMessage: 'No agents are selected for skill installation.',
+            headerMessage: sprintf('Installing %d skills for skills-capable agents', $skills->count()),
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
             processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->writeAll($skills),
             featureName: 'skills',
@@ -438,8 +438,8 @@ class InstallCommand extends Command
     {
         $this->installFeature(
             agents: $this->agentsWithMcp(),
-            emptyMessage: ' No agents are selected for MCP installation.',
-            headerMessage: ' Installing MCP servers to your selected IDEs',
+            emptyMessage: 'No agents are selected for MCP installation.',
+            headerMessage: 'Installing MCP servers to your selected IDEs',
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
                 $this->shouldUseSail() ? $this->sail : null,

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install;
 
+use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\Enums\Platform;
 
-class ExampleAgent extends Agent implements SupportsMcp
+class ExampleAgent extends Agent implements SupportsGuidelines, SupportsMcp
 {
     public function name(): string
     {

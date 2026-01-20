@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Enums\NodePackageManager;
@@ -73,4 +74,31 @@ test('skill has name, description, path, and package', function (): void {
         ->description->not->toBeEmpty()
         ->path->toBeDirectory()
         ->custom->toBeFalse();
+});
+
+test('skills result is cached', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = new SkillComposer($this->roster);
+
+    expect($composer->skills())->toBe($composer->skills());
+});
+
+test('config change clears skills cache', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = new SkillComposer($this->roster);
+    $first = $composer->skills();
+
+    $composer->config(new GuidelineConfig);
+
+    expect($composer->skills())->not->toBe($first);
 });
