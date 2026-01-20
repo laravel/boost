@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
-use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Enums\NodePackageManager;
@@ -75,4 +74,3 @@ test('skill has name, description, path, and package', function (): void {
         ->path->toBeDirectory()
         ->custom->toBeFalse();
 });
-
