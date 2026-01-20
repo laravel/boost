@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
+use FilesystemIterator;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use RuntimeException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -52,6 +55,94 @@ class SkillWriter
         return $skills
             ->mapWithKeys(fn (Skill $skill): array => [$skill->name => $this->write($skill)])
             ->all();
+    }
+
+    /**
+     * @param  Collection<string, Skill>  $skills
+     * @return array{written: array<string, int>, removed: array<string, bool>}
+     */
+    public function sync(Collection $skills): array
+    {
+        $written = $this->writeAll($skills);
+
+        $newSkillNames = $skills->keys()->all();
+        $existingSkillNames = $this->discoverExistingSkills();
+        $staleSkillNames = array_values(array_diff($existingSkillNames, $newSkillNames));
+
+        $removed = $this->removeStale($staleSkillNames);
+
+        return ['written' => $written, 'removed' => $removed];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function discoverExistingSkills(): array
+    {
+        $skillsPath = base_path($this->agent->skillsPath());
+
+        if (! is_dir($skillsPath)) {
+            return [];
+        }
+
+        $directories = new FilesystemIterator($skillsPath, FilesystemIterator::SKIP_DOTS);
+        $skills = [];
+
+        foreach ($directories as $directory) {
+            if ($directory->isDir()) {
+                $skills[] = $directory->getFilename();
+            }
+        }
+
+        return $skills;
+    }
+
+    public function remove(string $skillName): bool
+    {
+        if (! $this->isValidSkillName($skillName)) {
+            return false;
+        }
+
+        $targetPath = base_path($this->agent->skillsPath().'/'.$skillName);
+
+        if (! is_dir($targetPath)) {
+            return true;
+        }
+
+        return $this->deleteDirectory($targetPath);
+    }
+
+    /**
+     * @param  array<int, string>  $skillNames
+     * @return array<string, bool>
+     */
+    public function removeStale(array $skillNames): array
+    {
+        $results = [];
+
+        foreach ($skillNames as $name) {
+            $results[$name] = $this->remove($name);
+        }
+
+        return $results;
+    }
+
+    protected function deleteDirectory(string $path): bool
+    {
+        if (! is_dir($path)) {
+            return false;
+        }
+
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($files as $file) {
+            $file->isDir() ? @rmdir($file->getRealPath()) : @unlink($file->getRealPath());
+        }
+
+        return @rmdir($path);
     }
 
     protected function copyDirectory(string $source, string $target): bool

@@ -32,7 +32,7 @@ it('returns collection of all registered agents', function (): void {
     expect($agents)->toBeInstanceOf(Collection::class)
         ->and($agents->count())->toBe(7)
         ->and($agents->keys()->toArray())->toBe([
-            'junie', 'cursor', 'claudecode', 'codex', 'copilot', 'opencode', 'gemini',
+            'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'opencode', 'gemini',
         ]);
 
     $agents->each(function ($agent): void {
@@ -95,7 +95,7 @@ it('returns an array of detected agent names for project discovery', function ()
 
     $mockClaudeCode = Mockery::mock(Agent::class);
     $mockClaudeCode->shouldReceive('detectInProject')->with($basePath)->andReturn(true);
-    $mockClaudeCode->shouldReceive('name')->andReturn('claudecode');
+    $mockClaudeCode->shouldReceive('name')->andReturn('claude_code');
 
     $mockOther = Mockery::mock(Agent::class);
     $mockOther->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
@@ -112,7 +112,7 @@ it('returns an array of detected agent names for project discovery', function ()
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledAgents($basePath);
 
-    expect($detected)->toBe(['claudecode']);
+    expect($detected)->toBe(['claude_code']);
 });
 
 it('returns an empty array when no agents are detected for project discovery', function (): void {

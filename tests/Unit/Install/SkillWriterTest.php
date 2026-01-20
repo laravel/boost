@@ -201,3 +201,159 @@ it('renders blade templates to markdown', function (): void {
 
     cleanupSkillDirectory($absoluteTarget);
 });
+
+it('removes a skill directory', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillDir = $absoluteTarget.'/test-skill';
+
+    mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', 'test content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->remove('test-skill');
+
+    expect($result)->toBeTrue()
+        ->and($skillDir)->not->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('returns true when removing a non-existent skill', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->remove('nonexistent-skill');
+
+    expect($result)->toBeTrue();
+});
+
+it('returns false when removing skill with invalid name', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+
+    expect($writer->remove('../malicious'))->toBeFalse()
+        ->and($writer->remove('skill/with/slash'))->toBeFalse();
+});
+
+it('removes multiple stale skills', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $skillOneDir = $absoluteTarget.'/skill-one';
+    $skillTwoDir = $absoluteTarget.'/skill-two';
+    $skillThreeDir = $absoluteTarget.'/skill-three';
+
+    mkdir($skillOneDir, 0755, true);
+    mkdir($skillTwoDir, 0755, true);
+    mkdir($skillThreeDir, 0755, true);
+
+    file_put_contents($skillOneDir.'/SKILL.md', 'skill one');
+    file_put_contents($skillTwoDir.'/SKILL.md', 'skill two');
+    file_put_contents($skillThreeDir.'/SKILL.md', 'skill three');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $results = $writer->removeStale(['skill-one', 'skill-two']);
+
+    expect($results)->toHaveCount(2)
+        ->and($results['skill-one'])->toBeTrue()
+        ->and($results['skill-two'])->toBeTrue()
+        ->and($skillOneDir)->not->toBeDirectory()
+        ->and($skillTwoDir)->not->toBeDirectory()
+        ->and($skillThreeDir)->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('removes nested skill directory with deep structure', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillDir = $absoluteTarget.'/nested-skill';
+    $deepDir = $skillDir.'/references/deep/nested';
+
+    mkdir($deepDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', 'test');
+    file_put_contents($deepDir.'/file.md', 'nested content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->remove('nested-skill');
+
+    expect($result)->toBeTrue()
+        ->and($skillDir)->not->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('syncs skills by writing new and removing stale', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $staleSkillDir = $absoluteTarget.'/stale-skill';
+    mkdir($staleSkillDir, 0755, true);
+    file_put_contents($staleSkillDir.'/SKILL.md', 'stale content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        'new-skill' => new Skill('new-skill', 'boost', $sourceDir, 'New skill'),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync($skills);
+
+    expect($result['written'])->toHaveCount(1)
+        ->and($result['written']['new-skill'])->toBe(SkillWriter::SUCCESS)
+        ->and($result['removed'])->toHaveCount(1)
+        ->and($result['removed']['stale-skill'])->toBeTrue()
+        ->and($absoluteTarget.'/new-skill')->toBeDirectory()
+        ->and($staleSkillDir)->not->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('sync preserves skills that exist in both source and target', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $existingSkillDir = $absoluteTarget.'/existing-skill';
+    mkdir($existingSkillDir, 0755, true);
+    file_put_contents($existingSkillDir.'/SKILL.md', 'old content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        'existing-skill' => new Skill('existing-skill', 'boost', $sourceDir, 'Existing skill'),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync($skills);
+
+    expect($result['written']['existing-skill'])->toBe(SkillWriter::UPDATED)
+        ->and($result['removed'])->toBeEmpty()
+        ->and($existingSkillDir)->toBeDirectory();
+
+    $content = file_get_contents($existingSkillDir.'/SKILL.md');
+    expect($content)->toContain('name: test-skill');
+
+    cleanupSkillDirectory($absoluteTarget);
+});

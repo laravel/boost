@@ -20,14 +20,31 @@ class Config
         $this->set('guidelines', $enabled);
     }
 
-    public function getSkills(): bool
+    /**
+     * @return array<int, string>
+     */
+    public function getSkills(): array
     {
-        return $this->get('skills', false);
+        return $this->get('skills', []);
     }
 
-    public function setSkills(bool $enabled): void
+    /**
+     * @param  array<int, string>  $skills
+     */
+    public function setSkills(array $skills): void
     {
-        $this->set('skills', $enabled);
+        $this->set('skills', $skills);
+    }
+
+    public function hasSkills(): bool
+    {
+        $skills = $this->get('skills', []);
+
+        if (is_bool($skills)) {
+            return $skills;
+        }
+
+        return count($skills) > 0;
     }
 
     public function getMcp(): bool
@@ -110,7 +127,7 @@ class Config
 
     protected function set(string $key, mixed $value): void
     {
-        $config = array_filter($this->all());
+        $config = array_filter($this->all(), fn ($value): bool => $value !== null && $value !== []);
 
         data_set($config, $key, $value);
 
