@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Install\CodeEnvironment;
+namespace Tests\Unit\Install\Agents;
 
-use Laravel\Boost\Install\CodeEnvironment\Codex;
+use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
@@ -31,7 +31,7 @@ test('guidelinesPath returns default AGENTS.md when no config set', function ():
 });
 
 test('guidelinesPath returns a custom path from config', function (): void {
-    config(['boost.code_environments.codex.guidelines_path' => 'docs/AGENTS.md']);
+    config(['boost.agents.codex.guidelines_path' => 'docs/AGENTS.md']);
 
     $codex = new Codex($this->strategyFactory);
 

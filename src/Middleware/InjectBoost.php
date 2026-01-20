@@ -42,6 +42,7 @@ class InjectBoost
             JsonResponse::class,
             RedirectResponse::class,
         ];
+
         foreach ($responseTypes as $type) {
             if ($response instanceof $type) {
                 return false;
@@ -53,6 +54,7 @@ class InjectBoost
         }
 
         $content = $response->getContent();
+
         // Check if it's HTML
         if (! str_contains($content, '<html') && ! str_contains($content, '<head')) {
             return false;

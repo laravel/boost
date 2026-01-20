@@ -55,8 +55,10 @@ class LastError extends Tool
         // First, attempt to retrieve the cached last error captured during runtime.
         // This works even if the log driver isn't a file driver, so is the preferred approach
         $cached = Cache::get('boost:last_error');
+
         if ($cached) {
             $entry = "[{$cached['timestamp']}] {$cached['level']}: {$cached['message']}";
+
             if (! empty($cached['context'])) {
                 $entry .= ' '.json_encode($cached['context']);
             }

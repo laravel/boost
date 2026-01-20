@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Install\CodeEnvironment;
+namespace Tests\Unit\Install\Agents;
 
-use Laravel\Boost\Install\CodeEnvironment\ClaudeCode;
+use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
@@ -31,7 +31,7 @@ test('guidelinesPath returns default CLAUDE.md when no config set', function ():
 });
 
 test('guidelinesPath returns a custom path from config', function (): void {
-    config(['boost.code_environments.claude_code.guidelines_path' => '.claude/CLAUDE.md']);
+    config(['boost.agents.claude_code.guidelines_path' => '.claude/CLAUDE.md']);
 
     $claude = new ClaudeCode($this->strategyFactory);
 
@@ -39,7 +39,7 @@ test('guidelinesPath returns a custom path from config', function (): void {
 });
 
 test('guidelinesPath returns a nested custom path from config', function (): void {
-    config(['boost.code_environments.claude_code.guidelines_path' => 'docs/ai/CLAUDE.md']);
+    config(['boost.agents.claude_code.guidelines_path' => 'docs/ai/CLAUDE.md']);
 
     $claude = new ClaudeCode($this->strategyFactory);
 

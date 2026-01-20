@@ -60,6 +60,7 @@ class PostgreSQLSchemaDriver extends DatabaseSchemaDriver
                 FROM information_schema.triggers
                 WHERE trigger_schema = current_schema()
             ';
+
             if ($this->hasTable($table)) {
                 $sql .= ' AND event_object_table = ?';
 

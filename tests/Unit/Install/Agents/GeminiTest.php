@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Install\CodeEnvironment;
+namespace Tests\Unit\Install\Agents;
 
-use Laravel\Boost\Install\CodeEnvironment\Gemini;
+use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
@@ -31,7 +31,7 @@ test('guidelinesPath returns default GEMINI.md when no config set', function ():
 });
 
 test('guidelinesPath returns a custom path from config', function (): void {
-    config(['boost.code_environments.gemini.guidelines_path' => 'docs/GEMINI.md']);
+    config(['boost.agents.gemini.guidelines_path' => 'docs/GEMINI.md']);
 
     $gemini = new Gemini($this->strategyFactory);
 

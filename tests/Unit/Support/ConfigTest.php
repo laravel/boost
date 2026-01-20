@@ -6,19 +6,18 @@ afterEach(function (): void {
     (new Config)->flush();
 });
 
-it('may store and retrieve guidelines', function (): void {
+it('may store and retrieve guidelines status', function (): void {
     $config = new Config;
 
-    expect($config->getGuidelines())->toBeEmpty();
+    expect($config->getGuidelines())->toBeFalse();
 
-    $guidelines = [
-        'guideline_1',
-        'guideline_2',
-    ];
+    $config->setGuidelines(true);
 
-    $config->setGuidelines($guidelines);
+    expect($config->getGuidelines())->toBeTrue();
 
-    expect($config->getGuidelines())->toEqual($guidelines);
+    $config->setGuidelines(false);
+
+    expect($config->getGuidelines())->toBeFalse();
 });
 
 it('may store and retrieve agents', function (): void {
@@ -36,21 +35,6 @@ it('may store and retrieve agents', function (): void {
     expect($config->getAgents())->toEqual($agents);
 });
 
-it('may store and retrieve editors', function (): void {
-    $config = new Config;
-
-    expect($config->getEditors())->toBeEmpty();
-
-    $editors = [
-        'editor_1',
-        'editor_2',
-    ];
-
-    $config->setEditors($editors);
-
-    expect($config->getEditors())->toEqual($editors);
-});
-
 it('may store and retrieve herd mcp installation status', function (): void {
     $config = new Config;
 
@@ -63,4 +47,47 @@ it('may store and retrieve herd mcp installation status', function (): void {
     $config->setHerdMcp(false);
 
     expect($config->getHerdMcp())->toBeFalse();
+});
+
+it('may store and retrieve skills status', function (): void {
+    $config = new Config;
+
+    expect($config->getSkills())->toBeFalse();
+
+    $config->setSkills(true);
+
+    expect($config->getSkills())->toBeTrue();
+
+    $config->setSkills(false);
+
+    expect($config->getSkills())->toBeFalse();
+});
+
+it('may store and retrieve mcp status', function (): void {
+    $config = new Config;
+
+    expect($config->getMcp())->toBeFalse();
+
+    $config->setMcp(true);
+
+    expect($config->getMcp())->toBeTrue();
+
+    $config->setMcp(false);
+
+    expect($config->getMcp())->toBeFalse();
+});
+
+it('may store and retrieve packages', function (): void {
+    $config = new Config;
+
+    expect($config->getPackages())->toBeEmpty();
+
+    $packages = [
+        'laravel/fortify',
+        'laravel/prism',
+    ];
+
+    $config->setPackages($packages);
+
+    expect($config->getPackages())->toEqual($packages);
 });

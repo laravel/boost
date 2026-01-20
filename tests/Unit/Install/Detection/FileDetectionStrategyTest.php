@@ -131,6 +131,7 @@ function removeDirectoryForFileTests(string $dir): void
     }
 
     $files = array_diff(scandir($dir), ['.', '..']);
+
     foreach ($files as $file) {
         $path = $dir.DIRECTORY_SEPARATOR.$file;
         is_dir($path) ? removeDirectoryForFileTests($path) : unlink($path);

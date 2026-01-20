@@ -19,7 +19,10 @@ class SearchDocs extends Tool
 {
     use MakesHttpRequests;
 
-    public function __construct(protected Roster $roster) {}
+    public function __construct(protected Roster $roster)
+    {
+        //
+    }
 
     /**
      * The tool's description.

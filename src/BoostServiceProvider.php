@@ -48,6 +48,7 @@ class BoostServiceProvider extends ServiceProvider
             $lastModified = max(array_map(fn (string $path): int|false => file_exists($path) ? filemtime($path) : 0, $lockFiles));
 
             $cached = cache()->get($cacheKey);
+
             if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
                 return $cached['roster'];
             }

@@ -2,40 +2,29 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
 use Illuminate\Support\Facades\Process;
 use Laravel\Boost\BoostManager;
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Laravel\Boost\Install\Mcp\FileWriter;
 
-abstract class CodeEnvironment
+abstract class Agent
 {
-    public bool $useAbsolutePathForMcp = false;
-
-    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory) {}
+    public function __construct(protected readonly DetectionStrategyFactory $strategyFactory)
+    {
+        //
+    }
 
     abstract public function name(): string;
 
     abstract public function displayName(): string;
 
-    public function agentName(): ?string
-    {
-        return $this->displayName();
-    }
-
-    public function mcpClientName(): ?string
-    {
-        return $this->displayName();
-    }
-
     public function useAbsolutePathForMcp(): bool
     {
-        return $this->useAbsolutePathForMcp;
+        return false;
     }
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
@@ -78,29 +67,20 @@ abstract class CodeEnvironment
         return $strategy->detect($config);
     }
 
-    public function isAgent(): bool
-    {
-        return $this->agentName() && $this instanceof Agent;
-    }
-
-    public function isMcpClient(): bool
-    {
-        return $this->mcpClientName() && $this instanceof McpClient;
-    }
-
     public function mcpInstallationStrategy(): McpInstallationStrategy
     {
         return McpInstallationStrategy::FILE;
     }
 
-    public static function fromName(string $name): ?CodeEnvironment
+    public static function fromName(string $name): ?Agent
     {
         $detectionFactory = app(DetectionStrategyFactory::class);
         $boostManager = app(BoostManager::class);
 
-        foreach ($boostManager->getCodeEnvironments() as $class) {
-            /** @var class-string<CodeEnvironment> $class */
+        foreach ($boostManager->getAgents() as $class) {
+            /** @var class-string<Agent> $class */
             $instance = new $class($detectionFactory);
+
             if ($instance->name() === $name) {
                 return $instance;
             }
@@ -175,12 +155,14 @@ abstract class CodeEnvironment
     protected function installShellMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
         $shellCommand = $this->shellMcpCommand();
+
         if ($shellCommand === null) {
             return false;
         }
 
         // Build environment string
         $envString = '';
+
         foreach ($env as $envKey => $value) {
             $envKey = strtoupper($envKey);
             $envString .= "-e {$envKey}=\"{$value}\" ";
@@ -200,6 +182,7 @@ abstract class CodeEnvironment
         ], $shellCommand);
 
         $result = Process::run($command);
+
         if ($result->successful()) {
             return true;
         }
@@ -216,6 +199,7 @@ abstract class CodeEnvironment
     protected function installFileMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
         $path = $this->mcpConfigPath();
+
         if (! $path) {
             return false;
         }

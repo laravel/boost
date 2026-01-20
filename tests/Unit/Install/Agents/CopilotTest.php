@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Install\CodeEnvironment;
+namespace Tests\Unit\Install\Agents;
 
-use Laravel\Boost\Install\CodeEnvironment\Copilot;
+use Laravel\Boost\Install\Agents\Copilot;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
@@ -21,14 +21,14 @@ test('detectOnSystem always returns false', function (): void {
         ->and($copilot->detectOnSystem(Platform::Windows))->toBeFalse();
 });
 
-test('guidelinesPath returns a default path when no config set', function (): void {
+test('guidelinesPath returns a default path when no config is set', function (): void {
     $copilot = new Copilot($this->strategyFactory);
 
     expect($copilot->guidelinesPath())->toBe('.github/copilot-instructions.md');
 });
 
 test('guidelinesPath returns a custom path from config', function (): void {
-    config(['boost.code_environments.copilot.guidelines_path' => 'docs/copilot.md']);
+    config(['boost.agents.copilot.guidelines_path' => 'docs/copilot.md']);
 
     $copilot = new Copilot($this->strategyFactory);
 

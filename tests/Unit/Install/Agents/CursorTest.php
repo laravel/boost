@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Install\CodeEnvironment;
+namespace Tests\Unit\Install\Agents;
 
-use Laravel\Boost\Install\CodeEnvironment\Cursor;
+use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
@@ -31,7 +31,7 @@ test('guidelinesPath returns a default path when no config is set', function ():
 });
 
 test('guidelinesPath returns a custom path from config', function (): void {
-    config(['boost.code_environments.cursor.guidelines_path' => '.cursor/custom-rules.mdc']);
+    config(['boost.agents.cursor.guidelines_path' => '.cursor/custom-rules.mdc']);
 
     $cursor = new Cursor($this->strategyFactory);
 

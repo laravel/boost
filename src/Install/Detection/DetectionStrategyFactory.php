@@ -16,13 +16,16 @@ class DetectionStrategyFactory
 
     private const TYPE_FILE = 'file';
 
-    public function __construct(private readonly Container $container) {}
+    public function __construct(private readonly Container $container)
+    {
+        //
+    }
 
     public function make(string|array $type, array $config = []): DetectionStrategy
     {
         if (is_array($type)) {
             return new CompositeDetectionStrategy(
-                array_map(fn (string|array $singleType): \Laravel\Boost\Install\Contracts\DetectionStrategy => $this->make($singleType, $config), $type)
+                array_map(fn (string|array $singleType): DetectionStrategy => $this->make($singleType, $config), $type)
             );
         }
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Install\CodeEnvironment;
+namespace Tests\Unit\Install\Agents;
 
-use Laravel\Boost\Install\CodeEnvironment\OpenCode;
+use Laravel\Boost\Install\Agents\OpenCode;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
@@ -43,7 +43,7 @@ test('guidelinesPath returns default AGENTS.md when no config set', function ():
 });
 
 test('guidelinesPath returns a custom path from config', function (): void {
-    config(['boost.code_environments.opencode.guidelines_path' => 'docs/AGENTS.md']);
+    config(['boost.agents.opencode.guidelines_path' => 'docs/AGENTS.md']);
 
     $opencode = new OpenCode($this->strategyFactory);
 

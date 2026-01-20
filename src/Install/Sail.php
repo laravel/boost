@@ -47,10 +47,14 @@ class Sail
     }
 
     /**
-     * @return array<int, string>
+     * @return array{key: string, command: string, args: array<int, string>}
      */
     public function buildMcpCommand(string $serverName): array
     {
-        return [$serverName, self::BINARY_PATH, 'artisan', 'boost:mcp'];
+        return [
+            'key' => $serverName,
+            'command' => self::BINARY_PATH,
+            'args' => ['artisan', 'boost:mcp'],
+        ];
     }
 }

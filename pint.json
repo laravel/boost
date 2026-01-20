@@ -13,6 +13,13 @@
         "no_binary_string": false,
         "strict_comparison": true,
         "strict_param": true,
-        "ternary_to_null_coalescing": true
+        "ternary_to_null_coalescing": true,
+        "blank_line_before_statement": {
+            "statements": [
+                "if",
+                "return",
+                "foreach"
+            ]
+        }
     }
 }

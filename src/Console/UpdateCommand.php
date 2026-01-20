@@ -5,16 +5,25 @@ declare(strict_types=1);
 namespace Laravel\Boost\Console;
 
 use Illuminate\Console\Command;
+use Laravel\Boost\Support\Config;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand('boost:update', 'Update the Laravel Boost guidelines to the latest guidance')]
+#[AsCommand('boost:update', 'Update the Laravel Boost guidelines & skills to the latest guidance')]
 class UpdateCommand extends Command
 {
-    public function handle(): void
+    public function handle(Config $config): void
     {
+        $guidelines = $config->getGuidelines();
+        $skills = $config->getSkills();
+
+        if (! $guidelines && ! $skills) {
+            return;
+        }
+
         $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
-            '--ignore-mcp' => true,
+            '--guidelines' => $guidelines,
+            '--skills' => $skills,
         ]);
 
         $this->components->info('Boost guidelines updated successfully.');

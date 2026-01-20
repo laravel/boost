@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Contracts\SupportSkills;
+use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsMcp;
+use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Codex extends CodeEnvironment implements Agent, McpClient, SupportSkills
+class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -44,7 +44,7 @@ class Codex extends CodeEnvironment implements Agent, McpClient, SupportSkills
 
     public function guidelinesPath(): string
     {
-        return config('boost.code_environments.codex.guidelines_path', 'AGENTS.md');
+        return config('boost.agents.codex.guidelines_path', 'AGENTS.md');
     }
 
     public function mcpInstallationStrategy(): McpInstallationStrategy
@@ -59,6 +59,6 @@ class Codex extends CodeEnvironment implements Agent, McpClient, SupportSkills
 
     public function skillsPath(): string
     {
-        return config('boost.code_environments.codex.skills_path', '.codex/skills');
+        return config('boost.agents.codex.skills_path', '.codex/skills');
     }
 }
