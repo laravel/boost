@@ -15,7 +15,10 @@ class FileWriter
 
     protected int $defaultIndentation = 8;
 
-    public function __construct(protected string $filePath, protected array $baseConfig = []) {}
+    public function __construct(protected string $filePath, protected array $baseConfig = [])
+    {
+        //
+    }
 
     public function configKey(string $key): self
     {
@@ -71,6 +74,7 @@ class FileWriter
     protected function updatePlainJsonFile(string $content): bool
     {
         $config = json_decode($content, true);
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             return false;
         }
@@ -98,12 +102,14 @@ class FileWriter
 
         // Find the opening brace of the configKey object
         $openBracePos = strpos($content, '{', $configKeyStart);
+
         if ($openBracePos === false) {
             return false;
         }
 
         // Find the matching closing brace for this configKey object
         $closeBracePos = $this->findMatchingClosingBrace($content, $openBracePos);
+
         if ($closeBracePos === false) {
             return false;
         }
@@ -119,6 +125,7 @@ class FileWriter
         $indentLength = $this->detectIndentation($content, $closeBracePos);
 
         $serverJsonParts = [];
+
         foreach ($serversToAdd as $key => $serverConfig) {
             $serverJsonParts[] = $this->generateServerJson($key, $serverConfig, $indentLength);
         }
@@ -127,6 +134,7 @@ class FileWriter
 
         // Check if we need a comma and add it to the preceding content
         $needsComma = $this->needsCommaBeforeClosingBrace($content, $openBracePos, $closeBracePos);
+
         if (! $needsComma) {
             $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
 
@@ -135,6 +143,7 @@ class FileWriter
 
         // Find the position to add comma (after the last meaningful character)
         $commaPosition = $this->findCommaInsertionPoint($content, $openBracePos, $closeBracePos);
+
         if ($commaPosition !== -1) {
             $newContent = substr_replace($content, ',', $commaPosition, 0);
             $newContent = substr_replace($newContent, $serversJson, $commaPosition + 1, 0);
@@ -170,11 +179,13 @@ class FileWriter
     protected function injectNewConfigKey(string $content): bool
     {
         $openBracePos = strpos($content, '{');
+
         if ($openBracePos === false) {
             return false;
         }
 
         $serverJsonParts = [];
+
         foreach ($this->serversToAdd as $key => $serverConfig) {
             $serverJsonParts[] = $this->generateServerJson($key, $serverConfig);
         }
@@ -237,6 +248,7 @@ class FileWriter
                     $braceCount++;
                 } elseif ($char === '}') {
                     $braceCount--;
+
                     if ($braceCount === 0) {
                         return $i;
                     }
@@ -314,6 +326,7 @@ class FileWriter
         // Look for the most recent server definition to match its indentation
         for ($i = count($lines) - 1; $i >= 0; $i--) {
             $line = $lines[$i];
+
             // Match server definitions: any amount of whitespace + "key": {
             if (preg_match('/^(\s*)"[^"]+"\s*:\s*\{/', $line, $matches)) {
                 return strlen($matches[1]);

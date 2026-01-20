@@ -87,6 +87,7 @@ class ToolExecutor
 
             if (is_array($data['content']) && ! empty($data['content'])) {
                 $firstContent = $data['content'][0] ?? [];
+
                 if (is_array($firstContent)) {
                     $errorText = $firstContent['text'] ?? $errorText;
                 }
@@ -103,6 +104,7 @@ class ToolExecutor
                 $text = $firstContent['text'] ?? '';
 
                 $decoded = json_decode((string) $text, true);
+
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                     return Response::json($decoded);
                 }

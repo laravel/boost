@@ -174,11 +174,13 @@ trait ReadsLogs
     protected function scanLogChunkForEntries(string $logFile, int $chunkSize): array
     {
         $fileSize = filesize($logFile);
+
         if ($fileSize === false) {
             return [];
         }
 
         $handle = fopen($logFile, 'r');
+
         if (! $handle) {
             return [];
         }
@@ -196,6 +198,7 @@ trait ReadsLogs
 
             // Split by beginning-of-entry look-ahead (PSR-3 timestamp pattern).
             $entries = preg_split($this->getEntrySplitRegex(), $content, -1, PREG_SPLIT_NO_EMPTY);
+
             if (! $entries) {
                 return [];
             }

@@ -15,7 +15,10 @@ use Laravel\Roster\Roster;
 #[IsReadOnly]
 class ApplicationInfo extends Tool
 {
-    public function __construct(protected Roster $roster, protected GuidelineAssist $guidelineAssist) {}
+    public function __construct(protected Roster $roster, protected GuidelineAssist $guidelineAssist)
+    {
+        //
+    }
 
     /**
      * The tool's description.

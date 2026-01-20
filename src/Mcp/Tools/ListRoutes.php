@@ -64,11 +64,13 @@ class ListRoutes extends Tool
 
         foreach ($optionMap as $argKey => $cliOption) {
             $value = $request->get($argKey);
+
             if (! empty($value)) {
                 if (is_bool($value)) {
                     $options['--'.$cliOption] = true;
                 } else {
                     $sanitizedValue = str_replace(['*', '?'], '', $value);
+
                     if (filled($sanitizedValue)) {
                         $options['--'.$cliOption] = $sanitizedValue;
                     }
@@ -98,6 +100,7 @@ class ListRoutes extends Tool
     {
         $output = new BufferedOutput;
         $response = Artisan::call($command, $options, $output);
+
         if ($response !== CommandAlias::SUCCESS) {
             return 'Failed to list routes: '.$output->fetch();
         }

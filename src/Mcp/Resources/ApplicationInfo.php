@@ -6,13 +6,15 @@ namespace Laravel\Boost\Mcp\Resources;
 
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo as ApplicationInfoTool;
-use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Resource;
 
 class ApplicationInfo extends Resource
 {
-    public function __construct(protected ToolExecutor $toolExecutor) {}
+    public function __construct(protected ToolExecutor $toolExecutor)
+    {
+        //
+    }
 
     /**
      * The resource's description.

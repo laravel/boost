@@ -48,6 +48,7 @@ class BoostServiceProvider extends ServiceProvider
             $lastModified = max(array_map(fn (string $path): int|false => file_exists($path) ? filemtime($path) : 0, $lockFiles));
 
             $cached = cache()->get($cacheKey);
+
             if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
                 return $cached['roster'];
             }
@@ -113,6 +114,7 @@ class BoostServiceProvider extends ServiceProvider
     {
         Route::post('/_boost/browser-logs', function (Request $request) {
             $logs = $request->input('logs', []);
+
             /** @var Logger $logger */
             $logger = Log::channel('browser');
 

@@ -27,6 +27,7 @@ class ListArtisanCommands extends Tool
         $commands = Artisan::all();
 
         $commandList = [];
+
         foreach ($commands as $name => $command) {
             /** @var Command $command */
             $commandList[] = [

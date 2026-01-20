@@ -61,6 +61,7 @@ class BrowserLogs extends Tool
         }
 
         $logs = implode("\n\n", $entries);
+
         if (empty(trim($logs))) {
             return Response::text('No log entries yet.');
         }

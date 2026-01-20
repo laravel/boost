@@ -16,7 +16,10 @@ class DetectionStrategyFactory
 
     private const TYPE_FILE = 'file';
 
-    public function __construct(private readonly Container $container) {}
+    public function __construct(private readonly Container $container)
+    {
+        //
+    }
 
     public function make(string|array $type, array $config = []): DetectionStrategy
     {

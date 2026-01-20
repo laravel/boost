@@ -21,7 +21,10 @@ class SkillWriter
 
     public const FAILED = 2;
 
-    public function __construct(protected SupportSkills $agent) {}
+    public function __construct(protected SupportSkills $agent)
+    {
+        //
+    }
 
     public function write(Skill $skill): int
     {
@@ -85,6 +88,7 @@ class SkillWriter
         }
 
         $isBladeFile = str_ends_with($relativePath, '.blade.php');
+
         if ($isBladeFile) {
             $renderedContent = trim($this->renderBladeFile($file->getRealPath()));
             $replacedTargetFile = preg_replace('/\.blade\.php$/', '.md', $targetFile);

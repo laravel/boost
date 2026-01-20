@@ -15,6 +15,7 @@ use Laravel\Mcp\Request;
 beforeEach(function (): void {
     // Clean up any existing browser.log file before each test
     $logFile = storage_path('logs/browser.log');
+
     if (File::exists($logFile)) {
         File::delete($logFile);
     }

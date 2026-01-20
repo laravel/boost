@@ -48,6 +48,7 @@ class CallToolWithExecutor implements Errable, Method
                 ));
 
         $arguments = [];
+
         if (isset($request->params['arguments']) && is_array($request->params['arguments'])) {
             $arguments = $request->params['arguments'];
         }

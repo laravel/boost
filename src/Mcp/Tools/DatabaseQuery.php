@@ -44,6 +44,7 @@ class DatabaseQuery extends Tool
     {
         $query = trim((string) $request->string('query'));
         $token = strtok(ltrim($query), " \t\n\r");
+
         if (! $token) {
             return Response::error('Please pass a valid query');
         }

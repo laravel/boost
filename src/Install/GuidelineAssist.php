@@ -125,6 +125,7 @@ class GuidelineAssist
         }
 
         $code = file_get_contents($path);
+
         if ($code === false) {
             return $cache[$path] = false;
         }
@@ -139,6 +140,7 @@ class GuidelineAssist
         }
 
         $tokens = token_get_all($code);
+
         foreach ($tokens as $token) {
             if (is_array($token) && in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
                 return $cache[$path] = true;
