@@ -9,7 +9,10 @@ use Laravel\Roster\Roster;
 
 class Inertia
 {
-    public function __construct(private Roster $roster) {}
+    public function __construct(private Roster $roster)
+    {
+        //
+    }
 
     public function gte(string $version): bool
     {

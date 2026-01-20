@@ -12,7 +12,10 @@ class CompositeDetectionStrategy implements DetectionStrategy
     /**
      * @param  DetectionStrategy[]  $strategies
      */
-    public function __construct(private readonly array $strategies) {}
+    public function __construct(private readonly array $strategies)
+    {
+        //
+    }
 
     public function detect(array $config, ?Platform $platform = null): bool
     {

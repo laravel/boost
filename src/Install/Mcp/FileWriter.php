@@ -15,7 +15,10 @@ class FileWriter
 
     protected int $defaultIndentation = 8;
 
-    public function __construct(protected string $filePath, protected array $baseConfig = []) {}
+    public function __construct(protected string $filePath, protected array $baseConfig = [])
+    {
+        //
+    }
 
     public function configKey(string $key): self
     {
