@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\SupportsGuidelines;
 use RuntimeException;
 
 class GuidelineWriter
@@ -17,13 +17,13 @@ class GuidelineWriter
 
     public const NOOP = 3;
 
-    public function __construct(protected Agent $agent)
+    public function __construct(protected SupportsGuidelines $agent)
     {
         //
     }
 
     /**
-     * @return \Laravel\Boost\Install\GuidelineWriter::NEW|\Laravel\Boost\Install\GuidelineWriter::REPLACED|\Laravel\Boost\Install\GuidelineWriter::FAILED|\Laravel\Boost\Install\GuidelineWriter::NOOP
+     * @return GuidelineWriter::NEW|GuidelineWriter::REPLACED|GuidelineWriter::FAILED|GuidelineWriter::NOOP
      */
     public function write(string $guidelines): int
     {

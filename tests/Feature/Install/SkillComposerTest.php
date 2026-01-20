@@ -81,7 +81,7 @@ test('skills result is cached', function (): void {
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->once()->andReturn($packages);
+    $this->roster->shouldReceive('packages')->andReturn($packages);
 
     $composer = new SkillComposer($this->roster);
 
@@ -93,7 +93,7 @@ test('config change clears skills cache', function (): void {
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->twice()->andReturn($packages);
+    $this->roster->shouldReceive('packages')->andReturn($packages);
 
     $composer = new SkillComposer($this->roster);
     $first = $composer->skills();

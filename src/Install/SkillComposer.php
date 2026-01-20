@@ -23,7 +23,9 @@ class SkillComposer
     public function __construct(
         protected Roster $roster,
         protected GuidelineConfig $config = new GuidelineConfig
-    ) {}
+    ) {
+        //
+    }
 
     protected function getRoster(): Roster
     {
@@ -74,8 +76,7 @@ class SkillComposer
     protected function getThirdPartySkills(): Collection
     {
         $skills = collect(Composer::packagesDirectoriesWithBoostSkills())
-            ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package)
-            );
+            ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package));
 
         $selectedPackages = $this->config->aiGuidelines ?? [];
 

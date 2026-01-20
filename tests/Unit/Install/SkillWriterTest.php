@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Contracts\SupportSkills;
+use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillWriter;
 
@@ -29,7 +29,7 @@ it('writes skill to a target directory', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Mockery::mock(SupportSkills::class);
+    $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skill = new Skill(
@@ -58,7 +58,7 @@ it('returns UPDATED when skill directory already exists', function (): void {
     mkdir($targetSkill, 0755, true);
     file_put_contents($targetSkill.'/SKILL.md', 'old content');
 
-    $agent = Mockery::mock(SupportSkills::class);
+    $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skill = new Skill(
@@ -82,7 +82,7 @@ it('returns UPDATED when skill directory already exists', function (): void {
 it('returns FAILED when source directory does not exist', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
-    $agent = Mockery::mock(SupportSkills::class);
+    $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skill = new Skill(
@@ -103,7 +103,7 @@ it('writes all skills', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Mockery::mock(SupportSkills::class);
+    $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skills = collect([
@@ -126,7 +126,7 @@ it('copies nested directory structure', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Mockery::mock(SupportSkills::class);
+    $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skill = new Skill(
@@ -151,7 +151,7 @@ it('throws an exception for path traversal in skill name', function (string $mal
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
-    $agent = Mockery::mock(SupportSkills::class);
+    $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skill = new Skill(
@@ -178,7 +178,7 @@ it('renders blade templates to markdown', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Mockery::mock(SupportSkills::class);
+    $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skill = new Skill(

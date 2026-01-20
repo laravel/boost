@@ -27,12 +27,9 @@ class GuidelineAssist
 
     protected static array $classes = [];
 
-    /** @var Collection<string, Skill> */
-    protected Collection $skills;
-
-    public function __construct(public Roster $roster, public GuidelineConfig $config, ?Collection $skills = null)
+    public function __construct(public Roster $roster, public GuidelineConfig $config, public ?Collection $skills = null)
     {
-        $this->skills = $skills ?? collect();
+        $this->skills ??= collect();
         $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
         $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());

@@ -7,8 +7,8 @@ namespace Laravel\Boost;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static void registerCodeEnvironment(string $key, string $className)
- * @method static array getCodeEnvironments()
+ * @method static void registerAgent(string $key, string $className)
+ * @method static array getAgents()
  *
  * @see \Laravel\Boost\BoostManager
  */

@@ -25,7 +25,7 @@ class DetectionStrategyFactory
     {
         if (is_array($type)) {
             return new CompositeDetectionStrategy(
-                array_map(fn (string|array $singleType): \Laravel\Boost\Install\Contracts\DetectionStrategy => $this->make($singleType, $config), $type)
+                array_map(fn (string|array $singleType): DetectionStrategy => $this->make($singleType, $config), $type)
             );
         }
 

@@ -10,25 +10,50 @@ class Config
 {
     protected const FILE = 'boost.json';
 
+    public function getGuidelines(): bool
+    {
+        return (bool) $this->get('guidelines', false);
+    }
+
+    public function setGuidelines(bool $enabled): void
+    {
+        $this->set('guidelines', $enabled);
+    }
+
+    public function getSkills(): bool
+    {
+        return $this->get('skills', false);
+    }
+
+    public function setSkills(bool $enabled): void
+    {
+        $this->set('skills', $enabled);
+    }
+
+    public function getMcp(): bool
+    {
+        return $this->get('mcp', false);
+    }
+
+    public function setMcp(bool $enabled): void
+    {
+        $this->set('mcp', $enabled);
+    }
+
     /**
      * @return array<int, string>
      */
-    public function getGuidelines(): array
+    public function getPackages(): array
     {
-        return $this->get('guidelines', []);
+        return $this->get('packages', []);
     }
 
     /**
-     * @param  array<int, string>  $guidelines
+     * @param  array<int, string>  $packages
      */
-    public function setGuidelines(array $guidelines): void
+    public function setPackages(array $packages): void
     {
-        $this->set('guidelines', $guidelines);
-    }
-
-    public function setEditors(array $editors): void
-    {
-        $this->set('editors', $editors);
+        $this->set('packages', $packages);
     }
 
     /**
@@ -45,11 +70,6 @@ class Config
     public function getAgents(): array
     {
         return $this->get('agents', []);
-    }
-
-    public function getEditors(): array
-    {
-        return $this->get('editors', []);
     }
 
     public function setHerdMcp(bool $installed): void

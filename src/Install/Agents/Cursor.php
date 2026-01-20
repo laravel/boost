@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Contracts\SupportSkills;
+use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsMcp;
+use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Cursor extends CodeEnvironment implements Agent, McpClient, SupportSkills
+class Cursor extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -57,7 +57,7 @@ class Cursor extends CodeEnvironment implements Agent, McpClient, SupportSkills
 
     public function guidelinesPath(): string
     {
-        return config('boost.code_environments.cursor.guidelines_path', '.cursor/rules/laravel-boost.mdc');
+        return config('boost.agents.cursor.guidelines_path', '.cursor/rules/laravel-boost.mdc');
     }
 
     public function frontmatter(): bool
@@ -67,6 +67,6 @@ class Cursor extends CodeEnvironment implements Agent, McpClient, SupportSkills
 
     public function skillsPath(): string
     {
-        return config('boost.code_environments.cursor.skills_path', '.cursor/skills');
+        return config('boost.agents.cursor.skills_path', '.cursor/skills');
     }
 }

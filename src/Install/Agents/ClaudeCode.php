@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Install\CodeEnvironment;
+namespace Laravel\Boost\Install\Agents;
 
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Contracts\SupportSkills;
+use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsMcp;
+use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class ClaudeCode extends CodeEnvironment implements Agent, McpClient, SupportSkills
+class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -54,11 +54,11 @@ class ClaudeCode extends CodeEnvironment implements Agent, McpClient, SupportSki
 
     public function guidelinesPath(): string
     {
-        return config('boost.code_environments.claude_code.guidelines_path', 'CLAUDE.md');
+        return config('boost.agents.claude_code.guidelines_path', 'CLAUDE.md');
     }
 
     public function skillsPath(): string
     {
-        return config('boost.code_environments.claude_code.skills_path', '.claude/skills');
+        return config('boost.agents.claude_code.skills_path', '.claude/skills');
     }
 }

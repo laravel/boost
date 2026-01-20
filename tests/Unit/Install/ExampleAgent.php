@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install;
 
-use Laravel\Boost\Contracts\Agent;
-use Laravel\Boost\Contracts\McpClient;
-use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
+use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsMcp;
+use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\Enums\Platform;
 
-class ExampleCodeEnvironment extends CodeEnvironment implements Agent, McpClient
+class ExampleAgent extends Agent implements SupportsGuidelines, SupportsMcp
 {
     public function name(): string
     {

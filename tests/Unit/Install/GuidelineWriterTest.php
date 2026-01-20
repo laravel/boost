@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Contracts\Agent;
+use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Install\GuidelineWriter;
 
 test('it returns NOOP when guidelines are empty', function (): void {
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn('/tmp/test.md');
 
     $writer = new GuidelineWriter($agent);
@@ -19,7 +19,7 @@ test('it creates directory when it does not exist', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     $filePath = $tempDir.'/subdir/test.md';
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($filePath);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -39,7 +39,7 @@ test('it throws exception when directory creation fails', function (): void {
     // Use a path that cannot be created (root directory with insufficient permissions)
     $filePath = '/root/boost_test/test.md';
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($filePath);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -52,7 +52,7 @@ test('it throws exception when directory creation fails', function (): void {
 test('it writes guidelines to new file', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -69,7 +69,7 @@ test('it writes guidelines to existing file without existing guidelines', functi
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     file_put_contents($tempFile, "# Existing content\n\nSome text here.");
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -87,7 +87,7 @@ test('it replaces existing guidelines in-place', function (): void {
     $initialContent = "# Header\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n\n# Footer";
     file_put_contents($tempFile, $initialContent);
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -105,7 +105,7 @@ test('it avoids adding extra newline if one already exists', function (): void {
     $initialContent = "# Header\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n\n# Footer\n";
     file_put_contents($tempFile, $initialContent);
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -128,7 +128,7 @@ test('it handles multiline existing guidelines', function (): void {
     $initialContent = "Start\n<laravel-boost-guidelines>\nline 1\nline 2\nline 3\n</laravel-boost-guidelines>\nEnd";
     file_put_contents($tempFile, $initialContent);
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -147,7 +147,7 @@ test('it handles multiple guideline blocks', function (): void {
     $initialContent = "Start\n<laravel-boost-guidelines>\nfirst\n</laravel-boost-guidelines>\nMiddle\n<laravel-boost-guidelines>\nsecond\n</laravel-boost-guidelines>\nEnd";
     file_put_contents($tempFile, $initialContent);
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -165,7 +165,7 @@ test('it throws exception when file cannot be opened', function (): void {
     // Use a directory path instead of file path to cause fopen to fail
     $dirPath = sys_get_temp_dir();
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($dirPath);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -180,7 +180,7 @@ test('it preserves file content structure with proper spacing', function (): voi
     $initialContent = "# Title\n\nParagraph 1\n\nParagraph 2";
     file_put_contents($tempFile, $initialContent);
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -197,7 +197,7 @@ test('it handles empty file', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     file_put_contents($tempFile, '');
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -214,7 +214,7 @@ test('it handles file with only whitespace', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     file_put_contents($tempFile, "   \n\n  \t  \n");
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -232,7 +232,7 @@ test('it does not interfere with other XML-like tags', function (): void {
     $initialContent = "# Title\n\n<other-rules>\nShould not be touched\n</other-rules>\n\n<laravel-boost-guidelines>\nOld guidelines\n</laravel-boost-guidelines>\n\n<custom-config>\nAlso untouched\n</custom-config>";
     file_put_contents($tempFile, $initialContent);
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -251,7 +251,7 @@ test('it preserves user content after guidelines when replacing', function (): v
     $initialContent = "# My Project\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n\n# User Added Section\nThis content was added by the user after the guidelines.\n\n## Another user section\nMore content here.";
     file_put_contents($tempFile, $initialContent);
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
@@ -286,7 +286,7 @@ test('it adds frontmatter when agent supports it and file has no existing frontm
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     file_put_contents($tempFile, "# Existing content\n\nSome text here.");
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(true);
 
@@ -303,7 +303,7 @@ test('it does not add frontmatter when agent supports it but file already has fr
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     file_put_contents($tempFile, "---\ncustomOption: true\n---\n# Existing content\n\nSome text here.");
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(true);
 
@@ -320,7 +320,7 @@ test('it does not add frontmatter when agent does not support it', function (): 
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
     file_put_contents($tempFile, "# Existing content\n\nSome text here.");
 
-    $agent = Mockery::mock(Agent::class);
+    $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
