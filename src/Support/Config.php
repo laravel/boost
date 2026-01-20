@@ -12,7 +12,7 @@ class Config
 
     public function getGuidelines(): bool
     {
-        return $this->get('guidelines', false);
+        return (bool) $this->get('guidelines', false);
     }
 
     public function setGuidelines(bool $enabled): void

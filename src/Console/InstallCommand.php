@@ -51,7 +51,7 @@ class InstallCommand extends Command
     private Collection $selectedBoostFeatures;
 
     /** @var Collection<int, string> */
-    private Collection $selectThirdPartyPackages;
+    private Collection $selectedThirdPartyPackages;
 
     private string $projectName;
 
@@ -123,7 +123,7 @@ class InstallCommand extends Command
     {
         $this->selectedBoostFeatures = $this->selectBoostFeatures();
 
-        $this->selectThirdPartyPackages = $this->selectedBoostFeatures->contains('guidelines') || $this->selectedBoostFeatures->contains('skills')
+        $this->selectedThirdPartyPackages = $this->selectedBoostFeatures->contains('guidelines') || $this->selectedBoostFeatures->contains('skills')
             ? $this->selectThirdPartyPackages()
             : collect();
 
@@ -401,9 +401,8 @@ class InstallCommand extends Command
     {
         $guidelineConfig = new GuidelineConfig;
         $guidelineConfig->enforceTests = $this->enforceTests;
-        $guidelineConfig->caresAboutLocalization = $this->detectLocalization();
         $guidelineConfig->hasAnApi = false;
-        $guidelineConfig->aiGuidelines = $this->selectThirdPartyPackages->values()->toArray();
+        $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
 
         return $guidelineConfig;
@@ -416,7 +415,7 @@ class InstallCommand extends Command
         $this->config->setSkills($this->selectedBoostFeatures->contains('skills'));
         $this->config->setMcp($this->selectedBoostFeatures->contains('mcp'));
         $this->config->setAgents($this->selectedAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray());
-        $this->config->setPackages($this->selectThirdPartyPackages->values()->toArray());
+        $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
         $this->config->setSail($this->shouldUseSail());
         $this->config->setHerdMcp($this->shouldInstallHerdMcp());
     }
@@ -449,11 +448,6 @@ class InstallCommand extends Command
             featureName: 'MCP servers',
             withDelay: true,
         );
-    }
-
-    protected function detectLocalization(): bool
-    {
-        return false;
     }
 
     /**
