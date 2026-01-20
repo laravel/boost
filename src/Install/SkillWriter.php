@@ -59,15 +59,18 @@ class SkillWriter
 
     /**
      * @param  Collection<string, Skill>  $skills
+     * @param  array<int, string>  $previouslyTrackedSkills
      * @return array{written: array<string, int>, removed: array<string, bool>}
      */
-    public function sync(Collection $skills): array
+    public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
     {
         $written = $this->writeAll($skills);
 
         $newSkillNames = $skills->keys()->all();
         $existingSkillNames = $this->discoverExistingSkills();
-        $staleSkillNames = array_values(array_diff($existingSkillNames, $newSkillNames));
+
+        $boostManagedSkills = array_intersect($existingSkillNames, $previouslyTrackedSkills);
+        $staleSkillNames = array_values(array_diff($boostManagedSkills, $newSkillNames));
 
         $removed = $this->removeStale($staleSkillNames);
 

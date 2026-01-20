@@ -317,7 +317,7 @@ it('syncs skills by writing new and removing stale', function (): void {
     ]);
 
     $writer = new SkillWriter($agent);
-    $result = $writer->sync($skills);
+    $result = $writer->sync($skills, ['stale-skill']);
 
     expect($result['written'])->toHaveCount(1)
         ->and($result['written']['new-skill'])->toBe(SkillWriter::SUCCESS)
@@ -354,6 +354,75 @@ it('sync preserves skills that exist in both source and target', function (): vo
 
     $content = file_get_contents($existingSkillDir.'/SKILL.md');
     expect($content)->toContain('name: test-skill');
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('sync preserves user-created custom skills that were never tracked', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $trackedSkillDir = $absoluteTarget.'/tracked-skill';
+    $customSkillDir = $absoluteTarget.'/my-custom-skill';
+    mkdir($trackedSkillDir, 0755, true);
+    mkdir($customSkillDir, 0755, true);
+    file_put_contents($trackedSkillDir.'/SKILL.md', 'tracked content');
+    file_put_contents($customSkillDir.'/SKILL.md', 'custom content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        'new-skill' => new Skill('new-skill', 'boost', $sourceDir, 'New skill'),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync($skills, ['tracked-skill']);
+
+    expect($result['written']['new-skill'])->toBe(SkillWriter::SUCCESS)
+        ->and($result['removed'])->toHaveCount(1)
+        ->and($result['removed']['tracked-skill'])->toBeTrue()
+        ->and($trackedSkillDir)->not->toBeDirectory()
+        ->and($customSkillDir)->toBeDirectory();
+
+    $customContent = file_get_contents($customSkillDir.'/SKILL.md');
+    expect($customContent)->toBe('custom content');
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('sync only removes previously tracked skills', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $trackedOneDir = $absoluteTarget.'/tracked-one';
+    $trackedTwoDir = $absoluteTarget.'/tracked-two';
+    $untrackedDir = $absoluteTarget.'/untracked-skill';
+    mkdir($trackedOneDir, 0755, true);
+    mkdir($trackedTwoDir, 0755, true);
+    mkdir($untrackedDir, 0755, true);
+    file_put_contents($trackedOneDir.'/SKILL.md', 'tracked one');
+    file_put_contents($trackedTwoDir.'/SKILL.md', 'tracked two');
+    file_put_contents($untrackedDir.'/SKILL.md', 'untracked');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        'tracked-one' => new Skill('tracked-one', 'boost', $sourceDir, 'Tracked one'),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync($skills, ['tracked-one', 'tracked-two']);
+
+    expect($result['written']['tracked-one'])->toBe(SkillWriter::UPDATED)
+        ->and($result['removed'])->toHaveCount(1)
+        ->and($result['removed']['tracked-two'])->toBeTrue()
+        ->and($trackedOneDir)->toBeDirectory()
+        ->and($trackedTwoDir)->not->toBeDirectory()
+        ->and($untrackedDir)->toBeDirectory();
 
     cleanupSkillDirectory($absoluteTarget);
 });
