@@ -24,6 +24,7 @@ class UpdateCommand extends Command
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
             '--skills' => $skills,
+            '--preserve-config' => true,
         ]);
 
         $this->components->info('Boost guidelines updated successfully.');

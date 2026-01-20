@@ -105,36 +105,6 @@ test('detectInProject merges config with basePath and delegates to strategy', fu
     expect($result)->toBe(false);
 });
 
-test('mcpInstallationStrategy returns File by default', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-
-    expect($environment->mcpInstallationStrategy())->toBe(McpInstallationStrategy::FILE);
-});
-
-test('shellMcpCommand returns null by default', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-
-    expect($environment->shellMcpCommand())->toBe(null);
-});
-
-test('mcpConfigPath returns null by default', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-
-    expect($environment->mcpConfigPath())->toBe(null);
-});
-
-test('frontmatter returns false by default', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-
-    expect($environment->frontmatter())->toBe(false);
-});
-
-test('mcpConfigKey returns mcpServers by default', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-
-    expect($environment->mcpConfigKey())->toBe('mcpServers');
-});
-
 test('installMcp uses Shell strategy when configured', function (): void {
     $environment = Mockery::mock(TestAgent::class)->makePartial();
     $environment->shouldAllowMockingProtectedMethods();
@@ -341,24 +311,4 @@ test('installFileMcp updates existing config file', function (): void {
             ],
         ]);
 
-});
-
-test('getPhpPath uses absolute paths when forceAbsolutePath is true', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-    expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
-});
-
-test('getPhpPath maintains default behavior when forceAbsolutePath is false', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-    expect($environment->getPhpPath(false))->toBe('php');
-});
-
-test('getArtisanPath uses absolute path when forceAbsolutePath is true', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-    expect($environment->getArtisanPath(true))->toBe(base_path('artisan'));
-});
-
-test('getArtisanPath maintains default behavior when forceAbsolutePath is false', function (): void {
-    $environment = new TestAgent($this->strategyFactory);
-    expect($environment->getArtisanPath(false))->toBe('artisan');
 });

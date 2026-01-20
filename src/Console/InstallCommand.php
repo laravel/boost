@@ -41,7 +41,8 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}';
+        {--mcp : Install MCP server configuration}
+        {--preserve-config : Skip writing boost.json config file}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -148,7 +149,9 @@ class InstallCommand extends Command
             $this->installMcpServerConfig();
         }
 
-        $this->storeConfig();
+        if (! $this->option('preserve-config')) {
+            $this->storeConfig();
+        }
     }
 
     protected function outro(): void
