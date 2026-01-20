@@ -114,6 +114,7 @@ class BoostServiceProvider extends ServiceProvider
     {
         Route::post('/_boost/browser-logs', function (Request $request) {
             $logs = $request->input('logs', []);
+
             /** @var Logger $logger */
             $logger = Log::channel('browser');
 

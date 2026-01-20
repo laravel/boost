@@ -14,12 +14,8 @@
         "strict_comparison": true,
         "strict_param": true,
         "ternary_to_null_coalescing": true,
-        "blank_line_before_statement": {
-            "statements": [
-                "if",
-                "return",
-                "foreach"
-            ]
+         "blank_line_before_statement": {
+            "statements": ["break", "case", "continue", "declare", "default", "do", "exit", "for", "foreach", "goto", "if", "include", "include_once", "phpdoc", "require", "require_once", "return", "switch", "throw", "try", "while", "yield", "yield_from"]
         }
     }
 }
