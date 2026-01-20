@@ -319,10 +319,8 @@ it('syncs skills by writing new and removing stale', function (): void {
     $writer = new SkillWriter($agent);
     $result = $writer->sync($skills, ['stale-skill']);
 
-    expect($result['written'])->toHaveCount(1)
-        ->and($result['written']['new-skill'])->toBe(SkillWriter::SUCCESS)
-        ->and($result['removed'])->toHaveCount(1)
-        ->and($result['removed']['stale-skill'])->toBeTrue()
+    expect($result)->toHaveCount(1)
+        ->and($result['new-skill'])->toBe(SkillWriter::SUCCESS)
         ->and($absoluteTarget.'/new-skill')->toBeDirectory()
         ->and($staleSkillDir)->not->toBeDirectory();
 
@@ -348,8 +346,7 @@ it('sync preserves skills that exist in both source and target', function (): vo
     $writer = new SkillWriter($agent);
     $result = $writer->sync($skills);
 
-    expect($result['written']['existing-skill'])->toBe(SkillWriter::UPDATED)
-        ->and($result['removed'])->toBeEmpty()
+    expect($result['existing-skill'])->toBe(SkillWriter::UPDATED)
         ->and($existingSkillDir)->toBeDirectory();
 
     $content = file_get_contents($existingSkillDir.'/SKILL.md');
@@ -380,9 +377,7 @@ it('sync preserves user-created custom skills that were never tracked', function
     $writer = new SkillWriter($agent);
     $result = $writer->sync($skills, ['tracked-skill']);
 
-    expect($result['written']['new-skill'])->toBe(SkillWriter::SUCCESS)
-        ->and($result['removed'])->toHaveCount(1)
-        ->and($result['removed']['tracked-skill'])->toBeTrue()
+    expect($result['new-skill'])->toBe(SkillWriter::SUCCESS)
         ->and($trackedSkillDir)->not->toBeDirectory()
         ->and($customSkillDir)->toBeDirectory();
 
@@ -417,9 +412,7 @@ it('sync only removes previously tracked skills', function (): void {
     $writer = new SkillWriter($agent);
     $result = $writer->sync($skills, ['tracked-one', 'tracked-two']);
 
-    expect($result['written']['tracked-one'])->toBe(SkillWriter::UPDATED)
-        ->and($result['removed'])->toHaveCount(1)
-        ->and($result['removed']['tracked-two'])->toBeTrue()
+    expect($result['tracked-one'])->toBe(SkillWriter::UPDATED)
         ->and($trackedOneDir)->toBeDirectory()
         ->and($trackedTwoDir)->not->toBeDirectory()
         ->and($untrackedDir)->toBeDirectory();

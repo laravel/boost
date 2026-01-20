@@ -38,13 +38,7 @@ class Config
 
     public function hasSkills(): bool
     {
-        $skills = $this->get('skills', []);
-
-        if (is_bool($skills)) {
-            return $skills;
-        }
-
-        return count($skills) > 0;
+        return count($this->getSkills()) > 0;
     }
 
     public function getMcp(): bool

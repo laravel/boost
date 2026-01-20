@@ -60,44 +60,19 @@ class SkillWriter
     /**
      * @param  Collection<string, Skill>  $skills
      * @param  array<int, string>  $previouslyTrackedSkills
-     * @return array{written: array<string, int>, removed: array<string, bool>}
+     * @return array<string, int>
      */
     public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
     {
         $written = $this->writeAll($skills);
 
         $newSkillNames = $skills->keys()->all();
-        $existingSkillNames = $this->discoverExistingSkills();
 
-        $boostManagedSkills = array_intersect($existingSkillNames, $previouslyTrackedSkills);
-        $staleSkillNames = array_values(array_diff($boostManagedSkills, $newSkillNames));
+        $staleSkillNames = array_values(array_diff($previouslyTrackedSkills, $newSkillNames));
 
-        $removed = $this->removeStale($staleSkillNames);
+        $this->removeStale($staleSkillNames);
 
-        return ['written' => $written, 'removed' => $removed];
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    protected function discoverExistingSkills(): array
-    {
-        $skillsPath = base_path($this->agent->skillsPath());
-
-        if (! is_dir($skillsPath)) {
-            return [];
-        }
-
-        $directories = new FilesystemIterator($skillsPath, FilesystemIterator::SKIP_DOTS);
-        $skills = [];
-
-        foreach ($directories as $directory) {
-            if ($directory->isDir()) {
-                $skills[] = $directory->getFilename();
-            }
-        }
-
-        return $skills;
+        return $written;
     }
 
     public function remove(string $skillName): bool
