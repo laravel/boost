@@ -72,6 +72,26 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function setDocker(bool $useDocker): void
+    {
+        $this->set('docker', $useDocker);
+    }
+
+    public function getDocker(): bool
+    {
+        return $this->get('docker', false);
+    }
+
+    public function setDockerContainer(?string $containerName): void
+    {
+        $this->set('docker_container', $containerName);
+    }
+
+    public function getDockerContainer(): ?string
+    {
+        return $this->get('docker_container');
+    }
+
     public function flush(): void
     {
         $path = base_path(self::FILE);

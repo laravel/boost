@@ -15,6 +15,7 @@ use Laravel\Boost\Contracts\McpClient;
 use Laravel\Boost\Install\Cli\DisplayHelper;
 use Laravel\Boost\Install\CodeEnvironment\CodeEnvironment;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
+use Laravel\Boost\Install\Docker;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -30,6 +31,7 @@ use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
+use function Laravel\Prompts\text;
 
 class InstallCommand extends Command
 {
@@ -42,6 +44,8 @@ class InstallCommand extends Command
     private Herd $herd;
 
     private Sail $sail;
+
+    private Docker $docker;
 
     private Terminal $terminal;
 
@@ -85,6 +89,7 @@ class InstallCommand extends Command
         CodeEnvironmentsDetector $codeEnvironmentsDetector,
         Herd $herd,
         Sail $sail,
+        Docker $docker,
         Terminal $terminal,
     ): int {
         $this->installGuidelines = ! $this->option('ignore-guidelines');
@@ -96,7 +101,7 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        $this->bootstrap($codeEnvironmentsDetector, $herd, $sail, $terminal);
+        $this->bootstrap($codeEnvironmentsDetector, $herd, $sail, $docker, $terminal);
         $this->displayBoostHeader();
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
@@ -106,11 +111,12 @@ class InstallCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Sail $sail, Terminal $terminal): void
+    protected function bootstrap(CodeEnvironmentsDetector $codeEnvironmentsDetector, Herd $herd, Sail $sail, Docker $docker, Terminal $terminal): void
     {
         $this->codeEnvironmentsDetector = $codeEnvironmentsDetector;
         $this->herd = $herd;
         $this->sail = $sail;
+        $this->docker = $docker;
         $this->terminal = $terminal;
 
         $this->terminal->initDimensions();
@@ -275,6 +281,10 @@ class InstallCommand extends Command
 
         if ($this->sail->isInstalled() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
             $features->push('sail');
+        } elseif ($this->docker->isAvailableWithoutSail() && $this->shouldConfigureDocker()) {
+            $features->push('docker');
+            $containerName = $this->getDockerContainerName();
+            $this->docker->setContainerName($containerName);
         }
 
         return $features;
@@ -296,6 +306,58 @@ class InstallCommand extends Command
             default: $this->config->getHerdMcp(),
             hint: 'The Herd MCP provides additional tools like browser logs, which can help AI understand issues better',
         );
+    }
+
+    protected function shouldConfigureDocker(): bool
+    {
+        return confirm(
+            label: 'Docker Compose detected (without Sail). Configure Boost MCP to run inside a container?',
+            default: $this->config->getDocker(),
+            hint: 'This will configure the MCP server to run through Docker. Note: The container must be running to use Boost MCP',
+        );
+    }
+
+    protected function getDockerContainerName(): string
+    {
+        $defaultContainer = $this->config->getDockerContainer() ?? $this->guessContainerName();
+
+        return text(
+            label: 'Enter the Docker container name where PHP/Laravel runs:',
+            placeholder: 'laravel.test',
+            default: $defaultContainer,
+            required: true,
+            hint: 'This is the container where "php artisan" commands should be executed',
+        );
+    }
+
+    /**
+     * Try to guess the container name from docker-compose.yml.
+     */
+    protected function guessContainerName(): string
+    {
+        $composePath = file_exists(base_path('docker-compose.yml'))
+            ? base_path('docker-compose.yml')
+            : base_path('compose.yaml');
+
+        if (! file_exists($composePath)) {
+            return '';
+        }
+
+        $content = file_get_contents($composePath);
+
+        // Try to find the app name from the project directory
+        $projectName = basename(base_path());
+
+        // Common Laravel service names in docker-compose
+        $commonNames = ['app', 'laravel', 'php', 'web', $projectName];
+
+        foreach ($commonNames as $name) {
+            if (preg_match('/^\s*'.preg_quote($name, '/').':/m', $content)) {
+                return $name;
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -513,6 +575,14 @@ class InstallCommand extends Command
                 $this->shouldUseSail()
             );
 
+            $this->config->setDocker(
+                $this->shouldUseDocker()
+            );
+
+            $this->config->setDockerContainer(
+                $this->docker->getContainerName()
+            );
+
             $this->config->setHerdMcp(
                 $this->shouldInstallHerdMcp()
             );
@@ -550,12 +620,25 @@ class InstallCommand extends Command
         return $this->selectedBoostFeatures->contains('sail');
     }
 
+    protected function shouldUseDocker(): bool
+    {
+        if ($this->selectedBoostFeatures->isEmpty()) {
+            return $this->config->getDocker();
+        }
+
+        return $this->selectedBoostFeatures->contains('docker');
+    }
+
     protected function buildMcpCommand(McpClient $mcpClient): array
     {
         $serverName = 'laravel-boost';
 
         if ($this->shouldUseSail()) {
             return $this->sail->buildMcpCommand($serverName);
+        }
+
+        if ($this->shouldUseDocker()) {
+            return $this->docker->buildMcpCommand($serverName);
         }
 
         $inWsl = $this->isRunningInWsl();
