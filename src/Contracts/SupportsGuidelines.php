@@ -9,8 +9,6 @@ namespace Laravel\Boost\Contracts;
  */
 interface SupportsGuidelines
 {
-    public function name(): string;
-
     /**
      * Get the file path where AI guidelines should be written.
      *

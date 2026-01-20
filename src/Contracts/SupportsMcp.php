@@ -9,8 +9,6 @@ namespace Laravel\Boost\Contracts;
  */
 interface SupportsMcp
 {
-    public function name(): string;
-
     /**
      * Whether to use absolute paths for MCP commands.
      */
