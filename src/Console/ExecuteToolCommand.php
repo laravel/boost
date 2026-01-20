@@ -33,6 +33,7 @@ class ExecuteToolCommand extends Command
 
         // Decode arguments
         $arguments = json_decode(base64_decode($argumentsEncoded, true), true);
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->error('Invalid arguments format: '.json_last_error_msg());
 

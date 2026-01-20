@@ -32,6 +32,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     $dbFile = database_path('testing.sqlite');
+
     if (File::exists($dbFile)) {
         File::delete($dbFile);
     }

@@ -356,6 +356,7 @@ class GuidelineComposer
         // Relative path, prepend our package path to it
         if (! file_exists($path)) {
             $path = $this->prependPackageGuidelinePath($path);
+
             if (! file_exists($path)) {
                 return null;
             }

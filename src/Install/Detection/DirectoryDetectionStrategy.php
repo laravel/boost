@@ -27,6 +27,7 @@ class DirectoryDetectionStrategy implements DetectionStrategy
 
             if (str_contains($expandedPath, '*')) {
                 $matches = glob($expandedPath, GLOB_ONLYDIR);
+
                 if (! empty($matches)) {
                     return true;
                 }
@@ -46,6 +47,7 @@ class DirectoryDetectionStrategy implements DetectionStrategy
 
         if (str_starts_with($path, '~')) {
             $home = getenv('HOME');
+
             if ($home) {
                 return str_replace('~', $home, $path);
             }

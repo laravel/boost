@@ -101,6 +101,7 @@ abstract class CodeEnvironment
         foreach ($boostManager->getCodeEnvironments() as $class) {
             /** @var class-string<CodeEnvironment> $class */
             $instance = new $class($detectionFactory);
+
             if ($instance->name() === $name) {
                 return $instance;
             }
@@ -175,12 +176,14 @@ abstract class CodeEnvironment
     protected function installShellMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
         $shellCommand = $this->shellMcpCommand();
+
         if ($shellCommand === null) {
             return false;
         }
 
         // Build environment string
         $envString = '';
+
         foreach ($env as $envKey => $value) {
             $envKey = strtoupper($envKey);
             $envString .= "-e {$envKey}=\"{$value}\" ";
@@ -200,6 +203,7 @@ abstract class CodeEnvironment
         ], $shellCommand);
 
         $result = Process::run($command);
+
         if ($result->successful()) {
             return true;
         }
@@ -216,6 +220,7 @@ abstract class CodeEnvironment
     protected function installFileMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
         $path = $this->mcpConfigPath();
+
         if (! $path) {
             return false;
         }

@@ -396,6 +396,7 @@ class InstallCommand extends Command
         if ($defaults === []) {
             foreach ($installedEnvNames as $envKey) {
                 $matchingEnv = $availableEnvironments->first(fn (CodeEnvironment $env): bool => strtolower((string) $envKey) === strtolower($env->name()));
+
                 if ($matchingEnv) {
                     $detectedDefaults[] = $matchingEnv->name();
                 }
@@ -674,6 +675,7 @@ class InstallCommand extends Command
                 count($failed),
                 count($failed) === 1 ? '' : 's'
             ));
+
             foreach ($failed as $agentName => $error) {
                 $this->line("  - {$agentName}: {$error}");
             }
