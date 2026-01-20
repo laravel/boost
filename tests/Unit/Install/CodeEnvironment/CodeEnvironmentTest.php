@@ -427,21 +427,21 @@ test('getArtisanPath maintains default behavior when forceAbsolutePath is false'
 });
 
 test('getPhpPath uses configured default_php_bin from config', function (): void {
-    config(['boost.default_php_bin' => '/usr/local/bin/php8.3']);
+    config(['boost.commands.php' => '/usr/local/bin/php8.3']);
 
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('/usr/local/bin/php8.3');
 });
 
 test('getPhpPath returns php when config is set to php', function (): void {
-    config(['boost.default_php_bin' => 'php']);
+    config(['boost.commands.php' => 'php']);
 
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('php');
 });
 
 test('getPhpPath ignores config when forceAbsolutePath is true', function (): void {
-    config(['boost.default_php_bin' => '/usr/local/bin/php8.3']);
+    config(['boost.commands.php' => '/usr/local/bin/php8.3']);
 
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(true))->toBe(PHP_BINARY);

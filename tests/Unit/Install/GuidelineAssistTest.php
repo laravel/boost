@@ -16,7 +16,7 @@ beforeEach(function (): void {
 });
 
 test('artisan returns configured default_php_bin when not using Sail', function (): void {
-    config(['boost.default_php_bin' => '/usr/local/bin/php8.3']);
+    config(['boost.commands.php' => '/usr/local/bin/php8.3']);
     $this->config->usesSail = false;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -27,7 +27,7 @@ test('artisan returns configured default_php_bin when not using Sail', function 
 });
 
 test('artisan uses php when config is set to php and not using Sail', function (): void {
-    config(['boost.default_php_bin' => 'php']);
+    config(['boost.commands.php' => 'php']);
     $this->config->usesSail = false;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -38,7 +38,7 @@ test('artisan uses php when config is set to php and not using Sail', function (
 });
 
 test('artisan uses Sail command when usesSail is true', function (): void {
-    config(['boost.default_php_bin' => '/usr/local/bin/php8.3']);
+    config(['boost.commands.php' => '/usr/local/bin/php8.3']);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -49,7 +49,7 @@ test('artisan uses Sail command when usesSail is true', function (): void {
 });
 
 test('composerCommand returns configured default_composer_bin when not using Sail', function (): void {
-    config(['boost.default_composer_bin' => '/usr/local/bin/composer2']);
+    config(['boost.commands.composer' => '/usr/local/bin/composer2']);
     $this->config->usesSail = false;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -60,7 +60,7 @@ test('composerCommand returns configured default_composer_bin when not using Sai
 });
 
 test('composerCommand uses composer when config is set to composer and not using Sail', function (): void {
-    config(['boost.default_composer_bin' => 'composer']);
+    config(['boost.commands.composer' => 'composer']);
     $this->config->usesSail = false;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -71,7 +71,7 @@ test('composerCommand uses composer when config is set to composer and not using
 });
 
 test('composerCommand uses Sail command when usesSail is true', function (): void {
-    config(['boost.default_composer_bin' => '/usr/local/bin/composer2']);
+    config(['boost.commands.composer' => '/usr/local/bin/composer2']);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -84,7 +84,7 @@ test('composerCommand uses Sail command when usesSail is true', function (): voi
 });
 
 test('artisanCommand uses configured default_php_bin', function (): void {
-    config(['boost.default_php_bin' => '/opt/php/bin/php']);
+    config(['boost.commands.php' => '/opt/php/bin/php']);
     $this->config->usesSail = false;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();

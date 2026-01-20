@@ -194,7 +194,7 @@ class GuidelineAssist
     {
         $composerCommand = $this->config->usesSail
             ? Sail::composerCommand()
-            : config('boost.default_composer_bin', 'composer');
+            : config('boost.commands.composer', 'composer');
 
         return "{$composerCommand} {$command}";
     }
@@ -212,7 +212,7 @@ class GuidelineAssist
             return Sail::artisanCommand();
         }
 
-        $phpBin = config('boost.default_php_bin', 'php');
+        $phpBin = config('boost.commands.php', 'php');
 
         return "{$phpBin} artisan";
     }

@@ -44,7 +44,7 @@ abstract class CodeEnvironment
             return PHP_BINARY;
         }
 
-        return config('boost.default_php_bin', 'php');
+        return config('boost.commands.php', 'php');
     }
 
     public function getArtisanPath(bool $forceAbsolutePath = false): string
