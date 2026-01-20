@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
+use Laravel\Boost\Install\Sail;
 use Laravel\Roster\Roster;
 
 beforeEach(function (): void {
@@ -44,7 +45,7 @@ test('artisan uses Sail command when usesSail is true', function (): void {
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
-    expect($assist->artisan())->toBe('vendor/bin/sail artisan');
+    expect($assist->artisan())->toBe(Sail::artisanCommand());
 });
 
 test('composerCommand returns configured default_composer_bin when not using Sail', function (): void {
@@ -77,7 +78,9 @@ test('composerCommand uses Sail command when usesSail is true', function (): voi
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
-    expect($assist->composerCommand('install'))->toBe('vendor/bin/sail composer install');
+    $defaultSailComposer = Sail::composerCommand();
+
+    expect($assist->composerCommand('install'))->toBe("{$defaultSailComposer} install");
 });
 
 test('artisanCommand uses configured default_php_bin', function (): void {
