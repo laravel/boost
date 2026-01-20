@@ -11,8 +11,6 @@ interface SupportsSkills
 {
     /**
      * Get the file path where agent skills should be written.
-     *
-     * @return string
      */
     public function skillsPath(): string;
 }

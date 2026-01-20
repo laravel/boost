@@ -27,11 +27,8 @@ interface SupportsMcp
     /**
      * Install an MCP server configuration in this IDE.
      *
-     * @param  string  $key
-     * @param  string  $command
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
-     * @return bool
      */
     public function installMcp(string $key, string $command, array $args = [], array $env = []): bool;
 }
