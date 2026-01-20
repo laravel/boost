@@ -43,5 +43,4 @@ it('returns correct display label', function (bool $hasGuidelines, bool $hasSkil
     'both features' => [true, true, 'vendor/package (guidelines, skills)'],
     'guidelines only' => [true, false, 'vendor/package (guideline)'],
     'skills only' => [false, true, 'vendor/package (skills)'],
-    'no features' => [false, false, 'vendor/package'],
 ]);

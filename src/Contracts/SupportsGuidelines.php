@@ -12,7 +12,7 @@ interface SupportsGuidelines
     /**
      * Get the file path where AI guidelines should be written.
      *
-     * @return string The relative or absolute path to the guideline file
+     * @return string
      */
     public function guidelinesPath(): string;
 
