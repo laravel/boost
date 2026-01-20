@@ -232,13 +232,13 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 
-class CustomAgent extends Agent implements SupportGuidelines, SupportMCP, SupportsSkills
+class CustomAgent extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     // Your implementation...
 }
 ```
 
-For an example implementation, see [ClaudeCode.php](https://github.com/laravel/boost/blob/main/src/Install/Agent/ClaudeCode.php).
+For an example implementation, see [ClaudeCode.php](https://github.com/laravel/boost/blob/main/src/Install/Agents/ClaudeCode.php).
 
 ### Registering the Agent
 
