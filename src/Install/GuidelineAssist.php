@@ -192,9 +192,15 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
-        $composerCommand = $this->config->usesSail
-            ? Sail::composerCommand()
-            : config('boost.commands.composer', 'composer');
+        $configuredComposer = config('boost.commands.composer');
+
+        if ($configuredComposer !== null) {
+            $composerCommand = $configuredComposer;
+        } elseif ($this->config->usesSail) {
+            $composerCommand = Sail::composerCommand();
+        } else {
+            $composerCommand = 'composer';
+        }
 
         return "{$composerCommand} {$command}";
     }
@@ -208,13 +214,17 @@ class GuidelineAssist
 
     public function artisan(): string
     {
+        $configuredPhp = config('boost.commands.php');
+
+        if ($configuredPhp !== null) {
+            return "{$configuredPhp} artisan";
+        }
+
         if ($this->config->usesSail) {
             return Sail::artisanCommand();
         }
 
-        $phpBin = config('boost.commands.php', 'php');
-
-        return "{$phpBin} artisan";
+        return 'php artisan';
     }
 
     public function sailBinaryPath(): string
