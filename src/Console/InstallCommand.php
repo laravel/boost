@@ -221,7 +221,7 @@ class InstallCommand extends Command
         $defaults = $configValues->filter()->keys()->whenEmpty(fn () => $featureLabels->keys());
 
         return collect(multiselect(
-            label: 'Which Boost features do you want to use?',
+            label: 'Which Boost features would you like to configure?',
             options: $featureLabels->all(),
             default: $defaults->all(),
             required: true,
@@ -270,7 +270,7 @@ class InstallCommand extends Command
         }
 
         return collect(multiselect(
-            label: 'Which third-party AI guidelines/skills do you want to install?',
+            label: 'Which third-party AI guidelines/skills would you like to install?',
             options: $packages->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [
                 $name => $pkg->displayLabel(),
             ])->toArray(),
@@ -319,7 +319,7 @@ class InstallCommand extends Command
             ->values();
 
         $selected = multiselect(
-            label: 'Which AI agents do you use?',
+            label: 'Which AI agents would you like to configure?',
             options: $options->all(),
             default: $defaults->all(),
             scroll: $options->count(),
