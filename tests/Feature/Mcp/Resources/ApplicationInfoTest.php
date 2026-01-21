@@ -2,17 +2,11 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Mcp\Resources\ApplicationInfo;
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo as ApplicationInfoTool;
-use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Package;
-use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Roster;
 use Mockery\MockInterface;
 
 it('returns php version, laravel version, packages, and models when tool executes successfully', function (): void {
