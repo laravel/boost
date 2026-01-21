@@ -12,18 +12,19 @@ use Laravel\Roster\Roster;
 trait DiscoverPackagePaths
 {
     /**
-     * @var array<string, string[]>
-     */
-    protected array $packagePriorities = [];
-
-    /**
+     * Only include guidelines for these package names if they're a direct requirement.
+     * This fixes every Boost user getting the MCP guidelines due to indirect import.
+     *
      * @var array<int, Packages>
-     */
+     * */
     protected array $mustBeDirect = [
         Packages::MCP,
     ];
 
     /**
+     * Packages that should be excluded from automatic guideline inclusion.
+     * These packages require explicit configuration to be included.
+     *
      * @var array<int, Packages>
      */
     protected array $optInPackages = [
@@ -32,9 +33,13 @@ trait DiscoverPackagePaths
 
     abstract protected function getRoster(): Roster;
 
-    protected function initializePackagePriorities(): void
+    /**
+     * Package priority system to handle conflicts between packages.
+     * When a higher-priority package is present, lower-priority packages are excluded from guidelines.
+     */
+    protected function getPackagePriorities(): array
     {
-        $this->packagePriorities = [
+        return [
             Packages::PEST->value => [Packages::PHPUNIT->value],
             Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
         ];
@@ -46,10 +51,9 @@ trait DiscoverPackagePaths
             return true;
         }
 
-        foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
-            $packageIsInExclusionList = in_array($package->package()->value, $excludedPackages, true);
-
-            if ($packageIsInExclusionList && $this->getRoster()->uses(Packages::from($priorityPackage))) {
+        foreach ($this->getPackagePriorities() as $priorityPackage => $excludedPackages) {
+            if (in_array($package->package()->value, $excludedPackages, true)
+                && $this->getRoster()->uses(Packages::from($priorityPackage))) {
                 return true;
             }
         }
@@ -65,7 +69,7 @@ trait DiscoverPackagePaths
         $packages = $this->getRoster()->packages();
 
         if ($filterPackages) {
-            $packages = $packages->reject(fn (Package $p): bool => $this->shouldExcludePackage($p));
+            $packages = $packages->reject(fn (Package $package): bool => $this->shouldExcludePackage($package));
         }
 
         /** @var Collection<int, array{path: string, name: string, version: string}> $result */

@@ -32,7 +32,6 @@ class GuidelineComposer
 
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
-        $this->initializePackagePriorities();
         $this->config = new GuidelineConfig;
     }
 

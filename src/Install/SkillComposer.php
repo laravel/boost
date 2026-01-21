@@ -23,9 +23,7 @@ class SkillComposer
     public function __construct(
         protected Roster $roster,
         protected GuidelineConfig $config = new GuidelineConfig
-    ) {
-        $this->initializePackagePriorities();
-    }
+    ) {}
 
     protected function getRoster(): Roster
     {
