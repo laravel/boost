@@ -19,7 +19,7 @@ it('returns default agents', function (): void {
     expect($registered)->toMatchArray([
         'junie' => Junie::class,
         'cursor' => Cursor::class,
-        'claudecode' => ClaudeCode::class,
+        'claude_code' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
         'opencode' => OpenCode::class,
