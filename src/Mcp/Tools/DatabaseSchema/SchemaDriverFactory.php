@@ -10,7 +10,12 @@ class SchemaDriverFactory
 {
     public static function make(?string $connection = null): DatabaseSchemaDriver
     {
-        $driverName = DB::connection($connection)->getDriverName();
+        $connectionName = $connection ?? config('database.default');
+        $driverName = config("database.connections.{$connectionName}.driver");
+
+        if (! is_string($driverName) || $driverName === '') {
+            $driverName = DB::connection($connectionName)->getDriverName();
+        }
 
         return match ($driverName) {
             'mysql', 'mariadb' => new MySQLSchemaDriver($connection),

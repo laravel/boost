@@ -31,6 +31,8 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
+    DB::disconnect('testing');
+
     $dbFile = database_path('schema_driver_testing.sqlite');
 
     if (File::exists($dbFile)) {
