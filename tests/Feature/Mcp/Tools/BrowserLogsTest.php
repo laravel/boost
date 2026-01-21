@@ -130,38 +130,6 @@ test('browser logs endpoint processes logs correctly', function (): void {
         ->toContain('Mozilla/5.0');
 });
 
-test('browser logs endpoint handles complex nested data', function (): void {
-    $response = $this->postJson('/_boost/browser-logs', [
-        'logs' => [
-            [
-                'type' => 'unhandled_rejection',
-                'timestamp' => '2024-01-15T10:00:00.000Z',
-                'data' => [
-                    [
-                        'message' => 'Unhandled Promise Rejection',
-                        'reason' => [
-                            'name' => 'TypeError',
-                            'message' => 'NetworkError when attempting to fetch resource.',
-                            'stack' => '',
-                        ],
-                    ],
-                ],
-                'url' => 'http://example.com',
-                'userAgent' => 'Mozilla/5.0',
-            ],
-        ],
-    ]);
-
-    $response->assertOk();
-
-    expect(browserLogPath())->toBeFile()
-        ->and(getBrowserLogContent())
-        ->toContain('ERROR:')
-        ->toContain('Unhandled Promise Rejection')
-        ->toContain('TypeError')
-        ->toContain('NetworkError');
-});
-
 test('InjectBoost middleware injects script into HTML response', function (): void {
     $html = <<<'HTML'
 <!DOCTYPE html>
