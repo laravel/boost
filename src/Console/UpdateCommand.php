@@ -14,19 +14,18 @@ class UpdateCommand extends Command
     public function handle(Config $config): void
     {
         $guidelines = $config->getGuidelines();
-        $skills = $config->getSkills();
+        $hasSkills = $config->hasSkills();
 
-        if (! $guidelines && ! $skills) {
+        if (! $guidelines && ! $hasSkills) {
             return;
         }
 
         $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
-            '--skills' => $skills,
-            '--preserve-config' => true,
+            '--skills' => $hasSkills,
         ]);
 
-        $this->components->info('Boost guidelines updated successfully.');
+        $this->components->info('Boost guidelines and skills updated successfully.');
     }
 }

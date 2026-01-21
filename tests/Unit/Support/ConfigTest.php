@@ -49,18 +49,26 @@ it('may store and retrieve herd mcp installation status', function (): void {
     expect($config->getHerdMcp())->toBeFalse();
 });
 
-it('may store and retrieve skills status', function (): void {
+it('may store and retrieve skills as an array', function (): void {
     $config = new Config;
 
-    expect($config->getSkills())->toBeFalse();
+    expect($config->getSkills())->toBeEmpty()
+        ->and($config->hasSkills())->toBeFalse();
 
-    $config->setSkills(true);
+    $skills = [
+        'skill-one',
+        'skill-two',
+    ];
 
-    expect($config->getSkills())->toBeTrue();
+    $config->setSkills($skills);
 
-    $config->setSkills(false);
+    expect($config->getSkills())->toEqual($skills)
+        ->and($config->hasSkills())->toBeTrue();
 
-    expect($config->getSkills())->toBeFalse();
+    $config->setSkills([]);
+
+    expect($config->getSkills())->toBeEmpty()
+        ->and($config->hasSkills())->toBeFalse();
 });
 
 it('may store and retrieve mcp status', function (): void {
