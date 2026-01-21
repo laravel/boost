@@ -3,18 +3,18 @@
 ## Upgrading To 2.x From 1.x
 
 > Note: If you are not using custom agents or overriding Boost in any way, you should experience minimal issues while upgrading. Simply run `php artisan boost:install` after upgrading to Boost 2.x and the migration will be handled automatically.
->
-> Important: If you are using external packages that add custom agents, ensure you update to versions that have support for Boost 2.x.
+
+> Note: If you are using external packages that add custom agents, ensure you update to versions that have support for Boost 2.x.
 
 ### Custom Agent Changes
 
 PR Link: https://github.com/laravel/boost/pull/439
 
-Likelihood Of Impact: Low (only if you have custom agents)
+Likelihood Of Impact: Low
 
-If you have added your own custom agents, you'll need to make the following changes:
+If you have added your own custom agents, you will need to make the following changes:
 
-#### Terminology & Namespace Changes
+#### Terminology and Namespace Changes
 
 `CodeEnvironment` has been replaced with `Agent` throughout:
 
@@ -87,9 +87,9 @@ class MyCustomAgent extends Agent implements SupportsGuidelines, SupportsMcp, Su
 
 PR Link: https://github.com/laravel/boost/pull/439
 
-Likelihood Of Impact: Lo (if you've overridden config in `config/boost.php`)
+Likelihood Of Impact: Low (Only applies if you have overridden configuration options in `config/boost.php`)
 
-Published configuration paths have been updated from `code_environment` to `agents` in `config/boost.php`. For example:
+Published configuration paths have been updated from `code_environment` to `agents` in `config/boost.php`:
 
 ```diff
 - config('boost.code_environment.junie.guidelines_path')
