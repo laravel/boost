@@ -64,13 +64,10 @@ trait DiscoverPackagePaths
     /**
      * @return Collection<int, array{path: string, name: string, version: string}>
      */
-    protected function discoverPackagePaths(string $basePath, bool $filterPackages = false): Collection
+    protected function discoverPackagePaths(string $basePath): Collection
     {
-        $packages = $this->getRoster()->packages();
-
-        if ($filterPackages) {
-            $packages = $packages->reject(fn (Package $package): bool => $this->shouldExcludePackage($package));
-        }
+        $packages = $this->getRoster()->packages()
+            ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package));
 
         /** @var Collection<int, array{path: string, name: string, version: string}> $result */
         $result = $packages

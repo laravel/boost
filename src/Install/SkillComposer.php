@@ -60,7 +60,7 @@ class SkillComposer
      */
     protected function getBoostSkills(): Collection
     {
-        return $this->discoverPackagePaths($this->getBoostAiPath(), filterPackages: true)
+        return $this->discoverPackagePaths($this->getBoostAiPath())
             ->flatMap(fn (array $package): Collection => $this->discoverSkillsFromPath(
                 $package['path'],
                 $package['name'],
@@ -120,7 +120,7 @@ class SkillComposer
             return collect();
         }
 
-        return $this->discoverPackagePaths($userAiPath, filterPackages: true)
+        return $this->discoverPackagePaths($userAiPath)
             ->flatMap(fn (array $package): Collection => $this->discoverSkillsFromPath(
                 $package['path'],
                 $package['name'],
