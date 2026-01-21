@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
+use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Contracts\SupportsSkills;
-use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use RuntimeException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
