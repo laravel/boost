@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Mcp\Prompts\Concerns;
+namespace Laravel\Boost\Concerns;
 
 use Illuminate\Support\Facades\Blade;
 use Laravel\Boost\Install\GuidelineAssist;

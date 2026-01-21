@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Prompts\LaravelCodeSimplifier;
 
-use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
+use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Prompt;
 

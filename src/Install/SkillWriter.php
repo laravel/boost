@@ -6,8 +6,8 @@ namespace Laravel\Boost\Install;
 
 use FilesystemIterator;
 use Illuminate\Support\Collection;
+use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Contracts\SupportsSkills;
-use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
