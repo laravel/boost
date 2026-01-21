@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Middleware\InjectBoost;
@@ -13,7 +14,7 @@ use Laravel\Mcp\Request;
 
 function browserLogPath(): string
 {
-    return storage_path('logs/browser.log');
+    return storage_path('logs'.DIRECTORY_SEPARATOR.'browser.log');
 }
 
 function createBrowserLogFile(string $content): void
@@ -28,6 +29,9 @@ function getBrowserLogContent(): string
 }
 
 beforeEach(function (): void {
+    Log::forgetChannel('browser');
+    File::ensureDirectoryExists(dirname(browserLogPath()));
+
     if (File::exists(browserLogPath())) {
         File::delete(browserLogPath());
     }
