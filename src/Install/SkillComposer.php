@@ -24,7 +24,7 @@ class SkillComposer
         protected Roster $roster,
         protected GuidelineConfig $config = new GuidelineConfig
     ) {
-        //
+        $this->initializePackagePriorities();
     }
 
     protected function getRoster(): Roster
@@ -62,7 +62,7 @@ class SkillComposer
      */
     protected function getBoostSkills(): Collection
     {
-        return $this->discoverPackagePaths($this->getBoostAiPath())
+        return $this->discoverPackagePaths($this->getBoostAiPath(), filterPackages: true)
             ->flatMap(fn (array $package): Collection => $this->discoverSkillsFromPath(
                 $package['path'],
                 $package['name'],
@@ -122,7 +122,7 @@ class SkillComposer
             return collect();
         }
 
-        return $this->discoverPackagePaths($userAiPath)
+        return $this->discoverPackagePaths($userAiPath, filterPackages: true)
             ->flatMap(fn (array $package): Collection => $this->discoverSkillsFromPath(
                 $package['path'],
                 $package['name'],
