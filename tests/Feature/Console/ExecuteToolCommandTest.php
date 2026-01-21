@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Boost\Mcp\ToolRegistry;
 use Laravel\Boost\Mcp\Tools\GetConfig;
+use Symfony\Component\Console\Command\Command;
 use Tests\Fixtures\ThrowingTool;
 
 beforeEach(function (): void {
@@ -22,7 +23,7 @@ it('exits with error when the tool class is not in the registry', function (): v
     $this->artisan('boost:execute-tool', [
         'tool' => 'App\\Fake\\NonExistentTool',
         'arguments' => base64_encode('{}'),
-    ])->assertExitCode(1)
+    ])->assertExitCode(Command::FAILURE)
         ->expectsOutputToContain('Tool not registered or not allowed');
 });
 
@@ -33,7 +34,7 @@ it('exits with error when the tool is in the exclude config', function (): void 
     $this->artisan('boost:execute-tool', [
         'tool' => GetConfig::class,
         'arguments' => base64_encode(json_encode(['key' => 'app.name'])),
-    ])->assertExitCode(1)
+    ])->assertExitCode(Command::FAILURE)
         ->expectsOutputToContain('Tool not registered or not allowed');
 });
 
@@ -48,7 +49,7 @@ it('exits with error when decoded arguments contain invalid JSON', function (): 
     $this->artisan('boost:execute-tool', [
         'tool' => GetConfig::class,
         'arguments' => base64_encode('{not valid json'),
-    ])->assertExitCode(1)
+    ])->assertExitCode(Command::FAILURE)
         ->expectsOutputToContain('Invalid arguments format');
 });
 
@@ -62,7 +63,7 @@ it('outputs JSON with isError false on successful tool execution', function (): 
 
     $json = json_decode($rawOutput, true);
 
-    expect($exitCode)->toBe(0)
+    expect($exitCode)->toBe(Command::SUCCESS)
         ->and($json)->toHaveKeys(['isError', 'content'])
         ->and($json['isError'])->toBeFalse();
 });
@@ -87,6 +88,6 @@ it('catches tool exceptions and outputs error JSON with failure exit code', func
     $this->artisan('boost:execute-tool', [
         'tool' => ThrowingTool::class,
         'arguments' => base64_encode('{}'),
-    ])->assertExitCode(1)
+    ])->assertExitCode(Command::FAILURE)
         ->expectsOutputToContain('Intentional test exception');
 });
