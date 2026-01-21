@@ -6,8 +6,8 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
-use Laravel\Boost\Mcp\Prompts\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
