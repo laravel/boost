@@ -6,19 +6,6 @@
 >
 > Important: If you are using external packages that add custom agents, ensure you update to versions that have support for Boost 2.x.
 
-### Agent Consolidation
-
-PR Link: https://github.com/laravel/boost/pull/439
-
-Likelihood Of Impact: Medium
-
-Boost 2.x focuses on configuring AI agents rather than IDEs. Update agent references:
-
-| Before | After |
-|--------|-------|
-| `PhpStorm` | `Junie` |
-| `VSCode` | `Copilot` |
-
 ### Custom Agent Changes
 
 PR Link: https://github.com/laravel/boost/pull/439
@@ -100,9 +87,9 @@ class MyCustomAgent extends Agent implements SupportsGuidelines, SupportsMcp, Su
 
 PR Link: https://github.com/laravel/boost/pull/439
 
-Likelihood Of Impact: Medium (if you've overridden config), Low (otherwise)
+Likelihood Of Impact: Lo (if you've overridden config in `config/boost.php`)
 
-Published configuration paths have been updated from `code_environment` to `agents`. For example:
+Published configuration paths have been updated from `code_environment` to `agents` in `config/boost.php`. For example:
 
 ```diff
 - config('boost.code_environment.junie.guidelines_path')
@@ -115,7 +102,7 @@ This was previously undocumented, so the impact is very low unless you've explic
 
 PR Link: https://github.com/laravel/boost/pull/439
 
-Likelihood Of Impact: Low (UX improvement)
+Likelihood Of Impact: Low
 
 The `boost:install` command flags have changed from negative opt-out to positive opt-in for clearer intent:
 
@@ -123,5 +110,3 @@ The `boost:install` command flags have changed from negative opt-out to positive
 - php artisan boost:install {--ignore-guidelines} {--ignore-mcp}
 + php artisan boost:install {--guidelines} {--skills} {--mcp}
 ```
-
-This is a UX improvement and does not affect programmatic usage if you were running the command without flags.
