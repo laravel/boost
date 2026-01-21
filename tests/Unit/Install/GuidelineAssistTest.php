@@ -115,3 +115,49 @@ test('artisanCommand uses configured default_php_bin', function (): void {
 
     expect($assist->artisanCommand('migrate'))->toBe('/opt/php/bin/php artisan migrate');
 });
+
+test('nodePackageManagerCommand returns configured npm binary when set', function (): void {
+    config(['boost.commands.npm' => '/usr/local/bin/pnpm']);
+    $this->config->usesSail = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->nodePackageManagerCommand('install'))->toBe('/usr/local/bin/pnpm install');
+});
+
+test('nodePackageManagerCommand uses config over Sail when config is set', function (): void {
+    config(['boost.commands.npm' => '/usr/local/bin/yarn']);
+    $this->config->usesSail = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->nodePackageManagerCommand('install'))->toBe('/usr/local/bin/yarn install');
+});
+
+test('nodePackageManagerCommand uses Sail command when usesSail is true and config is null', function (): void {
+    config(['boost.commands.npm' => null]);
+    $this->config->usesSail = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    $expectedCommand = Sail::nodePackageManagerCommand('npm');
+
+    expect($assist->nodePackageManagerCommand('install'))->toBe("{$expectedCommand} install");
+});
+
+test('nodePackageManagerCommand uses detected package manager when config is null and not using Sail', function (): void {
+    config(['boost.commands.npm' => null]);
+    $this->config->usesSail = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->nodePackageManagerCommand('install'))->toBe('npm install');
+});

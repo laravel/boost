@@ -170,17 +170,22 @@ class GuidelineAssist
         return $this->roster->usesVersion(Packages::PINT, '1.27.0', '>=');
     }
 
-    public function nodePackageManager(): string
+    protected function detectedNodePackageManager(): string
     {
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
     }
 
     public function nodePackageManagerCommand(string $command): string
     {
-        $manager = $this->nodePackageManager();
-        $nodePackageManagerCommand = $this->config->usesSail
-            ? Sail::nodePackageManagerCommand($manager)
-            : $manager;
+        $configuredNpm = config('boost.commands.npm');
+
+        if ($configuredNpm !== null) {
+            $nodePackageManagerCommand = $configuredNpm;
+        } elseif ($this->config->usesSail) {
+            $nodePackageManagerCommand = Sail::nodePackageManagerCommand($this->detectedNodePackageManager());
+        } else {
+            $nodePackageManagerCommand = $this->detectedNodePackageManager();
+        }
 
         return "{$nodePackageManagerCommand} {$command}";
     }
