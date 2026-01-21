@@ -29,4 +29,20 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boost Commands
+    |--------------------------------------------------------------------------
+    |
+    | The following options allow you to configure custom paths for the PHP
+    | and Composer binaries used by Boost. Leave empty to use defaults.
+    | When configured, these take precedence over automatic detection.
+    |
+    */
+
+    'commands' => [
+        'php' => env('BOOST_PHP_BINARY'),
+        'composer' => env('BOOST_COMPOSER_BINARY'),
+    ],
+
 ];
