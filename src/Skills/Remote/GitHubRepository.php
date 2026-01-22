@@ -9,11 +9,8 @@ use InvalidArgumentException;
 
 class GitHubRepository
 {
-    public function __construct(
-        public readonly string $owner,
-        public readonly string $repo,
-        public readonly string $path = '',
-    ) {
+    public function __construct(public string $owner, public string $repo, public string $path = '')
+    {
         //
     }
 

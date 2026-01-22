@@ -24,9 +24,8 @@ class GitHubSkillProvider
         '.claude/skills',
     ];
 
-    public function __construct(
-        protected GitHubRepository $repository
-    ) {
+    public function __construct(protected GitHubRepository $repository)
+    {
         //
     }
 
