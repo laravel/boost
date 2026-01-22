@@ -41,9 +41,9 @@ return [
     */
 
     'commands' => [
-        'php' => env('BOOST_PHP_BINARY'),
-        'composer' => env('BOOST_COMPOSER_BINARY'),
-        'npm' => env('BOOST_NPM_BINARY'),
+        'php_binary' => env('BOOST_PHP_BINARY'),
+        'composer_binary' => env('BOOST_COMPOSER_BINARY'),
+        'node_package_manager_binary' => env('BOOST_NODE_PACKAGE_MANAGER_BINARY'),
         'vendor_bin_prefix' => env('BOOST_VENDOR_BIN_PREFIX'),
     ],
 
