@@ -136,7 +136,7 @@ class AddSkillCommand extends Command
 
     protected function displaySkillsTable(): int
     {
-        note(sprintf('Found %d available skills', $this->availableSkills->count()));
+        note("Found {$this->availableSkills->count()} available skills");
 
         grid($this->availableSkills->keys()->sort()->values()->toArray());
 
