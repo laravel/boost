@@ -31,20 +31,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Boost Commands
+    | Boost Executables Config
     |--------------------------------------------------------------------------
     |
-    | The following options allow you to configure custom paths for the PHP
-    | and Composer binaries used by Boost. Leave empty to use defaults.
+    | The following options allow you to configure custom paths for the PHP,
+    | Composer, and npm executables used by Boost. Leave empty to use defaults.
     | When configured, these take precedence over automatic detection.
     |
     */
 
-    'commands' => [
-        'php_binary' => env('BOOST_PHP_BINARY'),
-        'composer_binary' => env('BOOST_COMPOSER_BINARY'),
-        'node_package_manager_binary' => env('BOOST_NODE_PACKAGE_MANAGER_BINARY'),
-        'vendor_bin_prefix' => env('BOOST_VENDOR_BIN_PREFIX'),
+    'executables' => [
+        'php' => env('BOOST_PHP_EXECUTABLE'),
+        'composer' => env('BOOST_COMPOSER_EXECUTABLE'),
+        'npm' => env('BOOST_NPM_EXECUTABLE'),
+        'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE'),
     ],
 
 ];

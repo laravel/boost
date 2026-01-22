@@ -177,17 +177,17 @@ class GuidelineAssist
 
     public function nodePackageManagerCommand(string $command): string
     {
-        $configuredNpm = config('boost.commands.npm');
+        $npmExecutable = config('boost.executables.npm');
 
-        if ($configuredNpm !== null) {
-            $nodePackageManagerCommand = $configuredNpm;
-        } elseif ($this->config->usesSail) {
-            $nodePackageManagerCommand = Sail::nodePackageManagerCommand($this->detectedNodePackageManager());
-        } else {
-            $nodePackageManagerCommand = $this->detectedNodePackageManager();
+        if ($npmExecutable !== null) {
+            return "{$npmExecutable} {$command}";
         }
 
-        return "{$nodePackageManagerCommand} {$command}";
+        if ($this->config->usesSail) {
+            return Sail::nodePackageManagerCommand($this->detectedNodePackageManager())." {$command}";
+        }
+
+        return "{$this->detectedNodePackageManager()} {$command}";
     }
 
     public function artisanCommand(string $command): string
@@ -197,25 +197,25 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
-        $configuredComposer = config('boost.commands.composer');
+        $composerExecutable = config('boost.executables.composer');
 
-        if ($configuredComposer !== null) {
-            $composerCommand = $configuredComposer;
-        } elseif ($this->config->usesSail) {
-            $composerCommand = Sail::composerCommand();
-        } else {
-            $composerCommand = 'composer';
+        if ($composerExecutable !== null) {
+            return "{$composerExecutable} {$command}";
         }
 
-        return "{$composerCommand} {$command}";
+        if ($this->config->usesSail) {
+            return Sail::composerCommand()." {$command}";
+        }
+
+        return "composer {$command}";
     }
 
     public function binCommand(string $command): string
     {
-        $configuredBinPrefix = config('boost.commands.vendor_bin_prefix');
+        $vendorBinPrefix = config('boost.executables.vendor_bin');
 
-        if ($configuredBinPrefix !== null) {
-            return "{$configuredBinPrefix}{$command}";
+        if ($vendorBinPrefix !== null) {
+            return "{$vendorBinPrefix}{$command}";
         }
 
         if ($this->config->usesSail) {
@@ -227,17 +227,15 @@ class GuidelineAssist
 
     public function artisan(): string
     {
-        $configuredPhp = config('boost.commands.php');
+        $phpExecutable = config('boost.executables.php');
 
-        if ($configuredPhp !== null) {
-            return "{$configuredPhp} artisan";
+        if ($phpExecutable !== null) {
+            return "{$phpExecutable} artisan";
         }
 
-        if ($this->config->usesSail) {
-            return Sail::artisanCommand();
-        }
-
-        return 'php artisan';
+        return $this->config->usesSail
+            ? Sail::artisanCommand()
+            : 'php artisan';
     }
 
     public function sailBinaryPath(): string
