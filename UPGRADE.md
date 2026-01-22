@@ -12,7 +12,7 @@ PHP 8.2 is now the minimum required version.
 
 ### Minimum Laravel Version
 
-Laravel 11.0 is now the minimum required version.
+Laravel 11.x is now the minimum required version.
 
 ### Custom Agent Changes
 
