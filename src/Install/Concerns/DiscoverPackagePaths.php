@@ -5,20 +5,73 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Concerns;
 
 use Illuminate\Support\Collection;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 
 trait DiscoverPackagePaths
 {
+    /**
+     * Only include guidelines for these package names if they're a direct requirement.
+     * This fixes every Boost user getting the MCP guidelines due to indirect import.
+     *
+     * @var array<int, Packages>
+     * */
+    protected array $mustBeDirect = [
+        Packages::MCP,
+    ];
+
+    /**
+     * Packages that should be excluded from automatic guideline inclusion.
+     * These packages require explicit configuration to be included.
+     *
+     * @var array<int, Packages>
+     */
+    protected array $optInPackages = [
+        Packages::SAIL,
+    ];
+
     abstract protected function getRoster(): Roster;
+
+    /**
+     * Package priority system to handle conflicts between packages.
+     * When a higher-priority package is present, lower-priority packages are excluded from guidelines.
+     */
+    protected function getPackagePriorities(): array
+    {
+        return [
+            Packages::PEST->value => [Packages::PHPUNIT->value],
+            Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
+        ];
+    }
+
+    protected function shouldExcludePackage(Package $package): bool
+    {
+        if (in_array($package->package(), $this->optInPackages, true)) {
+            return true;
+        }
+
+        foreach ($this->getPackagePriorities() as $priorityPackage => $excludedPackages) {
+            if (in_array($package->package()->value, $excludedPackages, true)
+                && $this->getRoster()->uses(Packages::from($priorityPackage))) {
+                return true;
+            }
+        }
+
+        return $package->indirect() && in_array($package->package(), $this->mustBeDirect, true);
+    }
 
     /**
      * @return Collection<int, array{path: string, name: string, version: string}>
      */
     protected function discoverPackagePaths(string $basePath): Collection
     {
-        /** @var Collection<int, array{path: string, name: string, version: string}> $packages */
         $packages = $this->getRoster()->packages()
-            ->map(function ($package) use ($basePath): array {
+            ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package));
+
+        /** @var Collection<int, array{path: string, name: string, version: string}> $result */
+        $result = $packages
+            ->map(function (Package $package) use ($basePath): array {
                 $name = $this->normalizePackageName($package->name());
 
                 return [
@@ -29,7 +82,7 @@ trait DiscoverPackagePaths
             })
             ->collect();
 
-        return $packages->filter(fn (array $package): bool => is_dir($package['path']));
+        return $result->filter(fn (array $package): bool => is_dir($package['path']));
     }
 
     protected function normalizePackageName(string $name): string

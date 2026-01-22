@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
+use FilesystemIterator;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Contracts\SupportsSkills;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use RuntimeException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -52,6 +55,72 @@ class SkillWriter
         return $skills
             ->mapWithKeys(fn (Skill $skill): array => [$skill->name => $this->write($skill)])
             ->all();
+    }
+
+    /**
+     * @param  Collection<string, Skill>  $skills
+     * @param  array<int, string>  $previouslyTrackedSkills
+     * @return array<string, int>
+     */
+    public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
+    {
+        $written = $this->writeAll($skills);
+
+        $newSkillNames = $skills->keys()->all();
+
+        $staleSkillNames = array_values(array_diff($previouslyTrackedSkills, $newSkillNames));
+
+        $this->removeStale($staleSkillNames);
+
+        return $written;
+    }
+
+    public function remove(string $skillName): bool
+    {
+        if (! $this->isValidSkillName($skillName)) {
+            return false;
+        }
+
+        $targetPath = base_path($this->agent->skillsPath().'/'.$skillName);
+
+        if (! is_dir($targetPath)) {
+            return true;
+        }
+
+        return $this->deleteDirectory($targetPath);
+    }
+
+    /**
+     * @param  array<int, string>  $skillNames
+     * @return array<string, bool>
+     */
+    public function removeStale(array $skillNames): array
+    {
+        $results = [];
+
+        foreach ($skillNames as $name) {
+            $results[$name] = $this->remove($name);
+        }
+
+        return $results;
+    }
+
+    protected function deleteDirectory(string $path): bool
+    {
+        if (! is_dir($path)) {
+            return false;
+        }
+
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($files as $file) {
+            $file->isDir() ? @rmdir($file->getRealPath()) : @unlink($file->getRealPath());
+        }
+
+        return @rmdir($path);
     }
 
     protected function copyDirectory(string $source, string $target): bool

@@ -41,8 +41,7 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}
-        {--preserve-config : Skip writing boost.json config file}';
+        {--mcp : Install MCP server configuration}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -62,6 +61,9 @@ class InstallCommand extends Command
     private array $projectInstalledAgents = [];
 
     private bool $enforceTests = true;
+
+    /** @var array<int, string> */
+    private array $installedSkillNames = [];
 
     const MIN_TEST_COUNT = 6;
 
@@ -149,9 +151,7 @@ class InstallCommand extends Command
             $this->installMcpServerConfig();
         }
 
-        if (! $this->option('preserve-config')) {
-            $this->storeConfig();
-        }
+        $this->storeConfig();
     }
 
     protected function outro(): void
@@ -214,14 +214,14 @@ class InstallCommand extends Command
 
         $configValues = collect([
             'guidelines' => $this->config->getGuidelines(),
-            'skills' => $this->config->getSkills(),
+            'skills' => $this->config->hasSkills(),
             'mcp' => $this->config->getMcp(),
         ]);
 
         $defaults = $configValues->filter()->keys()->whenEmpty(fn () => $featureLabels->keys());
 
         return collect(multiselect(
-            label: 'Which Boost features do you want to use?',
+            label: 'Which Boost features would you like to configure?',
             options: $featureLabels->all(),
             default: $defaults->all(),
             required: true,
@@ -270,7 +270,7 @@ class InstallCommand extends Command
         }
 
         return collect(multiselect(
-            label: 'Which third-party AI guidelines/skills do you want to install?',
+            label: 'Which third-party AI guidelines/skills would you like to install?',
             options: $packages->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [
                 $name => $pkg->displayLabel(),
             ])->toArray(),
@@ -319,7 +319,7 @@ class InstallCommand extends Command
             ->values();
 
         $selected = multiselect(
-            label: 'Which AI agents do you use?',
+            label: 'Which AI agents would you like to configure?',
             options: $options->all(),
             default: $defaults->all(),
             scroll: $options->count(),
@@ -381,19 +381,19 @@ class InstallCommand extends Command
         $skillsComposer = app(SkillComposer::class)->config($this->buildGuidelineConfig());
         $skills = $skillsComposer->skills();
 
-        if ($skills->isEmpty()) {
-            return;
-        }
+        $this->installedSkillNames = $skills->keys()->toArray();
 
         /** @var Collection<int, SupportsSkills&Agent> $skillsAgents */
         $this->installFeature(
             agents: $skillsAgents,
             emptyMessage: 'No agents are selected for skill installation.',
-            headerMessage: sprintf('Installing %d skills for skills-capable agents', $skills->count()),
+            headerMessage: sprintf('Syncing %d skills for skills-capable agents', $skills->count()),
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
-            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->writeAll($skills),
+            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $this->config->getSkills()),
             featureName: 'skills',
-            beforeProcess: fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray()),
+            beforeProcess: $skills->isNotEmpty()
+                ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())
+                : null,
         );
     }
 
@@ -410,14 +410,27 @@ class InstallCommand extends Command
 
     protected function storeConfig(): void
     {
-        $this->config->flush();
-        $this->config->setGuidelines($this->selectedBoostFeatures->contains('guidelines'));
-        $this->config->setSkills($this->selectedBoostFeatures->contains('skills'));
-        $this->config->setMcp($this->selectedBoostFeatures->contains('mcp'));
-        $this->config->setAgents($this->selectedAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray());
-        $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
-        $this->config->setSail($this->shouldUseSail());
-        $this->config->setHerdMcp($this->shouldInstallHerdMcp());
+        $explicitMode = $this->isExplicitFlagMode();
+
+        if (! $explicitMode) {
+            $this->config->flush();
+            $this->config->setAgents($this->selectedAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray());
+            $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
+        }
+
+        if ($this->selectedBoostFeatures->contains('guidelines')) {
+            $this->config->setGuidelines(true);
+        }
+
+        if ($this->selectedBoostFeatures->contains('skills')) {
+            $this->config->setSkills($this->installedSkillNames);
+        }
+
+        if ($this->selectedBoostFeatures->contains('mcp')) {
+            $this->config->setMcp(true);
+            $this->config->setSail($this->shouldUseSail());
+            $this->config->setHerdMcp($this->shouldInstallHerdMcp());
+        }
     }
 
     protected function shouldInstallHerdMcp(): bool
@@ -432,6 +445,19 @@ class InstallCommand extends Command
         }
 
         return $this->selectedBoostFeatures->contains('sail');
+    }
+
+    protected function isExplicitFlagMode(): bool
+    {
+        if ($this->option('guidelines')) {
+            return true;
+        }
+
+        if ($this->option('skills')) {
+            return true;
+        }
+
+        return (bool) $this->option('mcp');
     }
 
     protected function installMcpServerConfig(): void
