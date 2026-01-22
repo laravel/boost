@@ -62,9 +62,11 @@ trait DisplayHelper
         note("Let's give {$this->displayBadge($projectName)} a Boost");
     }
 
-    protected function displayOutro(string $text, string $link, int $terminalWidth): void
+    protected function displayOutro(string $text, string $link = '', int $terminalWidth = 80): void
     {
-        $paddingLength = (int) (floor(($terminalWidth - mb_strlen($text.$link)) / 2)) - 2;
+        $visibleText = preg_replace('/\x1b\[[0-9;]*m|\x1b\]8;;[^\x07]*\x07|\x1b\]8;;\x1b\\\\/', '', $text.$link) ?? '';
+        $visualWidth = mb_strwidth($visibleText);
+        $paddingLength = (int) (floor(($terminalWidth - $visualWidth) / 2)) - 2;
         $padding = str_repeat(' ', max(0, $paddingLength));
 
         $this->output->writeln(
@@ -81,5 +83,10 @@ trait DisplayHelper
     protected function displayBadge(string $text): string
     {
         return "\e[48;5;{$this->theme->primary()}m\e[30m\e[1m{$text}\e[0m";
+    }
+
+    protected function hyperlink(string $label, string $url): string
+    {
+        return "\033]8;;{$url}\007{$label}\033]8;;\033\\";
     }
 }
