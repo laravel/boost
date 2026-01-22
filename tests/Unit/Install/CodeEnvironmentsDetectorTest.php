@@ -14,6 +14,7 @@ use Laravel\Boost\Install\CodeEnvironment\Gemini;
 use Laravel\Boost\Install\CodeEnvironment\OpenCode;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
+use Laravel\Boost\Install\CodeEnvironment\TraeCN;
 use Laravel\Boost\Install\CodeEnvironmentsDetector;
 use Laravel\Boost\Install\Enums\Platform;
 
@@ -31,9 +32,9 @@ it('returns collection of all registered code environments', function (): void {
     $codeEnvironments = $this->detector->getCodeEnvironments();
 
     expect($codeEnvironments)->toBeInstanceOf(Collection::class)
-        ->and($codeEnvironments->count())->toBe(8)
+        ->and($codeEnvironments->count())->toBe(9)
         ->and($codeEnvironments->keys()->toArray())->toBe([
-            'phpstorm', 'vscode', 'cursor', 'claudecode', 'codex', 'copilot', 'opencode', 'gemini',
+            'phpstorm', 'vscode', 'cursor', 'claudecode', 'codex', 'copilot', 'opencode', 'gemini', 'traecn',
         ]);
 
     $codeEnvironments->each(function ($environment): void {
@@ -66,6 +67,7 @@ it('returns an array of detected environment names for system discovery', functi
     $this->container->bind(Copilot::class, fn () => $mockOther);
     $this->container->bind(OpenCode::class, fn () => $mockOther);
     $this->container->bind(Gemini::class, fn () => $mockOther);
+    $this->container->bind(TraeCN::class, fn () => $mockOther);
 
     $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
@@ -86,6 +88,7 @@ it('returns an empty array when no environments are detected for system discover
     $this->container->bind(Copilot::class, fn () => $mockEnvironment);
     $this->container->bind(OpenCode::class, fn () => $mockEnvironment);
     $this->container->bind(Gemini::class, fn () => $mockEnvironment);
+    $this->container->bind(TraeCN::class, fn () => $mockEnvironment);
 
     $detector = new CodeEnvironmentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledCodeEnvironments();
