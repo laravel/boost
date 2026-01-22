@@ -88,7 +88,7 @@ test('it returns error when log file is empty', function (): void {
 });
 
 test('browser logger script contains required functionality', function (): void {
-    Route::post('/_boost/browser-logs', fn () => null)->name('boost.browser-logs');
+    Route::post('/_boost/browser-logs', fn (): null => null)->name('boost.browser-logs');
 
     expect(BrowserLogger::getScript())->toContain(
         'browser-logger-active',

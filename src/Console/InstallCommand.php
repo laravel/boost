@@ -141,11 +141,6 @@ class InstallCommand extends Command
         $this->displayOutro($text, $link, $this->terminal->cols());
     }
 
-    protected function hyperlink(string $label, string $url): string
-    {
-        return "\033]8;;{$url}\007{$label}\033]8;;\033\\";
-    }
-
     /**
      * We shouldn't add an AI guideline enforcing test if they don't have a basic test setup.
      * This would likely just create headaches for them or be a waste of time as they
