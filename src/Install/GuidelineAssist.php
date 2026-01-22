@@ -212,9 +212,17 @@ class GuidelineAssist
 
     public function binCommand(string $command): string
     {
-        return $this->config->usesSail
-            ? Sail::binCommand().$command
-            : "vendor/bin/{$command}";
+        $configuredBinPrefix = config('boost.commands.vendor_bin_prefix');
+
+        if ($configuredBinPrefix !== null) {
+            return "{$configuredBinPrefix}{$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::binCommand().$command;
+        }
+
+        return "vendor/bin/{$command}";
     }
 
     public function artisan(): string

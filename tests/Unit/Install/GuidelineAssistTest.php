@@ -161,3 +161,49 @@ test('nodePackageManagerCommand uses detected package manager when config is nul
 
     expect($assist->nodePackageManagerCommand('install'))->toBe('npm install');
 });
+
+test('binCommand returns configured vendor_bin_prefix when set', function (): void {
+    config(['boost.commands.vendor_bin_prefix' => '/custom/path/']);
+    $this->config->usesSail = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->binCommand('pint'))->toBe('/custom/path/pint');
+});
+
+test('binCommand uses config over Sail when config is set', function (): void {
+    config(['boost.commands.vendor_bin_prefix' => '/custom/path/']);
+    $this->config->usesSail = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->binCommand('pint'))->toBe('/custom/path/pint');
+});
+
+test('binCommand uses Sail command when usesSail is true and config is null', function (): void {
+    config(['boost.commands.vendor_bin_prefix' => null]);
+    $this->config->usesSail = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    $expectedPrefix = Sail::binCommand();
+
+    expect($assist->binCommand('pint'))->toBe("{$expectedPrefix}pint");
+});
+
+test('binCommand uses vendor/bin when config is null and not using Sail', function (): void {
+    config(['boost.commands.vendor_bin_prefix' => null]);
+    $this->config->usesSail = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+});

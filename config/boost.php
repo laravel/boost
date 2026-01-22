@@ -44,6 +44,7 @@ return [
         'php' => env('BOOST_PHP_BINARY'),
         'composer' => env('BOOST_COMPOSER_BINARY'),
         'npm' => env('BOOST_NPM_BINARY'),
+        'vendor_bin_prefix' => env('BOOST_VENDOR_BIN_PREFIX'),
     ],
 
 ];
