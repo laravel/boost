@@ -11,6 +11,7 @@ use Laravel\Boost\Install\CodeEnvironment\Gemini;
 use Laravel\Boost\Install\CodeEnvironment\OpenCode;
 use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\CodeEnvironment\VSCode;
+use Laravel\Boost\Install\CodeEnvironment\TraeCN;
 use Tests\Unit\Install\ExampleCodeEnvironment;
 
 it('returns default code environments', function (): void {
@@ -26,6 +27,7 @@ it('returns default code environments', function (): void {
         'copilot' => Copilot::class,
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
+        'traecn' => TraeCN::class,
     ]);
 });
 
