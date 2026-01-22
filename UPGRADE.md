@@ -6,6 +6,14 @@
 
 > Note: If you are using external packages that add custom agents, ensure you update to versions that have support for Boost 2.x.
 
+### Minimum PHP Version
+
+PHP 8.2 is now the minimum required version.
+
+### Minimum Laravel Version
+
+Laravel 11.0 is now the minimum required version.
+
 ### Custom Agent Changes
 
 PR Link: https://github.com/laravel/boost/pull/439
