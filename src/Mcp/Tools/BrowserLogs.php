@@ -48,7 +48,7 @@ class BrowserLogs extends Tool
         }
 
         // Locate the correct log file using the shared helper.
-        $logFile = storage_path('logs/browser.log');
+        $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'browser.log');
 
         if (! file_exists($logFile)) {
             return Response::error('No log file found, probably means no logs yet.');
