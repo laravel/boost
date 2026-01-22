@@ -33,7 +33,7 @@ test('it generates a description from the package name', function (): void {
     expect($resource->description())->toBe('Guidelines for acme/payments');
 });
 
-test('it has Markdown mime type', function (): void {
+test('it has a Markdown mime type', function (): void {
     $resource = new PackageGuidelineResource('acme/payments', $this->testBladePath);
 
     expect($resource->mimeType())->toBe('text/markdown');
@@ -132,7 +132,7 @@ function example() {
         ->and($content1)->not->toContain('___BOOST_SNIPPET___');
 });
 
-test('it handles non-existent blade file gracefully', function (): void {
+test('it handles a non-existent blade file gracefully', function (): void {
     $resource = new PackageGuidelineResource('acme/test', '/non/existent/path.blade.php');
 
     $response = $resource->handle();

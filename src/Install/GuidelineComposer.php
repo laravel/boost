@@ -9,7 +9,6 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
-use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
@@ -31,40 +30,8 @@ class GuidelineComposer
 
     protected ?SkillComposer $skillComposer = null;
 
-    /**
-     * Package priority system to handle conflicts between packages.
-     * When a higher-priority package is present, lower-priority packages are excluded from guidelines.
-     *
-     * @var array<string, string[]>
-     */
-    protected array $packagePriorities;
-
-    /**
-     * Only include guidelines for these package names if they're a direct requirement.
-     * This fixes every Boost user getting the MCP guidelines due to indirect import.
-     *
-     * @var array<int, Packages>
-     * */
-    protected array $mustBeDirect = [
-        Packages::MCP,
-    ];
-
-    /**
-     * Packages that should be excluded from automatic guideline inclusion.
-     * These packages require explicit configuration to be included.
-     *
-     * @var array<int, Packages>
-     */
-    protected array $optInPackages = [
-        Packages::SAIL,
-    ];
-
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
-        $this->packagePriorities = [
-            Packages::PEST->value => [Packages::PHPUNIT->value],
-            Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
-        ];
         $this->config = new GuidelineConfig;
     }
 
@@ -239,26 +206,6 @@ class GuidelineComposer
         return $guidelines->filter(
             fn (mixed $guideline, string $name): bool => in_array($name, $this->config->aiGuidelines, true),
         );
-    }
-
-    /**
-     * Determines if a package should be excluded from guidelines based on priority rules.
-     */
-    protected function shouldExcludePackage(Package $package): bool
-    {
-        if (in_array($package->package(), $this->optInPackages, true)) {
-            return true;
-        }
-
-        foreach ($this->packagePriorities as $priorityPackage => $excludedPackages) {
-            $packageIsInExclusionList = in_array($package->package()->value, $excludedPackages, true);
-
-            if ($packageIsInExclusionList && $this->roster->uses(Packages::from($priorityPackage))) {
-                return true;
-            }
-        }
-
-        return $package->indirect() && in_array($package->package(), $this->mustBeDirect, true);
     }
 
     /**

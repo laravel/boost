@@ -15,6 +15,8 @@ abstract class TestCase extends OrchestraTestCase
         $app['env'] = 'local';
 
         $app->singleton('mcp', Registrar::class);
+
+        $app->useStoragePath(realpath(__DIR__.'/../workbench/storage'));
     }
 
     protected function setUp(): void
