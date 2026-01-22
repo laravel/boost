@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Mcp\Request;
 
-test('executes allowed read-only queries', function (): void {
+it('executes allowed read-only queries', function (): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
 
@@ -30,7 +30,7 @@ test('executes allowed read-only queries', function (): void {
     }
 });
 
-test('blocks destructive queries', function (): void {
+it('blocks destructive queries', function (): void {
     DB::shouldReceive('select')->never();
 
     $tool = new DatabaseQuery;
@@ -50,7 +50,7 @@ test('blocks destructive queries', function (): void {
     }
 });
 
-test('blocks extended destructive keywords for mysql postgres and sqlite', function (): void {
+it('blocks extended destructive keywords for mysql postgres and sqlite', function (): void {
     DB::shouldReceive('select')->never();
 
     $tool = new DatabaseQuery;
@@ -71,7 +71,7 @@ test('blocks extended destructive keywords for mysql postgres and sqlite', funct
     }
 });
 
-test('handles empty queries gracefully', function (): void {
+it('handles empty queries gracefully', function (): void {
     $tool = new DatabaseQuery;
 
     foreach (['', '   ', "\n\t"] as $query) {
@@ -82,7 +82,7 @@ test('handles empty queries gracefully', function (): void {
     }
 });
 
-test('allows queries starting with any allowed keyword even when identifiers look like SQL keywords', function (): void {
+it('allows queries starting with any allowed keyword even when identifiers look like SQL keywords', function (): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
 
