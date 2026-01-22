@@ -10,5 +10,7 @@ class RemoteSkill
         public string $name,
         public string $repo,
         public string $path,
-    ) {}
+    ) {
+        //
+    }
 }

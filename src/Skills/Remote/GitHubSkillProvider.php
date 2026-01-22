@@ -26,7 +26,9 @@ class GitHubSkillProvider
 
     public function __construct(
         protected GitHubRepository $repository
-    ) {}
+    ) {
+        //
+    }
 
     /**
      * @return Collection<string, RemoteSkill>

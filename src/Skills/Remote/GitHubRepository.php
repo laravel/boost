@@ -13,7 +13,9 @@ class GitHubRepository
         public readonly string $owner,
         public readonly string $repo,
         public readonly string $path = '',
-    ) {}
+    ) {
+        //
+    }
 
     /**
      * @throws InvalidArgumentException
