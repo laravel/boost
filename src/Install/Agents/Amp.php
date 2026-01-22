@@ -44,17 +44,12 @@ class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkil
 
     public function mcpInstallationStrategy(): McpInstallationStrategy
     {
-        return McpInstallationStrategy::FILE;
+        return McpInstallationStrategy::SHELL;
     }
 
-    public function mcpConfigPath(): string
+    public function shellMcpCommand(): string
     {
-        return '.amp/settings.json';
-    }
-
-    public function mcpConfigKey(): string
-    {
-        return 'amp.mcpServers';
+        return 'amp mcp add {key} --workspace -- {command} {args}';
     }
 
     public function guidelinesPath(): string
