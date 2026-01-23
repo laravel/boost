@@ -1,6 +1,6 @@
 ## PHP 8.5
 
-- PHP 8.5 has new array functions that will make code simpler whenever we don't use Laravel's collections:
+- PHP 8.5 introduces new array functions that simplify code when not using Laravel collections:
     - `array_first(array $array): mixed` - Get first value (or `null` if empty).
     - `array_last(array $array): mixed` - Get last value (or `null` if empty).
 

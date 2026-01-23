@@ -1,6 +1,6 @@
 ## PHP 8.4
 
-- PHP 8.4 has new array functions that will make code simpler whenever we don't use Laravel's collections:
+- PHP 8.4 introduces new array functions that simplify code when not using Laravel collections:
     - `array_find(array $array, callable $callback): mixed` - Find first matching element.
     - `array_find_key(array $array, callable $callback): int|string|null` - Find first matching key.
     - `array_any(array $array, callable $callback): bool` - Check if any element satisfies a callback function.

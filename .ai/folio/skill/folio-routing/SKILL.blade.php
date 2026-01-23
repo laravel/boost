@@ -24,7 +24,7 @@ Use `search-docs` for detailed Folio patterns and documentation.
 
 ## Basic Usage
 
-Laravel Folio is a file-based router. With Laravel Folio, a new route is created for every Blade file within the configured Folio directory.
+Laravel Folio is a file-based router that creates a new route for every Blade file within the configured directory.
 
 Pages are usually in `resources/views/pages/` and the file structure determines routes:
 - `pages/index.blade.php` → `/`
@@ -49,7 +49,7 @@ Always create new `folio` pages and routes using `{{ $assist->artisanCommand('fo
 
 ## Named Routes
 
-Add a 'name' to each new Folio page at the very top of the file so it has a named route available for other parts of the codebase to use.
+Add a `name` at the top of each new Folio page to create a named route that other parts of the codebase can reference.
 
 @boostsnippet("Named Routes Example", "php")
 use function Laravel\Folio\name;

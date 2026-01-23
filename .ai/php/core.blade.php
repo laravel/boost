@@ -6,7 +6,7 @@
 @if($assist->shouldEnforceStrictTypes())
 - Always use strict typing at the head of a `.php` file: `declare(strict_types=1);`.
 @endif
-- Always use curly braces for control structures, even if it has one line.
+- Always use curly braces for control structures, even for single-line bodies.
 
 ### Constructors
 - Use PHP 8 constructor property promotion in `__construct()`.
@@ -25,10 +25,10 @@ protected function isAccessible(User $user, ?string $path = null): bool
 </code-snippet>
 
 ## Comments
-- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless there is something very complex going on.
+- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless the logic is exceptionally complex.
 
 ## PHPDoc Blocks
-- Add useful array shape type definitions for arrays when appropriate.
+- Add useful array shape type definitions when appropriate.
 
 ## Enums
 @if(empty($assist->enums()) || preg_match('/[A-Z]{3,8}/', $assist->enumContents()))
