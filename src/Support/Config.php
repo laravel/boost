@@ -103,6 +103,19 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function isValid(): bool
+    {
+        $path = base_path(self::FILE);
+
+        if (! file_exists($path)) {
+            return false;
+        }
+
+        json_decode(file_get_contents($path), true);
+
+        return json_last_error() === JSON_ERROR_NONE;
+    }
+
     public function flush(): void
     {
         $path = base_path(self::FILE);
