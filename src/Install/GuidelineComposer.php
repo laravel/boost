@@ -68,11 +68,20 @@ class GuidelineComposer
      */
     public static function composeGuidelines(Collection $guidelines): string
     {
-        return str_replace("\n\n\n\n", "\n\n", trim($guidelines
+        $guidelines = trim($guidelines
             ->filter(fn ($guideline): bool => ! empty(trim($guideline['content'])))
             ->map(fn ($guideline, $key): string => "\n=== {$key} rules ===\n\n".trim($guideline['content']))
-            ->join("\n\n"))
+            ->join("\n\n")
         );
+
+        // Ensure blank line before and after markdown headings
+        $guidelines = preg_replace('/(?<!\n)\n(#{1,4} )/m', "\n\n$1", $guidelines);
+        $guidelines = preg_replace('/(#{1,4} .+)\n(?!\n)/m', "$1\n\n", $guidelines);
+
+        // Collapse multiple consecutive empty lines into a single empty line
+        $guidelines = preg_replace('/\n{3,}/', "\n\n", $guidelines);
+
+        return $guidelines;
     }
 
     /**
