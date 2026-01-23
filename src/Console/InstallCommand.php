@@ -171,7 +171,7 @@ class InstallCommand extends Command
         $featureLabels = collect([
             'guidelines' => 'AI Guidelines',
             'skills' => 'Agent Skills',
-            'mcp' => 'MCP Server Config',
+            'mcp' => 'Boost MCP Server Configuration',
         ]);
 
         $explicit = $featureLabels->keys()->filter(fn ($feature) => $this->option($feature));
@@ -193,7 +193,7 @@ class InstallCommand extends Command
             options: $featureLabels->all(),
             default: $defaults->all(),
             required: true,
-            hint: 'This will override the current guidelines, skills and mcp configuration.',
+            hint: 'This will override the current guidelines, skills, and MCP configuration',
         ));
     }
 
