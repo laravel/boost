@@ -27,11 +27,11 @@ Use `search-docs` for detailed Wayfinder patterns and documentation.
 
 Run after route changes if Vite plugin isn't installed:
 
-{{ $assist->artisanCommand('wayfinder:generate') }}
+{{ $assist->artisanCommand('wayfinder:generate --no-interaction') }}
 
 For form helpers, use `--with-form` flag:
 
-{{ $assist->artisanCommand('wayfinder:generate --with-form') }}
+{{ $assist->artisanCommand('wayfinder:generate --with-form --no-interaction') }}
 
 ### Import Patterns
 
