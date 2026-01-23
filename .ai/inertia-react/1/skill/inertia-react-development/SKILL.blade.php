@@ -13,6 +13,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or modifying React page components for Inertia
 - Working with forms in React (using `router.post` or `useForm` if available)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -55,7 +56,7 @@ import { Link } from '@inertiajs/react'
 <Link href={`/users/${user.id}`}>View User</Link>
 @endboostsnippet
 
-### Link with Method
+### Link With Method
 
 @boostsnippet("Link with POST Method", "react")
 import { Link } from '@inertiajs/react'
@@ -84,9 +85,9 @@ router.visit('/users', {
 
 ## Form Handling
 
-### Using router.post
+### Using `router.post`
 
-@boostsnippet("Form with router.post", "react")
+@boostsnippet("Form With router.post", "react")
 import { router } from '@inertiajs/react'
 import { useState } from 'react'
 
@@ -126,7 +127,7 @@ export default function CreateUser() {
 }
 @endboostsnippet
 
-### Using useForm Hook (if available)
+### Using `useForm` Hook (If Available)
 
 Check the Inertia documentation to confirm if `useForm` is available in your version:
 
@@ -171,6 +172,7 @@ export default function CreateUser() {
 ## Inertia v1 Limitations
 
 Inertia v1 does not support these v2 features:
+
 - `<Form>` component
 - Deferred props
 - Prefetching

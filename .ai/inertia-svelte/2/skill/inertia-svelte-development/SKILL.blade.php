@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or modifying Svelte page components for Inertia
 - Working with forms in Svelte (using `<Form>` or `useForm`)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -63,9 +64,9 @@ import { Link } from '@inertiajs/svelte'
 <Link href={`/users/${user.id}`}>View User</Link>
 @endboostsnippet
 
-### Link with Method
+### Link With Method
 
-@boostsnippet("Link with POST Method", "svelte")
+@boostsnippet("Link With POST Method", "svelte")
 <script>
 import { Link } from '@inertiajs/svelte'
 </script>
@@ -150,7 +151,7 @@ The `<Form>` component supports automatic resetting:
 
 Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
 
-@boostsnippet("Form with Reset Props", "svelte")
+@boostsnippet("Form With Reset Props", "svelte")
 <script>
 import { Form } from '@inertiajs/svelte'
 </script>
@@ -182,7 +183,7 @@ Forms can also be built using the `useForm` hook for more programmatic control. 
 
 @endif
 
-### useForm Hook
+### `useForm` Hook
 
 @if($assist->inertia()->hasFormComponent() === false)
 For Inertia v2.0.x: Build forms using the `useForm` hook as the `<Form>` component is not available until v2.1.0+.

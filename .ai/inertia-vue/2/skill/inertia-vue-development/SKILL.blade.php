@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or modifying Vue page components for Inertia
 - Working with forms in Vue (using `<Form>` or `useForm`)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -162,7 +163,7 @@ import { Form } from '@inertiajs/vue3'
 @endboostsnippet
 @endverbatim
 
-### Form Component with All Props
+### Form Component With All Props
 
 @boostsnippet("Form Component Full Example", "vue")
 <script setup>
@@ -248,7 +249,7 @@ Forms can also be built using the `useForm` composable for more programmatic con
 
 @endif
 
-### useForm Composable
+### `useForm` Composable
 
 @if($assist->inertia()->hasFormComponent() === false)
 For Inertia v2.0.x: Build forms using the `useForm` composable as the `<Form>` component is not available until v2.1.0+.

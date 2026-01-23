@@ -11,6 +11,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating UI components or pages
 - Working with forms, modals, or interactive elements
 - Checking available Flux components
@@ -21,11 +22,11 @@ Use `search-docs` for detailed Flux UI patterns and documentation.
 
 ## Basic Usage
 
-This project is using the free edition of Flux UI. It has full access to the free components and variants, but does not have access to the Pro components.
+This project uses the free edition of Flux UI, which includes all free components and variants but not Pro components.
 
-Flux UI is a component library for Livewire. It's built using Tailwind CSS and provides a set of components that are easy to use and customize.
+Flux UI is a component library for Livewire built with Tailwind CSS. It provides components that are easy to use and customize.
 
-You should use Flux UI components when available. Fallback to standard Blade components if Flux is unavailable.
+Use Flux UI components when available. Fall back to standard Blade components when no Flux component exists for your needs.
 
 <code-snippet name="Basic Button" lang="blade">
 <flux:button variant="primary">Click me</flux:button>

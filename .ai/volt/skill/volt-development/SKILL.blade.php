@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating Volt single-file components
 - Converting traditional Livewire components to Volt
 - Testing Volt components
@@ -28,7 +29,7 @@ Create components with `{{ $assist->artisanCommand('make:volt [name] [--test] [-
 
 Important: Check existing Volt components to determine if they use functional or class-based style before creating new ones.
 
-## Functional Components
+### Functional Components
 
 @boostsnippet("Volt Functional Component", "php")
 @@volt
@@ -48,7 +49,7 @@ $double = computed(fn () => $this->count * 2);
 @@endvolt
 @endboostsnippet
 
-## Class-Based Components
+### Class-Based Components
 
 @boostsnippet("Volt Class-based Component", "php")
 use Livewire\Volt\Component;

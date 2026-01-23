@@ -1,7 +1,7 @@
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-## Laravel Sail
+# Laravel Sail
 
 - This project runs inside Laravel Sail's Docker containers. You MUST execute all commands through Sail.
 - Start services using `{{ $assist->sailBinaryPath() }} up -d` and stop them with `{{ $assist->sailBinaryPath() }} stop`.

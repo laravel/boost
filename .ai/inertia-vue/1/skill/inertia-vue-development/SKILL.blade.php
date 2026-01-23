@@ -13,6 +13,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or modifying Vue page components for Inertia
 - Working with forms in Vue (using `router.post`)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -71,9 +72,9 @@ import { Link } from '@inertiajs/vue3'
 </template>
 @endboostsnippet
 
-### Link with Method
+### Link With Method
 
-@boostsnippet("Link with POST Method", "vue")
+@boostsnippet("Link With POST Method", "vue")
 <script setup>
 import { Link } from '@inertiajs/vue3'
 </script>
@@ -108,7 +109,7 @@ function createUser() {
 
 ## Form Handling
 
-### Using router.post
+### Using `router.post`
 
 @boostsnippet("Form with router.post", "vue")
 <script setup>
@@ -145,6 +146,7 @@ function handleSubmit() {
 ## Inertia v1 Limitations
 
 Inertia v1 does not support these v2 features:
+
 - `<Form>` component
 - Deferred props
 - Prefetching
