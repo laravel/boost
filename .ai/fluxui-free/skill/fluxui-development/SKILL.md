@@ -11,6 +11,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating UI components or pages
 - Working with forms, modals, or interactive elements
 - Checking available Flux components

@@ -35,5 +35,5 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
 
 ## Magic Properties
 
-- `$errors` - Access validation errors from JS
+- `$errors` - Access validation errors from JavaScript
 - `$intercept` - Component-scoped interceptors

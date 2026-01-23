@@ -1,4 +1,4 @@
-## Livewire
+# Livewire
 
 - Livewire allows you to build dynamic, reactive interfaces using only PHP — no JavaScript required.
 - Instead of writing frontend code in JavaScript frameworks, you use Alpine.js to build the UI when client-side interactions are required.

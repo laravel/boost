@@ -13,6 +13,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or modifying Svelte page components for Inertia
 - Working with forms in Svelte (using `router.post`)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -94,7 +95,7 @@ function createUser() {
 
 ## Form Handling
 
-### Using router.post
+### Using `router.post`
 
 @boostsnippet("Form with router.post", "svelte")
 <script>

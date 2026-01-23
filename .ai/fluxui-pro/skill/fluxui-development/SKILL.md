@@ -11,6 +11,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating new UI components or pages
 - Working with forms, modals, or interactive elements
 - Styling components with Flux UI patterns
@@ -34,7 +35,7 @@ Use Flux UI components when available. Fall back to standard Blade components wh
 
 ## Available Components (Pro Edition)
 
-Full list: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, toast, tooltip
+Available: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, toast, tooltip
 
 ## Common Patterns
 

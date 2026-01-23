@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or modifying Livewire components
 - Using wire: directives (model, click, loading, sort, intersect)
 - Implementing islands or async actions
@@ -80,6 +81,7 @@ new class extends Component {
 ### Key Changes From Livewire 3
 
 These things changed in Livewire 4, but may not have been updated in this application. Verify this application's setup to ensure you follow existing conventions.
+
 - Use `Route::livewire()` for full-page components; config keys renamed: `layout` → `component_layout`, `lazy_placeholder` → `component_placeholder`.
 - `wire:model` now ignores child events by default (use `wire:model.deep` for old behavior); `wire:scroll` renamed to `wire:navigate:scroll`.
 - Component tags must be properly closed; `wire:transition` now uses View Transitions API (modifiers removed).

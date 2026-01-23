@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating pages with file-based routing
 - Working with route parameters and model binding
 - Adding middleware to Folio pages
@@ -27,6 +28,7 @@ Use `search-docs` for detailed Folio patterns and documentation.
 Laravel Folio is a file-based router that creates a new route for every Blade file within the configured directory.
 
 Pages are usually in `resources/views/pages/` and the file structure determines routes:
+
 - `pages/index.blade.php` → `/`
 - `pages/profile/index.blade.php` → `/profile`
 - `pages/auth/login.blade.php` → `/auth/login`
@@ -68,7 +70,7 @@ middleware(['auth', 'verified']);
 
 ## Verification
 
-1. Run `{{ $assist->artisanCommand('folio:list') }}` to verify route registered
+1. Run `{{ $assist->artisanCommand('folio:list') }}` to verify route registration
 2. Test page loads at expected URL
 
 ## Common Pitfalls

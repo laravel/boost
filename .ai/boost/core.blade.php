@@ -1,4 +1,4 @@
-## Laravel Boost
+# Laravel Boost
 - Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
 
 ## Artisan
