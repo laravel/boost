@@ -157,16 +157,23 @@ class SkillWriter
         }
 
         $isBladeFile = str_ends_with($relativePath, '.blade.php');
+        $isMarkdownFile = str_ends_with($relativePath, '.md');
 
         if ($isBladeFile) {
-            $renderedContent = trim($this->renderBladeFile($file->getRealPath()));
+            $content = MarkdownFormatter::format(trim($this->renderBladeFile($file->getRealPath())));
             $replacedTargetFile = preg_replace('/\.blade\.php$/', '.md', $targetFile);
 
             if ($replacedTargetFile === null) {
                 $replacedTargetFile = substr($targetFile, 0, -10).'.md';
             }
 
-            return file_put_contents($replacedTargetFile, $renderedContent) !== false;
+            return file_put_contents($replacedTargetFile, $content) !== false;
+        }
+
+        if ($isMarkdownFile) {
+            $content = MarkdownFormatter::format(trim(file_get_contents($file->getRealPath())));
+
+            return file_put_contents($targetFile, $content) !== false;
         }
 
         return @copy($file->getRealPath(), $targetFile);
