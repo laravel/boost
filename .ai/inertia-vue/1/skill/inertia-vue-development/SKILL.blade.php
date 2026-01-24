@@ -33,6 +33,7 @@ Vue page components should be placed in the `resources/js/Pages` directory.
 
 Important: Vue components must have a single root element.
 
+@verbatim
 @boostsnippet("Basic Vue Page Component", "vue")
 <script setup>
 defineProps({
@@ -45,12 +46,13 @@ defineProps({
         <h1>Users</h1>
         <ul>
             <li v-for="user in users" :key="user.id">
-                @{{ user.name }}
+                {{ user.name }}
             </li>
         </ul>
     </div>
 </template>
 @endboostsnippet
+@endverbatim
 
 ## Client-Side Navigation
 
