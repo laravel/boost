@@ -225,11 +225,9 @@ it('preserves vue template syntax in verbatim blocks when rendering blade skills
 
     $content = file_get_contents($absoluteTarget.'/vue-syntax-skill/SKILL.md');
 
-    // Vue template syntax should be preserved correctly (not escaped with @)
     expect($content)
         ->toContain('{{ user.name }}')
         ->toContain('{{ errors.email }}')
-        // Should NOT contain Blade-escaped syntax
         ->not->toContain('@{{ user.name }}')
         ->not->toContain('@{{ errors.email }}');
 
