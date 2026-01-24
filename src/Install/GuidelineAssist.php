@@ -92,7 +92,7 @@ class GuidelineAssist
 
                     $className = $this->classNameFromFile($path);
 
-                    if ($className && class_exists($className, false)) {
+                    if ($className && class_exists($className)) {
                         self::$classes[$cacheKey][$className] = $path;
                     }
                 } catch (Throwable) {
