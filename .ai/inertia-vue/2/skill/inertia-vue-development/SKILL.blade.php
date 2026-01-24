@@ -165,6 +165,7 @@ import { Form } from '@inertiajs/vue3'
 
 ### Form Component With All Props
 
+@verbatim
 @boostsnippet("Form Component Full Example", "vue")
 <script setup>
 import { Form } from '@inertiajs/vue3'
@@ -191,20 +192,21 @@ import { Form } from '@inertiajs/vue3'
         }"
     >
         <input type="text" name="name" :value="defaults.name" />
-        <div v-if="errors.name">@{{ errors.name }}</div>
+        <div v-if="errors.name">{{ errors.name }}</div>
 
         <button type="submit" :disabled="processing">
-            @{{ processing ? 'Saving...' : 'Save' }}
+            {{ processing ? 'Saving...' : 'Save' }}
         </button>
 
         <progress v-if="progress" :value="progress.percentage" max="100">
-            @{{ progress.percentage }}%
+            {{ progress.percentage }}%
         </progress>
 
         <div v-if="wasSuccessful">Saved!</div>
     </Form>
 </template>
 @endboostsnippet
+@endverbatim
 
 @if($assist->inertia()->hasFormComponentResets())
 ### Form Component Reset Props
@@ -257,6 +259,7 @@ For Inertia v2.0.x: Build forms using the `useForm` composable as the `<Form>` c
 For more programmatic control or to follow existing conventions, use the `useForm` composable:
 @endif
 
+@verbatim
 @boostsnippet("useForm Composable Example", "vue")
 <script setup>
 import { useForm } from '@inertiajs/vue3'
@@ -277,13 +280,13 @@ function submit() {
 <template>
     <form @submit.prevent="submit">
         <input type="text" v-model="form.name" />
-        <div v-if="form.errors.name">@{{ form.errors.name }}</div>
+        <div v-if="form.errors.name">{{ form.errors.name }}</div>
 
         <input type="email" v-model="form.email" />
-        <div v-if="form.errors.email">@{{ form.errors.email }}</div>
+        <div v-if="form.errors.email">{{ form.errors.email }}</div>
 
         <input type="password" v-model="form.password" />
-        <div v-if="form.errors.password">@{{ form.errors.password }}</div>
+        <div v-if="form.errors.password">{{ form.errors.password }}</div>
 
         <button type="submit" :disabled="form.processing">
             Create User
@@ -291,6 +294,7 @@ function submit() {
     </form>
 </template>
 @endboostsnippet
+@endverbatim
 
 ## Inertia v2 Features
 
@@ -298,6 +302,7 @@ function submit() {
 
 Use deferred props to load data after initial page render:
 
+@verbatim
 @boostsnippet("Deferred Props with Empty State", "vue")
 <script setup>
 defineProps({
@@ -314,17 +319,19 @@ defineProps({
         </div>
         <ul v-else>
             <li v-for="user in users" :key="user.id">
-                @{{ user.name }}
+                {{ user.name }}
             </li>
         </ul>
     </div>
 </template>
 @endboostsnippet
+@endverbatim
 
 ### Polling
 
 Automatically refresh data at intervals:
 
+@verbatim
 @boostsnippet("Polling Example", "vue")
 <script setup>
 import { router } from '@inertiajs/vue3'
@@ -350,15 +357,17 @@ onUnmounted(() => {
 <template>
     <div>
         <h1>Dashboard</h1>
-        <div>Active Users: @{{ stats.activeUsers }}</div>
+        <div>Active Users: {{ stats.activeUsers }}</div>
     </div>
 </template>
 @endboostsnippet
+@endverbatim
 
 ### WhenVisible (Infinite Scroll)
 
 Load more data when user scrolls to a specific element:
 
+@verbatim
 @boostsnippet("Infinite Scroll with WhenVisible", "vue")
 <script setup>
 import { WhenVisible } from '@inertiajs/vue3'
@@ -371,7 +380,7 @@ defineProps({
 <template>
     <div>
         <div v-for="user in users.data" :key="user.id">
-            @{{ user.name }}
+            {{ user.name }}
         </div>
 
         <WhenVisible
@@ -386,6 +395,7 @@ defineProps({
     </div>
 </template>
 @endboostsnippet
+@endverbatim
 
 ## Server-Side Patterns
 
