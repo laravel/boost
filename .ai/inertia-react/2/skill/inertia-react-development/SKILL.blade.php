@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or modifying React page components for Inertia
 - Working with forms in React (using `<Form>` or `useForm`)
 - Implementing client-side navigation with `<Link>` or `router`
@@ -131,7 +132,7 @@ export default function CreateUser() {
 }
 @endboostsnippet
 
-### Form Component with All Props
+### Form Component With All Props
 
 @boostsnippet("Form Component Full Example", "react")
 import { Form } from '@inertiajs/react'
@@ -211,7 +212,7 @@ Forms can also be built using the `useForm` helper for more programmatic control
 
 @endif
 
-### useForm Hook
+### `useForm` Hook
 
 @if($assist->inertia()->hasFormComponent() === false)
 For Inertia v2.0.x: Build forms using the `useForm` helper as the `<Form>` component is not available until v2.1.0+.

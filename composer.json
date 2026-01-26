@@ -13,20 +13,20 @@
         "source": "https://github.com/laravel/boost"
     },
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "guzzlehttp/guzzle": "^7.9",
-        "illuminate/console": "^10.49.0|^11.45.3|^12.41.1",
-        "illuminate/contracts": "^10.49.0|^11.45.3|^12.41.1",
-        "illuminate/routing": "^10.49.0|^11.45.3|^12.41.1",
-        "illuminate/support": "^10.49.0|^11.45.3|^12.41.1",
+        "illuminate/console": "^11.45.3|^12.41.1",
+        "illuminate/contracts": "^11.45.3|^12.41.1",
+        "illuminate/routing": "^11.45.3|^12.41.1",
+        "illuminate/support": "^11.45.3|^12.41.1",
         "laravel/mcp": "^0.5.1",
-        "laravel/prompts": "0.1.25|^0.3.10",
+        "laravel/prompts": "^0.3.10",
         "laravel/roster": "^0.2.9"
     },
     "require-dev": {
-        "laravel/pint": "^1.0.0|^1.27.0",
+        "laravel/pint": "^1.27.0",
         "mockery/mockery": "^1.6.12",
-        "orchestra/testbench": "^8.36.0|^9.15.0|^10.6",
+        "orchestra/testbench": "^9.15.0|^10.6",
         "pestphp/pest": "^2.36.0|^3.8.4|^4.1.5",
         "phpstan/phpstan": "^2.1.27",
         "rector/rector": "^2.1"

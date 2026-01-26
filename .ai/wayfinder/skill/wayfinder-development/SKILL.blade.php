@@ -27,11 +27,11 @@ Use `search-docs` for detailed Wayfinder patterns and documentation.
 
 Run after route changes if Vite plugin isn't installed:
 
-{{ $assist->artisanCommand('wayfinder:generate') }}
+{{ $assist->artisanCommand('wayfinder:generate --no-interaction') }}
 
 For form helpers, use `--with-form` flag:
 
-{{ $assist->artisanCommand('wayfinder:generate --with-form') }}
+{{ $assist->artisanCommand('wayfinder:generate --with-form --no-interaction') }}
 
 ### Import Patterns
 
@@ -99,7 +99,7 @@ form.submit(store());
 
 ## Verification
 
-1. Run `{{ $assist->artisanCommand('wayfinder:generate') }}` to regenerate routes if Vite plugin isn't installed:
+1. Run `{{ $assist->artisanCommand('wayfinder:generate') }}` to regenerate routes if Vite plugin isn't installed
 2. Check TypeScript imports resolve correctly
 3. Verify route URLs match expected paths
 

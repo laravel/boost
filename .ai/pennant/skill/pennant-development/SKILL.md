@@ -11,6 +11,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating or checking feature flags
 - Managing feature rollouts
 - Implementing A/B testing
@@ -54,7 +55,7 @@ if (Feature::for($user)->active('new-dashboard')) {
 @endfeature
 </code-snippet>
 
-### Activating/Deactivating
+### Activating / Deactivating
 
 <code-snippet name="Activating Features" lang="php">
 Feature::activate('new-dashboard');

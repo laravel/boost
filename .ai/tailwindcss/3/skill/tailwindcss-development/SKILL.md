@@ -23,14 +23,14 @@ Use `search-docs` for detailed Tailwind CSS v3 patterns and documentation.
 
 ## Basic Usage
 
-- Use Tailwind CSS classes to style HTML; check and use existing Tailwind conventions within the project before writing your own.
-- Offer to extract repeated patterns into components that match the project's conventions (i.e. Blade, JSX, Vue, etc.).
-- Think through class placement, order, priority, and defaults. Remove redundant classes, add classes to parent or child carefully to limit repetition, and group elements logically.
+- Use Tailwind CSS classes to style HTML. Check and follow existing Tailwind conventions in the project before introducing new patterns.
+- Offer to extract repeated patterns into components that match the project's conventions (e.g., Blade, JSX, Vue).
+- Consider class placement, order, priority, and defaults. Remove redundant classes, add classes to parent or child elements carefully to reduce repetition, and group elements logically.
 
 ## Tailwind CSS v3 Specifics
 
-- Always use Tailwind CSS v3; verify you're using only classes supported by this version.
-- Configuration is done in `tailwind.config.js` file.
+- Always use Tailwind CSS v3 and verify you're using only classes it supports.
+- Configuration is done in the `tailwind.config.js` file.
 - Import using `@tailwind` directives:
 
 <code-snippet name="v3 Import Syntax" lang="css">
@@ -52,7 +52,7 @@ When listing items, use gap utilities for spacing; don't use margins.
 
 ## Dark Mode
 
-If existing pages and components support dark mode, new pages and components must support dark mode in a similar way, typically using `dark:` variant:
+If existing pages and components support dark mode, new pages and components must support it the same way, typically using the `dark:` variant:
 
 <code-snippet name="Dark Mode" lang="html">
 <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">

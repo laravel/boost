@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating new tests (unit, feature, or browser)
 - Modifying existing tests
 - Debugging test failures
@@ -96,6 +97,7 @@ it('has emails', function (string $email) {
 ### Browser Test Example
 
 Browser tests run in real browsers for full integration testing:
+
 - Browser tests live in `tests/Browser/`.
 - Use Laravel features like `Event::fake()`, `assertAuthenticated()`, and model factories.
 - Use `RefreshDatabase` for clean state per test.
@@ -127,7 +129,6 @@ it('may reset the password', function () {
 ### Smoke Testing
 
 Quickly validate multiple pages have no JavaScript errors:
-
 
 @boostsnippet("Pest Smoke Testing Example", "php")
 $pages = visit(['/', '/about', '/contact']);

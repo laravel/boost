@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
@@ -24,19 +25,16 @@ use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
-use Laravel\Prompts\Concerns\Colors;
 use Laravel\Prompts\Terminal;
 use Symfony\Component\Process\Process;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\grid;
-use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
-use function Laravel\Prompts\note;
 
 class InstallCommand extends Command
 {
-    use Colors;
+    use DisplayHelper;
 
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
@@ -82,33 +80,13 @@ class InstallCommand extends Command
         $this->terminal->initDimensions();
         $this->projectName = config('app.name');
 
-        $this->displayBoostHeader();
+        $this->displayBoostHeader('Install', $this->projectName);
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
         $this->performInstallation();
         $this->outro();
 
         return self::SUCCESS;
-    }
-
-    protected function displayBoostHeader(): void
-    {
-        note($this->boostLogo());
-        intro('✦ Laravel Boost :: Install :: We Must Ship ✦');
-        note("Let's give {$this->bgYellow($this->black($this->bold($this->projectName)))} a Boost");
-    }
-
-    protected function boostLogo(): string
-    {
-        return
-         <<<'HEADER'
-        ██████╗   ██████╗   ██████╗  ███████╗ ████████╗
-        ██╔══██╗ ██╔═══██╗ ██╔═══██╗ ██╔════╝ ╚══██╔══╝
-        ██████╔╝ ██║   ██║ ██║   ██║ ███████╗    ██║
-        ██╔══██╗ ██║   ██║ ██║   ██║ ╚════██║    ██║
-        ██████╔╝ ╚██████╔╝ ╚██████╔╝ ███████║    ██║
-        ╚═════╝   ╚═════╝   ╚═════╝  ╚══════╝    ╚═╝
-        HEADER;
     }
 
     protected function discoverEnvironment(): void
@@ -158,19 +136,9 @@ class InstallCommand extends Command
     {
         $url = 'https://boost.laravel.com/installed/';
         $link = $this->hyperlink($url, $url);
-
         $text = 'Enjoy the boost 🚀 Next steps: ';
-        $paddingLength = (int) (floor(($this->terminal->cols() - mb_strlen($text.$url)) / 2)) - 2;
 
-        $this->output->write([
-            "\033[42m\033[2K".str_repeat(' ', max(0, $paddingLength)),
-            $this->black($this->bold($text.$link)).$this->reset(PHP_EOL).$this->reset(PHP_EOL),
-        ]);
-    }
-
-    protected function hyperlink(string $label, string $url): string
-    {
-        return "\033]8;;{$url}\007{$label}\033]8;;\033\\";
+        $this->displayOutro($text, $link, $this->terminal->cols());
     }
 
     /**
@@ -203,7 +171,7 @@ class InstallCommand extends Command
         $featureLabels = collect([
             'guidelines' => 'AI Guidelines',
             'skills' => 'Agent Skills',
-            'mcp' => 'MCP Server Config',
+            'mcp' => 'Boost MCP Server Configuration',
         ]);
 
         $explicit = $featureLabels->keys()->filter(fn ($feature) => $this->option($feature));
@@ -225,7 +193,7 @@ class InstallCommand extends Command
             options: $featureLabels->all(),
             default: $defaults->all(),
             required: true,
-            hint: 'This will override the current guidelines, skills and mcp configuration.',
+            hint: 'This will override the current guidelines, skills, and MCP configuration',
         ));
     }
 

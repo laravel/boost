@@ -202,6 +202,38 @@ it('renders blade templates to markdown', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
+it('preserves vue template syntax in verbatim blocks when rendering blade skills', function (): void {
+    $sourceDir = fixture('skills/vue-syntax-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'vue-syntax-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Vue syntax test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($absoluteTarget.'/vue-syntax-skill/SKILL.md')->toBeFile();
+
+    $content = file_get_contents($absoluteTarget.'/vue-syntax-skill/SKILL.md');
+
+    expect($content)
+        ->toContain('{{ user.name }}')
+        ->toContain('{{ errors.email }}')
+        ->not->toContain('@{{ user.name }}')
+        ->not->toContain('@{{ errors.email }}');
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
 it('removes a skill directory', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);

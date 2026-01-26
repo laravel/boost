@@ -14,6 +14,7 @@ description: >-
 ## When to Apply
 
 Activate this skill when:
+
 - Creating MCP tools, resources, or prompts
 - Setting up MCP server routes
 - Debugging MCP connection issues
@@ -32,7 +33,7 @@ use Laravel\Mcp\Facades\Mcp;
 Mcp::web();
 @endboostsnippet
 
-## Creating MCP Primitives
+### Creating MCP Primitives
 
 Create MCP tools, resources, prompts, and servers using artisan commands:
 
@@ -45,7 +46,7 @@ Create MCP tools, resources, prompts, and servers using artisan commands:
 
 After creating primitives, register them in your server's `$tools`, `$resources`, or `$prompts` properties.
 
-## Tools
+### Tools
 
 @boostsnippet("MCP Tool Example", "php")
 use Laravel\Mcp\Server\Tool;
@@ -72,4 +73,4 @@ class MyTool extends Tool
 - Using HTTPS locally with Node-based MCP clients
 - Not using `search-docs` for the latest MCP documentation
 - Not registering MCP server routes in `routes/ai.php`
-- Do not mention ai.php in the bootstrap.php file; it's already registered.
+- Do not register `ai.php` in `bootstrap.php`; it is registered automatically.

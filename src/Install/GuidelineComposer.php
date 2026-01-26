@@ -68,11 +68,13 @@ class GuidelineComposer
      */
     public static function composeGuidelines(Collection $guidelines): string
     {
-        return str_replace("\n\n\n\n", "\n\n", trim($guidelines
+        $composed = trim($guidelines
             ->filter(fn ($guideline): bool => ! empty(trim($guideline['content'])))
             ->map(fn ($guideline, $key): string => "\n=== {$key} rules ===\n\n".trim($guideline['content']))
-            ->join("\n\n"))
+            ->join("\n\n")
         );
+
+        return MarkdownFormatter::format($composed);
     }
 
     /**
