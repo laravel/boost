@@ -26,22 +26,24 @@ If you have added your own custom agents, you will need to make the following ch
 
 `CodeEnvironment` has been replaced with `Agent` throughout:
 
-| Before | After |
-|--------|-------|
-| `CodeEnvironment` | `Agent` |
-| `CodeEnvironmentsDetector` | `AgentsDetector` |
-| `src/Install/CodeEnvironment/` | `src/Install/Agents/` |
-| `Laravel\Boost\Install\CodeEnvironment` | `Laravel\Boost\Install\Agents` |
+| Before                                                    | After                                           |
+|-----------------------------------------------------------|-------------------------------------------------|
+| `CodeEnvironment`                                         | `Agent`                                         |
+| `CodeEnvironmentsDetector`                                | `AgentsDetector`                                |
+| `src/Install/CodeEnvironment/`                            | `src/Install/Agents/`                           |
+| `Laravel\Boost\Install\CodeEnvironment`                   | `Laravel\Boost\Install\Agents`                  |
+| `registerCodeEnvironment(string $key, string $className)` | `registerAgent(string $key, string $className)` |
+| `getCodeEnvironments()`                                   | `getAgents()`                                   |
 
 #### Contract Renames
 
 Several contracts have been renamed for clarity:
 
-| Before | After |
-|--------|-------|
-| `Laravel\Boost\Contracts\Agent` | `Laravel\Boost\Contracts\SupportsGuidelines` |
-| `Laravel\Boost\Contracts\McpClient` | `Laravel\Boost\Contracts\SupportsMcp` |
-| `Laravel\Boost\Contracts\SupportSkills` | `Laravel\Boost\Contracts\SupportsSkills` |
+| Before                                  | After                                        |
+|-----------------------------------------|----------------------------------------------|
+| `Laravel\Boost\Contracts\Agent`         | `Laravel\Boost\Contracts\SupportsGuidelines` |
+| `Laravel\Boost\Contracts\McpClient`     | `Laravel\Boost\Contracts\SupportsMcp`        |
+| `Laravel\Boost\Contracts\SupportSkills` | `Laravel\Boost\Contracts\SupportsSkills`     |
 
 #### Custom Agent Migration
 
