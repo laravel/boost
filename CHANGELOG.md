@@ -1,6 +1,36 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.10...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.0.0...main)
+
+## [v2.0.0](https://github.com/laravel/boost/compare/v1.8.10...v2.0.0) - 2026-01-24
+
+### What's Changed
+
+* Skills Support by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/421
+* Formatting changes by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/438
+* Refactor installation UX by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/439
+* Add tests for tool execution and error handling by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/447
+* Refactor `RendersBladeGuidelines` namespace and update references by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/449
+* Add Skill Sync by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/444
+* Implement package priority system and filtering for package discovery by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/450
+* Move Boost Docs to Laravel Docs by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/453
+* Update installation questions by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/452
+* Add 2.x Upgrade Guide by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/446
+* tests: add coverage for DatabaseQuery tool by [@sakshamgorey](https://github.com/sakshamgorey) in https://github.com/laravel/boost/pull/454
+* Refactor MCP related tests by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/448
+* Add Gradient to Boost Logo by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/455
+* Update minimum PHP and Laravel versions by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/459
+* Add boost:add-skill command by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/458
+* Add --no-interaction flag to wayfinder skills command by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/461
+* Add validation UpdateCommand to handle errors by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/462
+* Formatting by [@taylorotwell](https://github.com/taylorotwell) in https://github.com/laravel/boost/pull/463
+* Inertia vue skill syntax by [@Bottelet](https://github.com/Bottelet) in https://github.com/laravel/boost/pull/464
+
+### Upgrade Guide
+
+You can find the upgrade guide for version 2.x [here](https://github.com/laravel/boost/blob/main/UPGRADE.md)
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.10...v2.0.0
 
 ## [v1.8.10](https://github.com/laravel/boost/compare/v1.8.9...v1.8.10) - 2026-01-14
 
