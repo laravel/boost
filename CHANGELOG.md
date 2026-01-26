@@ -1,6 +1,20 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.0.1...main)
+
+## [v2.0.1](https://github.com/laravel/boost/compare/v2.0.0...v2.0.1) - 2026-01-26
+
+### What's Changed
+
+* Format pint.json by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/467
+* Update UPGRADE.md by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/470
+* Use skills directory instead of skill for OpenCode by [@thijsvdanker](https://github.com/thijsvdanker) in https://github.com/laravel/boost/pull/472
+
+### New Contributors
+
+* [@thijsvdanker](https://github.com/thijsvdanker) made their first contribution in https://github.com/laravel/boost/pull/472
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.0...v2.0.1
 
 ## [v2.0.0](https://github.com/laravel/boost/compare/v1.8.10...v2.0.0) - 2026-01-24
 
