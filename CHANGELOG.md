@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.0.2...main)
+
+## [v2.0.2](https://github.com/laravel/boost/compare/v2.0.1...v2.0.2) - 2026-01-27
+
+### What's Changed
+
+* Exclude Livewire skills and guidelines for indirect dependencies (#477) by [@zcuric](https://github.com/zcuric) in https://github.com/laravel/boost/pull/478
+* Update Flux UI documentation for verbatim usage by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/476
+
+### New Contributors
+
+* [@zcuric](https://github.com/zcuric) made their first contribution in https://github.com/laravel/boost/pull/478
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.1...v2.0.2
 
 ## [v2.0.1](https://github.com/laravel/boost/compare/v2.0.0...v2.0.1) - 2026-01-26
 
