@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
+use Laravel\Boost\Exceptions\BoostException;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
@@ -51,41 +52,32 @@ it('skips directories without SKILL.md', function (): void {
         ->and($skills->has('no-skill-file'))->toBeFalse();
 });
 
-it('returns empty collection when api fails', function (): void {
+it('throws exception when api fails', function (): void {
     Http::fake([
-        'api.github.com/*' => Http::response(null, 404),
+        'api.github.com/*' => Http::response('{"message":"Not Found"}', 404),
     ]);
 
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
-    $skills = $fetcher->discoverSkills();
+    $fetcher->discoverSkills();
+})->throws(BoostException::class, 'Not Found');
 
-    expect($skills)->toBeEmpty();
-});
-
-it('captures error message when api fails', function (): void {
+it('throws exception with parsed message when rate limited', function (): void {
     Http::fake([
         'api.github.com/*' => Http::response('{"message":"API rate limit exceeded"}', 403),
     ]);
 
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
     $fetcher->discoverSkills();
+})->throws(BoostException::class, 'API rate limit exceeded');
 
-    expect($fetcher->getLastError())->toBe('{"message":"API rate limit exceeded"}');
-});
-
-it('returns null for getLastError when no error occurred', function (): void {
+it('throws exception with raw body when response is not json', function (): void {
     Http::fake([
-        'api.github.com/repos/owner/repo/contents/' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-        ]),
-        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# SKILL'),
+        'api.github.com/*' => Http::response('Service Unavailable', 503),
     ]);
 
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
     $fetcher->discoverSkills();
-
-    expect($fetcher->getLastError())->toBeNull();
-});
+})->throws(BoostException::class, 'Service Unavailable');
 
 it('downloads skill files to target directory', function (): void {
     $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();

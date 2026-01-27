@@ -66,7 +66,7 @@ it('shows error when api request fails', function (): void {
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
         ->assertFailed()
-        ->expectsOutputToContain('Not Found');
+        ->expectsOutput('Not Found');
 });
 
 it('shows rate limit error message from github api', function (): void {
@@ -76,7 +76,7 @@ it('shows rate limit error message from github api', function (): void {
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
         ->assertFailed()
-        ->expectsOutputToContain('API rate limit exceeded');
+        ->expectsOutput('API rate limit exceeded for 1.2.3.4.');
 });
 
 it('installs all skills with --all option', function (): void {
