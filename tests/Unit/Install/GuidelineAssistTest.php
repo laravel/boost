@@ -11,7 +11,7 @@ beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
     $this->roster->shouldReceive('nodePackageManager')->andReturn(null);
     $this->roster->shouldReceive('usesVersion')->andReturn(false);
-
+    $this->roster->shouldReceive('uses')->andReturn(false)->byDefault();
     $this->config = new GuidelineConfig;
 });
 
@@ -167,6 +167,7 @@ PHP);
     unlink($modelPath);
     rmdir($modulesDir);
     rmdir(dirname($modulesDir));
+    rmdir(dirname($modulesDir, 2));
     rmdir($tempDir.'/app');
     rmdir($tempDir);
 });
