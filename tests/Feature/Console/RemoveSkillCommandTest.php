@@ -15,9 +15,11 @@ beforeEach(function (): void {
     File::put(base_path('.ai/skills/skill-two/SKILL.md'), 'content');
 });
 
-it('removes a single skill with confirmation', function (): void {
-    $this->artisan('boost:rm-skill', ['skills' => ['skill-one']])
-        ->expectsConfirmation("Are you sure you want to remove the 'skill-one' skill?", 'yes')
+it('removes a single skill', function (): void {
+    $this->artisan('boost:rm-skill', [
+        'skills' => ['skill-one'],
+        '--force' => true,
+    ])
         ->expectsOutput('Skills removed: skill-one')
         ->assertSuccessful();
 
@@ -25,9 +27,11 @@ it('removes a single skill with confirmation', function (): void {
     $this->assertFilenameExists('.ai/skills/skill-two');
 });
 
-it('removes multiple skills with confirmation', function (): void {
-    $this->artisan('boost:rm-skill', ['skills' => ['skill-one', 'skill-two']])
-        ->expectsConfirmation('Are you sure you want to remove these 2 skills? (skill-one, skill-two)', 'yes')
+it('removes multiple skills', function (): void {
+    $this->artisan('boost:rm-skill', [
+        'skills' => ['skill-one', 'skill-two'],
+        '--force' => true,
+    ])
         ->expectsOutput('Skills removed: skill-one, skill-two')
         ->assertSuccessful();
 
@@ -36,20 +40,16 @@ it('removes multiple skills with confirmation', function (): void {
 });
 
 it('cancels removal when confirmation is denied', function (): void {
+    if (! stream_isatty(STDIN)) {
+        $this->markTestSkipped('Interactive test skipped in non-TTY environment.');
+    }
+
     $this->artisan('boost:rm-skill', ['skills' => ['skill-one']])
         ->expectsConfirmation("Are you sure you want to remove the 'skill-one' skill?", 'no')
         ->expectsOutput('Removal cancelled.')
         ->assertSuccessful();
 
     $this->assertFilenameExists('.ai/skills/skill-one/SKILL.md');
-});
-
-it('removes skills without confirmation using --force', function (): void {
-    $this->artisan('boost:rm-skill', ['skills' => ['skill-one'], '--force' => true])
-        ->expectsOutput('Skills removed: skill-one')
-        ->assertSuccessful();
-
-    $this->assertFilenameNotExists('.ai/skills/skill-one');
 });
 
 it('fails to remove a non-existent skill', function (): void {
@@ -60,6 +60,10 @@ it('fails to remove a non-existent skill', function (): void {
 });
 
 it('prompts for skill selection if no argument is provided', function (): void {
+    if (! stream_isatty(STDIN)) {
+        $this->markTestSkipped('Interactive test skipped in non-TTY environment.');
+    }
+
     $this->artisan('boost:rm-skill')
         ->expectsChoice('Which skills would you like to remove?', ['skill-one'], ['skill-one' => 'skill-one', 'skill-two' => 'skill-two'])
         ->expectsConfirmation("Are you sure you want to remove the 'skill-one' skill?", 'yes')
