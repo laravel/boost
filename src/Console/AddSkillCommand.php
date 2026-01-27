@@ -89,8 +89,8 @@ class AddSkillCommand extends Command
                 callback: fn (): Collection => $this->fetcher->discoverSkills(),
                 message: "Fetching skills from {$this->repository->fullName()}..."
             );
-        } catch (GitHubSkillProviderException $exception) {
-            $this->error($exception->getMessage());
+        } catch (GitHubSkillProviderException $gitHubSkillProviderException) {
+            $this->error($gitHubSkillProviderException->getMessage());
 
             return false;
         }
