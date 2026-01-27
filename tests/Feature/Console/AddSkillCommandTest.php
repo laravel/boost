@@ -164,7 +164,7 @@ it('skips existing skills without --force flag', function (): void {
     ])->assertSuccessful();
 
     $this->assertFileContains(['existing content'], '.ai/skills/skill-one/SKILL.md');
-})->skip(fn () => stream_isatty(STDIN), 'Skipped in interactive TTY environments');
+})->skip(fn (): bool => stream_isatty(STDIN), 'Skipped in interactive TTY environments');
 
 it('overwrites existing skills with --force flag', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
