@@ -9,6 +9,8 @@ use Orchestra\Testbench\Concerns\InteractsWithPublishedFiles;
 uses(InteractsWithPublishedFiles::class);
 
 beforeEach(function (): void {
+    Http::preventStrayRequests();
+
     // Trait handles file cleanup, but we need directory cleanup too
     File::deleteDirectory(base_path('.ai/skills'));
 
