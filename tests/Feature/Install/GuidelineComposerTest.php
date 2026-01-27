@@ -157,6 +157,24 @@ test('excludes Sail guidelines when Herd is configured', function (): void {
         ->not->toContain('Laravel Sail');
 });
 
+test('includes Valet guidelines when configured', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->usesValet = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain('Laravel Valet');
+});
+
 test('composes guidelines with proper formatting', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

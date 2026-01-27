@@ -202,9 +202,13 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
-        $composerCommand = $this->config->usesSail
-            ? Sail::composerCommand()
-            : 'composer';
+        if ($this->config->usesSail) {
+            $composerCommand = Sail::composerCommand();
+        } elseif ($this->config->usesValet) {
+            $composerCommand = 'valet composer';
+        } else {
+            $composerCommand = 'composer';
+        }
 
         return "{$composerCommand} {$command}";
     }
@@ -218,9 +222,15 @@ class GuidelineAssist
 
     public function artisan(): string
     {
-        return $this->config->usesSail
-            ? Sail::artisanCommand()
-            : 'php artisan';
+        if ($this->config->usesSail) {
+            return Sail::artisanCommand();
+        }
+
+        if ($this->config->usesValet) {
+            return 'valet php artisan';
+        }
+
+        return 'php artisan';
     }
 
     public function sailBinaryPath(): string

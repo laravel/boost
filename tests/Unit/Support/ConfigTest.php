@@ -49,6 +49,20 @@ it('may store and retrieve herd mcp installation status', function (): void {
     expect($config->getHerdMcp())->toBeFalse();
 });
 
+it('may store and retrieve valet status', function (): void {
+    $config = new Config;
+
+    expect($config->getValet())->toBeFalse();
+
+    $config->setValet(true);
+
+    expect($config->getValet())->toBeTrue();
+
+    $config->setValet(false);
+
+    expect($config->getValet())->toBeFalse();
+});
+
 it('may store and retrieve skills as an array', function (): void {
     $config = new Config;
 

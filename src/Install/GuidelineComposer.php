@@ -145,6 +145,10 @@ class GuidelineComposer
                 'condition' => $this->config->usesSail,
                 'path' => 'sail/core',
             ],
+            'valet' => [
+                'condition' => $this->config->usesValet,
+                'path' => 'valet/core',
+            ],
             'laravel/style' => [
                 'condition' => $this->config->laravelStyle,
                 'path' => 'laravel/style',

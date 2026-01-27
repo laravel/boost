@@ -60,6 +60,8 @@ class InstallCommand extends Command
 
     private bool $enforceTests = true;
 
+    private bool $usesValet = false;
+
     /** @var array<int, string> */
     private array $installedSkillNames = [];
 
@@ -112,6 +114,11 @@ class InstallCommand extends Command
         }
 
         $this->selectedAgents = $this->selectAgents();
+
+        $this->usesValet = $this->selectedBoostFeatures->contains('guidelines')
+            ? $this->shouldUseValet()
+            : $this->config->getValet();
+
         $this->enforceTests = $this->selectedBoostFeatures->contains('guidelines') && $this->determineTestEnforcement();
     }
 
@@ -214,6 +221,15 @@ class InstallCommand extends Command
             label: 'Laravel Sail detected. Configure Boost MCP to use Sail?',
             default: $this->config->getSail(),
             hint: 'This will configure the MCP server to run through Sail. Note: Sail must be running to use Boost MCP',
+        );
+    }
+
+    protected function shouldUseValet(): bool
+    {
+        return confirm(
+            label: 'Is this project running under Laravel Valet?',
+            default: $this->config->getValet(),
+            hint: 'This will add Valet-specific command guidelines (e.g. `valet php artisan`).',
         );
     }
 
@@ -372,6 +388,7 @@ class InstallCommand extends Command
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
+        $guidelineConfig->usesValet = $this->usesValet;
 
         return $guidelineConfig;
     }
@@ -388,6 +405,7 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->config->setGuidelines(true);
+            $this->config->setValet($this->usesValet);
         }
 
         if ($this->selectedBoostFeatures->contains('skills')) {

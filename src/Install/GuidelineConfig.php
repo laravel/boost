@@ -12,6 +12,8 @@ class GuidelineConfig
 
     public bool $usesSail = false;
 
+    public bool $usesValet = false;
+
     public bool $caresAboutLocalization = false;
 
     public bool $hasAnApi = false;

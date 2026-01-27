@@ -103,6 +103,16 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function setValet(bool $useValet): void
+    {
+        $this->set('valet', $useValet);
+    }
+
+    public function getValet(): bool
+    {
+        return $this->get('valet', false);
+    }
+
     public function isValid(): bool
     {
         $path = base_path(self::FILE);
