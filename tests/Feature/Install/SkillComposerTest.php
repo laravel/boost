@@ -22,7 +22,7 @@ beforeEach(function (): void {
 test('skills return a collection keyed by skill name', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -37,7 +37,7 @@ test('skills return a collection keyed by skill name', function (): void {
 test('skills are discovered from Boost built-in .ai directory', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -62,7 +62,7 @@ test('skills only includes skills for installed packages', function (): void {
 test('skill has name, description, path, and package', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -101,4 +101,30 @@ test('config change clears skills cache', function (): void {
     $composer->config(new GuidelineConfig);
 
     expect($composer->skills())->not->toBe($first);
+});
+
+test('excludes livewire skills when indirectly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(false),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = (new SkillComposer($this->roster))->skills();
+
+    expect($skills->has('livewire-development'))->toBeFalse();
+});
+
+test('includes livewire skills when directly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = (new SkillComposer($this->roster))->skills();
+
+    expect($skills->has('livewire-development'))->toBeTrue();
 });
