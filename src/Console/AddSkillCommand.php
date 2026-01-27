@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
-use Laravel\Boost\Exceptions\BoostException;
+use Laravel\Boost\Exceptions\GitHubSkillProviderException;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
@@ -89,7 +89,7 @@ class AddSkillCommand extends Command
                 callback: fn (): Collection => $this->fetcher->discoverSkills(),
                 message: "Fetching skills from {$this->repository->fullName()}..."
             );
-        } catch (BoostException $exception) {
+        } catch (GitHubSkillProviderException $exception) {
             $this->error($exception->getMessage());
 
             return false;

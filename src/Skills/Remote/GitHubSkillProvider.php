@@ -9,7 +9,7 @@ use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Laravel\Boost\Exceptions\BoostException;
+use Laravel\Boost\Exceptions\GitHubSkillProviderException;
 
 class GitHubSkillProvider
 {
@@ -167,7 +167,7 @@ class GitHubSkillProvider
         $response = $this->client()->get($url);
 
         if ($response->failed()) {
-            throw BoostException::requestFailed($response->body());
+            throw GitHubSkillProviderException::requestFailed($response->body());
         }
 
         $contents = $response->json();

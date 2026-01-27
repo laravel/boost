@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Exceptions;
 
-use Exception;
 use JsonException;
+use RuntimeException;
 
-class BoostException extends Exception
+class GitHubSkillProviderException extends RuntimeException
 {
     public static function requestFailed(string $body): self
     {
