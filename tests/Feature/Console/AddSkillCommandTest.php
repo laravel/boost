@@ -61,12 +61,22 @@ it('shows error when no skills found', function (): void {
 
 it('shows error when api request fails', function (): void {
     Http::fake([
-        '*' => Http::response(null, 404),
+        '*' => Http::response('{"message":"Not Found"}', 404),
     ]);
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
         ->assertFailed()
-        ->expectsOutputToContain('No valid skills are found');
+        ->expectsOutputToContain('Not Found');
+});
+
+it('shows rate limit error message from github api', function (): void {
+    Http::fake([
+        '*' => Http::response('{"message":"API rate limit exceeded for 1.2.3.4."}', 403),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
+        ->assertFailed()
+        ->expectsOutputToContain('API rate limit exceeded');
 });
 
 it('installs all skills with --all option', function (): void {

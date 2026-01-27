@@ -62,6 +62,31 @@ it('returns empty collection when api fails', function (): void {
     expect($skills)->toBeEmpty();
 });
 
+it('captures error message when api fails', function (): void {
+    Http::fake([
+        'api.github.com/*' => Http::response('{"message":"API rate limit exceeded"}', 403),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $fetcher->discoverSkills();
+
+    expect($fetcher->getLastError())->toBe('{"message":"API rate limit exceeded"}');
+});
+
+it('returns null for getLastError when no error occurred', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/contents/' => Http::response([
+            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
+        ]),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# SKILL'),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $fetcher->discoverSkills();
+
+    expect($fetcher->getLastError())->toBeNull();
+});
+
 it('downloads skill files to target directory', function (): void {
     $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
 

@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Exceptions\BoostException;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
@@ -83,10 +84,16 @@ class AddSkillCommand extends Command
 
     protected function discoverAvailableSkills(): bool
     {
-        $this->availableSkills = spin(
-            callback: fn (): Collection => $this->fetcher->discoverSkills(),
-            message: "Fetching skills from {$this->repository->fullName()}..."
-        );
+        try {
+            $this->availableSkills = spin(
+                callback: fn (): Collection => $this->fetcher->discoverSkills(),
+                message: "Fetching skills from {$this->repository->fullName()}..."
+            );
+        } catch (BoostException $exception) {
+            $this->error($exception->getMessage());
+
+            return false;
+        }
 
         if ($this->availableSkills->isEmpty()) {
             $this->error('No valid skills are found in the repository.');
