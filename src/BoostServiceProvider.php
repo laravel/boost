@@ -61,19 +61,7 @@ class BoostServiceProvider extends ServiceProvider
             return $roster;
         });
 
-        $this->app->singleton(GuidelineConfig::class, function (): GuidelineConfig {
-            $config = new GuidelineConfig;
-
-            $config->discoveryPaths = config('boost.discovery_paths', []);
-            $config->enforceTests = config('boost.enforce_tests', false);
-            $config->laravelStyle = config('boost.laravel_style', false);
-            $config->usesSail = config('boost.uses_sail', false);
-            $config->caresAboutLocalization = config('boost.cares_about_localization', false);
-            $config->hasAnApi = config('boost.has_an_api', false);
-            $config->aiGuidelines = config('boost.ai_guidelines', []);
-
-            return $config;
-        });
+        $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
 
         $this->app->singleton(GuidelineAssist::class, fn ($app): GuidelineAssist => new GuidelineAssist(
             $app->make(Roster::class),

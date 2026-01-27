@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
@@ -63,8 +64,12 @@ class GuidelineAssist
     protected function discover(callable $cb): array
     {
         $classes = [];
-        $paths = $this->config->discoveryPaths !== []
-            ? $this->config->discoveryPaths
+        $paths = $this->roster->uses(Approaches::MODULAR)
+            ? array_filter([
+                base_path('modules'),
+                base_path('Modules'),
+                app_path(),
+            ], is_dir(...))
             : [app_path()];
         $cacheKey = md5(implode('|', $paths));
 

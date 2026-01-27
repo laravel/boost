@@ -20,11 +20,4 @@ class GuidelineConfig
      * @var array<int, string>
      */
     public array $aiGuidelines;
-
-    /**
-     * Paths to scan for PHP classes (models, enums, controllers, etc.)
-     *
-     * @var array<int, string>
-     */
-    public array $discoveryPaths = [];
 }

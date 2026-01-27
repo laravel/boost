@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
@@ -15,6 +16,10 @@ use function Pest\testDirectory;
 
 beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
+    $this->roster
+        ->shouldReceive('uses')
+        ->with(Approaches::MODULAR)
+        ->andReturn(false);
     $this->nodePackageManager = NodePackageManager::NPM;
     $this->roster->shouldReceive('nodePackageManager')->andReturnUsing(
         fn (): NodePackageManager => $this->nodePackageManager
