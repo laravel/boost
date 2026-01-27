@@ -29,4 +29,22 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boost Executables Config
+    |--------------------------------------------------------------------------
+    |
+    | The following options allow you to configure custom paths for the PHP,
+    | Composer, and npm executables used by Boost. Leave empty to use defaults.
+    | When configured, these take precedence over automatic detection.
+    |
+    */
+
+    'executables' => [
+        'php' => env('BOOST_PHP_EXECUTABLE'),
+        'composer' => env('BOOST_COMPOSER_EXECUTABLE'),
+        'npm' => env('BOOST_NPM_EXECUTABLE'),
+        'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE'),
+    ],
+
 ];

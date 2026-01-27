@@ -7,6 +7,7 @@ use Laravel\Boost\Install\CodeEnvironment\PhpStorm;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 
 test('PhpStorm returns absolute PHP_BINARY path', function (): void {
+    config(['boost.executables.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $phpStorm = new PhpStorm($strategyFactory);
 
@@ -25,10 +26,38 @@ test('PhpStorm returns absolute artisan path', function (): void {
 });
 
 test('Cursor returns relative php string', function (): void {
+    config(['boost.executables.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getPhpPath())->toBe('php');
+});
+
+test('Cursor uses configured default_php_bin when not forcing absolute path', function (): void {
+    config(['boost.executables.php' => '/custom/path/to/php']);
+
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $cursor = new Cursor($strategyFactory);
+
+    expect($cursor->getPhpPath())->toBe('/custom/path/to/php');
+});
+
+test('Cursor uses config even when forceAbsolutePath is true', function (): void {
+    config(['boost.executables.php' => '/custom/path/to/php']);
+
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $cursor = new Cursor($strategyFactory);
+
+    expect($cursor->getPhpPath(true))->toBe('/custom/path/to/php');
+});
+
+test('Cursor uses PHP_BINARY when forceAbsolutePath is true and config is empty', function (): void {
+    config(['boost.executables.php' => null]);
+
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $cursor = new Cursor($strategyFactory);
+
+    expect($cursor->getPhpPath(true))->toBe(PHP_BINARY);
 });
 
 test('Cursor returns relative artisan path', function (): void {
@@ -38,7 +67,8 @@ test('Cursor returns relative artisan path', function (): void {
     expect($cursor->getArtisanPath())->toBe('artisan');
 });
 
-test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', function (): void {
+test('CodeEnvironment returns absolute paths when forceAbsolutePath is true and config is empty', function (): void {
+    config(['boost.executables.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -47,7 +77,8 @@ test('CodeEnvironment returns absolute paths when forceAbsolutePath is true', fu
         ->not->toBe('artisan');
 });
 
-test('CodeEnvironment maintains relative paths when forceAbsolutePath is false', function (): void {
+test('CodeEnvironment maintains relative paths when forceAbsolutePath is false and config is empty', function (): void {
+    config(['boost.executables.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -56,6 +87,7 @@ test('CodeEnvironment maintains relative paths when forceAbsolutePath is false',
 });
 
 test('PhpStorm paths remain absolute regardless of forceAbsolutePath parameter', function (): void {
+    config(['boost.executables.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $phpStorm = new PhpStorm($strategyFactory);
 
@@ -68,4 +100,14 @@ test('PhpStorm paths remain absolute regardless of forceAbsolutePath parameter',
         ->not->toBe('artisan');
 
     expect($phpStorm->getArtisanPath(false))->toBe($artisanPath);
+});
+
+test('PhpStorm uses config when configured', function (): void {
+    config(['boost.executables.php' => '/custom/php']);
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $phpStorm = new PhpStorm($strategyFactory);
+
+    // Config takes precedence over useAbsolutePathForMcp
+    expect($phpStorm->getPhpPath(true))->toBe('/custom/php');
+    expect($phpStorm->getPhpPath(false))->toBe('/custom/php');
 });
