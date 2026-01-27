@@ -52,9 +52,11 @@ class GitHubSkillProvider
             $item['name'] => $this->buildRawFileUrl($item['path'].'/SKILL.md'),
         ]);
 
+        $headers = $this->headers();
+
         $responses = Http::pool(fn (Pool $pool) => $skillMdUrls->map(
             fn (string $url, string $name) => $pool->as($name)
-                ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'Laravel-Boost'])
+                ->withHeaders($headers)
                 ->timeout(30)
                 ->get($url)
         )->all());
@@ -137,9 +139,11 @@ class GitHubSkillProvider
             $dir['name'] => $this->buildRawFileUrl($dir['path'].'/SKILL.md'),
         ]);
 
+        $headers = $this->headers();
+
         $responses = Http::pool(fn (Pool $pool) => $urls->map(
             fn (string $url, string $name) => $pool->as($name)
-                ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'Laravel-Boost'])
+                ->withHeaders($headers)
                 ->timeout(10)
                 ->get($url)
         )->all());
@@ -216,9 +220,11 @@ class GitHubSkillProvider
             $item['path'] => $this->buildRawFileUrl($item['path']),
         ]);
 
+        $headers = $this->headers();
+
         $responses = Http::pool(fn (Pool $pool) => $fileUrls->map(
             fn (string $url, string $path) => $pool->as($path)
-                ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'Laravel-Boost'])
+                ->withHeaders($headers)
                 ->timeout(30)
                 ->get($url)
         )->all());
@@ -270,11 +276,24 @@ class GitHubSkillProvider
         return is_dir($path) || @mkdir($path, 0755, true);
     }
 
-    protected function client(int $timeout = 30): PendingRequest
+    protected function headers(): array
     {
-        return Http::withHeaders([
+        $headers = [
             'Accept' => 'application/vnd.github.v3+json',
             'User-Agent' => 'Laravel-Boost',
-        ])->timeout($timeout);
+        ];
+
+        $token = config('boost.github_token');
+
+        if (! blank($token)) {
+            $headers['Authorization'] = "token {$token}";
+        }
+
+        return $headers;
+    }
+
+    protected function client(int $timeout = 30): PendingRequest
+    {
+        return Http::withHeaders($this->headers())->timeout($timeout);
     }
 }
