@@ -116,7 +116,7 @@ it('may reset the password', function () {
     $page = visit('/sign-in');
 
     $page->assertSee('Sign In')
-        ->assertNoJavascriptErrors()
+        ->assertNoJavaScriptErrors()
         ->click('Forgot Password?')
         ->fill('email', 'nuno@laravel.com')
         ->click('Send Reset Link')
@@ -133,7 +133,7 @@ Quickly validate multiple pages have no JavaScript errors:
 @boostsnippet("Pest Smoke Testing Example", "php")
 $pages = visit(['/', '/about', '/contact']);
 
-$pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
+$pages->assertNoJavaScriptErrors()->assertNoConsoleLogs();
 @endboostsnippet
 
 ### Visual Regression Testing
@@ -161,4 +161,4 @@ arch('controllers')
 - Using `assertStatus(200)` instead of `assertSuccessful()`
 - Forgetting datasets for repetitive validation tests
 - Deleting tests without approval
-- Forgetting `assertNoJavascriptErrors()` in browser tests
+- Forgetting `assertNoJavaScriptErrors()` in browser tests
