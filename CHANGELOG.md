@@ -1,6 +1,20 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.0.3...main)
+
+## [v2.0.3](https://github.com/laravel/boost/compare/v2.0.2...v2.0.3) - 2026-01-28
+
+### What's Changed
+
+* Sort user guidelines by filename for predictable ordering by [@patrickomeara](https://github.com/patrickomeara) in https://github.com/laravel/boost/pull/474
+* fix typo in pest skill by [@lukasleitsch](https://github.com/lukasleitsch) in https://github.com/laravel/boost/pull/486
+
+### New Contributors
+
+* [@patrickomeara](https://github.com/patrickomeara) made their first contribution in https://github.com/laravel/boost/pull/474
+* [@lukasleitsch](https://github.com/lukasleitsch) made their first contribution in https://github.com/laravel/boost/pull/486
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.2...v2.0.3
 
 ## [v2.0.2](https://github.com/laravel/boost/compare/v2.0.1...v2.0.2) - 2026-01-27
 
