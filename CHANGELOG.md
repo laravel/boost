@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.0.4...main)
+
+## [v2.0.4](https://github.com/laravel/boost/compare/v2.0.3...v2.0.4) - 2026-01-28
+
+### What's Changed
+
+* Update skills path in Copilot configuration by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/488
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.3...v2.0.4
 
 ## [v2.0.3](https://github.com/laravel/boost/compare/v2.0.2...v2.0.3) - 2026-01-28
 
