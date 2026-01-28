@@ -166,6 +166,8 @@ abstract class Agent
             return false;
         }
 
+        $normalized = $this->normalizeCommand($command, $args);
+
         // Build environment string
         $envString = '';
 
@@ -182,8 +184,8 @@ abstract class Agent
             '{env}',
         ], [
             $key,
-            $command,
-            implode(' ', array_map(fn (string $arg): string => '"'.$arg.'"', $args)),
+            $normalized['command'],
+            implode(' ', array_map(fn (string $arg): string => '"'.$arg.'"', $normalized['args'])),
             trim($envString),
         ], $shellCommand);
 
@@ -210,9 +212,30 @@ abstract class Agent
             return false;
         }
 
+        $normalized = $this->normalizeCommand($command, $args);
+
         return (new FileWriter($path, $this->defaultMcpConfig()))
             ->configKey($this->mcpConfigKey())
-            ->addServerConfig($key, $this->mcpServerConfig($command, $args, $env))
+            ->addServerConfig($key, $this->mcpServerConfig($normalized['command'], $normalized['args'], $env))
             ->save();
+    }
+
+    /**
+     * Normalize command by splitting space-separated commands into command + args.
+     *
+     * @param  array<int, string>  $args
+     * @return array{command: string, args: array<int, string>}
+     */
+    protected function normalizeCommand(string $command, array $args = []): array
+    {
+        if (! str_contains($command, ' ')) {
+            return ['command' => $command, 'args' => $args];
+        }
+
+        $parts = explode(' ', $command);
+        $normalizedCommand = array_shift($parts);
+        $normalizedArgs = array_merge($parts, $args);
+
+        return ['command' => $normalizedCommand, 'args' => $normalizedArgs];
     }
 }
