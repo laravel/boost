@@ -27,9 +27,9 @@ class GuidelineAssist
 
     public function __construct(public Roster $roster, public GuidelineConfig $config)
     {
-        $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
+        $this->modelPaths = $this->discover(fn (ReflectionClass $reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
         $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
-        $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
+        $this->enumPaths = $this->discover(fn (ReflectionClass $reflection): bool => $reflection->isEnum());
     }
 
     /**
@@ -73,8 +73,8 @@ class GuidelineAssist
             : [app_path()];
         $cacheKey = md5(implode('|', $paths));
 
-        if (! collect($paths)->every(fn ($path): bool => is_dir($path))) {
-            return ['invalid-discovery-paths' => implode(',', $paths)];
+        if ($paths === []) {
+            return [];
         }
 
         if (! isset(self::$classes[$cacheKey])) {
@@ -153,7 +153,6 @@ class GuidelineAssist
                     }
                 }
             }
-
         }
 
         if (! $class) {

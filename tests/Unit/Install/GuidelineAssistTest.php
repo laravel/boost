@@ -130,7 +130,7 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
     expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
 });
 
-it('discovers models outside the app directory', function (): void {
+test('discovers models outside the app directory', function (): void {
     $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
     $modulesDir = $tempDir.'/modules/Blog/Models';
     mkdir($modulesDir, 0777, true);
@@ -158,16 +158,16 @@ PHP);
 
     require_once $modelPath;
 
-    $assist = new GuidelineAssist($this->roster, new GuidelineConfig);
+    try {
+        $assist = new GuidelineAssist($this->roster, new GuidelineConfig);
 
-    expect($assist->models())
-        ->toHaveKey('Modules\Blog\Models\Post');
-
-    // cleanup
-    unlink($modelPath);
-    rmdir($modulesDir);
-    rmdir(dirname($modulesDir));
-    rmdir(dirname($modulesDir, 2));
-    rmdir($tempDir.'/app');
-    rmdir($tempDir);
+        expect($assist->models())->toHaveKey('Modules\Blog\Models\Post');
+    } finally {
+        unlink($modelPath);
+        rmdir($modulesDir);
+        rmdir(dirname($modulesDir));
+        rmdir(dirname($modulesDir, 2));
+        rmdir($tempDir.'/app');
+        rmdir($tempDir);
+    }
 });
