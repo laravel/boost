@@ -312,3 +312,43 @@ test('installFileMcp updates existing config file', function (): void {
         ]);
 
 });
+
+test('getPhpPath uses absolute paths when forceAbsolutePath is true and config is empty', function (): void {
+    config(['boost.executables.php' => null]);
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
+});
+
+test('getPhpPath maintains default behavior when forceAbsolutePath is false and config is empty', function (): void {
+    config(['boost.executables.php' => null]);
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(false))->toBe('php');
+});
+
+test('getPhpPath uses configured default_php_bin from config', function (): void {
+    config(['boost.executables.php' => '/usr/local/bin/php8.3']);
+
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(false))->toBe('/usr/local/bin/php8.3');
+});
+
+test('getPhpPath returns php when config is set to php', function (): void {
+    config(['boost.executables.php' => 'php']);
+
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(false))->toBe('php');
+});
+
+test('getPhpPath uses config even when forceAbsolutePath is true', function (): void {
+    config(['boost.executables.php' => '/usr/local/bin/php8.3']);
+
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(true))->toBe('/usr/local/bin/php8.3');
+});
+
+test('getPhpPath uses PHP_BINARY when forceAbsolutePath is true and config is empty', function (): void {
+    config(['boost.executables.php' => null]);
+
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
+});
