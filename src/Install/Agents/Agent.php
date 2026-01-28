@@ -228,14 +228,11 @@ abstract class Agent
      */
     protected function normalizeCommand(string $command, array $args = []): array
     {
-        if (! str_contains($command, ' ')) {
-            return ['command' => $command, 'args' => $args];
-        }
+        $parts = str($command)->explode(' ');
 
-        $parts = explode(' ', $command);
-        $normalizedCommand = array_shift($parts);
-        $normalizedArgs = array_merge($parts, $args);
-
-        return ['command' => $normalizedCommand, 'args' => $normalizedArgs];
+        return [
+            'command' => $parts->first(),
+            'args' => $parts->skip(1)->values()->merge($args)->all(),
+        ];
     }
 }
