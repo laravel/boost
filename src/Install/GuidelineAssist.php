@@ -180,19 +180,24 @@ class GuidelineAssist
         );
     }
 
-    public function nodePackageManager(): string
+    protected function detectedNodePackageManager(): string
     {
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
     }
 
     public function nodePackageManagerCommand(string $command): string
     {
-        $manager = $this->nodePackageManager();
-        $nodePackageManagerCommand = $this->config->usesSail
-            ? Sail::nodePackageManagerCommand($manager)
-            : $manager;
+        $npmExecutable = config('boost.executables.npm');
 
-        return "{$nodePackageManagerCommand} {$command}";
+        if ($npmExecutable !== null) {
+            return "{$npmExecutable} {$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::nodePackageManagerCommand($this->detectedNodePackageManager())." {$command}";
+        }
+
+        return "{$this->detectedNodePackageManager()} {$command}";
     }
 
     public function artisanCommand(string $command): string
@@ -202,22 +207,42 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
-        $composerCommand = $this->config->usesSail
-            ? Sail::composerCommand()
-            : 'composer';
+        $composerExecutable = config('boost.executables.composer');
 
-        return "{$composerCommand} {$command}";
+        if ($composerExecutable !== null) {
+            return "{$composerExecutable} {$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::composerCommand()." {$command}";
+        }
+
+        return "composer {$command}";
     }
 
     public function binCommand(string $command): string
     {
-        return $this->config->usesSail
-            ? Sail::binCommand().$command
-            : "vendor/bin/{$command}";
+        $vendorBinPrefix = config('boost.executables.vendor_bin');
+
+        if ($vendorBinPrefix !== null) {
+            return "{$vendorBinPrefix}{$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::binCommand().$command;
+        }
+
+        return "vendor/bin/{$command}";
     }
 
     public function artisan(): string
     {
+        $phpExecutable = config('boost.executables.php');
+
+        if ($phpExecutable !== null) {
+            return "{$phpExecutable} artisan";
+        }
+
         return $this->config->usesSail
             ? Sail::artisanCommand()
             : 'php artisan';
