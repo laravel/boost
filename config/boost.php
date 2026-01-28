@@ -29,4 +29,20 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | GitHub Token for Skill Discovery
+    |--------------------------------------------------------------------------
+    |
+    | This option may be used to provide a GitHub Personal Access Token for
+    | authenticating requests to the GitHub API when discovering skills from
+    | remote repositories. This helps avoid rate limiting issues.
+    |
+    | You can generate a token at: https://github.com/settings/tokens
+    | For public repositories, no scopes are required.
+    |
+    */
+
+    'github_token' => env('BOOST_GITHUB_TOKEN'),
+
 ];

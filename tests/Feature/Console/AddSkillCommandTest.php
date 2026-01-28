@@ -9,6 +9,8 @@ use Orchestra\Testbench\Concerns\InteractsWithPublishedFiles;
 uses(InteractsWithPublishedFiles::class);
 
 beforeEach(function (): void {
+    Http::preventStrayRequests();
+
     // Trait handles file cleanup, but we need directory cleanup too
     File::deleteDirectory(base_path('.ai/skills'));
 
@@ -61,12 +63,22 @@ it('shows error when no skills found', function (): void {
 
 it('shows error when api request fails', function (): void {
     Http::fake([
-        '*' => Http::response(null, 404),
+        '*' => Http::response('{"message":"Not Found"}', 404),
     ]);
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
         ->assertFailed()
-        ->expectsOutputToContain('No valid skills are found');
+        ->expectsOutput('Not Found');
+});
+
+it('shows rate limit error message from github api', function (): void {
+    Http::fake([
+        '*' => Http::response('{"message":"API rate limit exceeded for 1.2.3.4."}', 403),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
+        ->assertFailed()
+        ->expectsOutput('API rate limit exceeded for 1.2.3.4.');
 });
 
 it('installs all skills with --all option', function (): void {
@@ -152,7 +164,7 @@ it('skips existing skills without --force flag', function (): void {
     ])->assertSuccessful();
 
     $this->assertFileContains(['existing content'], '.ai/skills/skill-one/SKILL.md');
-});
+})->skip(fn (): bool => stream_isatty(STDIN), 'Skipped in interactive TTY environments');
 
 it('overwrites existing skills with --force flag', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
