@@ -433,7 +433,7 @@ class InstallCommand extends Command
         $this->installFeature(
             agents: $this->agentsWithMcp(),
             emptyMessage: 'No agents are selected for MCP installation.',
-            headerMessage: 'Installing MCP servers to your selected IDEs',
+            headerMessage: 'Installing MCP servers to your selected Agents',
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
                 $this->shouldUseSail() ? $this->sail : null,
