@@ -11,7 +11,7 @@ beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
     $this->roster->shouldReceive('nodePackageManager')->andReturn(null);
     $this->roster->shouldReceive('usesVersion')->andReturn(false);
-
+    $this->roster->shouldReceive('uses')->andReturn(false)->byDefault();
     $this->config = new GuidelineConfig;
 });
 
@@ -88,7 +88,6 @@ test('npm executable config takes precedence over Sail', function (): void {
 test('npm executable falls back to npm when no config and no Sail', function (): void {
     config(['boost.executables.npm' => null]);
     $this->config->usesSail = false;
-
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
@@ -129,4 +128,46 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
     $assist->shouldReceive('discover')->andReturn([]);
 
     expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+});
+
+test('discovers models outside the app directory', function (): void {
+    $tempDir = sys_get_temp_dir().'/boost_test_'.uniqid();
+    $modulesDir = $tempDir.'/modules/Blog/Models';
+    mkdir($modulesDir, 0777, true);
+
+    $modelPath = $modulesDir.'/Post.php';
+
+    file_put_contents($modelPath, <<<'PHP'
+<?php
+
+namespace Modules\Blog\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model {}
+PHP);
+
+    $this->app->setBasePath($tempDir);
+    mkdir($tempDir.'/app', 0777, true);
+    $this->app->useAppPath($tempDir.'/app');
+
+    $this->roster
+        ->shouldReceive('uses')
+        ->with(\Laravel\Roster\Enums\Approaches::MODULAR)
+        ->andReturn(true);
+
+    require_once $modelPath;
+
+    try {
+        $assist = new GuidelineAssist($this->roster, new GuidelineConfig);
+
+        expect($assist->models())->toHaveKey('Modules\Blog\Models\Post');
+    } finally {
+        unlink($modelPath);
+        rmdir($modulesDir);
+        rmdir(dirname($modulesDir));
+        rmdir(dirname($modulesDir, 2));
+        rmdir($tempDir.'/app');
+        rmdir($tempDir);
+    }
 });
