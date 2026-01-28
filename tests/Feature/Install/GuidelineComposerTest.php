@@ -734,3 +734,26 @@ test('includes enabled conditional guidelines and orders them before packages', 
         ->and($testsPos)->toBeGreaterThan($foundationPos)
         ->and($testsPos)->toBeLessThan($pestPos);
 });
+
+test('user guidelines are sorted by filename for predictable ordering', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/sorted-guidelines')).'/'.ltrim((string) $path, '/'));
+
+    $guidelines = $composer->guidelines();
+    $keys = $guidelines->keys()->toArray();
+
+    // Get the positions of our test guidelines
+    $userGuidelineKeys = collect($keys)->filter(fn ($key): bool => str_starts_with((string) $key, '.ai/'))->values()->toArray();
+
+    // Files should be sorted alphabetically by filename:
+    // 00-first.md, 10-middle.md, 20-second.md
+    expect($userGuidelineKeys)->toBe(['.ai/00-first', '.ai/10-middle', '.ai/20-second']);
+});

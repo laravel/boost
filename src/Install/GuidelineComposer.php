@@ -225,7 +225,8 @@ class GuidelineComposer
                 ->in($dirPath)
                 ->exclude('skill')
                 ->name('*.blade.php')
-                ->name('*.md');
+                ->name('*.md')
+                ->sortByName();
         } catch (DirectoryNotFoundException) {
             return [];
         }
