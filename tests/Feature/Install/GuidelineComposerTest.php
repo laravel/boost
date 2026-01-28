@@ -373,6 +373,28 @@ test('includes laravel/mcp guidelines when directly required', function (): void
         ->not->toContain('Mcp::web');
 });
 
+test('excludes livewire guidelines when indirectly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(false),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    expect($this->composer->compose())->not->toContain('=== livewire/core rules ===');
+});
+
+test('includes livewire guidelines when directly required', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    expect($this->composer->compose())->toContain('=== livewire/core rules ===');
+});
+
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
