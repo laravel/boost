@@ -33,6 +33,20 @@ Use Flux UI components when available. Fall back to standard Blade components wh
 <flux:button variant="primary">Click me</flux:button>
 </code-snippet>
 
+## Icons
+
+Flux uses [Heroicons](https://heroicons.com/) for its icon collection. Search for exact icon names there—do not guess.
+
+<code-snippet name="Icon Button" lang="blade">
+<flux:button icon="arrow-down-tray">Export</flux:button>
+</code-snippet>
+
+For more icons, use [Lucide](https://lucide.dev/) via the import command:
+
+```bash
+php artisan flux:icon crown grip-vertical github
+```
+
 ## Available Components (Pro Edition)
 
 Available: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, calendar, callout, card, chart, checkbox, command, composer, context, date-picker, dropdown, editor, field, file-upload, heading, icon, input, kanban, modal, navbar, otp-input, pagination, pillbox, popover, profile, radio, select, separator, skeleton, slider, switch, table, tabs, text, textarea, time-picker, toast, tooltip
