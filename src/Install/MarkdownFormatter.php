@@ -13,10 +13,10 @@ class MarkdownFormatter
     {
         // Ensure blank line before and after markdown headings
         $content = preg_replace('/(?<!\n)\n(#{1,4} )/m', "\n\n$1", $content);
-        $content = preg_replace('/(#{1,4} .+)\n(?!\n)/m', "$1\n\n", $content);
+        $content = preg_replace('/(#{1,4} .+)\n(?!\n)/m', "$1\n\n", (string) $content);
 
         // Collapse multiple consecutive empty lines into a single empty line
-        $content = preg_replace('/\n{3,}/', "\n\n", $content);
+        $content = preg_replace('/\n{3,}/', "\n\n", (string) $content);
 
         return $content;
     }

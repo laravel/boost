@@ -451,3 +451,36 @@ it('sync only removes previously tracked skills', function (): void {
 
     cleanupSkillDirectory($absoluteTarget);
 });
+
+it('removes extra files when updating skill directory', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $targetSkill = $absoluteTarget.'/test-skill';
+
+    mkdir($targetSkill.'/references/old', 0755, true);
+    file_put_contents($targetSkill.'/SKILL.md', 'old content');
+    file_put_contents($targetSkill.'/extra-file.md', 'should be removed');
+    file_put_contents($targetSkill.'/references/old/nested.md', 'should also be removed');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'test-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::UPDATED)
+        ->and($targetSkill.'/SKILL.md')->toBeFile()
+        ->and($targetSkill.'/references/example.md')->toBeFile()
+        ->and($targetSkill.'/extra-file.md')->not->toBeFile()
+        ->and($targetSkill.'/references/old')->not->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
