@@ -34,9 +34,9 @@ return [
     | Boost Executables Config
     |--------------------------------------------------------------------------
     |
-    | The following options allow you to configure custom paths for the PHP,
-    | and npm executables used by Boost. Leave empty to use defaults.
-    | When configured, these take precedence over automatic detection.
+    | These options allow you to specify custom paths for the executables that
+    | Boost uses. When configured, they take precedence over the automatic
+    | discovery mechanism. Leave empty to use defaults from your $PATH.
     |
     */
 
