@@ -52,8 +52,8 @@ class DatabaseSchema extends Tool
     {
         $connection = $request->get('database') ?? config('database.default');
         $filter = $request->get('filter') ?? '';
-        $includeViews = $request->get('include_views') ?? false;
-        $includeRoutines = $request->get('include_routines') ?? false;
+        $includeViews = $request->get('include_views', false);
+        $includeRoutines = $request->get('include_routines', false);
 
         $cacheKey = sprintf(
             'boost:mcp:database-schema:%s:%s:%d:%d',
