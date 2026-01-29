@@ -51,12 +51,13 @@ class ExecuteToolCommand extends Command
         } catch (Throwable $throwable) {
             $errorResult = Response::error("Tool execution failed (E_THROWABLE): {$throwable->getMessage()}");
 
-            $this->error(json_encode([
+            // Write to STDOUT (not STDERR) so ToolExecutor can read the response
+            echo json_encode([
                 'isError' => true,
                 'content' => [
                     $errorResult->content()->toTool($tool),
                 ],
-            ]));
+            ]);
 
             return static::FAILURE;
         }

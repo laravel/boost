@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Exception;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -29,12 +30,16 @@ class LastError extends Tool
         if (! self::$listenerRegistered) {
             Log::listen(function (MessageLogged $event): void {
                 if ($event->level === 'error') {
-                    Cache::forever('boost:last_error', [
-                        'timestamp' => now()->toDateTimeString(),
-                        'level' => $event->level,
-                        'message' => $event->message,
-                        'context' => [], // $event->context,
-                    ]);
+                    try {
+                        Cache::forever('boost:last_error', [
+                            'timestamp' => now()->toDateTimeString(),
+                            'level' => $event->level,
+                            'message' => $event->message,
+                            'context' => [], // $event->context,
+                        ]);
+                    } catch (Exception) {
+                        // Cache may be unavailable, skip storing
+                    }
                 }
             });
 

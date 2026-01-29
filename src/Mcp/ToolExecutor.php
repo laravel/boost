@@ -126,6 +126,9 @@ class ToolExecutor
     {
         return [
             PHP_BINARY,
+            // Suppress deprecation warnings that corrupt JSON output (e.g., PHP 8.5 PDO constant deprecations)
+            '-d', 'error_reporting='.(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED),
+            '-d', 'display_errors=stderr',
             base_path('artisan'),
             'boost:execute-tool',
             $toolClass,
