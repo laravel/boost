@@ -6,7 +6,10 @@ namespace Laravel\Boost\Mcp\Tools\DatabaseSchema;
 
 abstract class DatabaseSchemaDriver
 {
-    public function __construct(protected ?string $connection = null) {}
+    public function __construct(protected ?string $connection = null)
+    {
+        //
+    }
 
     protected function hasTable(?string $table): bool
     {
