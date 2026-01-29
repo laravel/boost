@@ -29,4 +29,22 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boost Skills Install Options
+    |--------------------------------------------------------------------------
+    |
+    | When installing skills for agent integrations, Boost can either copy
+    | skills into each agent directory or create symlinks to the canonical
+    | .agents/skills directory. Copy mode is the default. If symlinks are
+    | unavailable, Boost will fall back to copy mode automatically.
+    |
+    | Supported modes: "copy", "symlink"
+    |
+    */
+
+    'skills' => [
+        'install_mode' => env('BOOST_SKILLS_INSTALL_MODE', 'copy'),
+    ],
+
 ];

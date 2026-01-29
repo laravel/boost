@@ -8,6 +8,12 @@ use Laravel\Boost\Install\SkillWriter;
 
 function cleanupSkillDirectory(string $path): void
 {
+    if (is_link($path)) {
+        @unlink($path);
+
+        return;
+    }
+
     if (! is_dir($path)) {
         return;
     }
@@ -18,6 +24,12 @@ function cleanupSkillDirectory(string $path): void
     );
 
     foreach ($files as $file) {
+        if ($file->isLink()) {
+            @unlink($file->getPathname());
+
+            continue;
+        }
+
         $file->isDir() ? @rmdir($file->getRealPath()) : @unlink($file->getRealPath());
     }
 
@@ -48,6 +60,82 @@ it('writes skill to a target directory', function (): void {
         ->and($absoluteTarget.'/test-skill/references/example.md')->toBeFile();
 
     cleanupSkillDirectory($absoluteTarget);
+});
+
+it('symlinks skills to the canonical directory when configured', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $canonicalBase = base_path('.agents/skills');
+    $skillName = 'test-skill-'.uniqid();
+
+    config()->set('boost.skills.install_mode', 'symlink');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+    $canonicalSkillPath = $canonicalBase.'/'.$skillName;
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($canonicalSkillPath)->toBeDirectory();
+
+    if (is_link($linkedPath)) {
+        expect(realpath($linkedPath))->toBe(realpath($canonicalSkillPath));
+    } else {
+        expect($linkedPath)->toBeDirectory();
+    }
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('does not delete canonical skills when removing in symlink mode', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $canonicalBase = base_path('.agents/skills');
+    $skillName = 'test-skill-'.uniqid();
+
+    config()->set('boost.skills.install_mode', 'symlink');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+    $canonicalSkillPath = $canonicalBase.'/'.$skillName;
+
+    $removed = $writer->remove($skillName);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($removed)->toBeTrue()
+        ->and(is_link($linkedPath))->toBeFalse()
+        ->and($linkedPath)->not->toBeDirectory()
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
 });
 
 it('returns UPDATED when skill directory already exists', function (): void {

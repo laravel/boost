@@ -37,7 +37,25 @@ class SkillWriter
 
         $targetPath = base_path($this->agent->skillsPath().'/'.$skill->name);
 
-        $existed = is_dir($targetPath);
+        $existed = is_dir($targetPath) || is_link($targetPath);
+
+        if ($this->installMode() === 'symlink') {
+            $canonicalPath = base_path('.agents/skills/'.$skill->name);
+
+            if (! $this->copyDirectory($skill->path, $canonicalPath)) {
+                return self::FAILED;
+            }
+
+            if (! $this->ensureDirectoryExists(dirname($targetPath))) {
+                return self::FAILED;
+            }
+
+            if (! $this->createSymlink($canonicalPath, $targetPath) && ! $this->copyDirectory($skill->path, $targetPath)) {
+                return self::FAILED;
+            }
+
+            return $existed ? self::UPDATED : self::SUCCESS;
+        }
 
         if (! $this->copyDirectory($skill->path, $targetPath)) {
             return self::FAILED;
@@ -83,7 +101,7 @@ class SkillWriter
 
         $targetPath = base_path($this->agent->skillsPath().'/'.$skillName);
 
-        if (! is_dir($targetPath)) {
+        if (! is_dir($targetPath) && ! is_link($targetPath)) {
             return true;
         }
 
@@ -107,6 +125,23 @@ class SkillWriter
 
     protected function deleteDirectory(string $path): bool
     {
+        if (is_link($path)) {
+            if (@unlink($path)) {
+                return true;
+            }
+
+            // On Windows, directory symlinks can require rmdir instead of unlink.
+            if (is_dir($path) && @rmdir($path)) {
+                return true;
+            }
+
+            return ! file_exists($path);
+        }
+
+        if (is_file($path)) {
+            return @unlink($path);
+        }
+
         if (! is_dir($path)) {
             return false;
         }
@@ -117,10 +152,16 @@ class SkillWriter
         );
 
         foreach ($files as $file) {
-            $file->isDir() ? @rmdir($file->getRealPath()) : @unlink($file->getRealPath());
+            if ($file->isLink()) {
+                @unlink($file->getPathname());
+
+                continue;
+            }
+
+            $file->isDir() ? @rmdir($file->getPathname()) : @unlink($file->getPathname());
         }
 
-        return @rmdir($path);
+        return @rmdir($path) || ! is_dir($path);
     }
 
     protected function copyDirectory(string $source, string $target): bool
@@ -184,6 +225,33 @@ class SkillWriter
     protected function ensureDirectoryExists(string $path): bool
     {
         return is_dir($path) || @mkdir($path, 0755, true);
+    }
+
+    protected function createSymlink(string $target, string $link): bool
+    {
+        $resolvedTarget = realpath($target) ?: $target;
+        $resolvedLink = realpath($link) ?: $link;
+
+        if ($resolvedTarget === $resolvedLink) {
+            return true;
+        }
+
+        if (file_exists($link) || is_link($link)) {
+            $this->deleteDirectory($link);
+        }
+
+        if (! $this->ensureDirectoryExists(dirname($link))) {
+            return false;
+        }
+
+        return @symlink($resolvedTarget, $link);
+    }
+
+    protected function installMode(): string
+    {
+        $mode = strtolower(trim((string) config('boost.skills.install_mode', 'copy')));
+
+        return in_array($mode, ['symlink', 'copy'], true) ? $mode : 'copy';
     }
 
     protected function isValidSkillName(string $name): bool
