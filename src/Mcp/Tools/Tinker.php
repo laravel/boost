@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Exception;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Throwable;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
+use Symfony\Component\Process\Process;
 
 class Tinker extends Tool
 {
@@ -37,45 +37,64 @@ class Tinker extends Tool
     }
 
     /**
-     * Handle the tool request.
-     *
-     * @throws Exception
+     * Handle the tool request using php artisan tinker --execute.
      */
     public function handle(Request $request): Response
     {
-        $code = str_replace(['<?php', '?>'], '', (string) $request->get('code'));
+        $code = $this->sanitizeCode((string) $request->get('code'));
 
-        ini_set('memory_limit', '256M');
+        if ($code === '') {
+            return Response::error('Please provide code to execute');
+        }
 
-        ob_start();
+        $timeout = $this->clampTimeout($request->get('timeout'));
+
+        $process = new Process(
+            command: $this->buildCommand($code),
+            timeout: $timeout
+        );
 
         try {
-            $result = eval($code);
+            $process->run();
 
-            $output = ob_get_contents();
+            $output = $process->getOutput();
+            $errorOutput = $process->getErrorOutput();
 
-            $response = [
-                'result' => $result,
-                'output' => $output,
-                'type' => gettype($result),
-            ];
-
-            // If a result is an object, include the class name
-            if (is_object($result)) {
-                $response['class'] = $result::class;
+            if (! $process->isSuccessful() && $errorOutput) {
+                return Response::json([
+                    'error' => trim($errorOutput),
+                    'type' => 'ProcessError',
+                ]);
             }
 
-            return Response::json($response);
-        } catch (Throwable $throwable) {
             return Response::json([
-                'error' => $throwable->getMessage(),
-                'type' => $throwable::class,
-                'file' => $throwable->getFile(),
-                'line' => $throwable->getLine(),
+                'output' => $output,
             ]);
+        } catch (ProcessTimedOutException) {
+            $process->stop();
 
-        } finally {
-            ob_end_clean();
+            return Response::json([
+                'error' => "Execution timed out after {$timeout} seconds",
+                'type' => 'TimeoutError',
+            ]);
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function buildCommand(string $code): array
+    {
+        return [PHP_BINARY, base_path('artisan'), 'tinker', '--execute='.$code];
+    }
+
+    protected function sanitizeCode(string $code): string
+    {
+        return trim(str_replace(['<?php', '?>'], '', $code));
+    }
+
+    protected function clampTimeout(mixed $timeout): int
+    {
+        return max(1, min(600, (int) ($timeout ?? 180)));
     }
 }

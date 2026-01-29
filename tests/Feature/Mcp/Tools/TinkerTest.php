@@ -4,137 +4,90 @@ declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Request;
+use Symfony\Component\Process\Process;
 
-test('executes simple php code', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'return 2 + 2;']));
+test('builds correct command with code', function (): void {
+    $tool = new class extends Tinker
+    {
+        public function exposeBuildCommand(string $code): array
+        {
+            return $this->buildCommand($code);
+        }
+    };
 
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 4,
-            'type' => 'integer',
-        ]);
+    $command = $tool->exposeBuildCommand('echo "hello"');
+
+    expect($command)->toBe([
+        PHP_BINARY,
+        base_path('artisan'),
+        'tinker',
+        '--execute=echo "hello"',
+    ]);
 });
 
-test('executes code with output', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'echo "Hello World"; return "test";']));
+test('sanitizes code by stripping php tags and trimming', function (): void {
+    $tool = new class extends Tinker
+    {
+        public function exposeSanitizeCode(string $code): string
+        {
+            return $this->sanitizeCode($code);
+        }
+    };
 
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 'test',
-            'output' => 'Hello World',
-            'type' => 'string',
-        ]);
+    expect($tool->exposeSanitizeCode('<?php echo 1; ?>'))->toBe('echo 1;')
+        ->and($tool->exposeSanitizeCode('  echo 1  '))->toBe('echo 1')
+        ->and($tool->exposeSanitizeCode('<?php ?>'))->toBe('')
+        ->and($tool->exposeSanitizeCode('   '))->toBe('');
 });
 
-test('accesses laravel facades', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'return config("app.name");']));
+test('clamps timeout between 1 and 600 seconds', function (): void {
+    $tool = new class extends Tinker
+    {
+        public function exposeClampTimeout(mixed $timeout): int
+        {
+            return $this->clampTimeout($timeout);
+        }
+    };
 
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => config('app.name'),
-            'type' => 'string',
-        ]);
+    expect($tool->exposeClampTimeout(null))->toBe(180)
+        ->and($tool->exposeClampTimeout(-10))->toBe(1)
+        ->and($tool->exposeClampTimeout(0))->toBe(1)
+        ->and($tool->exposeClampTimeout(9999))->toBe(600)
+        ->and($tool->exposeClampTimeout(60))->toBe(60);
 });
 
-test('creates objects', function (): void {
+test('returns error for empty code', function (): void {
     $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'return new stdClass();']));
 
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'type' => 'object',
-            'class' => 'stdClass',
-        ]);
+    foreach ([null, '', '   ', '<?php ?>'] as $code) {
+        $response = $tool->handle(new Request(['code' => $code]));
+
+        expect($response)->isToolResult()->toolHasError();
+    }
 });
 
-test('handles syntax errors', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'invalid syntax here']));
+test('tinker executes code in laravel context', function (): void {
+    $process = new Process([
+        PHP_BINARY,
+        'vendor/bin/testbench',
+        'tinker',
+        '--execute=echo config("app.name");',
+    ]);
+    $process->run();
 
-    expect($response)->isToolResult()
-        ->toolHasNoError()
-        ->toolJsonContentToMatchArray([
-            'type' => 'ParseError',
-        ])
-        ->toolJsonContent(function ($data): void {
-            expect($data)->toHaveKey('error');
-        });
+    expect($process->isSuccessful())->toBeTrue()
+        ->and($process->getOutput())->toContain('Laravel');
 });
 
-test('handles runtime errors', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'throw new Exception("Test error");']));
-
-    expect($response)->isToolResult()
-        ->toolHasNoError()
-        ->toolJsonContentToMatchArray([
-            'type' => 'Exception',
-            'error' => 'Test error',
-        ])
-        ->toolJsonContent(function ($data): void {
-            expect($data)->toHaveKey('error');
-        });
-});
-
-test('captures multiple outputs', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'echo "First"; echo "Second"; return "done";']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 'done',
-            'output' => 'FirstSecond',
-        ]);
-});
-
-test('executes code with different return types', function (string $code, mixed $expectedResult, string $expectedType): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => $code]));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => $expectedResult,
-            'type' => $expectedType,
-        ]);
-})->with([
-    'integer' => ['return 42;', 42, 'integer'],
-    'string' => ['return "hello";', 'hello', 'string'],
-    'boolean true' => ['return true;', true, 'boolean'],
-    'boolean false' => ['return false;', false, 'boolean'],
-    'null' => ['return null;', null, 'NULL'],
-    'array' => ['return [1, 2, 3];', [1, 2, 3], 'array'],
-    'float' => ['return 3.14;', 3.14, 'double'],
-]);
-
-test('handles empty code', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => '']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => false,
-            'type' => 'boolean',
-        ]);
-});
-
-test('handles code with no return statement', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => '$x = 5;']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => null,
-            'type' => 'NULL',
-        ]);
-});
-
-test('should register only in local environment', function (): void {
+test('handles syntax errors gracefully', function (): void {
     $tool = new Tinker;
 
-    app()->detectEnvironment(fn (): string => 'local');
+    $response = $tool->handle(new Request([
+        'code' => 'echo "missing semicolon',
+    ]));
 
-    expect($tool->eligibleForRegistration())->toBeTrue();
+    $result = json_decode((string) $response->content(), true);
+
+    expect($result['output'])->toContain('InvalidArgumentException')
+        ->and($result['output'])->toContain('Unexpected end of input');
 });

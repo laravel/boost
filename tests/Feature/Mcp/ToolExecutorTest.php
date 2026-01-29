@@ -44,14 +44,14 @@ test('subprocess proves fresh process isolation', function (): void {
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(buildSubprocessCommand(...));
 
-    $response1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
-    $response2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
+    $response1 = $executor->execute(Tinker::class, ['code' => 'echo getmypid();']);
+    $response2 = $executor->execute(Tinker::class, ['code' => 'echo getmypid();']);
 
     expect($response1->isError())->toBeFalse()
         ->and($response2->isError())->toBeFalse();
 
-    $pid1 = json_decode((string) $response1->content(), true)['result'];
-    $pid2 = json_decode((string) $response2->content(), true)['result'];
+    $pid1 = (int) trim((string) json_decode((string) $response1->content(), true)['output']);
+    $pid2 = (int) trim((string) json_decode((string) $response2->content(), true)['output']);
 
     expect($pid1)->toBeInt()->not->toBe(getmypid())
         ->and($pid2)->toBeInt()->not->toBe(getmypid())
@@ -140,7 +140,7 @@ test('respects custom timeout parameter', function (): void {
 
     // Test with custom timeout - should succeed with fast code
     $response = $executor->execute(Tinker::class, [
-        'code' => 'return "timeout test";',
+        'code' => 'echo "timeout test";',
         'timeout' => 30,
     ]);
 
