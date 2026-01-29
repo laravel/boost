@@ -99,4 +99,18 @@ class PostgreSQLSchemaDriver extends DatabaseSchemaDriver
             return [];
         }
     }
+
+    public function getTables(): array
+    {
+        try {
+            return DB::connection($this->connection)->select('
+                SELECT tablename as name
+                FROM pg_tables
+                WHERE schemaname = current_schema()
+                ORDER BY tablename
+            ');
+        } catch (Exception) {
+            return [];
+        }
+    }
 }

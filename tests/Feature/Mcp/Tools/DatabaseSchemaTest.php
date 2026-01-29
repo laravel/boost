@@ -9,7 +9,6 @@ use Laravel\Boost\Mcp\Tools\DatabaseSchema;
 use Laravel\Mcp\Request;
 
 beforeEach(function (): void {
-    // Switch the default connection to a file-backed SQLite DB.
     config()->set('database.default', 'testing');
     config()->set('database.connections.testing', [
         'driver' => 'sqlite',
@@ -17,12 +16,10 @@ beforeEach(function (): void {
         'prefix' => '',
     ]);
 
-    // Ensure the DB file exists
     if (! is_file($file = database_path('testing.sqlite'))) {
         touch($file);
     }
 
-    // Build a throw-away table that we expect in the dump.
     Schema::dropIfExists('examples');
     Schema::create('examples', function (Blueprint $table): void {
         $table->id();
@@ -49,21 +46,19 @@ test('it returns structured database schema', function (): void {
         ])
         ->toolJsonContent(function (array $schemaArray): void {
             expect($schemaArray)->toHaveKey('tables')
-                ->and($schemaArray['tables'])->toHaveKey('examples');
+                ->and($schemaArray['tables'])->toHaveKey('examples')
+                ->and($schemaArray)->not->toHaveKey('views')
+                ->and($schemaArray)->not->toHaveKey('routines');
 
             $exampleTable = $schemaArray['tables']['examples'];
             expect($exampleTable)->toHaveKeys(['columns', 'indexes', 'foreign_keys', 'triggers', 'check_constraints'])
                 ->and($exampleTable['columns'])->toHaveKeys(['id', 'name'])
                 ->and($exampleTable['columns']['id']['type'])->toBe('integer')
-                ->and($exampleTable['columns']['name']['type'])->toBe('varchar')
-                ->and($schemaArray)->toHaveKey('global')
-                ->and($schemaArray['global'])->toHaveKeys(['views', 'stored_procedures', 'functions', 'sequences']);
-
+                ->and($exampleTable['columns']['name']['type'])->toBe('varchar');
         });
 });
 
 test('it filters tables by name', function (): void {
-    // Create another table
     Schema::create('users', function (Blueprint $table): void {
         $table->id();
         $table->string('email');
@@ -71,7 +66,6 @@ test('it filters tables by name', function (): void {
 
     $tool = new DatabaseSchema;
 
-    // Test filtering for 'example'
     $response = $tool->handle(new Request(['filter' => 'example']));
     expect($response)->isToolResult()
         ->toolHasNoError()
@@ -80,12 +74,52 @@ test('it filters tables by name', function (): void {
                 ->and($schemaArray['tables'])->not->toHaveKey('users');
         });
 
-    // Test filtering for 'user'
     $response = $tool->handle(new Request(['filter' => 'user']));
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function (array $schemaArray): void {
             expect($schemaArray['tables'])->toHaveKey('users')
                 ->and($schemaArray['tables'])->not->toHaveKey('examples');
+        });
+});
+
+test('it includes views when include_views is true', function (): void {
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['include_views' => true]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray)->toHaveKey('views')
+                ->and($schemaArray)->toHaveKey('tables')
+                ->and($schemaArray)->not->toHaveKey('routines');
+        });
+});
+
+test('it includes routines when include_routines is true', function (): void {
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['include_routines' => true]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray)->toHaveKey('routines')
+                ->and($schemaArray['routines'])->toHaveKeys(['stored_procedures', 'functions', 'sequences'])
+                ->and($schemaArray)->toHaveKey('tables')
+                ->and($schemaArray)->not->toHaveKey('views');
+        });
+});
+
+test('it includes both views and routines when both are true', function (): void {
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['include_views' => true, 'include_routines' => true]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray)->toHaveKey('views')
+                ->and($schemaArray)->toHaveKey('routines')
+                ->and($schemaArray)->toHaveKey('tables')
+                ->and($schemaArray)->toHaveKey('engine');
         });
 });

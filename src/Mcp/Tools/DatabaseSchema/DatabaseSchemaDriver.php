@@ -6,14 +6,11 @@ namespace Laravel\Boost\Mcp\Tools\DatabaseSchema;
 
 abstract class DatabaseSchemaDriver
 {
-    public function __construct(protected $connection = null)
-    {
-        //
-    }
+    public function __construct(protected ?string $connection = null) {}
 
     protected function hasTable(?string $table): bool
     {
-        return ! in_array($table, [null, '', '0'], true);
+        return $table !== null && $table !== '';
     }
 
     abstract public function getViews(): array;
@@ -27,4 +24,6 @@ abstract class DatabaseSchemaDriver
     abstract public function getCheckConstraints(string $table): array;
 
     abstract public function getSequences(): array;
+
+    abstract public function getTables(): array;
 }
