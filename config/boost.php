@@ -29,4 +29,21 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Agent-Specific Configuration
+    |--------------------------------------------------------------------------
+    |
+    | The following options may be used to configure agent-specific settings
+    | such as file paths for guidelines, skills, and MCP configurations.
+    |
+    */
+
+    'agents' => [
+        'kilo_code' => [
+            'guidelines_path' => env('BOOST_KILO_CODE_GUIDELINES_PATH', '.kilocode/rules'),
+            'skills_path' => env('BOOST_KILO_CODE_SKILLS_PATH', '.kilocode/skills'),
+        ],
+    ],
+
 ];

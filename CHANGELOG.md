@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.4...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.0.5...main)
+
+## [v2.0.5](https://github.com/laravel/boost/compare/v2.0.4...v2.0.5) - 2026-02-01
+
+### What's Changed
+
+* Update message for ide -> agent in InstallCommand by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/490
+* Remove stale files during skill directory updates by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/492
+* Fix database-schema tool to only return tables from configured database by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/498
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.4...v2.0.5
 
 ## [v2.0.4](https://github.com/laravel/boost/compare/v2.0.3...v2.0.4) - 2026-01-28
 

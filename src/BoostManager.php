@@ -12,6 +12,7 @@ use Laravel\Boost\Install\Agents\Copilot;
 use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Agents\Junie;
+use Laravel\Boost\Install\Agents\KiloCode;
 use Laravel\Boost\Install\Agents\OpenCode;
 
 class BoostManager
@@ -25,6 +26,7 @@ class BoostManager
         'copilot' => Copilot::class,
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
+        'kilo_code' => KiloCode::class,
     ];
 
     /**

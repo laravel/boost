@@ -14,6 +14,19 @@
 
 Laravel Boost accelerates AI-assisted development by providing the essential context and structure that AI needs to generate high-quality, Laravel-specific code.
 
+## Supported Agents
+
+Laravel Boost supports the following AI coding assistants:
+
+- **Kilo Code** - AI-powered coding assistant with MCP, guidelines, and skills support
+- **Claude Code** - Anthropic's AI coding assistant
+- **Cursor** - AI-powered IDE
+- **Junie** - AI coding assistant
+- **Codex** - OpenAI's code generation model
+- **Copilot** - GitHub's AI pair programmer
+- **OpenCode** - AI coding assistant
+- **Gemini** - Google's AI assistant
+
 ## Official Documentation
 
 Documentation for Laravel Boost can be found on the [Laravel website](https://laravel.com/docs/boost).
