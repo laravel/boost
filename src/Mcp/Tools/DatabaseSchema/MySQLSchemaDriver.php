@@ -71,4 +71,19 @@ class MySQLSchemaDriver extends DatabaseSchemaDriver
     {
         return [];
     }
+
+    public function getTables(): array
+    {
+        try {
+            return DB::connection($this->connection)->select('
+                SELECT TABLE_NAME as name
+                FROM information_schema.TABLES
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_TYPE = "BASE TABLE"
+                ORDER BY TABLE_NAME
+            ');
+        } catch (Exception) {
+            return [];
+        }
+    }
 }

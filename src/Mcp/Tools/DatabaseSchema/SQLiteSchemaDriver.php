@@ -58,4 +58,19 @@ class SQLiteSchemaDriver extends DatabaseSchemaDriver
     {
         return [];
     }
+
+    public function getTables(): array
+    {
+        try {
+            return DB::connection($this->connection)->select("
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'table'
+                AND name NOT LIKE 'sqlite_%'
+                ORDER BY name
+            ");
+        } catch (Exception) {
+            return [];
+        }
+    }
 }
