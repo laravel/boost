@@ -242,7 +242,9 @@ class InstallCommand extends Command
             options: $packages->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [
                 $name => $pkg->displayLabel(),
             ])->toArray(),
-            default: collect($this->config->getPackages()),
+            default: collect($this->config->getPackages())
+                ->filter(fn (string $name) => $packages->has($name))
+                ->values(),
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
@@ -383,6 +385,9 @@ class InstallCommand extends Command
         if (! $explicitMode) {
             $this->config->flush();
             $this->config->setAgents($this->selectedAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray());
+            $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
+        } else {
+            // In explicit mode, still clean up orphaned packages from config
             $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
         }
 
