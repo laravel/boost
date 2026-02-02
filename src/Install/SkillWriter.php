@@ -39,25 +39,17 @@ class SkillWriter
 
         $existed = is_dir($targetPath) || is_link($targetPath);
 
-        if ($this->installMode() === 'symlink') {
-            $canonicalPath = base_path('.agents/skills/'.$skill->name);
+        $canonicalPath = base_path('.ai/skills/'.$skill->name);
 
-            if (! $this->copyDirectory($skill->path, $canonicalPath)) {
-                return self::FAILED;
-            }
-
-            if (! $this->ensureDirectoryExists(dirname($targetPath))) {
-                return self::FAILED;
-            }
-
-            if (! $this->createSymlink($canonicalPath, $targetPath) && ! $this->copyDirectory($skill->path, $targetPath)) {
-                return self::FAILED;
-            }
-
-            return $existed ? self::UPDATED : self::SUCCESS;
+        if (! $this->copyDirectory($skill->path, $canonicalPath)) {
+            return self::FAILED;
         }
 
-        if (! $this->copyDirectory($skill->path, $targetPath)) {
+        if (! $this->ensureDirectoryExists(dirname($targetPath))) {
+            return self::FAILED;
+        }
+
+        if (! $this->createSymlink($canonicalPath, $targetPath) && ! $this->copyDirectory($skill->path, $targetPath)) {
             return self::FAILED;
         }
 
@@ -245,13 +237,6 @@ class SkillWriter
         }
 
         return @symlink($resolvedTarget, $link);
-    }
-
-    protected function installMode(): string
-    {
-        $mode = strtolower(trim((string) config('boost.skills.install_mode', 'copy')));
-
-        return in_array($mode, ['symlink', 'copy'], true) ? $mode : 'copy';
     }
 
     protected function isValidSkillName(string $name): bool

@@ -62,14 +62,12 @@ it('writes skill to a target directory', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
-it('symlinks skills to the canonical directory when configured', function (): void {
+it('symlinks skills to the canonical directory', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
-    $canonicalBase = base_path('.agents/skills');
+    $canonicalBase = base_path('.ai/skills');
     $skillName = 'test-skill-'.uniqid();
-
-    config()->set('boost.skills.install_mode', 'symlink');
 
     $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
@@ -100,14 +98,12 @@ it('symlinks skills to the canonical directory when configured', function (): vo
     cleanupSkillDirectory($canonicalSkillPath);
 });
 
-it('does not delete canonical skills when removing in symlink mode', function (): void {
+it('does not delete canonical skills when removing symlink', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
-    $canonicalBase = base_path('.agents/skills');
+    $canonicalBase = base_path('.ai/skills');
     $skillName = 'test-skill-'.uniqid();
-
-    config()->set('boost.skills.install_mode', 'symlink');
 
     $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
