@@ -93,6 +93,16 @@ class Config
         return $this->get('herd_mcp', false);
     }
 
+    public function setDdev(bool $useDdev): void
+    {
+        $this->set('ddev', $useDdev);
+    }
+
+    public function getDdev(): bool
+    {
+        return $this->get('ddev', false);
+    }
+
     public function setSail(bool $useSail): void
     {
         $this->set('sail', $useSail);

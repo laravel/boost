@@ -202,6 +202,10 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
+        if ($this->config->usesDdev) {
+            return Ddev::composerCommand()." {$command}";
+        }
+
         $composerCommand = $this->config->usesSail
             ? Sail::composerCommand()
             : 'composer';
@@ -211,6 +215,10 @@ class GuidelineAssist
 
     public function binCommand(string $command): string
     {
+        if ($this->config->usesDdev) {
+            return Ddev::binCommand().$command;
+        }
+
         return $this->config->usesSail
             ? Sail::binCommand().$command
             : "vendor/bin/{$command}";
@@ -218,6 +226,10 @@ class GuidelineAssist
 
     public function artisan(): string
     {
+        if ($this->config->usesDdev) {
+            return Ddev::artisanCommand();
+        }
+
         return $this->config->usesSail
             ? Sail::artisanCommand()
             : 'php artisan';

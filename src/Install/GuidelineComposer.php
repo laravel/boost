@@ -137,8 +137,12 @@ class GuidelineComposer
     protected function getConditionalGuidelines(): Collection
     {
         return collect([
+            'ddev' => [
+                'condition' => $this->config->usesDdev,
+                'path' => 'ddev/core',
+            ],
             'herd' => [
-                'condition' => str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->usesSail,
+                'condition' => str_contains((string) config('app.url'), '.test') && $this->herd->isInstalled() && ! $this->config->usesSail && ! $this->config->usesDdev,
                 'path' => 'herd/core',
             ],
             'sail' => [

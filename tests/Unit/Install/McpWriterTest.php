@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Contracts\SupportsMcp;
+use Laravel\Boost\Install\Ddev;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\McpWriter;
 use Laravel\Boost\Install\Sail;
@@ -106,7 +107,7 @@ it('installs herd mcp when herd is provided', function (): void {
         ->andReturn('/path/to/herd-mcp.phar');
 
     $writer = new McpWriter($agent);
-    $result = $writer->write(null, $herd);
+    $result = $writer->write(null, null, $herd);
 
     expect($result)->toBe(McpWriter::SUCCESS);
 });
@@ -135,7 +136,7 @@ it('throws exception when herd mcp installation returns false', function (): voi
 
     $writer = new McpWriter($agent);
 
-    expect(fn (): int => $writer->write(null, $herd))
+    expect(fn (): int => $writer->write(null, null, $herd))
         ->toThrow(RuntimeException::class, 'Failed to install Herd MCP: could not write configuration');
 });
 
@@ -163,7 +164,7 @@ it('throws exception when herd mcp installation throws exception', function (): 
 
     $writer = new McpWriter($agent);
 
-    expect(fn (): int => $writer->write(null, $herd))
+    expect(fn (): int => $writer->write(null, null, $herd))
         ->toThrow(RuntimeException::class, 'Herd configuration error');
 });
 
@@ -217,7 +218,91 @@ it('installs with both sail and herd', function (): void {
         ->andReturn('/path/to/herd-mcp.phar');
 
     $writer = new McpWriter($agent);
-    $result = $writer->write($sail, $herd);
+    $result = $writer->write($sail, null, $herd);
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('installs boost mcp with ddev', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'ddev', ['exec', 'php', 'artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+
+    $ddev = Mockery::mock(Ddev::class);
+    $ddev->shouldReceive('buildMcpCommand')
+        ->with('laravel-boost')
+        ->once()
+        ->andReturn([
+            'key' => 'laravel-boost',
+            'command' => 'ddev',
+            'args' => ['exec', 'php', 'artisan', 'boost:mcp'],
+        ]);
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, $ddev);
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('prefers sail over ddev when both are provided', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+
+    $sail = Mockery::mock(Sail::class);
+    $sail->shouldReceive('buildMcpCommand')
+        ->with('laravel-boost')
+        ->once()
+        ->andReturn([
+            'key' => 'laravel-boost',
+            'command' => 'vendor/bin/sail',
+            'args' => ['artisan', 'boost:mcp'],
+        ]);
+
+    $ddev = Mockery::mock(Ddev::class);
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write($sail, $ddev);
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('installs with ddev and herd', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'ddev', ['exec', 'php', 'artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldReceive('getPhpPath')
+        ->withNoArgs()
+        ->once()
+        ->andReturn('/usr/bin/php');
+    $agent->shouldReceive('installMcp')
+        ->with('herd', '/usr/bin/php', Mockery::type('array'), ['SITE_PATH' => base_path()])
+        ->once()
+        ->andReturn(true);
+
+    $ddev = Mockery::mock(Ddev::class);
+    $ddev->shouldReceive('buildMcpCommand')
+        ->with('laravel-boost')
+        ->once()
+        ->andReturn([
+            'key' => 'laravel-boost',
+            'command' => 'ddev',
+            'args' => ['exec', 'php', 'artisan', 'boost:mcp'],
+        ]);
+
+    $herd = Mockery::mock(Herd::class);
+    $herd->shouldReceive('mcpPath')
+        ->once()
+        ->andReturn('/path/to/herd-mcp.phar');
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, $ddev, $herd);
 
     expect($result)->toBe(McpWriter::SUCCESS);
 });

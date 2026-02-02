@@ -16,9 +16,9 @@ class McpWriter
         //
     }
 
-    public function write(?Sail $sail = null, ?Herd $herd = null): int
+    public function write(?Sail $sail = null, ?Ddev $ddev = null, ?Herd $herd = null): int
     {
-        $this->installBoostMcp($sail);
+        $this->installBoostMcp($sail, $ddev);
 
         if ($herd instanceof Herd) {
             $this->installHerdMcp($herd);
@@ -27,9 +27,9 @@ class McpWriter
         return self::SUCCESS;
     }
 
-    protected function installBoostMcp(?Sail $sail): void
+    protected function installBoostMcp(?Sail $sail, ?Ddev $ddev): void
     {
-        $mcp = $this->buildBoostMcpCommand($sail);
+        $mcp = $this->buildBoostMcpCommand($sail, $ddev);
 
         if (! $this->agent->installMcp($mcp['key'], $mcp['command'], $mcp['args'])) {
             throw new RuntimeException('Failed to install Boost MCP: could not write configuration');
@@ -39,10 +39,14 @@ class McpWriter
     /**
      * @return array{key: string, command: string, args: array<int, string>}
      */
-    protected function buildBoostMcpCommand(?Sail $sail): array
+    protected function buildBoostMcpCommand(?Sail $sail, ?Ddev $ddev): array
     {
         if ($sail instanceof Sail) {
             return $sail->buildMcpCommand('laravel-boost');
+        }
+
+        if ($ddev instanceof Ddev) {
+            return $ddev->buildMcpCommand('laravel-boost');
         }
 
         if ($this->isRunningInsideWsl()) {

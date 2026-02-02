@@ -14,6 +14,7 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
+use Laravel\Boost\Install\Ddev;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -68,6 +69,7 @@ class InstallCommand extends Command
     public function __construct(
         private readonly AgentsDetector $agentsDetector,
         private readonly Config $config,
+        private readonly Ddev $ddev,
         private readonly Herd $herd,
         private readonly Sail $sail,
         private readonly Terminal $terminal
@@ -199,6 +201,10 @@ class InstallCommand extends Command
 
     protected function configureMcpOptions(): void
     {
+        if ($this->ddev->isInstalled() && ($this->ddev->isActive() || $this->shouldConfigureDdev())) {
+            $this->selectedBoostFeatures->push('ddev');
+        }
+
         if ($this->sail->isInstalled() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
             $this->selectedBoostFeatures->push('sail');
         }
@@ -206,6 +212,15 @@ class InstallCommand extends Command
         if ($this->herd->isMcpAvailable() && $this->shouldConfigureHerdMcp()) {
             $this->selectedBoostFeatures->push('herd_mcp');
         }
+    }
+
+    protected function shouldConfigureDdev(): bool
+    {
+        return confirm(
+            label: 'DDEV detected. Configure Boost MCP to use DDEV?',
+            default: $this->config->getDdev(),
+            hint: 'This will configure the MCP server to run through DDEV. Note: DDEV must be running to use Boost MCP',
+        );
     }
 
     protected function shouldConfigureSail(): bool
@@ -371,6 +386,7 @@ class InstallCommand extends Command
         $guidelineConfig->enforceTests = $this->enforceTests;
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
+        $guidelineConfig->usesDdev = $this->shouldUseDdev();
         $guidelineConfig->usesSail = $this->shouldUseSail();
 
         return $guidelineConfig;
@@ -396,6 +412,7 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->config->setMcp(true);
+            $this->config->setDdev($this->shouldUseDdev());
             $this->config->setSail($this->shouldUseSail());
             $this->config->setHerdMcp($this->shouldInstallHerdMcp());
         }
@@ -404,6 +421,15 @@ class InstallCommand extends Command
     protected function shouldInstallHerdMcp(): bool
     {
         return $this->selectedBoostFeatures->contains('herd_mcp');
+    }
+
+    protected function shouldUseDdev(): bool
+    {
+        if ($this->selectedBoostFeatures->isEmpty()) {
+            return $this->config->getDdev();
+        }
+
+        return $this->selectedBoostFeatures->contains('ddev');
     }
 
     protected function shouldUseSail(): bool
@@ -437,6 +463,7 @@ class InstallCommand extends Command
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
                 $this->shouldUseSail() ? $this->sail : null,
+                $this->shouldUseDdev() ? $this->ddev : null,
                 $this->shouldInstallHerdMcp() ? $this->herd : null
             ),
             featureName: 'MCP servers',
