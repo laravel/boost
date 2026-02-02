@@ -35,13 +35,13 @@ Use Flux UI components when available. Fall back to standard Blade components wh
 
 ## Icons
 
-Flux uses [Heroicons](https://heroicons.com/) for its icon collection. Search for exact icon names there—do not guess.
+Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Search for exact icon names on the Heroicons site - do not guess or invent icon names.
 
 <code-snippet name="Icon Button" lang="blade">
 <flux:button icon="arrow-down-tray">Export</flux:button>
 </code-snippet>
 
-For more icons, use [Lucide](https://lucide.dev/) via the import command:
+For icons not available in Heroicons, use [Lucide](https://lucide.dev/). Import the icons you need with the Artisan command:
 
 ```bash
 php artisan flux:icon crown grip-vertical github
