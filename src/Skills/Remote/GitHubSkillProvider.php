@@ -22,6 +22,7 @@ class GitHubSkillProvider
         '.ai/skills',
         '.cursor/skills',
         '.claude/skills',
+        '.junie/skills',
     ];
 
     public function __construct(protected GitHubRepository $repository)
