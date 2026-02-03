@@ -21,7 +21,7 @@ uses(Tests\TestCase::class)->in('Unit', 'Feature');
 
 expect()->extend('isToolResult', fn () => $this->toBeInstanceOf(Response::class));
 
-expect()->extend('toolTextContains', function (mixed ...$needles) {
+expect()->extend('toolTextContains', function (mixed ...$needles): object {
     /** @var Response $this->value */
     $output = (string) $this->value->content();
     expect($output)->toContain(...func_get_args());
@@ -29,7 +29,7 @@ expect()->extend('toolTextContains', function (mixed ...$needles) {
     return $this;
 });
 
-expect()->extend('toolTextDoesNotContain', function (mixed ...$needles) {
+expect()->extend('toolTextDoesNotContain', function (mixed ...$needles): object {
     /** @var Response $this->value */
     $output = (string) $this->value->content();
     expect($output)->not->toContain(...func_get_args());
@@ -37,19 +37,19 @@ expect()->extend('toolTextDoesNotContain', function (mixed ...$needles) {
     return $this;
 });
 
-expect()->extend('toolHasError', function () {
+expect()->extend('toolHasError', function (): object {
     expect($this->value->isError())->toBeTrue();
 
     return $this;
 });
 
-expect()->extend('toolHasNoError', function () {
+expect()->extend('toolHasNoError', function (): object {
     expect($this->value->isError())->toBeFalse();
 
     return $this;
 });
 
-expect()->extend('toolJsonContent', function (callable $callback) {
+expect()->extend('toolJsonContent', function (callable $callback): object {
     /** @var Response $this->value */
     $content = json_decode((string) $this->value->content(), true);
     $callback($content);
@@ -57,7 +57,7 @@ expect()->extend('toolJsonContent', function (callable $callback) {
     return $this;
 });
 
-expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray) {
+expect()->extend('toolJsonContentToMatchArray', function (array $expectedArray): object {
     /** @var Response $this->value */
     $content = json_decode((string) $this->value->content(), true);
     expect($content)->toMatchArray($expectedArray);

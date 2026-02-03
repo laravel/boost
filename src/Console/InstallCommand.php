@@ -242,7 +242,9 @@ class InstallCommand extends Command
             options: $packages->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [
                 $name => $pkg->displayLabel(),
             ])->toArray(),
-            default: collect($this->config->getPackages()),
+            default: collect($this->config->getPackages())
+                ->filter(fn (string $name) => $packages->has($name))
+                ->values(),
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
@@ -384,6 +386,8 @@ class InstallCommand extends Command
             $this->config->flush();
             $this->config->setAgents($this->selectedAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray());
             $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
+        } elseif ($this->selectedBoostFeatures->contains('guidelines') || $this->selectedBoostFeatures->contains('skills')) {
+            $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
         }
 
         if ($this->selectedBoostFeatures->contains('guidelines')) {
@@ -433,7 +437,7 @@ class InstallCommand extends Command
         $this->installFeature(
             agents: $this->agentsWithMcp(),
             emptyMessage: 'No agents are selected for MCP installation.',
-            headerMessage: 'Installing MCP servers to your selected IDEs',
+            headerMessage: 'Installing MCP servers to your selected Agents',
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
                 $this->shouldUseSail() ? $this->sail : null,

@@ -129,6 +129,8 @@ class SkillWriter
             return false;
         }
 
+        $this->deleteDirectory($target);
+
         if (! $this->ensureDirectoryExists($target)) {
             throw new RuntimeException("Failed to create directory: {$target}");
         }
