@@ -39,10 +39,28 @@ class SkillWriter
 
         $existed = is_dir($targetPath) || is_link($targetPath);
 
+        if (! $skill->custom) {
+            $canonicalPath = base_path('.ai/skills/'.$skill->name);
+
+            if ((is_dir($canonicalPath) || is_link($canonicalPath))
+                && ! $this->pathsMatch($skill->path, $canonicalPath)
+                && ! $this->copyDirectory($skill->path, $canonicalPath)) {
+                return self::FAILED;
+            }
+
+            if (! $this->copyDirectory($skill->path, $targetPath)) {
+                return self::FAILED;
+            }
+
+            return $existed ? self::UPDATED : self::SUCCESS;
+        }
+
         $canonicalPath = base_path('.ai/skills/'.$skill->name);
 
-        if (! $this->copyDirectory($skill->path, $canonicalPath)) {
-            return self::FAILED;
+        if (! $this->pathsMatch($skill->path, $canonicalPath)) {
+            if (! $this->copyDirectory($skill->path, $canonicalPath)) {
+                return self::FAILED;
+            }
         }
 
         if (! $this->ensureDirectoryExists(dirname($targetPath))) {
@@ -224,7 +242,7 @@ class SkillWriter
         $resolvedTarget = realpath($target) ?: $target;
         $resolvedLink = realpath($link) ?: $link;
 
-        if ($resolvedTarget === $resolvedLink) {
+        if ($this->pathsMatch($resolvedTarget, $resolvedLink)) {
             return true;
         }
 
@@ -236,7 +254,32 @@ class SkillWriter
             return false;
         }
 
-        return @symlink($resolvedTarget, $link);
+        return @symlink($this->relativePath($resolvedTarget, dirname($link)), $link);
+    }
+
+    protected function pathsMatch(string $left, string $right): bool
+    {
+        $resolvedLeft = realpath($left) ?: $left;
+        $resolvedRight = realpath($right) ?: $right;
+
+        return rtrim($resolvedLeft, DIRECTORY_SEPARATOR) === rtrim($resolvedRight, DIRECTORY_SEPARATOR);
+    }
+
+    protected function relativePath(string $target, string $from): string
+    {
+        $base = rtrim(str_replace('\\', '/', base_path()), '/');
+        $resolvedTarget = str_replace('\\', '/', realpath($target) ?: $target);
+        $resolvedFrom = str_replace('\\', '/', realpath($from) ?: $from);
+
+        if (! str_starts_with($resolvedTarget, $base.'/') || ! str_starts_with($resolvedFrom, $base.'/')) {
+            return $resolvedTarget;
+        }
+
+        $targetRel = ltrim(substr($resolvedTarget, strlen($base)), '/');
+        $fromRel = ltrim(substr($resolvedFrom, strlen($base)), '/');
+        $depth = $fromRel === '' ? 0 : count(explode('/', $fromRel));
+
+        return str_repeat('../', $depth).$targetRel;
     }
 
     protected function isValidSkillName(string $name): bool

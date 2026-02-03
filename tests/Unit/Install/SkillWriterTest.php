@@ -40,6 +40,7 @@ it('writes skill to a target directory', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
+    $canonicalSkillPath = base_path('.ai/skills/test-skill');
 
     $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
@@ -57,17 +58,24 @@ it('writes skill to a target directory', function (): void {
     expect($result)->toBe(SkillWriter::SUCCESS)
         ->and($absoluteTarget.'/test-skill')->toBeDirectory()
         ->and($absoluteTarget.'/test-skill/SKILL.md')->toBeFile()
-        ->and($absoluteTarget.'/test-skill/references/example.md')->toBeFile();
+        ->and($absoluteTarget.'/test-skill/references/example.md')->toBeFile()
+        ->and($canonicalSkillPath)->not->toBeDirectory();
 
     cleanupSkillDirectory($absoluteTarget);
 });
 
-it('symlinks skills to the canonical directory', function (): void {
+it('updates existing canonical skills when installing non-custom skills', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
-    $canonicalBase = base_path('.ai/skills');
     $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    if (! is_dir($canonicalSkillPath)) {
+        mkdir($canonicalSkillPath, 0755, true);
+    }
+
+    file_put_contents($canonicalSkillPath.'/SKILL.md', 'old content');
 
     $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
@@ -82,8 +90,43 @@ it('symlinks skills to the canonical directory', function (): void {
     $writer = new SkillWriter($agent);
     $result = $writer->write($skill);
 
-    $linkedPath = $absoluteTarget.'/'.$skillName;
+    $content = file_get_contents($canonicalSkillPath.'/SKILL.md');
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($content)->toContain('name: test-skill');
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('symlinks skills to the canonical directory', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $canonicalBase = base_path('.ai/skills');
+    $skillName = 'test-skill-'.uniqid();
     $canonicalSkillPath = $canonicalBase.'/'.$skillName;
+
+    if (! is_dir($canonicalSkillPath)) {
+        mkdir($canonicalSkillPath, 0755, true);
+    }
+
+    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $canonicalSkillPath,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
 
     expect($result)->toBe(SkillWriter::SUCCESS)
         ->and($canonicalSkillPath)->toBeDirectory();
@@ -99,11 +142,17 @@ it('symlinks skills to the canonical directory', function (): void {
 });
 
 it('does not delete canonical skills when removing symlink', function (): void {
-    $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
     $canonicalBase = base_path('.ai/skills');
     $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = $canonicalBase.'/'.$skillName;
+
+    if (! is_dir($canonicalSkillPath)) {
+        mkdir($canonicalSkillPath, 0755, true);
+    }
+
+    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
 
     $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
@@ -111,15 +160,15 @@ it('does not delete canonical skills when removing symlink', function (): void {
     $skill = new Skill(
         name: $skillName,
         package: 'boost',
-        path: $sourceDir,
+        path: $canonicalSkillPath,
         description: 'Test skill',
+        custom: true,
     );
 
     $writer = new SkillWriter($agent);
     $result = $writer->write($skill);
 
     $linkedPath = $absoluteTarget.'/'.$skillName;
-    $canonicalSkillPath = $canonicalBase.'/'.$skillName;
 
     $removed = $writer->remove($skillName);
 
