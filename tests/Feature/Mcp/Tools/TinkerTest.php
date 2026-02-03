@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Tinker\TinkerServiceProvider;
 
 beforeEach(function (): void {
@@ -59,6 +60,8 @@ it('executes valid code successfully', function (): void {
 
     $result = json_decode((string) $response->content(), true);
 
+    dumpResponseIfMissingOutput($response, $result, 'TinkerTest executes valid code');
+
     expect($result)->toHaveKey('output')
         ->and($result['output'])->toContain('2');
 });
@@ -72,6 +75,8 @@ it('preserves return values from executed code', function (): void {
     ]));
 
     $result = json_decode((string) $response->content(), true);
+
+    dumpResponseIfMissingOutput($response, $result, 'TinkerTest preserves return values');
 
     expect($result)->toHaveKey('output')
         ->and($result['output'])->toContain('=>')
@@ -87,6 +92,8 @@ it('captures both echo output and return values', function (): void {
     ]));
 
     $result = json_decode((string) $response->content(), true);
+
+    dumpResponseIfMissingOutput($response, $result, 'TinkerTest captures echo and return');
 
     expect($result)->toHaveKey('output')
         ->and($result['output'])->toContain('debug')
@@ -104,6 +111,8 @@ it('returns null values silently without extra output', function (): void {
 
     $result = json_decode((string) $response->content(), true);
 
+    dumpResponseIfMissingOutput($response, $result, 'TinkerTest returns null values');
+
     expect($result)->toHaveKey('output')
         ->and($result['output'])->toBe('test')
         ->and($result['output'])->not->toContain('=>');
@@ -119,6 +128,8 @@ it('returns runtime errors in output for AI interpretation', function (): void {
 
     $result = json_decode((string) $response->content(), true);
 
+    dumpResponseIfMissingOutput($response, $result, 'TinkerTest returns runtime errors');
+
     expect($result)->toHaveKey('output')
         ->and($result['output'])->toContain('nonExistentFunction');
 });
@@ -133,6 +144,15 @@ it('returns division by zero errors in output', function (): void {
 
     $result = json_decode((string) $response->content(), true);
 
+    dumpResponseIfMissingOutput($response, $result, 'TinkerTest returns division by zero');
+
     expect($result)->toHaveKey('output')
         ->and($result['output'])->toContain('Division by zero');
 });
+
+function dumpResponseIfMissingOutput(Response $response, mixed $result, string $label): void
+{
+    if (! is_array($result) || ! array_key_exists('output', $result)) {
+        fwrite(STDERR, PHP_EOL.$label.' missing output. Raw response: '.(string) $response->content().PHP_EOL);
+    }
+}
