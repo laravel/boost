@@ -52,7 +52,7 @@ test('kilo code returns correct system detection config for darwin', function ()
     $config = $agent->systemDetectionConfig(Platform::Darwin);
 
     expect($config)->toBe([
-        'command' => 'command -v kilo 2>/dev/null || command -v kilo-code 2>/dev/null',
+        'command' => 'command -v kilo-code 2>/dev/null',
     ]);
 });
 
@@ -62,7 +62,7 @@ test('kilo code returns correct system detection config for linux', function ():
     $config = $agent->systemDetectionConfig(Platform::Linux);
 
     expect($config)->toBe([
-        'command' => 'command -v kilo 2>/dev/null || command -v kilo-code 2>/dev/null',
+        'command' => 'command -v kilo-code 2>/dev/null',
     ]);
 });
 
@@ -72,7 +72,7 @@ test('kilo code returns correct system detection config for windows', function (
     $config = $agent->systemDetectionConfig(Platform::Windows);
 
     expect($config)->toBe([
-        'command' => 'where kilo 2>nul || where kilo-code 2>nul',
+        'command' => 'where kilo-code 2>nul',
     ]);
 });
 

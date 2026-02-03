@@ -25,10 +25,10 @@ class KiloCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
     {
         return match ($platform) {
             Platform::Darwin, Platform::Linux => [
-                'command' => 'command -v kilo 2>/dev/null || command -v kilo-code 2>/dev/null',
+                'command' => 'command -v kilo-code 2>/dev/null',
             ],
             Platform::Windows => [
-                'command' => 'where kilo 2>nul || where kilo-code 2>nul',
+                'command' => 'where kilo-code 2>nul',
             ],
         };
     }
@@ -48,12 +48,12 @@ class KiloCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
 
     public function guidelinesPath(): string
     {
-        return config('boost.agents.kilo_code.guidelines_path', '.kilocode/rules');
+        return config('boost.agents.kilo_code.guidelines_path') ?? '.kilocode/rules';
     }
 
     public function skillsPath(): string
     {
-        return config('boost.agents.kilo_code.skills_path', '.kilocode/skills');
+        return config('boost.agents.kilo_code.skills_path') ?? '.kilocode/skills';
     }
 
     public function frontmatter(): bool
