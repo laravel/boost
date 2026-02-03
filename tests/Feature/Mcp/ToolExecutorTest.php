@@ -50,14 +50,8 @@ test('subprocess proves fresh process isolation', function (): void {
     expect($response1->isError())->toBeFalse()
         ->and($response2->isError())->toBeFalse();
 
-    $responseData1 = json_decode((string) $response1->content(), true);
-    $responseData2 = json_decode((string) $response2->content(), true);
-
-    dumpResponseIfMissingOutput($response1, $responseData1, 'ToolExecutorTest response1');
-    dumpResponseIfMissingOutput($response2, $responseData2, 'ToolExecutorTest response2');
-
-    $pid1 = (int) trim((string) $responseData1['output']);
-    $pid2 = (int) trim((string) $responseData2['output']);
+    $pid1 = (int) trim((string) json_decode((string) $response1->content(), true)['output']);
+    $pid2 = (int) trim((string) json_decode((string) $response2->content(), true)['output']);
 
     expect($pid1)->toBeInt()->not->toBe(getmypid())
         ->and($pid2)->toBeInt()->not->toBe(getmypid())
@@ -137,13 +131,6 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
     );
 
     return [PHP_BINARY, '-r', $testScript];
-}
-
-function dumpResponseIfMissingOutput(Response $response, mixed $result, string $label): void
-{
-    if (! is_array($result) || ! array_key_exists('output', $result)) {
-        fwrite(STDERR, PHP_EOL.$label.' missing output. Raw response: '.(string) $response->content().PHP_EOL);
-    }
 }
 
 test('respects custom timeout parameter', function (): void {

@@ -52,9 +52,11 @@ class Tinker extends Tool
         $wrappedCode = $this->wrapCodeToPreserveReturnValue($code);
 
         try {
-            $output = $this->callArtisanCommand('tinker', [
-                '--execute' => $wrappedCode,
-            ]);
+            $output = $this->withTemporaryPsyshConfig(function () use ($wrappedCode): string {
+                return $this->callArtisanCommand('tinker', [
+                    '--execute' => $wrappedCode,
+                ]);
+            });
 
             return Response::json([
                 'output' => $output,
@@ -84,5 +86,91 @@ class Tinker extends Tool
             echo PHP_EOL;
         }
         PHP;
+    }
+
+    /**
+     * @param callable(): string $callback
+     */
+    private function withTemporaryPsyshConfig(callable $callback): string
+    {
+        $configDir = $this->resolvePsyshConfigDir();
+        $previous = $this->captureEnv(['XDG_CONFIG_HOME']);
+
+        $this->setEnvValue('XDG_CONFIG_HOME', $configDir);
+
+        try {
+            return $callback();
+        } finally {
+            $this->restoreEnv($previous);
+        }
+    }
+
+    private function resolvePsyshConfigDir(): string
+    {
+        $candidates = [];
+
+        if (\function_exists('storage_path')) {
+            $candidates[] = storage_path('boost/psysh');
+        }
+
+        $candidates[] = \rtrim(\sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'boost-psysh';
+
+        foreach ($candidates as $candidate) {
+            if ($this->ensureWritableDirectory($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $candidates[\count($candidates) - 1];
+    }
+
+    private function ensureWritableDirectory(string $path): bool
+    {
+        if (! \is_dir($path)) {
+            @\mkdir($path, 0700, true);
+        }
+
+        return \is_dir($path) && \is_writable($path);
+    }
+
+    /**
+     * @param array<int, string> $keys
+     * @return array<string, string|null>
+     */
+    private function captureEnv(array $keys): array
+    {
+        $values = [];
+
+        foreach ($keys as $key) {
+            $value = \getenv($key);
+            $values[$key] = $value === false ? null : $value;
+        }
+
+        return $values;
+    }
+
+    private function setEnvValue(string $key, string $value): void
+    {
+        $_SERVER[$key] = $value;
+        $_ENV[$key] = $value;
+        \putenv($key.'='.$value);
+    }
+
+    /**
+     * @param array<string, string|null> $values
+     */
+    private function restoreEnv(array $values): void
+    {
+        foreach ($values as $key => $value) {
+            if ($value === null || $value === '') {
+                unset($_SERVER[$key], $_ENV[$key]);
+                \putenv($key);
+                continue;
+            }
+
+            $_SERVER[$key] = $value;
+            $_ENV[$key] = $value;
+            \putenv($key.'='.$value);
+        }
     }
 }
