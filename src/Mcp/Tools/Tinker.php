@@ -89,7 +89,7 @@ class Tinker extends Tool
     }
 
     /**
-     * @param callable(): string $callback
+     * @param  callable(): string  $callback
      */
     private function withTemporaryPsyshConfig(callable $callback): string
     {
@@ -134,7 +134,7 @@ class Tinker extends Tool
     }
 
     /**
-     * @param array<int, string> $keys
+     * @param  array<int, string>  $keys
      * @return array<string, string|null>
      */
     private function captureEnv(array $keys): array
@@ -157,7 +157,7 @@ class Tinker extends Tool
     }
 
     /**
-     * @param array<string, string|null> $values
+     * @param  array<string, string|null>  $values
      */
     private function restoreEnv(array $values): void
     {
@@ -165,6 +165,7 @@ class Tinker extends Tool
             if ($value === null || $value === '') {
                 unset($_SERVER[$key], $_ENV[$key]);
                 \putenv($key);
+
                 continue;
             }
 
