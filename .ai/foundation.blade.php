@@ -18,11 +18,11 @@ Application purpose: {!! config('boost.purpose') !!}
 
 @endif
 
+@if($assist->hasSkillsEnabled() && $assist->skills()->isNotEmpty())
 ## Skills Activation
 
 This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
-@if($assist->skills()->isNotEmpty())
 @foreach($assist->skills() as $skill)
 - `{{ $skill->name }}` — {{ $skill->description }}
 @endforeach

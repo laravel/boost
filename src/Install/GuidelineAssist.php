@@ -260,4 +260,9 @@ class GuidelineAssist
     {
         return $this->skills;
     }
+
+    public function hasSkillsEnabled(): bool
+    {
+        return app(\Laravel\Boost\Support\Config::class)->hasSkills();
+    }
 }
