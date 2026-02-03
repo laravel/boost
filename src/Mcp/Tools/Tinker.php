@@ -57,9 +57,9 @@ class Tinker extends Tool
             return Response::json([
                 'output' => $output,
             ]);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             return Response::json([
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
                 'type' => 'ExecutionError',
             ]);
         }

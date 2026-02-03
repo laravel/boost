@@ -115,6 +115,8 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
         (\Illuminate\Container\Container::class.'::setInstance($app); ').
         '$kernel = $app->make("Illuminate\Contracts\Console\Kernel"); '.
         '$kernel->bootstrap(); '.
+        // Register a Tinker service provider if we're testing the Tinker tool
+        (str_contains($toolClass, 'Tinker') ? '$app->register(' . \Laravel\Tinker\TinkerServiceProvider::class . '::class); ' : '').
         // Register the ExecuteToolCommand
         '$kernel->registerCommand(new \Laravel\Boost\Console\ExecuteToolCommand()); '.
         '$output = new BufferedOutput(); '.

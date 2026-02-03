@@ -42,7 +42,7 @@ it('returns trimmed output', function (): void {
     $output = $this->trait->testCallArtisan('list');
 
     expect($output)
-        ->toBe(trim($output))
+        ->toBe(trim((string) $output))
         ->not->toStartWith(' ')
         ->not->toStartWith("\n")
         ->not->toEndWith(' ')
@@ -58,8 +58,8 @@ it('includes command name in exception message', function (): void {
     try {
         $this->trait->testCallArtisan('nonexistent:command');
         expect(false)->toBeTrue(); // Should not reach here
-    } catch (RuntimeException $e) {
-        expect($e->getMessage())
+    } catch (RuntimeException $runtimeException) {
+        expect($runtimeException->getMessage())
             ->toContain('nonexistent:command')
             ->toContain('failed');
     }

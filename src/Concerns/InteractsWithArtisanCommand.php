@@ -29,10 +29,7 @@ trait InteractsWithArtisanCommand
         } catch (RuntimeException $e) {
             throw $e;
         } catch (Exception $e) {
-            throw new RuntimeException(
-                "Artisan command '{$command}' failed: ".$e->getMessage(),
-                previous: $e
-            );
+            throw new RuntimeException("Artisan command '{$command}' failed: ".$e->getMessage(), $e->getCode(), previous: $e);
         }
     }
 }
