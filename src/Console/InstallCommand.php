@@ -386,8 +386,7 @@ class InstallCommand extends Command
             $this->config->flush();
             $this->config->setAgents($this->selectedAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray());
             $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
-        } else {
-            // In explicit mode, still clean up orphaned packages from config
+        } elseif ($this->selectedBoostFeatures->contains('guidelines') || $this->selectedBoostFeatures->contains('skills')) {
             $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
         }
 
