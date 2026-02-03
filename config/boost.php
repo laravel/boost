@@ -25,26 +25,27 @@ return [
     | The following option may be used to enable or disable the browser logs
     | watcher feature within Laravel Boost. The log watcher will read any
     | errors within the browser's console to give Boost better context.
+    |
     */
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
     /*
     |--------------------------------------------------------------------------
-    | Boost Executables Config
+    | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
-    | The following options allow you to configure custom paths for the PHP,
-    | Composer, and npm executables used by Boost. Leave empty to use defaults.
-    | When configured, these take precedence over automatic detection.
+    | These options allow you to specify custom paths for the executables that
+    | Boost uses. When configured, they take precedence over the automatic
+    | discovery mechanism. Leave empty to use defaults from your $PATH.
     |
     */
 
-    'executables' => [
-        'php' => env('BOOST_PHP_EXECUTABLE'),
-        'composer' => env('BOOST_COMPOSER_EXECUTABLE'),
-        'npm' => env('BOOST_NPM_EXECUTABLE'),
-        'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE'),
+    'executable_paths' => [
+        'php' => env('BOOST_PHP_EXECUTABLE_PATH'),
+        'composer' => env('BOOST_COMPOSER_EXECUTABLE_PATH'),
+        'npm' => env('BOOST_NPM_EXECUTABLE_PATH'),
+        'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
     ],
 
 ];

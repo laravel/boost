@@ -43,6 +43,11 @@ class TestCodeEnvironment extends CodeEnvironment
     {
         return ['files' => ['test.config']];
     }
+
+    public function testNormalizeCommand(string $command, array $args = []): array
+    {
+        return $this->normalizeCommand($command, $args);
+    }
 }
 
 class TestAgent extends TestCodeEnvironment implements Agent
@@ -407,13 +412,13 @@ test('installFileMcp works with existing config file using JSON 5', function ():
 });
 
 test('getPhpPath uses absolute paths when forceAbsolutePath is true and config is empty', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
 });
 
 test('getPhpPath maintains default behavior when forceAbsolutePath is false and config is empty', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('php');
 });
@@ -429,29 +434,186 @@ test('getArtisanPath maintains default behavior when forceAbsolutePath is false'
 });
 
 test('getPhpPath uses configured default_php_bin from config', function (): void {
-    config(['boost.executables.php' => '/usr/local/bin/php8.3']);
+    config(['boost.executable_paths.php' => '/usr/local/bin/php8.3']);
 
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('/usr/local/bin/php8.3');
 });
 
 test('getPhpPath returns php when config is set to php', function (): void {
-    config(['boost.executables.php' => 'php']);
+    config(['boost.executable_paths.php' => 'php']);
 
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('php');
 });
 
 test('getPhpPath uses config even when forceAbsolutePath is true', function (): void {
-    config(['boost.executables.php' => '/usr/local/bin/php8.3']);
+    config(['boost.executable_paths.php' => '/usr/local/bin/php8.3']);
 
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(true))->toBe('/usr/local/bin/php8.3');
 });
 
 test('getPhpPath uses PHP_BINARY when forceAbsolutePath is true and config is empty', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
 
     $environment = new TestCodeEnvironment($this->strategyFactory);
     expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
+});
+
+test('preserves simple commands without normalisation', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand('php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe([
+        'command' => 'php',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('splits valet php into command and arguments', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand('valet php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe([
+        'command' => 'valet',
+        'args' => ['php', 'artisan', 'boost:mcp'],
+    ]);
+});
+
+test('splits docker exec commands into parts', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand('docker exec container php', ['artisan']);
+
+    expect($result)->toBe([
+        'command' => 'docker',
+        'args' => ['exec', 'container', 'php', 'artisan'],
+    ]);
+});
+
+test('splits commands even without additional arguments', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand('valet php');
+
+    expect($result)->toBe([
+        'command' => 'valet',
+        'args' => ['php'],
+    ]);
+});
+
+test('preserves single commands without arguments', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand('php');
+
+    expect($result)->toBe([
+        'command' => 'php',
+        'args' => [],
+    ]);
+});
+
+test('shell installation handles valet php commands', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('shellMcpCommand')
+        ->andReturn('install {key} {command} {args}');
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::SHELL);
+
+    $mockResult = Mockery::mock();
+    $mockResult->shouldReceive('successful')->andReturn(true);
+    $mockResult->shouldReceive('errorOutput')->andReturn('');
+
+    Process::shouldReceive('run')
+        ->once()
+        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key valet') &&
+               str_contains((string) $command, '"php"') &&
+               str_contains((string) $command, '"artisan"')))
+        ->andReturn($mockResult);
+
+    $result = $environment->installMcp('test-key', 'valet php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe(true);
+});
+
+test('file installation handles valet php commands', function (): void {
+    $environment = Mockery::mock(TestMcpClient::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp('test-key', 'valet php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'test-key' => [
+                    'command' => 'valet',
+                    'args' => ['php', 'artisan', 'boost:mcp'],
+                ],
+            ],
+        ]);
+});
+
+test('file installation handles docker exec commands', function (): void {
+    $environment = Mockery::mock(TestMcpClient::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp('test-key', 'docker exec container php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'test-key' => [
+                    'command' => 'docker',
+                    'args' => ['exec', 'container', 'php', 'artisan', 'boost:mcp'],
+                ],
+            ],
+        ]);
 });
