@@ -6,17 +6,17 @@ namespace Laravel\Boost\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
-use Illuminate\Support\Facades\Artisan;
+use Laravel\Boost\Concerns\InteractsWithArtisanCommand;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Symfony\Component\Console\Command\Command as CommandAlias;
-use Symfony\Component\Console\Output\BufferedOutput;
 
 #[IsReadOnly]
 class ListRoutes extends Tool
 {
+    use InteractsWithArtisanCommand;
+
     /**
      * The tool's description.
      */
@@ -78,7 +78,7 @@ class ListRoutes extends Tool
             }
         }
 
-        $routesOutput = $this->artisan('route:list', $options);
+        $routesOutput = $this->callArtisanCommand('route:list', $options);
 
         // If Folio is installed, include folio routes (JSON to prevent hanging)
         if (class_exists('Laravel\\Folio\\FolioRoutes')) {
@@ -87,24 +87,9 @@ class ListRoutes extends Tool
             $folioOptions = $options;
             $folioOptions['--json'] = true; // Ensure non-interactive json output
 
-            $routesOutput .= $this->artisan('folio:list', $folioOptions);
+            $routesOutput .= $this->callArtisanCommand('folio:list', $folioOptions);
         }
 
         return Response::text($routesOutput);
-    }
-
-    /**
-     * @param  array<string|bool>  $options
-     */
-    protected function artisan(string $command, array $options = []): string
-    {
-        $output = new BufferedOutput;
-        $response = Artisan::call($command, $options, $output);
-
-        if ($response !== CommandAlias::SUCCESS) {
-            return 'Failed to list routes: '.$output->fetch();
-        }
-
-        return trim($output->fetch());
     }
 }

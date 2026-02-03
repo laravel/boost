@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Exception;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Laravel\Boost\Concerns\InteractsWithArtisanCommand;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Symfony\Component\Process\Exception\ProcessTimedOutException;
-use Symfony\Component\Process\Process;
 
 class Tinker extends Tool
 {
+    use InteractsWithArtisanCommand;
+
     /**
      * The tool's description.
      */
@@ -47,54 +49,24 @@ class Tinker extends Tool
             return Response::error('Please provide code to execute');
         }
 
-        $timeout = $this->clampTimeout($request->get('timeout'));
-
-        $process = new Process(
-            command: $this->buildCommand($code),
-            timeout: $timeout
-        );
-
         try {
-            $process->run();
-
-            $output = $process->getOutput();
-            $errorOutput = $process->getErrorOutput();
-
-            if (! $process->isSuccessful() && $errorOutput) {
-                return Response::json([
-                    'error' => trim($errorOutput),
-                    'type' => 'ProcessError',
-                ]);
-            }
+            $output = $this->callArtisanCommand('tinker', [
+                '--execute' => $code,
+            ]);
 
             return Response::json([
                 'output' => $output,
             ]);
-        } catch (ProcessTimedOutException) {
-            $process->stop();
-
+        } catch (Exception $e) {
             return Response::json([
-                'error' => "Execution timed out after {$timeout} seconds",
-                'type' => 'TimeoutError',
+                'error' => $e->getMessage(),
+                'type' => 'ExecutionError',
             ]);
         }
-    }
-
-    /**
-     * @return list<string>
-     */
-    protected function buildCommand(string $code): array
-    {
-        return [PHP_BINARY, base_path('artisan'), 'tinker', '--execute='.$code];
     }
 
     protected function sanitizeCode(string $code): string
     {
         return trim(str_replace(['<?php', '?>'], '', $code));
-    }
-
-    protected function clampTimeout(mixed $timeout): int
-    {
-        return max(1, min(600, (int) ($timeout ?? 180)));
     }
 }
