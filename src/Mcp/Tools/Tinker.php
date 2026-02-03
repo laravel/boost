@@ -49,9 +49,11 @@ class Tinker extends Tool
             return Response::error('Please provide code to execute');
         }
 
+        $wrappedCode = $this->wrapCodeToPreserveReturnValue($code);
+
         try {
             $output = $this->callArtisanCommand('tinker', [
-                '--execute' => $code,
+                '--execute' => $wrappedCode,
             ]);
 
             return Response::json([
@@ -68,5 +70,19 @@ class Tinker extends Tool
     protected function sanitizeCode(string $code): string
     {
         return trim(str_replace(['<?php', '?>'], '', $code));
+    }
+
+    protected function wrapCodeToPreserveReturnValue(string $code): string
+    {
+        return <<<PHP
+        \$__boost_result = (function() {
+            {$code}
+        })();
+        if (\$__boost_result !== null) {
+            echo PHP_EOL . '=> ';
+            var_export(\$__boost_result);
+            echo PHP_EOL;
+        }
+        PHP;
     }
 }

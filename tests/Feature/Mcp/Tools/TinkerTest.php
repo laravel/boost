@@ -6,6 +6,10 @@ use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Request;
 use Laravel\Tinker\TinkerServiceProvider;
 
+beforeEach(function (): void {
+    $this->app->register(TinkerServiceProvider::class);
+});
+
 it('sanitizes code by stripping php tags and trimming', function (): void {
     $tool = new class extends Tinker
     {
@@ -32,8 +36,6 @@ it('returns error for empty code', function (): void {
 });
 
 it('handles syntax errors gracefully', function (): void {
-    $this->app->register(TinkerServiceProvider::class);
-
     $tool = new Tinker;
 
     $response = $tool->handle(new Request([
@@ -48,8 +50,6 @@ it('handles syntax errors gracefully', function (): void {
 });
 
 it('executes valid code successfully', function (): void {
-    $this->app->register(TinkerServiceProvider::class);
-
     $tool = new Tinker;
 
     $response = $tool->handle(new Request([
@@ -61,4 +61,78 @@ it('executes valid code successfully', function (): void {
 
     expect($result)->toHaveKey('output')
         ->and($result['output'])->toContain('2');
+});
+
+it('preserves return values from executed code', function (): void {
+    $tool = new Tinker;
+
+    $response = $tool->handle(new Request([
+        'code' => 'return 1 + 1;',
+        'timeout' => 30,
+    ]));
+
+    $result = json_decode((string) $response->content(), true);
+
+    expect($result)->toHaveKey('output')
+        ->and($result['output'])->toContain('=>')
+        ->and($result['output'])->toContain('2');
+});
+
+it('captures both echo output and return values', function (): void {
+    $tool = new Tinker;
+
+    $response = $tool->handle(new Request([
+        'code' => 'echo "debug"; return 42;',
+        'timeout' => 30,
+    ]));
+
+    $result = json_decode((string) $response->content(), true);
+
+    expect($result)->toHaveKey('output')
+        ->and($result['output'])->toContain('debug')
+        ->and($result['output'])->toContain('=>')
+        ->and($result['output'])->toContain('42');
+});
+
+it('returns null values silently without extra output', function (): void {
+    $tool = new Tinker;
+
+    $response = $tool->handle(new Request([
+        'code' => 'echo "test";',
+        'timeout' => 30,
+    ]));
+
+    $result = json_decode((string) $response->content(), true);
+
+    expect($result)->toHaveKey('output')
+        ->and($result['output'])->toBe('test')
+        ->and($result['output'])->not->toContain('=>');
+});
+
+it('returns runtime errors in output for AI interpretation', function (): void {
+    $tool = new Tinker;
+
+    $response = $tool->handle(new Request([
+        'code' => 'nonExistentFunction();',
+        'timeout' => 30,
+    ]));
+
+    $result = json_decode((string) $response->content(), true);
+
+    expect($result)->toHaveKey('output')
+        ->and($result['output'])->toContain('nonExistentFunction');
+});
+
+it('returns division by zero errors in output', function (): void {
+    $tool = new Tinker;
+
+    $response = $tool->handle(new Request([
+        'code' => 'return 1 / 0;',
+        'timeout' => 30,
+    ]));
+
+    $result = json_decode((string) $response->content(), true);
+
+    expect($result)->toHaveKey('output')
+        ->and($result['output'])->toContain('Division by zero');
 });
