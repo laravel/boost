@@ -7,7 +7,7 @@ use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 
 test('Junie returns absolute PHP_BINARY path', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $junie = new Junie($strategyFactory);
 
@@ -26,7 +26,7 @@ test('Junie returns absolute artisan path', function (): void {
 });
 
 test('Cursor returns relative php string', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -34,7 +34,7 @@ test('Cursor returns relative php string', function (): void {
 });
 
 test('Cursor uses configured default_php_bin when not forcing absolute path', function (): void {
-    config(['boost.executables.php' => '/custom/path/to/php']);
+    config(['boost.executable_paths.php' => '/custom/path/to/php']);
 
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
@@ -43,7 +43,7 @@ test('Cursor uses configured default_php_bin when not forcing absolute path', fu
 });
 
 test('Cursor uses config even when forceAbsolutePath is true', function (): void {
-    config(['boost.executables.php' => '/custom/path/to/php']);
+    config(['boost.executable_paths.php' => '/custom/path/to/php']);
 
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
@@ -52,7 +52,7 @@ test('Cursor uses config even when forceAbsolutePath is true', function (): void
 });
 
 test('Cursor uses PHP_BINARY when forceAbsolutePath is true and config is empty', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
 
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
@@ -68,7 +68,7 @@ test('Cursor returns relative artisan path', function (): void {
 });
 
 test('Agents return absolute paths when forceAbsolutePath is true and config is empty', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -78,7 +78,7 @@ test('Agents return absolute paths when forceAbsolutePath is true and config is 
 });
 
 test('Agents maintain relative paths when forceAbsolutePath is false and config is empty', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
@@ -87,7 +87,7 @@ test('Agents maintain relative paths when forceAbsolutePath is false and config 
 });
 
 test('Junie paths remain absolute regardless of forceAbsolutePath parameter', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $junie = new Junie($strategyFactory);
 
@@ -102,7 +102,7 @@ test('Junie paths remain absolute regardless of forceAbsolutePath parameter', fu
 });
 
 test('Junie uses config when configured', function (): void {
-    config(['boost.executables.php' => '/custom/php']);
+    config(['boost.executable_paths.php' => '/custom/php']);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $junie = new Junie($strategyFactory);
 

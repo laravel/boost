@@ -32,7 +32,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Boost Executables Config
+    | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
     | These options allow you to specify custom paths for the executables that
@@ -41,11 +41,11 @@ return [
     |
     */
 
-    'executables' => [
-        'php' => env('BOOST_PHP_EXECUTABLE'),
-        'composer' => env('BOOST_COMPOSER_EXECUTABLE'),
-        'npm' => env('BOOST_NPM_EXECUTABLE'),
-        'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE'),
+    'executable_paths' => [
+        'php' => env('BOOST_PHP_EXECUTABLE_PATH'),
+        'composer' => env('BOOST_COMPOSER_EXECUTABLE_PATH'),
+        'npm' => env('BOOST_NPM_EXECUTABLE_PATH'),
+        'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
     ],
 
 ];

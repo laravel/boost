@@ -16,7 +16,7 @@ beforeEach(function (): void {
 });
 
 test('php executable falls back to Sail when no config is set', function (): void {
-    config(['boost.executables.php' => null]);
+    config(['boost.executable_paths.php' => null]);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -27,7 +27,7 @@ test('php executable falls back to Sail when no config is set', function (): voi
 });
 
 test('php executable config takes precedence over Sail', function (): void {
-    config(['boost.executables.php' => '/usr/local/bin/php8.3']);
+    config(['boost.executable_paths.php' => '/usr/local/bin/php8.3']);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -38,7 +38,7 @@ test('php executable config takes precedence over Sail', function (): void {
 });
 
 test('composer executable falls back to Sail when no config is set', function (): void {
-    config(['boost.executables.composer' => null]);
+    config(['boost.executable_paths.composer' => null]);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -51,7 +51,7 @@ test('composer executable falls back to Sail when no config is set', function ()
 });
 
 test('composer executable config takes precedence over Sail', function (): void {
-    config(['boost.executables.composer' => '/usr/local/bin/composer2']);
+    config(['boost.executable_paths.composer' => '/usr/local/bin/composer2']);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -62,7 +62,7 @@ test('composer executable config takes precedence over Sail', function (): void 
 });
 
 test('npm executable falls back to Sail when no config is set', function (): void {
-    config(['boost.executables.npm' => null]);
+    config(['boost.executable_paths.npm' => null]);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -75,7 +75,7 @@ test('npm executable falls back to Sail when no config is set', function (): voi
 });
 
 test('npm executable config takes precedence over Sail', function (): void {
-    config(['boost.executables.npm' => '/usr/local/bin/yarn']);
+    config(['boost.executable_paths.npm' => '/usr/local/bin/yarn']);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -86,7 +86,7 @@ test('npm executable config takes precedence over Sail', function (): void {
 });
 
 test('npm executable falls back to npm when no config and no Sail', function (): void {
-    config(['boost.executables.npm' => null]);
+    config(['boost.executable_paths.npm' => null]);
     $this->config->usesSail = false;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -97,7 +97,7 @@ test('npm executable falls back to npm when no config and no Sail', function ():
 });
 
 test('vendor bin prefix falls back to Sail when no config is set', function (): void {
-    config(['boost.executables.vendor_bin' => null]);
+    config(['boost.executable_paths.vendor_bin' => null]);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -110,7 +110,7 @@ test('vendor bin prefix falls back to Sail when no config is set', function (): 
 });
 
 test('vendor bin prefix config takes precedence over Sail', function (): void {
-    config(['boost.executables.vendor_bin' => '/custom/path/']);
+    config(['boost.executable_paths.vendor_bin' => '/custom/path/']);
     $this->config->usesSail = true;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
@@ -121,7 +121,7 @@ test('vendor bin prefix config takes precedence over Sail', function (): void {
 });
 
 test('vendor bin prefix falls back to vendor/bin when no config and no Sail', function (): void {
-    config(['boost.executables.vendor_bin' => null]);
+    config(['boost.executable_paths.vendor_bin' => null]);
     $this->config->usesSail = false;
 
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
