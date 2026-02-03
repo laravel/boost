@@ -35,4 +35,9 @@ class NullSchemaDriver extends DatabaseSchemaDriver
     {
         return [];
     }
+
+    public function getTables(): array
+    {
+        return [];
+    }
 }

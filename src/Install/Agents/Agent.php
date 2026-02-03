@@ -29,7 +29,13 @@ abstract class Agent
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
-        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? PHP_BINARY : 'php';
+        $phpBinaryPath = config('boost.executable_paths.php') ?? 'php';
+
+        if ($phpBinaryPath === 'php' && ($this->useAbsolutePathForMcp() || $forceAbsolutePath)) {
+            return PHP_BINARY;
+        }
+
+        return $phpBinaryPath;
     }
 
     public function getArtisanPath(bool $forceAbsolutePath = false): string
@@ -160,6 +166,8 @@ abstract class Agent
             return false;
         }
 
+        $normalized = $this->normalizeCommand($command, $args);
+
         // Build environment string
         $envString = '';
 
@@ -176,8 +184,8 @@ abstract class Agent
             '{env}',
         ], [
             $key,
-            $command,
-            implode(' ', array_map(fn (string $arg): string => '"'.$arg.'"', $args)),
+            $normalized['command'],
+            implode(' ', array_map(fn (string $arg): string => '"'.$arg.'"', $normalized['args'])),
             trim($envString),
         ], $shellCommand);
 
@@ -204,9 +212,27 @@ abstract class Agent
             return false;
         }
 
+        $normalized = $this->normalizeCommand($command, $args);
+
         return (new FileWriter($path, $this->defaultMcpConfig()))
             ->configKey($this->mcpConfigKey())
-            ->addServerConfig($key, $this->mcpServerConfig($command, $args, $env))
+            ->addServerConfig($key, $this->mcpServerConfig($normalized['command'], $normalized['args'], $env))
             ->save();
+    }
+
+    /**
+     * Normalize command by splitting space-separated commands into command + args.
+     *
+     * @param  array<int, string>  $args
+     * @return array{command: string, args: array<int, string>}
+     */
+    protected function normalizeCommand(string $command, array $args = []): array
+    {
+        $parts = str($command)->explode(' ');
+
+        return [
+            'command' => $parts->first(),
+            'args' => $parts->skip(1)->values()->merge($args)->all(),
+        ];
     }
 }
