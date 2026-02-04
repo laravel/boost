@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Contracts\PostProcessGuidelines;
-use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -47,10 +45,10 @@ MARKDOWN;
     expect($processed)->toBe($markdown);
 });
 
-test('guideline writer applies post processing if agent implements the contract', function (): void {
+test('guideline writer applies post processing', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
 
-    $agent = Mockery::mock(SupportsGuidelines::class, PostProcessGuidelines::class);
+    $agent = Mockery::mock(Gemini::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('postProcessGuidelines')->andReturn('processed guidelines');
     $agent->shouldReceive('frontmatter')->andReturn(false);
@@ -61,22 +59,6 @@ test('guideline writer applies post processing if agent implements the contract'
     $content = file_get_contents($tempFile);
     expect($content)->toContain('processed guidelines')
         ->and($content)->not->toContain('original guidelines');
-
-    unlink($tempFile);
-});
-
-test('guideline writer does not apply post processing if agent does not implement the contract', function (): void {
-    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
-
-    $agent = Mockery::mock(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-
-    $writer = new GuidelineWriter($agent);
-    $writer->write('original guidelines');
-
-    $content = file_get_contents($tempFile);
-    expect($content)->toContain('original guidelines');
 
     unlink($tempFile);
 });

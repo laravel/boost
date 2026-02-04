@@ -8,6 +8,7 @@ use Laravel\Boost\Install\GuidelineWriter;
 test('it returns NOOP when guidelines are empty', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn('/tmp/test.md');
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
 
@@ -22,6 +23,7 @@ test('it creates directory when it does not exist', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($filePath);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('test guidelines');
@@ -42,6 +44,7 @@ test('it throws exception when directory creation fails', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($filePath);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
 
@@ -55,6 +58,7 @@ test('it writes guidelines to new file', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('test guidelines content');
@@ -72,6 +76,7 @@ test('it writes guidelines to existing file without existing guidelines', functi
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('new guidelines');
@@ -90,6 +95,7 @@ test('it replaces existing guidelines in-place', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('updated guidelines');
@@ -108,6 +114,7 @@ test('it avoids adding extra newline if one already exists', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('updated guidelines');
@@ -131,6 +138,7 @@ test('it handles multiline existing guidelines', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('single line');
@@ -150,6 +158,7 @@ test('it handles multiple guideline blocks', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('replacement');
@@ -168,6 +177,7 @@ test('it throws exception when file cannot be opened', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($dirPath);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
 
@@ -183,6 +193,7 @@ test('it preserves file content structure with proper spacing', function (): voi
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('my guidelines');
@@ -200,6 +211,7 @@ test('it handles empty file', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('first guidelines');
@@ -217,6 +229,7 @@ test('it handles file with only whitespace', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('clean guidelines');
@@ -235,6 +248,7 @@ test('it does not interfere with other XML-like tags', function (): void {
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $result = $writer->write('new guidelines');
@@ -254,6 +268,7 @@ test('it preserves user content after guidelines when replacing', function (): v
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('updated guidelines from boost');
@@ -289,6 +304,7 @@ test('it adds frontmatter when agent supports it and file has no existing frontm
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(true);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('new guidelines');
@@ -306,6 +322,7 @@ test('it does not add frontmatter when agent supports it but file already has fr
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(true);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('new guidelines');
@@ -323,6 +340,7 @@ test('it does not add frontmatter when agent does not support it', function (): 
     $agent = Mockery::mock(SupportsGuidelines::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
     $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('postProcessGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $result = $writer->write('new guidelines');

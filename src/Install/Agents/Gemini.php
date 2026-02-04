@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
-use Laravel\Boost\Contracts\PostProcessGuidelines;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Gemini extends Agent implements PostProcessGuidelines, SupportsGuidelines, SupportsMcp, SupportsSkills
+class Gemini extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {

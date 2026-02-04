@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Laravel\Boost\Contracts\PostProcessGuidelines;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use RuntimeException;
 
@@ -32,9 +31,7 @@ class GuidelineWriter
             return self::NOOP;
         }
 
-        if ($this->agent instanceof PostProcessGuidelines) {
-            $guidelines = $this->agent->postProcessGuidelines($guidelines);
-        }
+        $guidelines = $this->agent->postProcessGuidelines($guidelines);
 
         $filePath = $this->agent->guidelinesPath();
 

@@ -18,4 +18,9 @@ interface SupportsGuidelines
      * Determine if the guideline file requires frontmatter.
      */
     public function frontmatter(): bool;
+
+    /**
+     * Post-process the generated guidelines' Markdown.
+     */
+    public function postProcessGuidelines(string $markdown): string;
 }
