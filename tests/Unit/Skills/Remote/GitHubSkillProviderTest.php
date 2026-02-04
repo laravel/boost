@@ -335,8 +335,8 @@ it('uses specified repository path when provided', function (): void {
         ->and($skills->get('my-skill')->path)->toBe('custom/path/my-skill');
 });
 
-it('uses GITHUB_TOKEN for authentication when available', function (): void {
-    putenv('GITHUB_TOKEN=test-token-123');
+it('uses boost.github.token for authentication when available', function (): void {
+    config(['boost.github.token' => 'test-token-123']);
 
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
@@ -353,12 +353,10 @@ it('uses GITHUB_TOKEN for authentication when available', function (): void {
     $fetcher->discoverSkills();
 
     Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'Bearer test-token-123'));
-
-    putenv('GITHUB_TOKEN');
 });
 
-it('uses GH_TOKEN for authentication when GITHUB_TOKEN is not set', function (): void {
-    putenv('GH_TOKEN=gh-token-456');
+it('uses services.github.token for authentication when boost.github.token is not set', function (): void {
+    config(['services.github.token' => 'gh-token-456']);
 
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
@@ -375,6 +373,4 @@ it('uses GH_TOKEN for authentication when GITHUB_TOKEN is not set', function ():
     $fetcher->discoverSkills();
 
     Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'Bearer gh-token-456'));
-
-    putenv('GH_TOKEN');
 });
