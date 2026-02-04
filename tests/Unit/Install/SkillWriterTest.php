@@ -585,6 +585,39 @@ it('sync only removes previously tracked skills', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
+it('removes directory containing nested symlinks', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillDir = $absoluteTarget.'/symlink-skill';
+    $nestedDir = $skillDir.'/references';
+    $linkTargetDir = base_path('.boost-link-target-'.uniqid());
+
+    mkdir($nestedDir, 0755, true);
+    mkdir($linkTargetDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', 'test');
+    file_put_contents($linkTargetDir.'/target.md', 'link target content');
+
+    $symlinkPath = $nestedDir.'/linked-dir';
+    @symlink($linkTargetDir, $symlinkPath);
+
+    expect(is_link($symlinkPath))->toBeTrue();
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->remove('symlink-skill');
+
+    expect($result)->toBeTrue()
+        ->and($skillDir)->not->toBeDirectory()
+        ->and(is_link($symlinkPath))->toBeFalse()
+        ->and($linkTargetDir)->toBeDirectory()
+        ->and($linkTargetDir.'/target.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($linkTargetDir);
+});
+
 it('removes extra files when updating skill directory', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();

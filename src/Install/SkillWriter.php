@@ -36,31 +36,36 @@ class SkillWriter
         }
 
         $targetPath = base_path($this->agent->skillsPath().'/'.$skill->name);
-
-        $existed = is_dir($targetPath) || is_link($targetPath);
+        $canonicalPath = base_path('.ai/skills/'.$skill->name);
+        $existed = $this->pathExists($targetPath);
 
         if (! $skill->custom) {
-            $canonicalPath = base_path('.ai/skills/'.$skill->name);
-
-            if ((is_dir($canonicalPath) || is_link($canonicalPath))
-                && ! $this->pathsMatch($skill->path, $canonicalPath)
-                && ! $this->copyDirectory($skill->path, $canonicalPath)) {
-                return self::FAILED;
-            }
-
-            if (! $this->copyDirectory($skill->path, $targetPath)) {
-                return self::FAILED;
-            }
-
-            return $existed ? self::UPDATED : self::SUCCESS;
+            return $this->writeNonCustomSkill($skill, $targetPath, $canonicalPath, $existed);
         }
 
-        $canonicalPath = base_path('.ai/skills/'.$skill->name);
+        return $this->writeCustomSkill($skill, $targetPath, $canonicalPath, $existed);
+    }
 
-        if (! $this->pathsMatch($skill->path, $canonicalPath)) {
-            if (! $this->copyDirectory($skill->path, $canonicalPath)) {
-                return self::FAILED;
-            }
+    protected function writeNonCustomSkill(Skill $skill, string $targetPath, string $canonicalPath, bool $existed): int
+    {
+        $canonicalExists = $this->pathExists($canonicalPath);
+        $needsCanonicalUpdate = $canonicalExists && ! $this->pathsMatch($skill->path, $canonicalPath);
+
+        if ($needsCanonicalUpdate && ! $this->copyDirectory($skill->path, $canonicalPath)) {
+            return self::FAILED;
+        }
+
+        if (! $this->copyDirectory($skill->path, $targetPath)) {
+            return self::FAILED;
+        }
+
+        return $existed ? self::UPDATED : self::SUCCESS;
+    }
+
+    protected function writeCustomSkill(Skill $skill, string $targetPath, string $canonicalPath, bool $existed): int
+    {
+        if (! $this->pathsMatch($skill->path, $canonicalPath) && ! $this->copyDirectory($skill->path, $canonicalPath)) {
+            return self::FAILED;
         }
 
         if (! $this->ensureDirectoryExists(dirname($targetPath))) {
@@ -72,6 +77,11 @@ class SkillWriter
         }
 
         return $existed ? self::UPDATED : self::SUCCESS;
+    }
+
+    protected function pathExists(string $path): bool
+    {
+        return is_dir($path) || is_link($path);
     }
 
     /**
@@ -111,7 +121,7 @@ class SkillWriter
 
         $targetPath = base_path($this->agent->skillsPath().'/'.$skillName);
 
-        if (! is_dir($targetPath) && ! is_link($targetPath)) {
+        if (! $this->pathExists($targetPath)) {
             return true;
         }
 
@@ -163,7 +173,11 @@ class SkillWriter
 
         foreach ($files as $file) {
             if ($file->isLink()) {
-                @unlink($file->getPathname());
+                $linkPath = $file->getPathname();
+
+                if (! @unlink($linkPath) && is_dir($linkPath)) {
+                    @rmdir($linkPath);
+                }
 
                 continue;
             }
