@@ -8,13 +8,17 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class GitHubSkillProvider
 {
     protected string $defaultBranch = 'main';
 
     protected string $resolvedPath = '';
+
+    /** @var array<string, mixed>|null */
+    protected ?array $cachedTree = null;
 
     /** @var array<int, string> */
     protected array $commonSkillPaths = [
@@ -24,56 +28,47 @@ class GitHubSkillProvider
         '.claude/skills',
     ];
 
-    public function __construct(protected GitHubRepository $repository)
-    {
-        //
-    }
+    public function __construct(protected GitHubRepository $repository) {}
 
     /**
      * @return Collection<string, RemoteSkill>
      */
     public function discoverSkills(): Collection
     {
-        $this->resolvedPath = $this->resolveSkillsPath();
-        $contents = $this->fetchContents($this->resolvedPath);
+        $tree = $this->fetchRepositoryTree();
 
-        if ($contents === null) {
+        if ($tree === null) {
             return collect();
         }
 
-        $directories = collect($contents)
-            ->filter(fn (array $item): bool => $item['type'] === 'dir');
+        $this->resolvedPath = $this->resolveSkillsPath();
+
+        $directories = $this->findSkillDirectoriesInTree($tree['tree'], $this->resolvedPath);
 
         if ($directories->isEmpty()) {
             return collect();
         }
 
-        $skillMdUrls = $directories->mapWithKeys(fn (array $item): array => [
-            $item['name'] => $this->buildRawFileUrl($item['path'].'/SKILL.md'),
-        ]);
+        $validSkills = $this->validateSkillDirectories($directories, $tree['tree']);
 
-        $responses = Http::pool(fn (Pool $pool) => $skillMdUrls->map(
-            fn (string $url, string $name) => $pool->as($name)
-                ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'Laravel-Boost'])
-                ->timeout(30)
-                ->get($url)
-        )->all());
-
-        return $directories
-            ->filter(fn (array $item): bool => ($responses[$item['name']] ?? null)?->successful() ?? false)
-            ->map(fn (array $item): RemoteSkill => new RemoteSkill(
-                name: $item['name'],
-                repo: $this->repository->fullName(),
-                path: $item['path'],
-            ))
-            ->keyBy(fn (RemoteSkill $skill): string => $skill->name);
+        return $validSkills->map(fn (array $item): RemoteSkill => new RemoteSkill(
+            name: $item['name'],
+            repo: $this->repository->fullName(),
+            path: $item['path'],
+        ))->keyBy(fn (RemoteSkill $skill): string => $skill->name);
     }
 
     public function downloadSkill(RemoteSkill $skill, string $targetPath): bool
     {
-        $contents = $this->fetchContents($skill->path);
+        $tree = $this->fetchRepositoryTree();
 
-        if ($contents === null) {
+        if ($tree === null) {
+            return false;
+        }
+
+        $skillFiles = $this->extractSkillFilesFromTree($tree['tree'], $skill->path);
+
+        if ($skillFiles->isEmpty()) {
             return false;
         }
 
@@ -81,7 +76,83 @@ class GitHubSkillProvider
             return false;
         }
 
-        return $this->downloadContentsRecursively($contents, $targetPath, $skill->path);
+        $files = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'blob');
+        $directories = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'tree');
+
+        foreach ($directories as $dir) {
+            $relativePath = $this->getRelativePath($dir['path'], $skill->path);
+            $localPath = $targetPath.'/'.$relativePath;
+
+            if (! $this->ensureDirectoryExists($localPath)) {
+                return false;
+            }
+        }
+
+        return $this->downloadFiles($files->toArray(), $targetPath, $skill->path);
+    }
+
+    /**
+     * @return array{tree: array<int, array<string, mixed>>, sha: string, url: string, truncated: bool}|null
+     *
+     * @throws RuntimeException
+     */
+    protected function fetchRepositoryTree(): ?array
+    {
+        if ($this->cachedTree !== null) {
+            return $this->cachedTree;
+        }
+
+        $url = sprintf(
+            'https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1',
+            $this->repository->owner,
+            $this->repository->repo,
+            $this->defaultBranch
+        );
+
+        $response = $this->client()->get($url);
+
+        if ($response->status() === 403) {
+            $rateLimitRemaining = $response->header('X-RateLimit-Remaining');
+            $rateLimitReset = $response->header('X-RateLimit-Reset');
+
+            if ($rateLimitRemaining === '0') {
+                $resetTime = $rateLimitReset
+                    ? date('Y-m-d H:i:s', (int) $rateLimitReset)
+                    : 'unknown';
+
+                throw new RuntimeException(
+                    "GitHub API rate limit exceeded. Rate limit will reset at {$resetTime}. ".
+                    'Set GITHUB_TOKEN or GH_TOKEN environment variable for higher limits (5000 req/hr vs 60 req/hr).'
+                );
+            }
+        }
+
+        if ($response->failed()) {
+            $errorMessage = $response->json('message') ?? 'Unknown error';
+
+            throw new RuntimeException(
+                "Failed to fetch repository tree from GitHub: {$errorMessage} (HTTP {$response->status()})"
+            );
+        }
+
+        $tree = $response->json();
+
+        if (! is_array($tree) || ! isset($tree['tree']) || ! is_array($tree['tree'])) {
+            throw new RuntimeException('Invalid response structure from GitHub Tree API');
+        }
+
+        /** @var array<string, mixed> $tree */
+        if (($tree['truncated'] ?? false) === true) {
+            Log::warning('GitHub tree response truncated (>100K entries). Some files may not be visible.', [
+                'repo' => $this->repository->fullName(),
+                'entries' => count($tree['tree']),
+            ]);
+        }
+
+        /** @var array{tree: array<int, array<string, mixed>>, sha: string, url: string, truncated: bool} $tree */
+        $this->cachedTree = $tree;
+
+        return $tree;
     }
 
     protected function resolveSkillsPath(): string
@@ -90,31 +161,44 @@ class GitHubSkillProvider
             return $this->repository->path;
         }
 
-        $rootContents = $this->fetchContents();
+        $tree = $this->fetchRepositoryTree();
 
-        if ($rootContents === null) {
+        if ($tree === null) {
             return '';
         }
 
-        if ($this->hasValidSkillDirectories($rootContents)) {
-            return '';
-        }
+        $treeItems = collect($tree['tree']);
 
-        $rootDirectories = collect($rootContents)
-            ->filter(fn (array $item): bool => $item['type'] === 'dir')
-            ->pluck('name')
+        $rootDirs = $treeItems
+            ->filter(fn (array $item): bool => $item['type'] === 'tree' && ! str_contains((string) $item['path'], '/'))
+            ->pluck('path')
             ->toArray();
 
-        foreach ($this->commonSkillPaths as $commonPath) {
-            $topLevel = Str::before($commonPath, '/');
+        if ($this->hasValidSkillsAtPath($treeItems, '', $rootDirs)) {
+            return '';
+        }
 
-            if (! in_array($topLevel, $rootDirectories, true)) {
+        foreach ($this->commonSkillPaths as $commonPath) {
+            $topLevel = explode('/', $commonPath)[0];
+
+            if (! in_array($topLevel, $rootDirs, true)) {
                 continue;
             }
 
-            $pathContents = $this->fetchContents($commonPath);
+            $pathExists = $treeItems->contains(
+                fn (array $item): bool => $item['path'] === $commonPath && $item['type'] === 'tree'
+            );
 
-            if ($pathContents !== null && $this->hasValidSkillDirectories($pathContents)) {
+            if (! $pathExists) {
+                continue;
+            }
+
+            $dirsAtPath = $treeItems
+                ->filter(fn (array $item): bool => $this->isDirectChildOf($item, $commonPath, 'tree'))
+                ->map(fn (array $item): string => basename((string) $item['path']))
+                ->toArray();
+
+            if ($this->hasValidSkillsAtPath($treeItems, $commonPath, $dirsAtPath)) {
                 return $commonPath;
             }
         }
@@ -123,88 +207,91 @@ class GitHubSkillProvider
     }
 
     /**
-     * @param  array<int, array<string, mixed>>  $contents
+     * @param  Collection<int, array<string, mixed>>  $treeItems
+     * @param  array<int, string>  $dirNames
      */
-    protected function hasValidSkillDirectories(array $contents): bool
+    protected function hasValidSkillsAtPath(Collection $treeItems, string $basePath, array $dirNames): bool
     {
-        $directories = collect($contents)->filter(fn (array $item): bool => $item['type'] === 'dir');
+        $prefix = $basePath === '' ? '' : $basePath.'/';
 
-        if ($directories->isEmpty()) {
-            return false;
-        }
+        return collect($dirNames)->contains(function (string $dirName) use ($treeItems, $prefix): bool {
+            $skillMdPath = $prefix.$dirName.'/SKILL.md';
 
-        $urls = $directories->mapWithKeys(fn (array $dir): array => [
-            $dir['name'] => $this->buildRawFileUrl($dir['path'].'/SKILL.md'),
-        ]);
-
-        $responses = Http::pool(fn (Pool $pool) => $urls->map(
-            fn (string $url, string $name) => $pool->as($name)
-                ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'Laravel-Boost'])
-                ->timeout(10)
-                ->get($url)
-        )->all());
-
-        return collect($responses)->contains(fn ($response) => $response?->successful());
+            return $treeItems->contains(
+                fn (array $item): bool => $item['path'] === $skillMdPath && $item['type'] === 'blob'
+            );
+        });
     }
 
     /**
-     * @return array<int, array<string, mixed>>|null
+     * @param  array<int, array<string, mixed>>  $tree
+     * @return Collection<int, array{name: string, path: string, type: string}>
      */
-    protected function fetchContents(string $path = ''): ?array
+    protected function findSkillDirectoriesInTree(array $tree, string $basePath): Collection
     {
-        $url = sprintf(
-            'https://api.github.com/repos/%s/%s/contents/%s',
-            $this->repository->owner,
-            $this->repository->repo,
-            ltrim($path, '/')
-        );
-
-        $response = $this->client()->get($url);
-
-        if ($response->failed()) {
-            return null;
-        }
-
-        $contents = $response->json();
-
-        if (! is_array($contents)) {
-            return null;
-        }
-
-        if (isset($contents['type'])) {
-            return [$contents];
-        }
-
-        return $contents;
+        return collect($tree)
+            ->filter(fn (array $item): bool => $this->isDirectChildOf($item, $basePath, 'tree'))
+            ->map(fn (array $item): array => [
+                'name' => basename((string) $item['path']),
+                'path' => $item['path'],
+                'type' => 'dir',
+            ])
+            ->values();
     }
 
     /**
-     * @param  array<int, array<string, mixed>>  $contents
+     * @param  array<string, mixed>  $item
      */
-    protected function downloadContentsRecursively(array $contents, string $targetPath, string $basePath): bool
+    protected function isDirectChildOf(array $item, string $basePath, string $type): bool
     {
-        [$files, $directories] = collect($contents)->partition(fn (array $item): bool => $item['type'] !== 'dir');
-
-        if ($files->isNotEmpty() && ! $this->downloadFiles($files->toArray(), $targetPath, $basePath)) {
+        if ($item['type'] !== $type) {
             return false;
         }
 
-        foreach ($directories as $item) {
-            $relativePath = $this->getRelativePath($item['path'], $basePath);
-            $localPath = $targetPath.'/'.$relativePath;
+        $path = (string) $item['path'];
 
-            if (! $this->ensureDirectoryExists($localPath)) {
-                return false;
-            }
-
-            $subContents = $this->fetchContents($item['path']);
-
-            if ($subContents === null || ! $this->downloadContentsRecursively($subContents, $targetPath, $basePath)) {
-                return false;
-            }
+        if ($basePath === '') {
+            return ! str_contains($path, '/');
         }
 
-        return true;
+        $expectedPrefix = $basePath.'/';
+
+        if (! str_starts_with($path, $expectedPrefix)) {
+            return false;
+        }
+
+        $remainder = substr($path, strlen($expectedPrefix));
+
+        return ! str_contains($remainder, '/');
+    }
+
+    /**
+     * @param  Collection<int, array{name: string, path: string, type: string}>  $directories
+     * @param  array<int, array<string, mixed>>  $tree
+     * @return Collection<int, array{name: string, path: string, type: string}>
+     */
+    protected function validateSkillDirectories(Collection $directories, array $tree): Collection
+    {
+        $treeCollection = collect($tree);
+
+        return $directories->filter(function (array $dir) use ($treeCollection): bool {
+            $skillMdPath = $dir['path'].'/SKILL.md';
+
+            return $treeCollection->contains(
+                fn (array $item): bool => $item['path'] === $skillMdPath && $item['type'] === 'blob'
+            );
+        });
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $tree
+     * @return Collection<int, array<string, mixed>>
+     */
+    protected function extractSkillFilesFromTree(array $tree, string $skillPath): Collection
+    {
+        $prefix = $skillPath.'/';
+
+        return collect($tree)->filter(fn (array $item): bool => str_starts_with((string) $item['path'], $prefix))->values();
     }
 
     /**
@@ -218,7 +305,7 @@ class GitHubSkillProvider
 
         $responses = Http::pool(fn (Pool $pool) => $fileUrls->map(
             fn (string $url, string $path) => $pool->as($path)
-                ->withHeaders(['Accept' => 'application/vnd.github.v3+json', 'User-Agent' => 'Laravel-Boost'])
+                ->withHeaders(['User-Agent' => 'Laravel-Boost'])
                 ->timeout(30)
                 ->get($url)
         )->all());
@@ -258,8 +345,8 @@ class GitHubSkillProvider
 
     protected function getRelativePath(string $fullPath, string $basePath): string
     {
-        if (Str::startsWith($fullPath, $basePath.'/')) {
-            return Str::after($fullPath, $basePath.'/');
+        if (str_starts_with($fullPath, $basePath.'/')) {
+            return substr($fullPath, strlen($basePath.'/'));
         }
 
         return basename($fullPath);
@@ -272,9 +359,22 @@ class GitHubSkillProvider
 
     protected function client(int $timeout = 30): PendingRequest
     {
-        return Http::withHeaders([
+        $headers = [
             'Accept' => 'application/vnd.github.v3+json',
             'User-Agent' => 'Laravel-Boost',
-        ])->timeout($timeout);
+        ];
+
+        $token = $this->getGitHubToken();
+
+        if ($token !== null) {
+            $headers['Authorization'] = "Bearer {$token}";
+        }
+
+        return Http::withHeaders($headers)->timeout($timeout);
+    }
+
+    protected function getGitHubToken(): ?string
+    {
+        return env('GITHUB_TOKEN') ?? env('GH_TOKEN');
     }
 }

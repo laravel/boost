@@ -9,7 +9,6 @@ use Orchestra\Testbench\Concerns\InteractsWithPublishedFiles;
 uses(InteractsWithPublishedFiles::class);
 
 beforeEach(function (): void {
-    // Trait handles file cleanup, but we need directory cleanup too
     File::deleteDirectory(base_path('.ai/skills'));
 
     $this->files = [
@@ -25,24 +24,16 @@ it('throws exception for invalid repository format', function (): void {
 
 it('lists available skills with --list option', function (): void {
     Http::fake([
-        'api.github.com/*' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-            ['name' => 'skill-two', 'path' => 'skill-two', 'type' => 'dir'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+                ['path' => 'skill-two', 'type' => 'tree', 'sha' => 'jkl'],
+                ['path' => 'skill-two/SKILL.md', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+            ],
+            'truncated' => false,
         ]),
-        'raw.githubusercontent.com/*skill-one*' => Http::response(<<<'YAML'
-            ---
-            name: skill-one
-            description: First skill
-            ---
-            # Content
-            YAML),
-        'raw.githubusercontent.com/*skill-two*' => Http::response(<<<'YAML'
-            ---
-            name: skill-two
-            description: Second skill
-            ---
-            # Content
-            YAML),
     ]);
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo', '--list' => true])
@@ -51,7 +42,11 @@ it('lists available skills with --list option', function (): void {
 
 it('shows error when no skills found', function (): void {
     Http::fake([
-        'api.github.com/*' => Http::response([]),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [],
+            'truncated' => false,
+        ]),
     ]);
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
@@ -61,21 +56,26 @@ it('shows error when no skills found', function (): void {
 
 it('shows error when api request fails', function (): void {
     Http::fake([
-        '*' => Http::response(null, 404),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response(
+            ['message' => 'Not Found'],
+            404
+        ),
     ]);
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
         ->assertFailed()
-        ->expectsOutputToContain('No valid skills are found');
+        ->expectsOutputToContain('Failed to fetch repository tree from GitHub');
 });
 
 it('installs all skills with --all option', function (): void {
     Http::fake([
-        'api.github.com/repos/owner/repo/contents/' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-        ]),
-        'api.github.com/repos/owner/repo/contents/skill-one' => Http::response([
-            ['name' => 'SKILL.md', 'path' => 'skill-one/SKILL.md', 'type' => 'file'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
         ]),
         'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
             ---
@@ -97,12 +97,15 @@ it('installs all skills with --all option', function (): void {
 
 it('installs specific skills with --skill option', function (): void {
     Http::fake([
-        'api.github.com/repos/owner/repo/contents/' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-            ['name' => 'skill-two', 'path' => 'skill-two', 'type' => 'dir'],
-        ]),
-        'api.github.com/repos/owner/repo/contents/skill-one' => Http::response([
-            ['name' => 'SKILL.md', 'path' => 'skill-one/SKILL.md', 'type' => 'file'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+                ['path' => 'skill-two', 'type' => 'tree', 'sha' => 'jkl'],
+                ['path' => 'skill-two/SKILL.md', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+            ],
+            'truncated' => false,
         ]),
         'raw.githubusercontent.com/*skill-one*' => Http::response(<<<'YAML'
             ---
@@ -110,13 +113,6 @@ it('installs specific skills with --skill option', function (): void {
             description: First skill
             ---
             # SKILL Content
-            YAML),
-        'raw.githubusercontent.com/*skill-two*' => Http::response(<<<'YAML'
-            ---
-            name: skill-two
-            description: Second skill
-            ---
-            # Content
             YAML),
     ]);
 
@@ -134,16 +130,14 @@ it('skips existing skills without --force flag', function (): void {
     File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
 
     Http::fake([
-        'api.github.com/*' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
         ]),
-        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
-            ---
-            name: skill-one
-            description: First skill
-            ---
-            # Content
-            YAML),
     ]);
 
     $this->artisan('boost:add-skill', [
@@ -167,11 +161,13 @@ it('overwrites existing skills with --force flag', function (): void {
         YAML;
 
     Http::fake([
-        'api.github.com/repos/owner/repo/contents/' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-        ]),
-        'api.github.com/repos/owner/repo/contents/skill-one' => Http::response([
-            ['name' => 'SKILL.md', 'path' => 'skill-one/SKILL.md', 'type' => 'file'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
         ]),
         'raw.githubusercontent.com/*' => Http::response($newContent),
     ]);
@@ -188,15 +184,15 @@ it('overwrites existing skills with --force flag', function (): void {
 
 it('installs nested skill files correctly', function (): void {
     Http::fake([
-        'api.github.com/repos/owner/repo/contents/' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-        ]),
-        'api.github.com/repos/owner/repo/contents/skill-one' => Http::response([
-            ['name' => 'SKILL.md', 'path' => 'skill-one/SKILL.md', 'type' => 'file'],
-            ['name' => 'examples', 'path' => 'skill-one/examples', 'type' => 'dir'],
-        ]),
-        'api.github.com/repos/owner/repo/contents/skill-one/examples' => Http::response([
-            ['name' => 'example.md', 'path' => 'skill-one/examples/example.md', 'type' => 'file'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+                ['path' => 'skill-one/examples', 'type' => 'tree', 'sha' => 'jkl'],
+                ['path' => 'skill-one/examples/example.md', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+            ],
+            'truncated' => false,
         ]),
         'raw.githubusercontent.com/*SKILL.md' => Http::response(<<<'YAML'
             ---
@@ -221,11 +217,13 @@ it('installs nested skill files correctly', function (): void {
 
 it('shows success message after installing skills', function (): void {
     Http::fake([
-        'api.github.com/repos/owner/repo/contents/' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-        ]),
-        'api.github.com/repos/owner/repo/contents/skill-one' => Http::response([
-            ['name' => 'SKILL.md', 'path' => 'skill-one/SKILL.md', 'type' => 'file'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
         ]),
         'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
             ---
@@ -246,27 +244,36 @@ it('shows success message after installing skills', function (): void {
 
 it('shows available skill count when listing', function (): void {
     Http::fake([
-        'api.github.com/*' => Http::response([
-            ['name' => 'skill-one', 'path' => 'skill-one', 'type' => 'dir'],
-            ['name' => 'skill-two', 'path' => 'skill-two', 'type' => 'dir'],
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+                ['path' => 'skill-two', 'type' => 'tree', 'sha' => 'jkl'],
+                ['path' => 'skill-two/SKILL.md', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+            ],
+            'truncated' => false,
         ]),
-        'raw.githubusercontent.com/*skill-one*' => Http::response(<<<'YAML'
-            ---
-            name: skill-one
-            description: First skill
-            ---
-            # Content
-            YAML),
-        'raw.githubusercontent.com/*skill-two*' => Http::response(<<<'YAML'
-            ---
-            name: skill-two
-            description: Second skill
-            ---
-            # Content
-            YAML),
     ]);
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo', '--list' => true])
         ->expectsOutputToContain('Found 2 available skills')
         ->assertSuccessful();
+});
+
+it('displays error when rate limit is exceeded', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response(
+            ['message' => 'API rate limit exceeded'],
+            403,
+            [
+                'X-RateLimit-Remaining' => '0',
+                'X-RateLimit-Reset' => (string) (time() + 3600),
+            ]
+        ),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
+        ->assertFailed()
+        ->expectsOutputToContain('GitHub API rate limit exceeded');
 });
