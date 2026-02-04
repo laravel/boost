@@ -28,7 +28,10 @@ class GitHubSkillProvider
         '.claude/skills',
     ];
 
-    public function __construct(protected GitHubRepository $repository) {}
+    public function __construct(protected GitHubRepository $repository)
+    {
+        //
+    }
 
     /**
      * @return Collection<string, RemoteSkill>
@@ -122,7 +125,7 @@ class GitHubSkillProvider
 
                 throw new RuntimeException(
                     "GitHub API rate limit exceeded. Rate limit will reset at {$resetTime}. ".
-                    'Set GITHUB_TOKEN or GH_TOKEN environment variable for higher limits (5000 req/hr vs 60 req/hr).'
+                    'Configure a GitHub token via boost.github.token or services.github.token for higher limits (5000 req/hr vs 60 req/hr).'
                 );
             }
         }
