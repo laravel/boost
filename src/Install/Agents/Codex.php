@@ -38,7 +38,7 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
     {
         return [
             'paths' => ['.codex'],
-            'files' => ['AGENTS.md'],
+            'files' => ['AGENTS.md', '.codex/config.toml'],
         ];
     }
 
@@ -49,12 +49,29 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
 
     public function mcpInstallationStrategy(): McpInstallationStrategy
     {
-        return McpInstallationStrategy::SHELL;
+        return McpInstallationStrategy::FILE;
     }
 
-    public function shellMcpCommand(): string
+    public function mcpConfigPath(): string
     {
-        return 'codex mcp add {key} -- {command} {args}';
+        return '.codex/config.toml';
+    }
+
+    public function mcpConfigKey(): string
+    {
+        return 'mcp_servers';
+    }
+
+    /** {@inheritDoc} */
+    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    {
+        return collect([
+            'command' => $command,
+            'args' => $args,
+            'cwd' => base_path(),
+            'env' => $env,
+        ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
+            ->toArray();
     }
 
     public function skillsPath(): string

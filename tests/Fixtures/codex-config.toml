@@ -1,0 +1,4 @@
+[mcp_servers.existing_server]
+command = "npm"
+args = ["start"]
+cwd = "/some/path"
