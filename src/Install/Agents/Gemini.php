@@ -21,7 +21,7 @@ class Gemini extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
         return 'Gemini CLI';
     }
 
-    public function postProcessGuidelines(string $markdown): string
+    public function transformGuidelines(string $markdown): string
     {
         return preg_replace_callback(
             '/## Foundational Context.*?(?=\n## |$)/s',

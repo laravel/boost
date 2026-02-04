@@ -31,7 +31,7 @@ class GuidelineWriter
             return self::NOOP;
         }
 
-        $guidelines = $this->agent->postProcessGuidelines($guidelines);
+        $guidelines = $this->agent->transformGuidelines($guidelines);
 
         $filePath = $this->agent->guidelinesPath();
 

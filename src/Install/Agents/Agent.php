@@ -239,7 +239,7 @@ abstract class Agent
     /**
      * Post-process the generated guidelines' Markdown.
      */
-    public function postProcessGuidelines(string $markdown): string
+    public function transformGuidelines(string $markdown): string
     {
         return $markdown;
     }

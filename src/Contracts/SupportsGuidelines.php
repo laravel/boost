@@ -20,7 +20,7 @@ interface SupportsGuidelines
     public function frontmatter(): bool;
 
     /**
-     * Post-process the generated guidelines' Markdown.
+     * Transform the generated guidelines' Markdown.
      */
-    public function postProcessGuidelines(string $markdown): string;
+    public function transformGuidelines(string $markdown): string;
 }

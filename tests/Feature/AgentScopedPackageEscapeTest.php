@@ -23,7 +23,7 @@ This application uses:
 - @inertiajs/react should not be escaped here.
 MARKDOWN;
 
-    $processed = $gemini->postProcessGuidelines($markdown);
+    $processed = $gemini->transformGuidelines($markdown);
 
     expect($processed)->toContain('\@inertiajs/react')
         ->and($processed)->toContain('\@tailwindcss/vite')
@@ -40,7 +40,7 @@ test('gemini agent does not double escape', function (): void {
 - \@inertiajs/react
 MARKDOWN;
 
-    $processed = $gemini->postProcessGuidelines($markdown);
+    $processed = $gemini->transformGuidelines($markdown);
 
     expect($processed)->toBe($markdown);
 });
@@ -50,7 +50,7 @@ test('guideline writer applies post processing', function (): void {
 
     $agent = Mockery::mock(Gemini::class);
     $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('postProcessGuidelines')->andReturn('processed guidelines');
+    $agent->shouldReceive('transformGuidelines')->andReturn('processed guidelines');
     $agent->shouldReceive('frontmatter')->andReturn(false);
 
     $writer = new GuidelineWriter($agent);
