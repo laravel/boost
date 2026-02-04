@@ -352,7 +352,7 @@ it('uses GITHUB_TOKEN for authentication when available', function (): void {
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
     $fetcher->discoverSkills();
 
-    Http::assertSent(fn($request): bool => $request->hasHeader('Authorization', 'Bearer test-token-123'));
+    Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'Bearer test-token-123'));
 
     putenv('GITHUB_TOKEN');
 });
@@ -374,7 +374,7 @@ it('uses GH_TOKEN for authentication when GITHUB_TOKEN is not set', function ():
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
     $fetcher->discoverSkills();
 
-    Http::assertSent(fn($request): bool => $request->hasHeader('Authorization', 'Bearer gh-token-456'));
+    Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'Bearer gh-token-456'));
 
     putenv('GH_TOKEN');
 });
