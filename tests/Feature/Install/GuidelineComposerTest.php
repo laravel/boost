@@ -757,3 +757,42 @@ test('user guidelines are sorted by filename for predictable ordering', function
     // 00-first.md, 10-middle.md, 20-second.md
     expect($userGuidelineKeys)->toBe(['.ai/00-first', '.ai/10-middle', '.ai/20-second']);
 });
+
+test('excludes Skills Activation section when skills are disabled', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hasSkills = false;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->not->toContain('## Skills Activation')
+        ->not->toContain('This project has domain-specific skills available');
+});
+
+test('includes Skills Activation section when skills are enabled and skills exist', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hasSkills = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain('## Skills Activation')
+        ->toContain('This project has domain-specific skills available');
+});

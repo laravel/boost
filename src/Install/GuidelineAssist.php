@@ -173,6 +173,11 @@ class GuidelineAssist
         return new Inertia($this->roster);
     }
 
+    public function supportsPintAgentFormatter(): bool
+    {
+        return $this->roster->usesVersion(Packages::PINT, '1.27.0', '>=');
+    }
+
     public function hasPackage(Packages $package): bool
     {
         return $this->roster->packages()->contains(
@@ -185,14 +190,24 @@ class GuidelineAssist
         return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
     }
 
+    protected function detectedNodePackageManager(): string
+    {
+        return $this->nodePackageManager();
+    }
+
     public function nodePackageManagerCommand(string $command): string
     {
-        $manager = $this->nodePackageManager();
-        $nodePackageManagerCommand = $this->config->usesSail
-            ? Sail::nodePackageManagerCommand($manager)
-            : $manager;
+        $npmExecutable = config('boost.executable_paths.npm');
 
-        return "{$nodePackageManagerCommand} {$command}";
+        if ($npmExecutable !== null) {
+            return "{$npmExecutable} {$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::nodePackageManagerCommand($this->detectedNodePackageManager())." {$command}";
+        }
+
+        return "{$this->detectedNodePackageManager()} {$command}";
     }
 
     public function artisanCommand(string $command): string
@@ -202,22 +217,42 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
-        $composerCommand = $this->config->usesSail
-            ? Sail::composerCommand()
-            : 'composer';
+        $composerExecutable = config('boost.executable_paths.composer');
 
-        return "{$composerCommand} {$command}";
+        if ($composerExecutable !== null) {
+            return "{$composerExecutable} {$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::composerCommand()." {$command}";
+        }
+
+        return "composer {$command}";
     }
 
     public function binCommand(string $command): string
     {
-        return $this->config->usesSail
-            ? Sail::binCommand().$command
-            : "vendor/bin/{$command}";
+        $vendorBinPrefix = config('boost.executable_paths.vendor_bin');
+
+        if ($vendorBinPrefix !== null) {
+            return "{$vendorBinPrefix}{$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::binCommand().$command;
+        }
+
+        return "vendor/bin/{$command}";
     }
 
     public function artisan(): string
     {
+        $phpExecutable = config('boost.executable_paths.php');
+
+        if ($phpExecutable !== null) {
+            return "{$phpExecutable} artisan";
+        }
+
         return $this->config->usesSail
             ? Sail::artisanCommand()
             : 'php artisan';
@@ -234,5 +269,10 @@ class GuidelineAssist
     public function skills(): Collection
     {
         return $this->skills;
+    }
+
+    public function hasSkillsEnabled(): bool
+    {
+        return $this->config->hasSkills;
     }
 }
