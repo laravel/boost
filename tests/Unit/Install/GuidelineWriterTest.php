@@ -333,3 +333,114 @@ test('it does not add frontmatter when agent does not support it', function (): 
 
     unlink($tempFile);
 });
+
+test('it protects ambiguous @ symbols for Gemini agent', function (string $input, string $expectedOutput): void {
+    $tempFile = sys_get_temp_dir().'/boost_gemini_test_'.uniqid().'.md';
+    $agent = Mockery::mock(\Laravel\Boost\Install\Agents\Gemini::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $writer = new GuidelineWriter($agent);
+
+    $writer->write($input);
+
+    expect(file_get_contents($tempFile))
+        ->toContain($expectedOutput);
+
+    unlink($tempFile);
+})->with([
+    'scoped package' => ['- @inertiajs/react', '\@inertiajs/react'],
+    'versioned package' => ['@scoped/package@1.0', '\@scoped/package@1.0'],
+    'simple versioned' => ['@simple-package@v2', '\@simple-package@v2'],
+    'major version only' => ['- @3', '\@3'],
+    'caret version' => ['@^1.0.0', '\@^1.0.0'],
+    'tilde version' => ['@~2.0', '\@~2.0'],
+]);
+
+test('it ignores symbols that are already safe or intentional', function (string $input): void {
+    $tempFile = sys_get_temp_dir().'/boost_gemini_test_'.uniqid().'.md';
+    $agent = Mockery::mock(\Laravel\Boost\Install\Agents\Gemini::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $writer = new GuidelineWriter($agent);
+
+    $writer->write($input);
+
+    expect(file_get_contents($tempFile))
+        ->toContain($input)
+        ->not->toContain('\@');
+
+    unlink($tempFile);
+})->with([
+    'email address' => ['contact@example.com'],
+    'middle of word' => ['package@version'],
+    'relative path' => ['@./src/App.php'],
+    'absolute path' => ['@/root/file.md'],
+    'config file' => ['@composer.json'],
+    'hidden file' => ['@.editorconfig'],
+    'readme' => ['@README.md'],
+]);
+
+test('it does NOT double escape already escaped symbols', function (): void {
+    $tempFile = sys_get_temp_dir().'/boost_gemini_test_'.uniqid().'.md';
+    $agent = Mockery::mock(\Laravel\Boost\Install\Agents\Gemini::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $writer = new GuidelineWriter($agent);
+
+    $writer->write("\@scoped/package");
+
+    expect(file_get_contents($tempFile))
+        ->toContain('\@scoped/package')
+        ->not->toContain('\\\\@');
+
+    unlink($tempFile);
+});
+
+test('it preserves intentional file imports', function (): void {
+    $tempFile = sys_get_temp_dir().'/boost_gemini_test_'.uniqid().'.md';
+    $agent = Mockery::mock(\Laravel\Boost\Install\Agents\Gemini::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $writer = new GuidelineWriter($agent);
+
+    $writer->write(<<<'EOD'
+Here is how you can import context:
+- @composer.json
+- @README.md
+- @.editorconfig
+- @./src/App.php
+- @/absolute/path/file.md
+EOD
+    );
+
+    $content = file_get_contents($tempFile);
+
+    expect($content)
+        ->toContain('@composer.json')
+        ->toContain('@README.md')
+        ->toContain('@.editorconfig')
+        ->toContain('@./src/App.php')
+        ->toContain('@/absolute/path/file.md')
+        ->not->toContain('\@composer.json');
+
+    unlink($tempFile);
+});
+
+test('it should not escape when already wrapped in backticks', function (): void {
+    $tempFile = sys_get_temp_dir().'/boost_gemini_test_'.uniqid().'.md';
+    $agent = Mockery::mock(\Laravel\Boost\Install\Agents\Gemini::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $writer = new GuidelineWriter($agent);
+
+    $input = "Use `@inertiajs/react` for this. Also ```\n@laravel/vite\n```";
+    $writer->write($input);
+
+    expect(file_get_contents($tempFile))
+        ->toContain('`@inertiajs/react`')
+        ->toContain('@laravel/vite')
+        ->not->toContain('\@inertiajs/react')
+        ->not->toContain('\@laravel/vite');
+
+    unlink($tempFile);
+});

@@ -31,6 +31,10 @@ class GuidelineWriter
             return self::NOOP;
         }
 
+        if ($this->shouldEscapeUnintentionalAtCommand()) {
+            $guidelines = $this->escapeUnintentionalAtCommand($guidelines);
+        }
+
         $filePath = $this->agent->guidelinesPath();
 
         $directory = dirname($filePath);
@@ -119,5 +123,33 @@ class GuidelineWriter
             usleep($delay + $jitter);
             $delay *= 2;
         }
+    }
+
+    /**
+     * @see https://github.com/laravel/boost/issues/503
+     */
+    private function shouldEscapeUnintentionalAtCommand(): bool
+    {
+        return $this->agent instanceof \Laravel\Boost\Install\Agents\Gemini;
+    }
+
+    /**
+     * Escape package-like @ symbols that Gemini CLI might mistake for file imports.
+     *
+     * It ignores intentional imports (e.g., @./file.md) and content inside backticks.
+     */
+    private function escapeUnintentionalAtCommand(string $guidelines): string
+    {
+        return preg_replace_callback(
+            '/((`+)(?:(?!\2).)*?\2)|((?<![a-zA-Z0-9\\\\])@(?![\.\/])(?=[a-zA-Z0-9._-]*(?:\/|@)|[0-9^~v]))/s',
+            function ($matches): string {
+                if (! empty($matches[1])) {
+                    return $matches[1];
+                }
+
+                return '\@';
+            },
+            $guidelines
+        );
     }
 }
