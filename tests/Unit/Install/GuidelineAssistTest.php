@@ -130,3 +130,36 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
 
     expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
 });
+
+test('hasSkills property defaults to false', function (): void {
+    $config = new GuidelineConfig;
+
+    expect($config->hasSkills)->toBeFalse();
+});
+
+test('hasSkills property can be set to true', function (): void {
+    $config = new GuidelineConfig;
+    $config->hasSkills = true;
+
+    expect($config->hasSkills)->toBeTrue();
+});
+
+test('hasSkillsEnabled returns false when skills are disabled', function (): void {
+    $this->config->hasSkills = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->hasSkillsEnabled())->toBeFalse();
+});
+
+test('hasSkillsEnabled returns true when skills are enabled', function (): void {
+    $this->config->hasSkills = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->hasSkillsEnabled())->toBeTrue();
+});
