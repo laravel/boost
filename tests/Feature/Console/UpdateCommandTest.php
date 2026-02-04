@@ -148,9 +148,7 @@ it('preserves sail configuration when updating guidelines', function (): void {
             '--guidelines' => true,
             '--skills' => false,
         ])
-        ->andReturnUsing(function () {
-            return 0;
-        });
+        ->andReturnUsing(fn (): int => 0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
