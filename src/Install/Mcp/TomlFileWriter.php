@@ -35,7 +35,7 @@ class TomlFileWriter
 
     public function save(): bool
     {
-        $this->ensureDirectoryExists();
+        File::ensureDirectoryExists(dirname($this->filePath));
 
         if ($this->shouldWriteNew()) {
             return $this->createNewFile();
@@ -67,7 +67,7 @@ class TomlFileWriter
 
     protected function updateExistingFile(): bool
     {
-        $content = $this->readFile();
+        $content = File::get($this->filePath);
 
         foreach ($this->serversToAdd as $key => $config) {
             if ($this->serverExists($content, $key)) {
@@ -111,11 +111,11 @@ class TomlFileWriter
     protected function formatValue(mixed $value): string
     {
         if (is_string($value)) {
-            return '"'.addslashes($value).'"';
+            return '"'.$this->escapeTomlString($value).'"';
         }
 
         if (is_array($value)) {
-            $items = array_map(fn ($v): string => '"'.addslashes((string) $v).'"', $value);
+            $items = array_map($this->formatValue(...), $value);
 
             return '['.implode(', ', $items).']';
         }
@@ -125,6 +125,17 @@ class TomlFileWriter
         }
 
         return (string) $value;
+    }
+
+    protected function escapeTomlString(string $value): string
+    {
+        return strtr($value, [
+            '\\' => '\\\\',
+            '"' => '\\"',
+            "\n" => '\\n',
+            "\r" => '\\r',
+            "\t" => '\\t',
+        ]);
     }
 
     protected function serverExists(string $content, string $key): bool
@@ -139,32 +150,17 @@ class TomlFileWriter
         $escapedConfigKey = preg_quote($this->configKey, '/');
         $escapedKey = preg_quote($key, '/');
 
-        $envPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\.env\].*?(?=\r?\n\[[\w]|$)/s';
+        $envPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\.env\].*?(?=\r?\n\[|$)/s';
         $content = preg_replace($envPattern, '', $content) ?? $content;
 
-        $mainPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\].*?(?=\r?\n\[[\w]|$)/s';
+        $mainPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\].*?(?=\r?\n\[|$)/s';
 
         return preg_replace($mainPattern, '', $content) ?? $content;
     }
 
-    protected function readFile(): string
-    {
-        return File::get($this->filePath);
-    }
-
-    protected function ensureDirectoryExists(): void
-    {
-        File::ensureDirectoryExists(dirname($this->filePath));
-    }
-
-    protected function fileExists(): bool
-    {
-        return File::exists($this->filePath);
-    }
-
     protected function shouldWriteNew(): bool
     {
-        if (! $this->fileExists()) {
+        if (! File::exists($this->filePath)) {
             return true;
         }
 
