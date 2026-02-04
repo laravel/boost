@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.0.6...main)
+
+## [v2.0.6](https://github.com/laravel/boost/compare/v2.0.5...v2.0.6) - 2026-02-04
+
+### What's Changed
+
+* Adding support for Junie skills by [@balu-lt](https://github.com/balu-lt) in https://github.com/laravel/boost/pull/510
+* Filter orphaned packages from config by [@lucianotonet](https://github.com/lucianotonet) in https://github.com/laravel/boost/pull/506
+* Configure Executables Path by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/491
+* Fix skills activation section by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/516
+* Fix Sail Guideline Overwrite issue by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/521
+
+### New Contributors
+
+* [@lucianotonet](https://github.com/lucianotonet) made their first contribution in https://github.com/laravel/boost/pull/506
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.5...v2.0.6
 
 ## [v2.0.5](https://github.com/laravel/boost/compare/v2.0.4...v2.0.5) - 2026-02-01
 
