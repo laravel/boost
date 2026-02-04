@@ -413,11 +413,11 @@ class InstallCommand extends Command
 
     protected function shouldUseSail(): bool
     {
-        if ($this->selectedBoostFeatures->isEmpty()) {
-            return $this->config->getSail();
+        if ($this->selectedBoostFeatures->contains('mcp')) {
+            return $this->selectedBoostFeatures->contains('sail');
         }
 
-        return $this->selectedBoostFeatures->contains('sail');
+        return $this->config->getSail();
     }
 
     protected function isExplicitFlagMode(): bool
