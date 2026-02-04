@@ -374,6 +374,7 @@ class InstallCommand extends Command
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
+        $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
 
         return $guidelineConfig;
     }

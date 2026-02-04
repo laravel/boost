@@ -270,4 +270,9 @@ class GuidelineAssist
     {
         return $this->skills;
     }
+
+    public function hasSkillsEnabled(): bool
+    {
+        return $this->config->hasSkills;
+    }
 }
