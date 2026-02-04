@@ -5,11 +5,7 @@ declare(strict_types=1);
 use Illuminate\Console\OutputStyle;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
-use Laravel\Boost\Install\Agents\ClaudeCode;
-use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Support\Config;
-use Laravel\Prompts\Key;
-use Laravel\Prompts\Prompt;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -144,7 +140,6 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $config->setGuidelines(true);
     $config->setSail(true);
 
-    // Mock UpdateCommand to verify Sail config is used
     $command = Mockery::mock(UpdateCommand::class)->makePartial();
     $command->shouldReceive('callSilently')
         ->once()
@@ -153,9 +148,7 @@ it('preserves sail configuration when updating guidelines', function (): void {
             '--guidelines' => true,
             '--skills' => false,
         ])
-        ->andReturnUsing(function () use ($config) {
-            // Verify that shouldUseSail() returns true during InstallCommand execution
-            // This simulates the fix working correctly
+        ->andReturnUsing(function () {
             return 0;
         });
 
