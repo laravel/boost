@@ -263,6 +263,6 @@ class GuidelineAssist
 
     public function hasSkillsEnabled(): bool
     {
-        return app(\Laravel\Boost\Support\Config::class)->hasSkills();
+        return $this->config->hasSkills;
     }
 }
