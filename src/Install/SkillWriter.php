@@ -35,8 +35,8 @@ class SkillWriter
             throw new RuntimeException("Invalid skill name: {$skill->name}");
         }
 
-        $targetPath = base_path($this->agent->skillsPath().'/'.$skill->name);
-        $canonicalPath = base_path('.ai/skills/'.$skill->name);
+        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
+        $canonicalPath = base_path('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
         $existed = $this->pathExists($targetPath);
 
         if (! $skill->custom) {
@@ -119,7 +119,7 @@ class SkillWriter
             return false;
         }
 
-        $targetPath = base_path($this->agent->skillsPath().'/'.$skillName);
+        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skillName);
 
         if (! $this->pathExists($targetPath)) {
             return true;
@@ -217,7 +217,7 @@ class SkillWriter
     protected function copyFile(SplFileInfo $file, string $targetDir): bool
     {
         $relativePath = $file->getRelativePathname();
-        $targetFile = $targetDir.'/'.$relativePath;
+        $targetFile = $targetDir.DIRECTORY_SEPARATOR.$relativePath;
 
         if (! $this->ensureDirectoryExists(dirname($targetFile))) {
             return false;
