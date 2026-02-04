@@ -375,6 +375,6 @@ class GitHubSkillProvider
 
     protected function getGitHubToken(): ?string
     {
-        return config('boost.github.token');
+        return config('boost.github.token') ?? config('services.github.token');
     }
 }
