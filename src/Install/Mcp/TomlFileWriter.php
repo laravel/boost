@@ -14,7 +14,10 @@ class TomlFileWriter
     protected array $serversToAdd = [];
 
     /** @param array<string, mixed> $baseConfig */
-    public function __construct(protected string $filePath, protected array $baseConfig = []) {}
+    public function __construct(protected string $filePath, protected array $baseConfig = [])
+    {
+        //
+    }
 
     public function configKey(string $key): self
     {
