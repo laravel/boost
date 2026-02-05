@@ -32,6 +32,10 @@ Use Flux UI components when available. Fall back to standard Blade components wh
 <flux:button variant="primary">Click me</flux:button>
 </code-snippet>
 
+## Available Components (Free Edition)
+
+Available: avatar, badge, brand, breadcrumbs, button, callout, checkbox, dropdown, field, heading, icon, input, modal, navbar, otp-input, profile, radio, select, separator, skeleton, switch, text, textarea, tooltip
+
 ## Icons
 
 Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Search for exact icon names on the Heroicons site - do not guess or invent icon names.
@@ -45,10 +49,6 @@ For icons not available in Heroicons, use [Lucide](https://lucide.dev/). Import 
 ```bash
 php artisan flux:icon crown grip-vertical github
 ```
-
-## Available Components (Free Edition)
-
-Available: avatar, badge, brand, breadcrumbs, button, callout, checkbox, dropdown, field, heading, icon, input, modal, navbar, otp-input, profile, radio, select, separator, skeleton, switch, text, textarea, tooltip
 
 ## Common Patterns
 
