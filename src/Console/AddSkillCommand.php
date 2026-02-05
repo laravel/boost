@@ -15,6 +15,7 @@ use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Prompts\Terminal;
+use RuntimeException;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\grid;
@@ -83,10 +84,16 @@ class AddSkillCommand extends Command
 
     protected function discoverAvailableSkills(): bool
     {
-        $this->availableSkills = spin(
-            callback: fn (): Collection => $this->fetcher->discoverSkills(),
-            message: "Fetching skills from {$this->repository->fullName()}..."
-        );
+        try {
+            $this->availableSkills = spin(
+                callback: fn (): Collection => $this->fetcher->discoverSkills(),
+                message: "Fetching skills from {$this->repository->fullName()}..."
+            );
+        } catch (RuntimeException $runtimeException) {
+            $this->error($runtimeException->getMessage());
+
+            return false;
+        }
 
         if ($this->availableSkills->isEmpty()) {
             $this->error('No valid skills are found in the repository.');
@@ -252,10 +259,14 @@ class AddSkillCommand extends Command
                 File::deleteDirectory($targetPath);
             }
 
-            if ($this->fetcher->downloadSkill($skill, $targetPath)) {
-                $results['installedNames'][] = $skill->name;
-            } else {
-                $results['failedDetails'][$skill->name] = 'Download failed';
+            try {
+                if ($this->fetcher->downloadSkill($skill, $targetPath)) {
+                    $results['installedNames'][] = $skill->name;
+                } else {
+                    $results['failedDetails'][$skill->name] = 'Download failed';
+                }
+            } catch (RuntimeException $e) {
+                $results['failedDetails'][$skill->name] = $e->getMessage();
             }
         }
 
