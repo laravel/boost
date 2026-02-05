@@ -31,6 +31,8 @@ class GuidelineWriter
             return self::NOOP;
         }
 
+        $guidelines = $this->agent->transformGuidelines($guidelines);
+
         $filePath = $this->agent->guidelinesPath();
 
         $directory = dirname($filePath);

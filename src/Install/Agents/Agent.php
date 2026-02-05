@@ -240,4 +240,12 @@ abstract class Agent
             'args' => $parts->skip(1)->values()->merge($args)->all(),
         ];
     }
+
+    /**
+     * Post-process the generated guidelines' Markdown.
+     */
+    public function transformGuidelines(string $markdown): string
+    {
+        return $markdown;
+    }
 }
