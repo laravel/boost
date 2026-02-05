@@ -62,6 +62,6 @@ class Gemini extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
 
     public function skillsPath(): string
     {
-        return config('boost.agents.gemini.skills_path', '.gemini/skills');
+        return config('boost.agents.gemini.skills_path', '.agents/skills');
     }
 }

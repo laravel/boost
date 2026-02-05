@@ -57,12 +57,7 @@ class Cursor extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
 
     public function guidelinesPath(): string
     {
-        return config('boost.agents.cursor.guidelines_path', '.cursor/rules/laravel-boost.mdc');
-    }
-
-    public function frontmatter(): bool
-    {
-        return true;
+        return config('boost.agents.cursor.guidelines_path', 'AGENTS.md');
     }
 
     public function skillsPath(): string

@@ -76,6 +76,6 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
 
     public function skillsPath(): string
     {
-        return config('boost.agents.codex.skills_path', '.codex/skills');
+        return config('boost.agents.codex.skills_path', '.agents/skills');
     }
 }
