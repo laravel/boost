@@ -1,6 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.6...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.0...main)
+
+## [v2.1.0](https://github.com/laravel/boost/compare/v2.0.6...v2.1.0) - 2026-02-05
+
+### What's Changed
+
+* fix(gemini): escape @ symbols in foundational context by [@soleinjast](https://github.com/soleinjast) in https://github.com/laravel/boost/pull/523
+* Add project-level mcp support for Codex by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/525
+* Unify agent paths for guidelines and skills configuration which supports .agents standard by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/528
+* Handle Rate Limits Error in Add Skill Command by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/520
+
+### New Contributors
+
+* [@soleinjast](https://github.com/soleinjast) made their first contribution in https://github.com/laravel/boost/pull/523
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.6...v2.1.0
 
 ## [v2.0.6](https://github.com/laravel/boost/compare/v2.0.5...v2.0.6) - 2026-02-04
 
