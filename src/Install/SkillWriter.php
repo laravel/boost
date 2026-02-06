@@ -39,7 +39,7 @@ class SkillWriter
 
         $existed = is_dir($targetPath);
 
-        if (! $this->copyDirectory($skill->path, $targetPath)) {
+        if (! $this->copyDirectory($skill->path, $targetPath, $skill->custom ? null : $skill->name)) {
             return self::FAILED;
         }
 
@@ -123,7 +123,7 @@ class SkillWriter
         return @rmdir($path);
     }
 
-    protected function copyDirectory(string $source, string $target): bool
+    protected function copyDirectory(string $source, string $target, ?string $skillName = null): bool
     {
         if (! is_dir($source)) {
             return false;
@@ -141,7 +141,7 @@ class SkillWriter
             ->ignoreDotFiles(false);
 
         foreach ($finder as $file) {
-            if (! $this->copyFile($file, $target)) {
+            if (! $this->copyFile($file, $target, $skillName)) {
                 return false;
             }
         }
@@ -149,7 +149,7 @@ class SkillWriter
         return true;
     }
 
-    protected function copyFile(SplFileInfo $file, string $targetDir): bool
+    protected function copyFile(SplFileInfo $file, string $targetDir, ?string $skillName = null): bool
     {
         $relativePath = $file->getRelativePathname();
         $targetFile = $targetDir.'/'.$relativePath;
@@ -163,6 +163,11 @@ class SkillWriter
 
         if ($isBladeFile) {
             $content = MarkdownFormatter::format(trim($this->renderBladeFile($file->getRealPath())));
+
+            if ($this->isMainSkillFile($relativePath)) {
+                $content = $this->applySkillExtensions($skillName, $content);
+            }
+
             $replacedTargetFile = preg_replace('/\.blade\.php$/', '.md', $targetFile);
 
             if ($replacedTargetFile === null) {
@@ -175,10 +180,72 @@ class SkillWriter
         if ($isMarkdownFile) {
             $content = MarkdownFormatter::format(trim(file_get_contents($file->getRealPath())));
 
+            if ($this->isMainSkillFile($relativePath)) {
+                $content = $this->applySkillExtensions($skillName, $content);
+            }
+
             return file_put_contents($targetFile, $content) !== false;
         }
 
         return @copy($file->getRealPath(), $targetFile);
+    }
+
+    protected function isMainSkillFile(string $relativePath): bool
+    {
+        return in_array($relativePath, ['SKILL.md', 'SKILL.blade.php'], true);
+    }
+
+    protected function applySkillExtensions(?string $skillName, string $content): string
+    {
+        if ($skillName === null) {
+            return $content;
+        }
+
+        $prependContent = $this->getSkillExtensionContent($skillName, 'prepend');
+        $appendContent = $this->getSkillExtensionContent($skillName, 'append');
+
+        if ($prependContent !== '') {
+            $content = $this->insertAfterFrontmatter($content, $prependContent);
+        }
+
+        if ($appendContent !== '') {
+            $content = $content."\n\n".trim($appendContent);
+        }
+
+        return $content;
+    }
+
+    protected function getSkillExtensionContent(string $skillName, string $type): string
+    {
+        $basePath = base_path('.ai/skills/'.$skillName);
+
+        foreach (['.blade.php', '.md'] as $extension) {
+            $extensionPath = $basePath.'/SKILL.'.$type.$extension;
+
+            if (file_exists($extensionPath)) {
+                $content = file_get_contents($extensionPath);
+
+                if (str_ends_with($extensionPath, '.blade.php')) {
+                    return $this->renderBladeFile($extensionPath);
+                }
+
+                return $content ?: '';
+            }
+        }
+
+        return '';
+    }
+
+    protected function insertAfterFrontmatter(string $content, string $prependContent): string
+    {
+        if (preg_match('/^(---\s*\n.*?\n---\s*\n)/s', $content, $matches)) {
+            $frontmatter = $matches[1];
+            $rest = substr($content, strlen($frontmatter));
+
+            return $frontmatter.trim($prependContent)."\n\n".$rest;
+        }
+
+        return trim($prependContent)."\n\n".$content;
     }
 
     protected function ensureDirectoryExists(string $path): bool

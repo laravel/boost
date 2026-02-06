@@ -484,3 +484,150 @@ it('removes extra files when updating skill directory', function (): void {
 
     cleanupSkillDirectory($absoluteTarget);
 });
+
+it('appends content from SKILL.append.md to built-in skills', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $userSkillDir = base_path('.ai/skills/test-skill');
+    mkdir($userSkillDir, 0755, true);
+    file_put_contents($userSkillDir.'/SKILL.append.md', "## Custom Conventions\n\n- Use UUIDs everywhere");
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'test-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: false,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS);
+
+    $content = file_get_contents($absoluteTarget.'/test-skill/SKILL.md');
+    expect($content)
+        ->toContain('name: test-skill')
+        ->toContain('# Test')
+        ->toContain('## Custom Conventions')
+        ->toContain('Use UUIDs everywhere');
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($userSkillDir);
+});
+
+it('prepends content from SKILL.prepend.md to built-in skills after frontmatter', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $userSkillDir = base_path('.ai/skills/test-skill');
+    mkdir($userSkillDir, 0755, true);
+    file_put_contents($userSkillDir.'/SKILL.prepend.md', "## Project Context\n\nThis project uses special conventions.");
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'test-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: false,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS);
+
+    $content = file_get_contents($absoluteTarget.'/test-skill/SKILL.md');
+
+    expect($content)
+        ->toContain('name: test-skill')
+        ->toContain('## Project Context')
+        ->toContain('# Test');
+
+    $frontmatterEnd = strpos($content, '---', 4);
+    $contextPos = strpos($content, '## Project Context');
+    $testPos = strpos($content, '# Test');
+
+    expect($contextPos)->toBeGreaterThan($frontmatterEnd)
+        ->and($contextPos)->toBeLessThan($testPos);
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($userSkillDir);
+});
+
+it('applies both prepend and append extensions to built-in skills', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $userSkillDir = base_path('.ai/skills/test-skill');
+    mkdir($userSkillDir, 0755, true);
+    file_put_contents($userSkillDir.'/SKILL.prepend.md', '## Before Content');
+    file_put_contents($userSkillDir.'/SKILL.append.md', '## After Content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'test-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: false,
+    );
+
+    $writer = new SkillWriter($agent);
+    $writer->write($skill);
+
+    $content = file_get_contents($absoluteTarget.'/test-skill/SKILL.md');
+
+    $beforePos = strpos($content, '## Before Content');
+    $testPos = strpos($content, '# Test');
+    $afterPos = strpos($content, '## After Content');
+
+    expect($beforePos)->toBeLessThan($testPos)
+        ->and($testPos)->toBeLessThan($afterPos);
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($userSkillDir);
+});
+
+it('does not apply extensions to custom user skills', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $userSkillDir = base_path('.ai/skills/test-skill');
+    mkdir($userSkillDir, 0755, true);
+    file_put_contents($userSkillDir.'/SKILL.append.md', '## Should Not Appear');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'test-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $writer->write($skill);
+
+    $content = file_get_contents($absoluteTarget.'/test-skill/SKILL.md');
+
+    expect($content)->not->toContain('## Should Not Appear');
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($userSkillDir);
+});
