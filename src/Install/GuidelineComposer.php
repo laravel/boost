@@ -255,6 +255,7 @@ class GuidelineComposer
         }
 
         $rendered = $this->renderBladeFile($path);
+        $rendered = $this->applyGuidelineExtensions($path, $rendered);
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -273,6 +274,56 @@ class GuidelineComposer
             'third_party' => $thirdParty,
             'tokens' => round(str_word_count($rendered) * 1.3),
         ];
+    }
+
+    protected function applyGuidelineExtensions(string $basePath, string $content): string
+    {
+        if (str_contains($basePath, $this->customGuidelinePath())) {
+            return $content;
+        }
+
+        $relativePath = $this->getRelativeGuidelinePath($basePath);
+
+        if ($relativePath === null) {
+            return $content;
+        }
+
+        $prependContent = $this->getExtensionContent($relativePath, 'prepend');
+        $appendContent = $this->getExtensionContent($relativePath, 'append');
+
+        if ($prependContent !== '') {
+            $content = trim($prependContent)."\n\n".$content;
+        }
+
+        if ($appendContent !== '') {
+            $content = $content."\n\n".trim($appendContent);
+        }
+
+        return $content;
+    }
+
+    protected function getRelativeGuidelinePath(string $absolutePath): ?string
+    {
+        $basePath = realpath(__DIR__.'/../../');
+
+        return Str::of($absolutePath)
+            ->replace([$basePath, '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '')
+            ->ltrim('/\\')
+            ->replace(['.blade.php', '.md'], '')
+            ->toString();
+    }
+
+    protected function getExtensionContent(string $relativePath, string $type): string
+    {
+        foreach (['.blade.php', '.md'] as $extension) {
+            $extensionPath = $this->customGuidelinePath($relativePath.'.'.$type.$extension);
+
+            if (file_exists($extensionPath)) {
+                return $this->renderBladeFile($extensionPath);
+            }
+        }
+
+        return '';
     }
 
     protected function getGuidelineAssist(): GuidelineAssist
