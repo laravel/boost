@@ -58,6 +58,22 @@ test('it returns structured database schema', function (): void {
         });
 });
 
+test('it falls back to direct query when cache is unreachable', function (): void {
+    Cache::shouldReceive('remember')
+        ->andThrow(new RuntimeException('Cache driver unreachable'));
+
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request([]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray)->toHaveKey('engine')
+                ->and($schemaArray)->toHaveKey('tables')
+                ->and($schemaArray['tables'])->toHaveKey('examples');
+        });
+});
+
 test('it filters tables by name', function (): void {
     Schema::create('users', function (Blueprint $table): void {
         $table->id();

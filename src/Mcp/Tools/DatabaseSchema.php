@@ -63,12 +63,16 @@ class DatabaseSchema extends Tool
             (int) $includeRoutines
         );
 
-        $schema = Cache::remember($cacheKey, 20, fn (): array => $this->getDatabaseStructure(
-            $connection,
-            $filter,
-            $includeViews,
-            $includeRoutines
-        ));
+        $schema = rescue(
+            fn () => Cache::remember($cacheKey, 20, fn (): array => $this->getDatabaseStructure(
+                $connection,
+                $filter,
+                $includeViews,
+                $includeRoutines
+            )),
+            fn (): array => $this->getDatabaseStructure($connection, $filter, $includeViews, $includeRoutines),
+            report: false
+        );
 
         return Response::json($schema);
     }
