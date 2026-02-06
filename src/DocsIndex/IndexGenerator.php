@@ -37,8 +37,10 @@ class IndexGenerator
         $files = collect(iterator_to_array($finder, false))
             ->reject(fn (SplFileInfo $file): bool => in_array(strtolower($file->getFilename()), $excluded, true))
             ->map(function (SplFileInfo $file) use ($basePath): array {
-                $relativePath = str_replace($basePath.'/', '', $file->getPathname());
-                $dir = dirname($relativePath);
+                $normalizedBase = str_replace('\\', '/', $basePath);
+                $normalizedPath = str_replace('\\', '/', $file->getPathname());
+                $relativePath = str_replace($normalizedBase.'/', '', $normalizedPath);
+                $dir = str_replace('\\', '/', dirname($relativePath));
 
                 return [
                     'dir' => $dir === '.' ? '' : $dir,
