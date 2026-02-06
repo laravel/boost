@@ -98,7 +98,7 @@ test('returns correct guidelines path', function (): void {
 test('returns correct skills path', function (): void {
     $codex = new Codex($this->strategyFactory);
 
-    expect($codex->skillsPath())->toBe('.codex/skills');
+    expect($codex->skillsPath())->toBe('.agents/skills');
 });
 
 test('system detection uses which command on Darwin', function (): void {
