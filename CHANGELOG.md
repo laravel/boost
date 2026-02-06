@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.1...main)
+
+## [v2.1.1](https://github.com/laravel/boost/compare/v2.1.0...v2.1.1) - 2026-02-06
+
+### What's Changed
+
+* Add Flux Icons documentation to SKILL.md files by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/494
+* Detect Inertia pages directory casing from filesystem by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/534
+* Graceful cache fallback when cache driver is unreachable by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/533
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.0...v2.1.1
 
 ## [v2.1.0](https://github.com/laravel/boost/compare/v2.0.6...v2.1.0) - 2026-02-05
 
