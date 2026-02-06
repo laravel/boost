@@ -9,6 +9,7 @@ use Laravel\Mcp\Request;
 it('executes allowed read-only queries', function (): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
+    DB::shouldReceive('getTablePrefix')->andReturn('');
 
     $tool = new DatabaseQuery;
 
@@ -85,6 +86,7 @@ it('handles empty queries gracefully', function (): void {
 it('allows queries starting with any allowed keyword even when identifiers look like SQL keywords', function (): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
+    DB::shouldReceive('getTablePrefix')->andReturn('');
 
     $tool = new DatabaseQuery;
 
@@ -106,5 +108,31 @@ it('allows queries starting with any allowed keyword even when identifiers look 
 
         expect($response)->isToolResult()
             ->toolHasNoError();
+    }
+});
+
+it('adds table prefix to queries', function (): void {
+    DB::shouldReceive('connection')->andReturnSelf();
+    DB::shouldReceive('getTablePrefix')->andReturn('wp_');
+
+    $testCases = [
+        'SELECT * FROM users' => 'SELECT * FROM wp_users',
+        'SELECT * FROM users JOIN posts ON users.id = posts.user_id' => 'SELECT * FROM wp_users JOIN wp_posts ON users.id = posts.user_id',
+        'SELECT * FROM `users`' => 'SELECT * FROM `wp_users`',
+        'SELECT * FROM wp_already_prefixed' => 'SELECT * FROM wp_already_prefixed',
+        'EXPLAIN SELECT * FROM users' => 'EXPLAIN SELECT * FROM wp_users',
+        'WITH cte AS (SELECT 1) SELECT * FROM users' => 'WITH cte AS (SELECT 1) SELECT * FROM wp_users',
+        'SELECT * FROM users JOIN posts ON users.id = posts.user_id JOIN comments ON posts.id = comments.post_id' => 'SELECT * FROM wp_users JOIN wp_posts ON users.id = posts.user_id JOIN wp_comments ON posts.id = comments.post_id',
+        'SELECT * FROM "users"' => 'SELECT * FROM "wp_users"',
+        "SELECT * FROM 'users'" => "SELECT * FROM 'wp_users'",
+    ];
+
+    foreach ($testCases as $input => $expected) {
+        DB::shouldReceive('select')->with($expected)->once()->andReturn([]);
+
+        $tool = new DatabaseQuery;
+        $response = $tool->handle(new Request(['query' => $input]));
+
+        expect($response)->isToolResult()->toolHasNoError();
     }
 });

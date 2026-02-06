@@ -77,11 +77,38 @@ class DatabaseQuery extends Tool
         $connectionName = $request->get('database');
 
         try {
+            $connection = DB::connection($connectionName);
+            $prefix = $connection->getTablePrefix();
+
+            if ($prefix) {
+                $query = $this->addPrefixToQuery($query, $prefix);
+            }
+
             return Response::json(
-                DB::connection($connectionName)->select($query)
+                $connection->select($query)
             );
         } catch (Throwable $throwable) {
             return Response::error('Query failed: '.$throwable->getMessage());
         }
+    }
+
+    /**
+     * Add table prefix to SQL query.
+     */
+    protected function addPrefixToQuery(string $query, string $prefix): string
+    {
+        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+([`"\']?)(\w+)\2/i';
+
+        return preg_replace_callback($pattern, function ($matches) use ($prefix): string {
+            $keyword = $matches[1];
+            $quote = $matches[2];
+            $tableName = $matches[3];
+
+            if (str_starts_with($tableName, $prefix)) {
+                return $matches[0];
+            }
+
+            return "{$keyword} {$quote}{$prefix}{$tableName}{$quote}";
+        }, $query);
     }
 }
