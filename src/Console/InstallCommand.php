@@ -39,7 +39,8 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}';
+        {--mcp : Install MCP server configuration}
+        {--docs : Download package docs and generate index}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -130,6 +131,10 @@ class InstallCommand extends Command
         }
 
         $this->storeConfig();
+
+        if ($this->selectedBoostFeatures->contains('docs')) {
+            $this->call(DocsCommand::class);
+        }
     }
 
     protected function outro(): void
@@ -172,6 +177,7 @@ class InstallCommand extends Command
             'guidelines' => 'AI Guidelines',
             'skills' => 'Agent Skills',
             'mcp' => 'Boost MCP Server Configuration',
+            'docs' => 'Local Docs Index',
         ]);
 
         $explicit = $featureLabels->keys()->filter(fn ($feature) => $this->option($feature));
@@ -184,6 +190,7 @@ class InstallCommand extends Command
             'guidelines' => $this->config->getGuidelines(),
             'skills' => $this->config->hasSkills(),
             'mcp' => $this->config->getMcp(),
+            'docs' => $this->config->getDocs(),
         ]);
 
         $defaults = $configValues->filter()->keys()->whenEmpty(fn () => $featureLabels->keys());
@@ -404,6 +411,10 @@ class InstallCommand extends Command
             $this->config->setSail($this->shouldUseSail());
             $this->config->setHerdMcp($this->shouldInstallHerdMcp());
         }
+
+        if ($this->selectedBoostFeatures->contains('docs')) {
+            $this->config->setDocs(true);
+        }
     }
 
     protected function shouldInstallHerdMcp(): bool
@@ -427,6 +438,10 @@ class InstallCommand extends Command
         }
 
         if ($this->option('skills')) {
+            return true;
+        }
+
+        if ($this->option('docs')) {
             return true;
         }
 

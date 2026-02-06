@@ -108,6 +108,7 @@ class BoostServiceProvider extends ServiceProvider
                 Console\UpdateCommand::class,
                 Console\ExecuteToolCommand::class,
                 Console\AddSkillCommand::class,
+                Console\DocsCommand::class,
             ]);
         }
     }

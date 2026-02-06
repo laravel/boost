@@ -32,6 +32,10 @@ class UpdateCommand extends Command
             '--skills' => $hasSkills,
         ]);
 
+        if ($config->getDocs()) {
+            $this->callSilently(DocsCommand::class);
+        }
+
         $this->info('Boost guidelines and skills updated successfully.');
 
         return self::SUCCESS;

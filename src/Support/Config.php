@@ -103,6 +103,16 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function setDocs(bool $enabled): void
+    {
+        $this->set('docs', $enabled);
+    }
+
+    public function getDocs(): bool
+    {
+        return (bool) $this->get('docs', false);
+    }
+
     public function isValid(): bool
     {
         $path = base_path(self::FILE);
