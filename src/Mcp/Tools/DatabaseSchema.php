@@ -24,7 +24,7 @@ class DatabaseSchema extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Read the database schema for this application. Returns table names, columns, data types, indexes, and foreign keys. Use "filter" to narrow down tables by name (substring match).';
+    protected string $description = 'Read the database schema for this application. Returns table names, columns (type with precision, nullable, default, auto_increment), indexes, and foreign keys. Use "filter" to narrow down tables by name (substring match).';
 
     /**
      * Get the tool's input schema.
@@ -167,15 +167,30 @@ class DatabaseSchema extends Tool
     }
 
     /**
-     * @return array<string, array{type: string}>
+     * @return array<string, array{type: string, nullable: bool, default: mixed, auto_increment: bool, comment?: string, generation?: array<string, mixed>}>
      */
     protected function getTableColumns(?string $connection, string $tableName): array
     {
         $schema = Schema::connection($connection);
         $columnDetails = [];
 
-        foreach ($schema->getColumnListing($tableName) as $column) {
-            $columnDetails[$column] = ['type' => $schema->getColumnType($tableName, $column)];
+        foreach ($schema->getColumns($tableName) as $column) {
+            $detail = [
+                'type' => $column['type'],
+                'nullable' => $column['nullable'],
+                'default' => $column['default'],
+                'auto_increment' => $column['auto_increment'],
+            ];
+
+            if ($column['comment'] !== null && $column['comment'] !== '') {
+                $detail['comment'] = $column['comment'];
+            }
+
+            if ($column['generation'] !== null) {
+                $detail['generation'] = $column['generation'];
+            }
+
+            $columnDetails[$column['name']] = $detail;
         }
 
         return $columnDetails;

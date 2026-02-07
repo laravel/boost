@@ -10,6 +10,7 @@
 ## Tinker / Debugging
 - You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
 - Use the `database-query` tool when you only need to read from the database.
+- Use the `database-schema` tool to inspect table structure before writing migrations or models.
 
 @if (config('boost.browser_logs', true) !== false || config('boost.browser_logs_watcher', true) !== false)
 ## Reading Browser Logs With the `browser-logs` Tool
