@@ -11,66 +11,136 @@ description: >-
 @endphp
 # MCP Development
 
-## When to Apply
+## Documentation First
 
-Activate this skill when:
+**CRITICAL**: Always use `search-docs` BEFORE writing MCP code. The documentation is version-specific, comprehensive, and always up-to-date.
 
-- Creating MCP tools, resources, or prompts
-- Setting up MCP server routes
-- Debugging MCP connection issues
-
-## Documentation
-
-Use `search-docs` for detailed Laravel MCP patterns and documentation.
-
-## Basic Usage
-
-Register MCP servers in `routes/ai.php`:
-
-@boostsnippet("Register MCP Server", "php")
-use Laravel\Mcp\Facades\Mcp;
-
-Mcp::web();
+@boostsnippet("Search MCP Documentation", "bash")
+# Example searches
+search-docs(['mcp tools', 'mcp resources', 'mcp validation'])
 @endboostsnippet
 
-### Creating MCP Primitives
+## Quick Reference
 
-Create MCP tools, resources, prompts, and servers using artisan commands:
+### Artisan Commands
 
-@boostsnippet("MCP Artisan Commands", "bash")
-{{ $assist->artisanCommand('make:mcp-tool ToolName') }}        # Create a tool
-{{ $assist->artisanCommand('make:mcp-resource ResourceName') }} # Create a resource
-{{ $assist->artisanCommand('make:mcp-prompt PromptName') }}    # Create a prompt
-{{ $assist->artisanCommand('make:mcp-server ServerName') }}    # Create a server
+@boostsnippet("Create MCP Primitives", "bash")
+{{ $assist->artisanCommand('make:mcp-tool ToolName') }}
+{{ $assist->artisanCommand('make:mcp-resource ResourceName') }}
+{{ $assist->artisanCommand('make:mcp-prompt PromptName') }}
+{{ $assist->artisanCommand('make:mcp-server ServerName') }}
 @endboostsnippet
 
-After creating primitives, register them in your server's `$tools`, `$resources`, or `$prompts` properties.
+### Basic Tool Pattern
 
-### Tools
-
-@boostsnippet("MCP Tool Example", "php")
+@boostsnippet("Tool Example", "php")
+use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Laravel\Mcp\Server\Request;
-use Laravel\Mcp\Server\Response;
 
 class MyTool extends Tool
 {
+    protected string $description = 'Tool description for LLM';
+
+    public function schema(JsonSchema $schema): array
+    {
+        return [
+            'param' => $schema->string()->required(),
+        ];
+    }
+
     public function handle(Request $request): Response
     {
-        return new Response(['result' => 'success']);
+        return Response::text($request->get('param'));
     }
 }
 @endboostsnippet
 
-## Verification
+### Basic Resource Pattern
 
-1. Check `routes/ai.php` for proper registration
-2. Test tool via MCP client
+@boostsnippet("Resource Example", "php")
+use Laravel\Mcp\Response;
+use Laravel\Mcp\Server\Resource;
+
+class MyResource extends Resource
+{
+    protected string $description = 'Resource description';
+    protected string $uri = 'file://path/to/resource';
+    protected string $mimeType = 'text/markdown';
+
+    public function handle(): Response
+    {
+        return Response::text($content);
+    }
+}
+@endboostsnippet
+
+### Response Methods
+
+@boostsnippet("Available Responses", "php")
+Response::text('Text content');
+Response::error('Error message');
+Response::structured(['key' => 'value']);
+@endboostsnippet
+
+## Testing MCP Primitives
+
+Test tools, resources, and prompts directly on their server:
+
+@boostsnippet("Test MCP Primitives", "php")
+// Test a tool
+$response = MyServer::tool(MyTool::class, ['param' => 'value']);
+$response->assertOk()->assertSee('Expected text');
+
+// Test as authenticated user
+$response = MyServer::actingAs($user)->tool(MyTool::class, [...]);
+
+// Available assertions
+$response->assertOk();
+$response->assertSee('text');
+$response->assertHasErrors();
+$response->assertHasNoErrors();
+$response->assertName('tool-name');
+$response->assertSentNotification('event/type', ['data' => 'value']);
+@endboostsnippet
+
+### MCP Inspector
+
+Test interactively using the inspector:
+
+@boostsnippet("Launch MCP Inspector", "bash")
+{{ $assist->artisanCommand('mcp:inspector mcp/my-server') }}  # Web server
+{{ $assist->artisanCommand('mcp:inspector my-server') }}      # Local server
+@endboostsnippet
+
+## Available Features
+
+The following features exist—**use `search-docs` for implementation details**:
+
+- **Tools**: `schema()`, validation, annotations (`#[IsReadOnly]`, `#[IsDestructive]`, etc.)
+- **Resources**: URI templates (`HasUriTemplate`), Dynamic resources
+- **Prompts**: Arguments, multi-message responses
+- **All primitives**: Dependency injection, `shouldRegister()`, validation
+- **Responses**: Text, error, structured, streaming, metadata
+- **Server registration**: Web routes, local routes, OAuth
+
+## Critical Imports
+
+@boostsnippet("Correct Imports", "php")
+use Laravel\Mcp\Request;           // NOT Laravel\Mcp\Server\Request
+use Laravel\Mcp\Response;          // NOT Laravel\Mcp\Server\Response
+use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Resource;
+use Laravel\Mcp\Server\Prompt;
+use Illuminate\Contracts\JsonSchema\JsonSchema;
+@endboostsnippet
 
 ## Common Pitfalls
 
-- Running `mcp:start` command (it hangs waiting for input)
-- Using HTTPS locally with Node-based MCP clients
-- Not using `search-docs` for the latest MCP documentation
-- Not registering MCP server routes in `routes/ai.php`
-- Do not register `ai.php` in `bootstrap.php`; it is registered automatically.
+- **Not using `search-docs` before implementation**
+- Wrong imports: `Laravel\Mcp\Server\Request` (wrong) vs `Laravel\Mcp\Request` (correct)
+- Forgetting `schema()` method for tools with parameters
+- Missing required properties: `$description`, `$uri`, `$mimeType`
+- Wrong response pattern: `new Response()` instead of `Response::text()`
+- Running `mcp:start` command locally (hangs waiting for stdin)
