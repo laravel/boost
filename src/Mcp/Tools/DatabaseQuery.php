@@ -97,18 +97,34 @@ class DatabaseQuery extends Tool
      */
     protected function addPrefixToQuery(string $query, string $prefix): string
     {
+        $cteNames = $this->extractCteNames($query);
+
         $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+([`"\']?)(\w+)\2/i';
 
-        return preg_replace_callback($pattern, function ($matches) use ($prefix): string {
+        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
             $keyword = $matches[1];
             $quote = $matches[2];
             $tableName = $matches[3];
 
-            if (str_starts_with($tableName, $prefix)) {
+            if (str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true)) {
                 return $matches[0];
             }
 
             return "{$keyword} {$quote}{$prefix}{$tableName}{$quote}";
         }, $query);
+    }
+
+    /**
+     * Extract CTE (Common Table Expression) names from a query.
+     *
+     * @return array<int, string>
+     */
+    protected function extractCteNames(string $query): array
+    {
+        if (preg_match_all('/\b(\w+)\s*(?:\([^)]*\))?\s*AS\s*\(/i', $query, $matches)) {
+            return $matches[1];
+        }
+
+        return [];
     }
 }
