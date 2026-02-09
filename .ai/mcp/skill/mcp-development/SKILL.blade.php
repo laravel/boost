@@ -1,10 +1,9 @@
 ---
 name: mcp-development
-description: >-
-  Develops MCP servers, tools, resources, and prompts. Activates when creating MCP tools,
-  resources, or prompts; setting up AI integrations; debugging MCP connections; working with
-  routes/ai.php; or when the user mentions MCP, Model Context Protocol, AI tools, AI server,
-  or building tools for AI assistants.
+description: "Develops MCP servers, tools, resources, and prompts. Activates when creating MCP tools, resources, or prompts; setting up AI integrations; debugging MCP connections; working with routes/ai.php; or when the user mentions MCP, Model Context Protocol, AI tools, AI server, or building tools for AI assistants."
+license: MIT
+metadata:
+  author: laravel
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */

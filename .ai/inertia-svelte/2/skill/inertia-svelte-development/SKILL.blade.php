@@ -1,10 +1,9 @@
 ---
 name: inertia-svelte-development
-description: >-
-  Develops Inertia.js v2 Svelte client-side applications. Activates when creating
-  Svelte pages, forms, or navigation; using Link, Form, or router; working with
-  deferred props, prefetching, or polling; or when user mentions Svelte with Inertia,
-  Svelte pages, Svelte forms, or Svelte navigation.
+description: "Develops Inertia.js v2 Svelte client-side applications. Activates when creating Svelte pages, forms, or navigation; using Link, Form, or router; working with deferred props, prefetching, or polling; or when user mentions Svelte with Inertia, Svelte pages, Svelte forms, or Svelte navigation."
+license: MIT
+metadata:
+  author: laravel
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema;
@@ -28,6 +29,8 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
+    DB::disconnect('testing');
+
     $dbFile = database_path('testing.sqlite');
 
     if (File::exists($dbFile)) {
@@ -53,8 +56,29 @@ test('it returns structured database schema', function (): void {
             $exampleTable = $schemaArray['tables']['examples'];
             expect($exampleTable)->toHaveKeys(['columns', 'indexes', 'foreign_keys', 'triggers', 'check_constraints'])
                 ->and($exampleTable['columns'])->toHaveKeys(['id', 'name'])
-                ->and($exampleTable['columns']['id']['type'])->toBe('integer')
-                ->and($exampleTable['columns']['name']['type'])->toBe('varchar');
+                ->and($exampleTable['columns']['id']['type'])->toContain('integer')
+                ->and($exampleTable['columns']['name']['type'])->toContain('varchar')
+                ->and($exampleTable['columns']['id'])->not->toHaveKey('nullable')
+                ->and($exampleTable['columns']['id'])->not->toHaveKey('auto_increment')
+                ->and($exampleTable['columns']['id'])->not->toHaveKey('default');
+        });
+});
+
+test('it includes column details when include_column_details is true', function (): void {
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['include_column_details' => true]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            $exampleTable = $schemaArray['tables']['examples'];
+            expect($exampleTable['columns'])->toHaveKeys(['id', 'name'])
+                ->and($exampleTable['columns']['id']['type'])->toContain('integer')
+                ->and($exampleTable['columns']['id']['nullable'])->toBeBool()
+                ->and($exampleTable['columns']['id']['auto_increment'])->toBeTrue()
+                ->and($exampleTable['columns']['id'])->toHaveKey('default')
+                ->and($exampleTable['columns']['name']['nullable'])->toBeFalse()
+                ->and($exampleTable['columns']['name']['auto_increment'])->toBeFalse();
         });
 });
 

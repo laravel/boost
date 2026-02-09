@@ -1,10 +1,9 @@
 ---
 name: fluxui-development
-description: >-
-  Develops UIs with Flux UI Pro components. Activates when creating buttons, forms, modals,
-  inputs, tables, charts, date pickers, or UI components; replacing HTML elements with Flux;
-  working with flux: components; or when the user mentions Flux, component library, UI components,
-  form fields, or asks about available Flux components.
+description: "Develops UIs with Flux UI Pro components. Activates when creating buttons, forms, modals, inputs, tables, charts, date pickers, or UI components; replacing HTML elements with Flux; working with flux: components; or when the user mentions Flux, component library, UI components, form fields, or asks about available Flux components."
+license: MIT
+metadata:
+  author: laravel
 ---
 # Flux UI Development
 
