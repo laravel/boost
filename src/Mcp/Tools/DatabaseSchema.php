@@ -24,7 +24,7 @@ class DatabaseSchema extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Read the database schema for this application. Returns table names, columns, data types, indexes, and foreign keys. Use "filter" to narrow down tables by name (substring match).';
+    protected string $description = 'Read the database schema for this application. Returns table names, tables, columns (type only), indexes, foreign keys. Params: "database" - connection name; "filter" - substring match on table names; "include_column_details" (default false) - adds nullable, default, auto_increment, comments; "include_views" (default false); "include_routines" (default false) - stored procedures, functions, sequences.';
 
     /**
      * Get the tool's input schema.
@@ -42,6 +42,8 @@ class DatabaseSchema extends Tool
                 ->description('Include database views. Defaults to false.'),
             'include_routines' => $schema->boolean()
                 ->description('Include stored procedures, functions, and sequences. Defaults to false.'),
+            'include_column_details' => $schema->boolean()
+                ->description('Include full column metadata (nullable, default, auto_increment, comments, generation). Defaults to false.'),
         ];
     }
 
@@ -54,13 +56,15 @@ class DatabaseSchema extends Tool
         $filter = $request->get('filter') ?? '';
         $includeViews = $request->get('include_views', false);
         $includeRoutines = $request->get('include_routines', false);
+        $includeColumnDetails = $request->get('include_column_details', false);
 
         $cacheKey = sprintf(
-            'boost:mcp:database-schema:%s:%s:%d:%d',
+            'boost:mcp:database-schema:%s:%s:%d:%d:%d',
             $connection,
             $filter,
             (int) $includeViews,
-            (int) $includeRoutines
+            (int) $includeRoutines,
+            (int) $includeColumnDetails
         );
 
         $schema = rescue(
@@ -68,9 +72,10 @@ class DatabaseSchema extends Tool
                 $connection,
                 $filter,
                 $includeViews,
-                $includeRoutines
+                $includeRoutines,
+                $includeColumnDetails
             )),
-            fn (): array => $this->getDatabaseStructure($connection, $filter, $includeViews, $includeRoutines),
+            fn (): array => $this->getDatabaseStructure($connection, $filter, $includeViews, $includeRoutines, $includeColumnDetails),
             report: false
         );
 
@@ -84,13 +89,14 @@ class DatabaseSchema extends Tool
         ?string $connection,
         string $filter = '',
         bool $includeViews = false,
-        bool $includeRoutines = false
+        bool $includeRoutines = false,
+        bool $includeColumnDetails = false
     ): array {
         $driver = SchemaDriverFactory::make($connection);
 
         $result = [
             'engine' => DB::connection($connection)->getDriverName(),
-            'tables' => $this->getAllTablesStructure($connection, $filter),
+            'tables' => $this->getAllTablesStructure($connection, $filter, $includeColumnDetails),
         ];
 
         if ($includeViews) {
@@ -111,7 +117,7 @@ class DatabaseSchema extends Tool
     /**
      * @return array<string, array<string, mixed>>
      */
-    protected function getAllTablesStructure(?string $connection, string $filter = ''): array
+    protected function getAllTablesStructure(?string $connection, string $filter = '', bool $includeColumnDetails = false): array
     {
         $structures = [];
 
@@ -122,7 +128,7 @@ class DatabaseSchema extends Tool
                 continue;
             }
 
-            $structures[$tableName] = $this->getTableStructure($connection, $tableName);
+            $structures[$tableName] = $this->getTableStructure($connection, $tableName, $includeColumnDetails);
         }
 
         return $structures;
@@ -136,12 +142,12 @@ class DatabaseSchema extends Tool
         return SchemaDriverFactory::make($connection)->getTables();
     }
 
-    protected function getTableStructure(?string $connection, string $tableName): array
+    protected function getTableStructure(?string $connection, string $tableName, bool $includeColumnDetails = false): array
     {
         $driver = SchemaDriverFactory::make($connection);
 
         try {
-            $columns = $this->getTableColumns($connection, $tableName);
+            $columns = $this->getTableColumns($connection, $tableName, $includeColumnDetails);
             $indexes = $this->getTableIndexes($connection, $tableName);
             $foreignKeys = $this->getTableForeignKeys($connection, $tableName);
             $triggers = $driver->getTriggers($tableName);
@@ -167,15 +173,31 @@ class DatabaseSchema extends Tool
     }
 
     /**
-     * @return array<string, array{type: string}>
+     * @return array<string, array{type: string, nullable?: bool, default?: mixed, auto_increment?: bool, comment?: string, generation?: array<string, mixed>}>
      */
-    protected function getTableColumns(?string $connection, string $tableName): array
+    protected function getTableColumns(?string $connection, string $tableName, bool $includeColumnDetails = false): array
     {
         $schema = Schema::connection($connection);
         $columnDetails = [];
 
-        foreach ($schema->getColumnListing($tableName) as $column) {
-            $columnDetails[$column] = ['type' => $schema->getColumnType($tableName, $column)];
+        foreach ($schema->getColumns($tableName) as $column) {
+            $detail = ['type' => $column['type']];
+
+            if ($includeColumnDetails) {
+                $detail['nullable'] = $column['nullable'];
+                $detail['default'] = $column['default'];
+                $detail['auto_increment'] = $column['auto_increment'];
+
+                if ($column['comment'] !== null && $column['comment'] !== '') {
+                    $detail['comment'] = $column['comment'];
+                }
+
+                if ($column['generation'] !== null) {
+                    $detail['generation'] = $column['generation'];
+                }
+            }
+
+            $columnDetails[$column['name']] = $detail;
         }
 
         return $columnDetails;
