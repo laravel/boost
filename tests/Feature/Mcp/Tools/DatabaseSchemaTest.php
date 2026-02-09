@@ -58,6 +58,22 @@ test('it returns structured database schema', function (): void {
                 ->and($exampleTable['columns'])->toHaveKeys(['id', 'name'])
                 ->and($exampleTable['columns']['id']['type'])->toContain('integer')
                 ->and($exampleTable['columns']['name']['type'])->toContain('varchar')
+                ->and($exampleTable['columns']['id'])->not->toHaveKey('nullable')
+                ->and($exampleTable['columns']['id'])->not->toHaveKey('auto_increment')
+                ->and($exampleTable['columns']['id'])->not->toHaveKey('default');
+        });
+});
+
+test('it includes column details when include_column_details is true', function (): void {
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['include_column_details' => true]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            $exampleTable = $schemaArray['tables']['examples'];
+            expect($exampleTable['columns'])->toHaveKeys(['id', 'name'])
+                ->and($exampleTable['columns']['id']['type'])->toContain('integer')
                 ->and($exampleTable['columns']['id']['nullable'])->toBeBool()
                 ->and($exampleTable['columns']['id']['auto_increment'])->toBeTrue()
                 ->and($exampleTable['columns']['id'])->toHaveKey('default')
