@@ -13,6 +13,7 @@ use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\OpenCode;
+use Laravel\Boost\Install\Agents\Cline;
 
 class BoostManager
 {
@@ -25,6 +26,7 @@ class BoostManager
         'copilot' => Copilot::class,
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
+        'cline' => Cline::class,
     ];
 
     /**
