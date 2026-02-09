@@ -514,3 +514,87 @@ test('file installation handles docker exec commands', function (): void {
             ],
         ]);
 });
+
+test('preserves absolute unix paths with spaces without splitting', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand(
+        '/Users/dev/Library/Application Support/Herd/bin/php83',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe([
+        'command' => '/Users/dev/Library/Application Support/Herd/bin/php83',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('preserves absolute unix paths without spaces without splitting', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand(
+        '/usr/local/bin/php',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe([
+        'command' => '/usr/local/bin/php',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('preserves absolute windows paths with spaces without splitting', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand(
+        'C:\\Program Files\\PHP\\php.exe',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe([
+        'command' => 'C:\\Program Files\\PHP\\php.exe',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('file installation handles absolute paths with spaces correctly', function (): void {
+    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp(
+        'test-key',
+        '/Users/dev/Library/Application Support/Herd/bin/php83',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'test-key' => [
+                    'command' => '/Users/dev/Library/Application Support/Herd/bin/php83',
+                    'args' => ['artisan', 'boost:mcp'],
+                ],
+            ],
+        ]);
+});
