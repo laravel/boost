@@ -1,10 +1,9 @@
 ---
 name: pennant-development
-description: >-
-  Manages feature flags with Laravel Pennant. Activates when creating, checking, or toggling
-  feature flags; showing or hiding features conditionally; implementing A/B testing; working with
-  @feature directive; or when the user mentions feature flags, feature toggles, Pennant, conditional
-  features, rollouts, or gradually enabling features.
+description: "Manages feature flags with Laravel Pennant. Activates when creating, checking, or toggling feature flags; showing or hiding features conditionally; implementing A/B testing; working with @feature directive; or when the user mentions feature flags, feature toggles, Pennant, conditional features, rollouts, or gradually enabling features."
+license: MIT
+metadata:
+  author: laravel
 ---
 # Pennant Features
 

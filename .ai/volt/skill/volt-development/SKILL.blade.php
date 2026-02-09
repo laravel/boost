@@ -1,10 +1,9 @@
 ---
 name: volt-development
-description: >-
-  Develops single-file Livewire components with Volt. Activates when creating Volt components,
-  converting Livewire to Volt, working with @volt directive, functional or class-based Volt APIs;
-  or when the user mentions Volt, single-file components, functional Livewire, or inline component
-  logic in Blade files.
+description: "Develops single-file Livewire components with Volt. Activates when creating Volt components, converting Livewire to Volt, working with @volt directive, functional or class-based Volt APIs; or when the user mentions Volt, single-file components, functional Livewire, or inline component logic in Blade files."
+license: MIT
+metadata:
+  author: laravel
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
