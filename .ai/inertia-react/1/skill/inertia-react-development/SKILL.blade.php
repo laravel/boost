@@ -1,9 +1,9 @@
 ---
 name: inertia-react-development
-description: >-
-  Develops Inertia.js v1 React client-side applications. Activates when creating
-  React pages, forms, or navigation; using Link or router; or when user mentions
-  React with Inertia, React pages, React forms, or React navigation.
+description: "Develops Inertia.js v1 React client-side applications. Activates when creating React pages, forms, or navigation; using Link or router; or when user mentions React with Inertia, React pages, React forms, or React navigation."
+license: MIT
+metadata:
+  author: laravel
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
@@ -27,7 +27,7 @@ Use `search-docs` for detailed Inertia v1 React patterns and documentation.
 
 ### Page Components Location
 
-React page components should be placed in the `resources/js/Pages` directory.
+React page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
 
 ### Page Component Structure
 

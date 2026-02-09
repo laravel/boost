@@ -1,9 +1,9 @@
 ---
 name: inertia-svelte-development
-description: >-
-  Develops Inertia.js v1 Svelte client-side applications. Activates when creating
-  Svelte pages, forms, or navigation; using Link or router; or when user mentions
-  Svelte with Inertia, Svelte pages, Svelte forms, or Svelte navigation.
+description: "Develops Inertia.js v1 Svelte client-side applications. Activates when creating Svelte pages, forms, or navigation; using Link or router; or when user mentions Svelte with Inertia, Svelte pages, Svelte forms, or Svelte navigation."
+license: MIT
+metadata:
+  author: laravel
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
@@ -27,7 +27,7 @@ Use `search-docs` for detailed Inertia v1 Svelte patterns and documentation.
 
 ### Page Components Location
 
-Svelte page components should be placed in the `resources/js/Pages` directory.
+Svelte page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
 
 ### Page Component Structure
 

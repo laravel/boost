@@ -117,6 +117,29 @@ it('uses a daily log driver correctly', function (): void {
         ->toolTextContains('Daily driver error');
 });
 
+it('falls back to log file when cache is unreachable', function (): void {
+    Cache::shouldReceive('get')
+        ->with('boost:last_error')
+        ->andThrow(new RuntimeException('Cache driver unreachable'));
+
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    File::put($logFile, '[2024-01-15 10:00:00] local.ERROR: Fallback error from log file');
+
+    $tool = new LastError;
+    $response = $tool->handle(new Request([]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Fallback error from log file');
+});
+
 it('does not return info or warning entries', function (): void {
     $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
 
