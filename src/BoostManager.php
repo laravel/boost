@@ -6,6 +6,7 @@ namespace Laravel\Boost;
 
 use InvalidArgumentException;
 use Laravel\Boost\Install\Agents\Agent;
+use Laravel\Boost\Install\Agents\Antigravity;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
@@ -25,6 +26,7 @@ class BoostManager
         'copilot' => Copilot::class,
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
+        'antigravity' => Antigravity::class,
     ];
 
     /**
