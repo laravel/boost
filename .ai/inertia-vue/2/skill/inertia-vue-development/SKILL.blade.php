@@ -1,10 +1,9 @@
 ---
 name: inertia-vue-development
-description: >-
-  Develops Inertia.js v2 Vue client-side applications. Activates when creating
-  Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router;
-  working with deferred props, prefetching, or polling; or when user mentions
-  Vue with Inertia, Vue pages, Vue forms, or Vue navigation.
+description: "Develops Inertia.js v2 Vue client-side applications. Activates when creating Vue pages, forms, or navigation; using <Link>, <Form>, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions Vue with Inertia, Vue pages, Vue forms, or Vue navigation."
+license: MIT
+metadata:
+  author: laravel
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */

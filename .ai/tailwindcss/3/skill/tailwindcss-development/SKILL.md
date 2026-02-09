@@ -1,10 +1,9 @@
 ---
 name: tailwindcss-development
-description: >-
-  Styles applications using Tailwind CSS v3 utilities. Activates when adding styles, restyling components,
-  working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors,
-  typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle,
-  hero section, cards, buttons, or any visual/UI changes.
+description: "Styles applications using Tailwind CSS v3 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes."
+license: MIT
+metadata:
+  author: laravel
 ---
 # Tailwind CSS Development
 
