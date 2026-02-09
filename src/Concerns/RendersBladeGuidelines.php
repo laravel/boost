@@ -41,7 +41,7 @@ trait RendersBladeGuidelines
         return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function (array $matches): string {
             $name = $matches['name'];
             $lang = empty($matches['lang']) ? 'html' : $matches['lang'];
-            $snippetContent = $matches['content'];
+            $snippetContent = trim($matches['content']);
 
             $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
 
