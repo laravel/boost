@@ -23,8 +23,8 @@ Use `search-docs` for detailed Pennant patterns and documentation.
 
 ### Defining Features
 
+<!-- Defining Features -->
 ```php
-# Defining Features
 use Laravel\Pennant\Feature;
 
 Feature::define('new-dashboard', function (User $user) {
@@ -34,8 +34,8 @@ Feature::define('new-dashboard', function (User $user) {
 
 ### Checking Features
 
+<!-- Checking Features -->
 ```php
-# Checking Features
 if (Feature::active('new-dashboard')) {
     // Feature is active
 }
@@ -48,8 +48,8 @@ if (Feature::for($user)->active('new-dashboard')) {
 
 ### Blade Directive
 
+<!-- Blade Directive -->
 ```blade
-# Blade Directive
 @feature('new-dashboard')
     <x-new-dashboard />
 @else
@@ -59,8 +59,8 @@ if (Feature::for($user)->active('new-dashboard')) {
 
 ### Activating / Deactivating
 
+<!-- Activating Features -->
 ```php
-# Activating Features
 Feature::activate('new-dashboard');
 Feature::for($user)->activate('new-dashboard');
 ```

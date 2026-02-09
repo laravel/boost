@@ -103,8 +103,8 @@ function example() {
     $response = $prompt->handle();
 
     expect($response)->isToolResult()
+        ->toolTextContains('<!-- example -->')
         ->toolTextContains('```php')
-        ->toolTextContains('# example')
         ->toolTextContains('function example()');
 });
 
@@ -128,7 +128,7 @@ function example() {
     $content2 = (string) $response2->content();
 
     expect($content1)->toBe($content2)
+        ->and($content1)->toContain('<!-- example -->')
         ->and($content1)->toContain('```php')
-        ->and($content1)->toContain('# example')
         ->and($content1)->not->toContain('___BOOST_SNIPPET_');
 });

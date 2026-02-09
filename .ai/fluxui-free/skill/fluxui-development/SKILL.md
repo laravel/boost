@@ -27,8 +27,8 @@ Flux UI is a component library for Livewire built with Tailwind CSS. It provides
 
 Use Flux UI components when available. Fall back to standard Blade components when no Flux component exists for your needs.
 
+<!-- Basic Button -->
 ```blade
-# Basic Button
 <flux:button variant="primary">Click me</flux:button>
 ```
 
@@ -40,8 +40,8 @@ Available: avatar, badge, brand, breadcrumbs, button, callout, checkbox, dropdow
 
 Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Search for exact icon names on the Heroicons site - do not guess or invent icon names.
 
+<!-- Icon Button -->
 ```blade
-# Icon Button
 <flux:button icon="arrow-down-tray">Export</flux:button>
 ```
 
@@ -55,8 +55,8 @@ php artisan flux:icon crown grip-vertical github
 
 ### Form Fields
 
+<!-- Form Field -->
 ```blade
-# Form Field
 <flux:field>
     <flux:label>Email</flux:label>
     <flux:input type="email" wire:model="email" />
@@ -66,8 +66,8 @@ php artisan flux:icon crown grip-vertical github
 
 ### Modals
 
+<!-- Modal -->
 ```blade
-# Modal
 <flux:modal wire:model="showModal">
     <flux:heading>Title</flux:heading>
     <p>Content</p>

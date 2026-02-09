@@ -9,8 +9,8 @@ PHP 8.5 introduces new array functions that simplify code when not using Laravel
 
 The pipe operator (`|>`) chains function calls left-to-right, replacing nested calls:
 
+<!-- Pipe Operator Example -->
 ```php
-# Pipe Operator Example
 // Before PHP 8.5
 $slug = strtolower(str_replace(' ', '-', trim($title)));
 

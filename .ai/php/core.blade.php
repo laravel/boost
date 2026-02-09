@@ -17,8 +17,8 @@
 - Always use explicit return type declarations for methods and functions.
 - Use appropriate PHP type hints for method parameters.
 
+<!-- Explicit Return Types and Method Params -->
 ```php
-# Explicit Return Types and Method Params
 protected function isAccessible(User $user, ?string $path = null): bool
 {
     ...

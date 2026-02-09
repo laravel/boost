@@ -36,8 +36,8 @@ Use `search-docs` for detailed Tailwind CSS v4 patterns and documentation.
 
 In Tailwind v4, configuration is CSS-first using the `@theme` directive — no separate `tailwind.config.js` file is needed:
 
+<!-- CSS-First Config -->
 ```css
-# CSS-First Config
 @theme {
   --color-brand: oklch(0.72 0.11 178);
 }
@@ -47,8 +47,8 @@ In Tailwind v4, configuration is CSS-first using the `@theme` directive — no s
 
 In Tailwind v4, import Tailwind with a regular CSS `@import` statement instead of the `@tailwind` directives used in v3:
 
+<!-- v4 Import Syntax -->
 ```diff
-# v4 Import Syntax
 - @tailwind base;
 - @tailwind components;
 - @tailwind utilities;
@@ -77,8 +77,8 @@ Tailwind v4 removed deprecated utilities. Use the replacements shown below. Opac
 
 Use `gap` utilities instead of margins for spacing between siblings:
 
+<!-- Gap Utilities -->
 ```html
-# Gap Utilities
 <div class="flex gap-8">
     <div>Item 1</div>
     <div>Item 2</div>
@@ -89,8 +89,8 @@ Use `gap` utilities instead of margins for spacing between siblings:
 
 If existing pages and components support dark mode, new pages and components must support it the same way, typically using the `dark:` variant:
 
+<!-- Dark Mode -->
 ```html
-# Dark Mode
 <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
     Content adapts to color scheme
 </div>
@@ -100,8 +100,8 @@ If existing pages and components support dark mode, new pages and components mus
 
 ### Flexbox Layout
 
+<!-- Flexbox Layout -->
 ```html
-# Flexbox Layout
 <div class="flex items-center justify-between gap-4">
     <div>Left content</div>
     <div>Right content</div>
@@ -110,8 +110,8 @@ If existing pages and components support dark mode, new pages and components mus
 
 ### Grid Layout
 
+<!-- Grid Layout -->
 ```html
-# Grid Layout
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <div>Card 1</div>
     <div>Card 2</div>

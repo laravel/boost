@@ -45,7 +45,7 @@ trait RendersBladeGuidelines
 
             $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
 
-            $this->storedSnippets[$placeholder] = '```'.$lang."\n".'# '.$name."\n".$snippetContent."\n".'```'."\n\n";
+            $this->storedSnippets[$placeholder] = '<!-- '.$name.' -->'."\n".'```'.$lang."\n".$snippetContent."\n".'```'."\n\n";
 
             return $placeholder;
         }, $content);

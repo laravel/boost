@@ -41,8 +41,8 @@ test('boostsnippet directive extracts name and content into fenced code block', 
 
     $snippet = $this->renderer->getStoredSnippets()['___BOOST_SNIPPET_0___'];
     expect($snippet)
+        ->toStartWith('<!-- Authentication Example -->')
         ->toContain('```html')
-        ->toContain('# Authentication Example')
         ->toContain('return Auth::user();')
         ->toContain('```');
 });
@@ -53,7 +53,7 @@ test('boostsnippet supports double quotes for name parameter', function (): void
     $this->renderer->processSnippets($content);
 
     expect($this->renderer->getStoredSnippets()['___BOOST_SNIPPET_0___'])
-        ->toContain('# Double Quoted');
+        ->toStartWith('<!-- Double Quoted -->');
 });
 
 test('boostsnippet uses specified language in fenced code block', function (): void {
@@ -150,8 +150,8 @@ test('renderBladeFile processes snippets and renders blade in single pipeline', 
         $result = $this->renderer->renderFile($tempFile);
 
         expect($result)
+            ->toContain('<!-- Query -->')
             ->toContain('```php')
-            ->toContain('# Query')
             ->toContain('User::all()')
             ->toContain('```')
             ->toContain('Version: 1.0');
