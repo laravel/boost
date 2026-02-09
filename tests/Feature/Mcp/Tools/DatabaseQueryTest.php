@@ -136,6 +136,9 @@ it('adds table prefix to queries', function (): void {
         'WITH users_cte AS (SELECT * FROM users), posts_cte AS (SELECT p.* FROM posts p JOIN users_cte u ON p.user_id = u.id) SELECT * FROM posts_cte' => 'WITH users_cte AS (SELECT * FROM wp_users), posts_cte AS (SELECT p.* FROM wp_posts p JOIN users_cte u ON p.user_id = u.id) SELECT * FROM posts_cte',
         'WITH users AS (SELECT * FROM employees) SELECT * FROM users' => 'WITH users AS (SELECT * FROM wp_employees) SELECT * FROM users',
         'WITH RECURSIVE cte1 AS (SELECT * FROM users), RECURSIVE cte2 AS (SELECT * FROM posts) SELECT * FROM cte1 JOIN cte2' => 'WITH RECURSIVE cte1 AS (SELECT * FROM wp_users), RECURSIVE cte2 AS (SELECT * FROM wp_posts) SELECT * FROM cte1 JOIN cte2',
+        'DESCRIBE users' => 'DESCRIBE wp_users',
+        'DESC users' => 'DESC wp_users',
+        'DESCRIBE `users`' => 'DESCRIBE `wp_users`',
     ];
 
     foreach ($testCases as $input => $expected) {

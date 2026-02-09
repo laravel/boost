@@ -92,14 +92,11 @@ class DatabaseQuery extends Tool
         }
     }
 
-    /**
-     * Add table prefix to SQL query.
-     */
     protected function addPrefixToQuery(string $query, string $prefix): string
     {
         $cteNames = $this->extractCteNames($query);
 
-        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+([`"\']?)(\w+)\2/i';
+        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE|DESCRIBE|DESC)\s+([`"\']?)(\w+)\2/i';
 
         return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
             $keyword = $matches[1];
@@ -111,7 +108,7 @@ class DatabaseQuery extends Tool
             }
 
             return "{$keyword} {$quote}{$prefix}{$tableName}{$quote}";
-        }, $query);
+        }, $query) ?? $query;
     }
 
     /**
