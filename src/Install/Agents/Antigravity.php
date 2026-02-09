@@ -20,15 +20,6 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsSkills
         return 'Antigravity';
     }
 
-    public function transformGuidelines(string $markdown): string
-    {
-        return preg_replace_callback(
-            '/## Foundational Context.*?(?=\n## |$)/s',
-            fn (array $matches) => preg_replace('/(?<!\\\\)@([a-z0-9-]+\/[a-z0-9-]+)/i', '\\\\@$1', $matches[0]),
-            $markdown
-        );
-    }
-
     public function systemDetectionConfig(Platform $platform): array
     {
         return match ($platform) {
