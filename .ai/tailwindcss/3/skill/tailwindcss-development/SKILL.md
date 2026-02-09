@@ -32,53 +32,58 @@ Use `search-docs` for detailed Tailwind CSS v3 patterns and documentation.
 - Configuration is done in the `tailwind.config.js` file.
 - Import using `@tailwind` directives:
 
-<code-snippet name="v3 Import Syntax" lang="css">
+```css
+# v3 Import Syntax
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-</code-snippet>
+```
 
 ## Spacing
 
 When listing items, use gap utilities for spacing; don't use margins.
 
-<code-snippet name="Gap Utilities" lang="html">
+```html
+# Gap Utilities
 <div class="flex gap-8">
     <div>Item 1</div>
     <div>Item 2</div>
 </div>
-</code-snippet>
+```
 
 ## Dark Mode
 
 If existing pages and components support dark mode, new pages and components must support it the same way, typically using the `dark:` variant:
 
-<code-snippet name="Dark Mode" lang="html">
+```html
+# Dark Mode
 <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
     Content adapts to color scheme
 </div>
-</code-snippet>
+```
 
 ## Common Patterns
 
 ### Flexbox Layout
 
-<code-snippet name="Flexbox Layout" lang="html">
+```html
+# Flexbox Layout
 <div class="flex items-center justify-between gap-4">
     <div>Left content</div>
     <div>Right content</div>
 </div>
-</code-snippet>
+```
 
 ### Grid Layout
 
-<code-snippet name="Grid Layout" lang="html">
+```html
+# Grid Layout
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <div>Card 1</div>
     <div>Card 2</div>
     <div>Card 3</div>
 </div>
-</code-snippet>
+```
 
 ## Verification
 

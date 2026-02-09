@@ -11,10 +11,11 @@ PHP 8.4 introduces new array functions that simplify code when not using Laravel
 
 No extra parentheses are needed when chaining on new object instances:
 
-<code-snippet name="New Object Chaining Example" lang="php">
+```php
+# New Object Chaining Example
 // Before PHP 8.4
 $response = (new JsonResponse(['data' => $data]))->setStatusCode(201);
 
 // After PHP 8.4
 $response = new JsonResponse(['data' => $data])->setStatusCode(201);
-</code-snippet>
+```

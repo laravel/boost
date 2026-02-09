@@ -9,13 +9,14 @@ PHP 8.5 introduces new array functions that simplify code when not using Laravel
 
 The pipe operator (`|>`) chains function calls left-to-right, replacing nested calls:
 
-<code-snippet name="Pipe Operator Example" lang="php">
+```php
+# Pipe Operator Example
 // Before PHP 8.5
 $slug = strtolower(str_replace(' ', '-', trim($title)));
 
 // After PHP 8.5
 $slug = $title |> trim(...) |> (fn($s) => str_replace(' ', '-', $s)) |> strtolower(...);
-</code-snippet>
+```
 
 ## Cloning
 
