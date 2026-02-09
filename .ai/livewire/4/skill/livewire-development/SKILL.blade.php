@@ -28,7 +28,7 @@ Use `search-docs` for detailed Livewire 4 patterns and documentation.
 
 ### Creating Components
 
-@boostsnippet("Component Creation Commands", "bash")
+```bash
 # Single-file component (default in v4)
 {{ $assist->artisanCommand('make:livewire create-post') }}
 
@@ -40,8 +40,7 @@ Use `search-docs` for detailed Livewire 4 patterns and documentation.
 
 # With namespace
 {{ $assist->artisanCommand('make:livewire Posts/CreatePost') }}
-@endboostsnippet
-
+```
 ### Converting Between Formats
 
 Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert between single-file, multi-file, and class-based formats.
