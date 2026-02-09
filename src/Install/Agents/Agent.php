@@ -236,7 +236,7 @@ abstract class Agent
      */
     protected function normalizeCommand(string $command, array $args = []): array
     {
-        if (str_starts_with($command, '/') || preg_match('/^[a-zA-Z]:[\\\\\/]/', $command)) {
+        if (str_starts_with($command, '/') || preg_match('#^[a-zA-Z]:[/\\\\]#', $command)) {
             return [
                 'command' => $command,
                 'args' => $args,

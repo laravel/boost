@@ -380,6 +380,17 @@ test('splits valet php into command and arguments', function (): void {
     ]);
 });
 
+test('splits herd php into command and arguments', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand('herd php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe([
+        'command' => 'herd',
+        'args' => ['php', 'artisan', 'boost:mcp'],
+    ]);
+});
+
 test('splits docker exec commands into parts', function (): void {
     $environment = new TestAgent($this->strategyFactory);
 
@@ -439,6 +450,32 @@ test('shell installation handles valet php commands', function (): void {
     expect($result)->toBe(true);
 });
 
+test('shell installation handles herd php commands', function (): void {
+    $environment = Mockery::mock(TestAgent::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('shellMcpCommand')
+        ->andReturn('install {key} {command} {args}');
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::SHELL);
+
+    $mockResult = Mockery::mock();
+    $mockResult->shouldReceive('successful')->andReturn(true);
+    $mockResult->shouldReceive('errorOutput')->andReturn('');
+
+    Process::shouldReceive('run')
+        ->once()
+        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key herd') &&
+               str_contains((string) $command, '"php"') &&
+               str_contains((string) $command, '"artisan"')))
+        ->andReturn($mockResult);
+
+    $result = $environment->installMcp('test-key', 'herd php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe(true);
+});
+
 test('file installation handles valet php commands', function (): void {
     $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
     $environment->shouldAllowMockingProtectedMethods();
@@ -471,6 +508,44 @@ test('file installation handles valet php commands', function (): void {
             'mcpServers' => [
                 'test-key' => [
                     'command' => 'valet',
+                    'args' => ['php', 'artisan', 'boost:mcp'],
+                ],
+            ],
+        ]);
+});
+
+test('file installation handles herd php commands', function (): void {
+    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp('test-key', 'herd php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'test-key' => [
+                    'command' => 'herd',
                     'args' => ['php', 'artisan', 'boost:mcp'],
                 ],
             ],
