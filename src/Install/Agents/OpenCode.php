@@ -29,7 +29,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
                 'command' => 'command -v opencode',
             ],
             Platform::Windows => [
-                'command' => 'where opencode 2>nul',
+                'command' => 'cmd /c where opencode 2>nul',
             ],
         };
     }

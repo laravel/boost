@@ -29,7 +29,7 @@ class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, Suppo
                 'command' => 'command -v claude',
             ],
             Platform::Windows => [
-                'command' => 'where claude 2>nul',
+                'command' => 'cmd /c where claude 2>nul',
             ],
         };
     }

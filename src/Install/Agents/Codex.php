@@ -29,7 +29,7 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
                 'command' => 'which codex',
             ],
             Platform::Windows => [
-                'command' => 'where codex 2>nul',
+                'command' => 'cmd /c where codex 2>nul',
             ],
         };
     }

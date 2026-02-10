@@ -37,7 +37,7 @@ class Gemini extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
                 'command' => 'command -v gemini',
             ],
             Platform::Windows => [
-                'command' => 'where gemini 2>nul',
+                'command' => 'cmd /c where gemini 2>nul',
             ],
         };
     }
