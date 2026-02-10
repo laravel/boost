@@ -666,11 +666,19 @@ it('handles dangling symlink at target path', function (): void {
 
     mkdir($danglingTarget, 0755, true);
     mkdir(dirname($linkedPath), 0755, true);
-    @symlink($danglingTarget, $linkedPath);
+
+    if (! @symlink($danglingTarget, $linkedPath)) {
+        cleanupSkillDirectory($danglingTarget);
+        cleanupSkillDirectory($absoluteTarget);
+        $this->markTestSkipped('Symlinks not supported in this environment');
+    }
+
     cleanupSkillDirectory($danglingTarget);
 
-    expect(is_link($linkedPath))->toBeTrue()
-        ->and(is_dir($linkedPath))->toBeFalse();
+    if (! is_link($linkedPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        $this->markTestSkipped('Dangling symlink not detectable in this environment');
+    }
 
     $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
