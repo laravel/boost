@@ -32,7 +32,7 @@ beforeEach(function (): void {
     };
 });
 
-test('boostsnippet directive extracts name and content into code-snippet xml', function (): void {
+test('boostsnippet directive extracts name and content into fenced code block', function (): void {
     $content = "@boostsnippet('Authentication Example')return Auth::user();@endboostsnippet";
 
     $result = $this->renderer->processSnippets($content);
@@ -41,9 +41,10 @@ test('boostsnippet directive extracts name and content into code-snippet xml', f
 
     $snippet = $this->renderer->getStoredSnippets()['___BOOST_SNIPPET_0___'];
     expect($snippet)
-        ->toContain('<code-snippet name="Authentication Example" lang="html">')
+        ->toStartWith('<!-- Authentication Example -->')
+        ->toContain('```html')
         ->toContain('return Auth::user();')
-        ->toContain('</code-snippet>');
+        ->toContain('```');
 });
 
 test('boostsnippet supports double quotes for name parameter', function (): void {
@@ -52,16 +53,16 @@ test('boostsnippet supports double quotes for name parameter', function (): void
     $this->renderer->processSnippets($content);
 
     expect($this->renderer->getStoredSnippets()['___BOOST_SNIPPET_0___'])
-        ->toContain('name="Double Quoted"');
+        ->toStartWith('<!-- Double Quoted -->');
 });
 
-test('boostsnippet uses specified language in code-snippet output', function (): void {
+test('boostsnippet uses specified language in fenced code block', function (): void {
     $content = "@boostsnippet('PHP Example', 'php')\$user = User::find(1);@endboostsnippet";
 
     $this->renderer->processSnippets($content);
 
     expect($this->renderer->getStoredSnippets()['___BOOST_SNIPPET_0___'])
-        ->toContain('lang="php"')
+        ->toContain('```php')
         ->toContain('$user = User::find(1);');
 });
 
@@ -72,7 +73,7 @@ test('multiple boostsnippets are replaced with sequential placeholders', functio
 
     expect($result)->toBe('___BOOST_SNIPPET_0___ between ___BOOST_SNIPPET_1___')
         ->and($this->renderer->getStoredSnippets())->toHaveCount(2)
-        ->and($this->renderer->getStoredSnippets()['___BOOST_SNIPPET_1___'])->toContain('lang="js"');
+        ->and($this->renderer->getStoredSnippets()['___BOOST_SNIPPET_1___'])->toContain('```js');
 });
 
 test('escaped boostsnippet directive is not processed', function (): void {
@@ -149,9 +150,10 @@ test('renderBladeFile processes snippets and renders blade in single pipeline', 
         $result = $this->renderer->renderFile($tempFile);
 
         expect($result)
-            ->toContain('<code-snippet name="Query" lang="php">')
+            ->toContain('<!-- Query -->')
+            ->toContain('```php')
             ->toContain('User::all()')
-            ->toContain('</code-snippet>')
+            ->toContain('```')
             ->toContain('Version: 1.0');
     } finally {
         @unlink($tempFile);

@@ -23,17 +23,19 @@ Use `search-docs` for detailed Pennant patterns and documentation.
 
 ### Defining Features
 
-<code-snippet name="Defining Features" lang="php">
+<!-- Defining Features -->
+```php
 use Laravel\Pennant\Feature;
 
 Feature::define('new-dashboard', function (User $user) {
     return $user->isAdmin();
 });
-</code-snippet>
+```
 
 ### Checking Features
 
-<code-snippet name="Checking Features" lang="php">
+<!-- Checking Features -->
+```php
 if (Feature::active('new-dashboard')) {
     // Feature is active
 }
@@ -42,24 +44,26 @@ if (Feature::active('new-dashboard')) {
 if (Feature::for($user)->active('new-dashboard')) {
     // Feature is active for this user
 }
-</code-snippet>
+```
 
 ### Blade Directive
 
-<code-snippet name="Blade Directive" lang="blade">
+<!-- Blade Directive -->
+```blade
 @feature('new-dashboard')
     <x-new-dashboard />
 @else
     <x-old-dashboard />
 @endfeature
-</code-snippet>
+```
 
 ### Activating / Deactivating
 
-<code-snippet name="Activating Features" lang="php">
+<!-- Activating Features -->
+```php
 Feature::activate('new-dashboard');
 Feature::for($user)->activate('new-dashboard');
-</code-snippet>
+```
 
 ## Verification
 
