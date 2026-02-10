@@ -1,6 +1,49 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.0.6...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.2...main)
+
+## [v2.1.2](https://github.com/laravel/boost/compare/v2.1.1...v2.1.2) - 2026-02-10
+
+### What's Changed
+
+* Enhance database-schema tool with full column metadata by [@alanost](https://github.com/alanost) in https://github.com/laravel/boost/pull/541
+* Replace >- block scalar with single-line descriptions in SKILL files by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/547
+* fix: apply table prefix to raw SQL queries in DatabaseQuery tool by [@soleinjast](https://github.com/soleinjast) in https://github.com/laravel/boost/pull/529
+* Fix normalizeCommand() splitting absolute paths containing spaces by [@digitall-it](https://github.com/digitall-it) in https://github.com/laravel/boost/pull/553
+* Fix code snippet styling to use fenced code blocks by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/555
+* Use cmd /c for Windows agent detection commands by [@soleinjast](https://github.com/soleinjast) in https://github.com/laravel/boost/pull/558
+
+### New Contributors
+
+* [@alanost](https://github.com/alanost) made their first contribution in https://github.com/laravel/boost/pull/541
+* [@digitall-it](https://github.com/digitall-it) made their first contribution in https://github.com/laravel/boost/pull/553
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.1...v2.1.2
+
+## [v2.1.1](https://github.com/laravel/boost/compare/v2.1.0...v2.1.1) - 2026-02-06
+
+### What's Changed
+
+* Add Flux Icons documentation to SKILL.md files by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/494
+* Detect Inertia pages directory casing from filesystem by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/534
+* Graceful cache fallback when cache driver is unreachable by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/533
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.0...v2.1.1
+
+## [v2.1.0](https://github.com/laravel/boost/compare/v2.0.6...v2.1.0) - 2026-02-05
+
+### What's Changed
+
+* fix(gemini): escape @ symbols in foundational context by [@soleinjast](https://github.com/soleinjast) in https://github.com/laravel/boost/pull/523
+* Add project-level mcp support for Codex by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/525
+* Unify agent paths for guidelines and skills configuration which supports .agents standard by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/528
+* Handle Rate Limits Error in Add Skill Command by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/520
+
+### New Contributors
+
+* [@soleinjast](https://github.com/soleinjast) made their first contribution in https://github.com/laravel/boost/pull/523
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.0.6...v2.1.0
 
 ## [v2.0.6](https://github.com/laravel/boost/compare/v2.0.5...v2.0.6) - 2026-02-04
 

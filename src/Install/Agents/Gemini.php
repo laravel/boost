@@ -37,7 +37,7 @@ class Gemini extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
                 'command' => 'command -v gemini',
             ],
             Platform::Windows => [
-                'command' => 'where gemini 2>nul',
+                'command' => 'cmd /c where gemini 2>nul',
             ],
         };
     }
@@ -62,6 +62,6 @@ class Gemini extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
 
     public function skillsPath(): string
     {
-        return config('boost.agents.gemini.skills_path', '.gemini/skills');
+        return config('boost.agents.gemini.skills_path', '.agents/skills');
     }
 }

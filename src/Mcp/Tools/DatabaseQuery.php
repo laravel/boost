@@ -77,11 +77,51 @@ class DatabaseQuery extends Tool
         $connectionName = $request->get('database');
 
         try {
+            $connection = DB::connection($connectionName);
+            $prefix = $connection->getTablePrefix();
+
+            if ($prefix) {
+                $query = $this->addPrefixToQuery($query, $prefix);
+            }
+
             return Response::json(
-                DB::connection($connectionName)->select($query)
+                $connection->select($query)
             );
         } catch (Throwable $throwable) {
             return Response::error('Query failed: '.$throwable->getMessage());
         }
+    }
+
+    protected function addPrefixToQuery(string $query, string $prefix): string
+    {
+        $cteNames = $this->extractCteNames($query);
+
+        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE|DESCRIBE|DESC)\s+([`"\']?)(\w+)\2/i';
+
+        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
+            $keyword = $matches[1];
+            $quote = $matches[2];
+            $tableName = $matches[3];
+
+            if (str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true)) {
+                return $matches[0];
+            }
+
+            return "{$keyword} {$quote}{$prefix}{$tableName}{$quote}";
+        }, $query) ?? $query;
+    }
+
+    /**
+     * Extract CTE (Common Table Expression) names from a query.
+     *
+     * @return array<int, string>
+     */
+    protected function extractCteNames(string $query): array
+    {
+        if (preg_match_all('/\b(\w+)\s*(?:\([^)]*\))?\s*AS\s*\(/i', $query, $matches)) {
+            return $matches[1];
+        }
+
+        return [];
     }
 }

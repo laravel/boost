@@ -47,17 +47,18 @@ class BoostServiceProvider extends ServiceProvider
             $cacheKey = 'boost.roster.scan';
             $lastModified = max(array_map(fn (string $path): int|false => file_exists($path) ? filemtime($path) : 0, $lockFiles));
 
-            $cached = cache()->get($cacheKey);
+            $cached = rescue(fn () => cache()->get($cacheKey), report: false);
 
             if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
                 return $cached['roster'];
             }
 
             $roster = Roster::scan(base_path());
-            cache()->put($cacheKey, [
+
+            rescue(fn () => cache()->put($cacheKey, [
                 'roster' => $roster,
                 'timestamp' => time(),
-            ], now()->addHours(24));
+            ], now()->addHours(24)), report: false);
 
             return $roster;
         });

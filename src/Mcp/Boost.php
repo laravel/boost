@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp;
 
-use InvalidArgumentException;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\Prompts\LaravelCodeSimplifier\LaravelCodeSimplifier;
-use Laravel\Boost\Mcp\Prompts\PackageGuidelinePrompt;
 use Laravel\Boost\Mcp\Prompts\UpgradeLivewirev4\UpgradeLivewireV4;
-use Laravel\Boost\Mcp\Resources\PackageGuidelineResource;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
@@ -25,7 +22,6 @@ use Laravel\Boost\Mcp\Tools\ListRoutes;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Boost\Mcp\Tools\Tinker;
-use Laravel\Boost\Support\Composer;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Resource;
@@ -113,12 +109,9 @@ class Boost extends Server
      */
     protected function discoverResources(): array
     {
-        $availableResources = [
+        return $this->filterPrimitives([
             Resources\ApplicationInfo::class,
-            ...$this->discoverThirdPartyPrimitives(Resource::class),
-        ];
-
-        return $this->filterPrimitives($availableResources, 'resources');
+        ], 'resources');
     }
 
     /**
@@ -126,40 +119,10 @@ class Boost extends Server
      */
     protected function discoverPrompts(): array
     {
-        $availablePrompts = [
+        return $this->filterPrimitives([
             LaravelCodeSimplifier::class,
             UpgradeLivewireV4::class,
-            ...$this->discoverThirdPartyPrimitives(Prompt::class),
-        ];
-
-        return $this->filterPrimitives($availablePrompts, 'prompts');
-    }
-
-    /**
-     * @template T of Prompt|Resource
-     *
-     * @param  class-string<T>  $primitiveType
-     * @return array<int, T>
-     */
-    private function discoverThirdPartyPrimitives(string $primitiveType): array
-    {
-        $primitiveClass = match ($primitiveType) {
-            Prompt::class => PackageGuidelinePrompt::class,
-            Resource::class => PackageGuidelineResource::class,
-            default => throw new InvalidArgumentException('Invalid Primitive Type'),
-        };
-
-        $primitives = [];
-
-        foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
-            $corePath = $path.DIRECTORY_SEPARATOR.'core.blade.php';
-
-            if (file_exists($corePath)) {
-                $primitives[] = new $primitiveClass($package, $corePath);
-            }
-        }
-
-        return $primitives;
+        ], 'prompts');
     }
 
     /**

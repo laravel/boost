@@ -40,4 +40,19 @@ class Inertia
     {
         return $this->gte('2.1.2');
     }
+
+    public function pagesDirectory(): string
+    {
+        $jsPath = base_path('resources/js');
+
+        if (is_dir($jsPath)) {
+            $entries = @scandir($jsPath);
+
+            if ($entries !== false && in_array('pages', $entries, true)) {
+                return 'resources/js/pages';
+            }
+        }
+
+        return 'resources/js/Pages';
+    }
 }

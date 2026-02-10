@@ -1,9 +1,9 @@
 ---
 name: wayfinder-development
-description: >-
-  Activates whenever referencing backend routes in frontend components. Use when
-  importing from @/actions or @/routes, calling Laravel routes from TypeScript,
-  or working with Wayfinder route functions.
+description: "Activates whenever referencing backend routes in frontend components. Use when importing from @/actions or @/routes, calling Laravel routes from TypeScript, or working with Wayfinder route functions."
+license: MIT
+metadata:
+  author: laravel
 ---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
@@ -26,13 +26,13 @@ Use `search-docs` for detailed Wayfinder patterns and documentation.
 ### Generate Routes
 
 Run after route changes if Vite plugin isn't installed:
-
+```bash
 {{ $assist->artisanCommand('wayfinder:generate --no-interaction') }}
-
+```
 For form helpers, use `--with-form` flag:
-
+```bash
 {{ $assist->artisanCommand('wayfinder:generate --with-form --no-interaction') }}
-
+```
 ### Import Patterns
 
 @boostsnippet("Controller Action Imports", "typescript")

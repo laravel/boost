@@ -10,6 +10,7 @@ use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Laravel\Boost\Install\Mcp\FileWriter;
+use Laravel\Boost\Install\Mcp\TomlFileWriter;
 
 abstract class Agent
 {
@@ -214,7 +215,11 @@ abstract class Agent
 
         $normalized = $this->normalizeCommand($command, $args);
 
-        return (new FileWriter($path, $this->defaultMcpConfig()))
+        $writer = str_ends_with($path, '.toml')
+            ? new TomlFileWriter($path, $this->defaultMcpConfig())
+            : new FileWriter($path, $this->defaultMcpConfig());
+
+        return $writer
             ->configKey($this->mcpConfigKey())
             ->addServerConfig($key, $this->mcpServerConfig($normalized['command'], $normalized['args'], $env))
             ->save();
@@ -223,11 +228,21 @@ abstract class Agent
     /**
      * Normalize command by splitting space-separated commands into command + args.
      *
+     * Absolute paths (starting with / on Unix or a drive letter on Windows)
+     * are never split, as they may contain spaces (e.g. macOS "Application Support").
+     *
      * @param  array<int, string>  $args
      * @return array{command: string, args: array<int, string>}
      */
     protected function normalizeCommand(string $command, array $args = []): array
     {
+        if (str_starts_with($command, '/') || preg_match('#^[a-zA-Z]:[/\\\\]#', $command)) {
+            return [
+                'command' => $command,
+                'args' => $args,
+            ];
+        }
+
         $parts = str($command)->explode(' ');
 
         return [
