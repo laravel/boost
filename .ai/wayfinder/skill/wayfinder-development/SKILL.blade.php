@@ -26,13 +26,13 @@ Use `search-docs` for detailed Wayfinder patterns and documentation.
 ### Generate Routes
 
 Run after route changes if Vite plugin isn't installed:
-
+```bash
 {{ $assist->artisanCommand('wayfinder:generate --no-interaction') }}
-
+```
 For form helpers, use `--with-form` flag:
-
+```bash
 {{ $assist->artisanCommand('wayfinder:generate --with-form --no-interaction') }}
-
+```
 ### Import Patterns
 
 @boostsnippet("Controller Action Imports", "typescript")
