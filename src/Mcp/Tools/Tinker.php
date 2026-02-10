@@ -7,10 +7,10 @@ namespace Laravel\Boost\Mcp\Tools;
 use Exception;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Laravel\Boost\Mcp\Tools\Tinker\TinkerExecutor;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Throwable;
 
 class Tinker extends Tool
 {
@@ -43,39 +43,11 @@ class Tinker extends Tool
      */
     public function handle(Request $request): Response
     {
-        $code = str_replace(['<?php', '?>'], '', (string) $request->get('code'));
-
         ini_set('memory_limit', '256M');
 
-        ob_start();
+        $executor = new TinkerExecutor;
+        $result = $executor->execute((string) $request->get('code'));
 
-        try {
-            $result = eval($code);
-
-            $output = ob_get_contents();
-
-            $response = [
-                'result' => $result,
-                'output' => $output,
-                'type' => gettype($result),
-            ];
-
-            // If a result is an object, include the class name
-            if (is_object($result)) {
-                $response['class'] = $result::class;
-            }
-
-            return Response::json($response);
-        } catch (Throwable $throwable) {
-            return Response::json([
-                'error' => $throwable->getMessage(),
-                'type' => $throwable::class,
-                'file' => $throwable->getFile(),
-                'line' => $throwable->getLine(),
-            ]);
-
-        } finally {
-            ob_end_clean();
-        }
+        return Response::json($result);
     }
 }

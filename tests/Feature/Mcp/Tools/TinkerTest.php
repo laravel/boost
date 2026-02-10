@@ -57,7 +57,7 @@ test('handles syntax errors', function (): void {
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
-            'type' => 'ParseError',
+            'type' => \Psy\Exception\ParseErrorException::class,
         ])
         ->toolJsonContent(function ($data): void {
             expect($data)->toHaveKey('error');
@@ -115,8 +115,8 @@ test('handles empty code', function (): void {
 
     expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
-            'result' => false,
-            'type' => 'boolean',
+            'type' => 'object',
+            'class' => \Psy\CodeCleaner\NoReturnValue::class,
         ]);
 });
 
@@ -126,8 +126,8 @@ test('handles code with no return statement', function (): void {
 
     expect($response)->isToolResult()
         ->toolJsonContentToMatchArray([
-            'result' => null,
-            'type' => 'NULL',
+            'result' => 5,
+            'type' => 'integer',
         ]);
 });
 
@@ -137,4 +137,25 @@ test('should register only in local environment', function (): void {
     app()->detectEnvironment(fn (): string => 'local');
 
     expect($tool->eligibleForRegistration())->toBeTrue();
+});
+
+test('executes expression-only code without return or semicolon', function (): void {
+    $tool = new Tinker;
+    $response = $tool->handle(new Request(['code' => '2 + 3']));
+
+    expect($response)->isToolResult()
+        ->toolJsonContentToMatchArray([
+            'result' => 5,
+            'type' => 'integer',
+        ]);
+});
+
+test('executes code without trailing semicolon', function (): void {
+    $tool = new Tinker;
+    $response = $tool->handle(new Request(['code' => 'echo "Hi"']));
+
+    expect($response)->isToolResult()
+        ->toolJsonContentToMatchArray([
+            'output' => 'Hi',
+        ]);
 });
