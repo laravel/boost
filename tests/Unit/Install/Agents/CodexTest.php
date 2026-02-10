@@ -122,7 +122,7 @@ test('system detection uses where command on Windows', function (): void {
 
     $config = $codex->systemDetectionConfig(Platform::Windows);
 
-    expect($config['command'])->toBe('where codex 2>nul');
+    expect($config['command'])->toBe('cmd /c where codex 2>nul');
 });
 
 test('installMcp creates TOML config file', function (): void {
