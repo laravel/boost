@@ -35,15 +35,53 @@ class SkillWriter
             throw new RuntimeException("Invalid skill name: {$skill->name}");
         }
 
-        $targetPath = base_path($this->agent->skillsPath().'/'.$skill->name);
+        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
+        $canonicalPath = base_path('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
+        $existed = $this->pathExists($targetPath);
 
-        $existed = is_dir($targetPath);
+        if (! $skill->custom) {
+            return $this->writeNonCustomSkill($skill, $targetPath, $canonicalPath, $existed);
+        }
+
+        return $this->writeCustomSkill($skill, $targetPath, $canonicalPath, $existed);
+    }
+
+    protected function writeNonCustomSkill(Skill $skill, string $targetPath, string $canonicalPath, bool $existed): int
+    {
+        $canonicalExists = $this->pathExists($canonicalPath);
+        $needsCanonicalUpdate = $canonicalExists && ! $this->pathsMatch($skill->path, $canonicalPath);
+
+        if ($needsCanonicalUpdate && ! $this->copyDirectory($skill->path, $canonicalPath)) {
+            return self::FAILED;
+        }
 
         if (! $this->copyDirectory($skill->path, $targetPath)) {
             return self::FAILED;
         }
 
         return $existed ? self::UPDATED : self::SUCCESS;
+    }
+
+    protected function writeCustomSkill(Skill $skill, string $targetPath, string $canonicalPath, bool $existed): int
+    {
+        if (! $this->pathsMatch($skill->path, $canonicalPath) && ! $this->copyDirectory($skill->path, $canonicalPath)) {
+            return self::FAILED;
+        }
+
+        if (! $this->ensureDirectoryExists(dirname($targetPath))) {
+            return self::FAILED;
+        }
+
+        if (! $this->createSymlink($canonicalPath, $targetPath) && ! $this->copyDirectory($skill->path, $targetPath)) {
+            return self::FAILED;
+        }
+
+        return $existed ? self::UPDATED : self::SUCCESS;
+    }
+
+    protected function pathExists(string $path): bool
+    {
+        return is_dir($path) || is_link($path);
     }
 
     /**
@@ -81,9 +119,9 @@ class SkillWriter
             return false;
         }
 
-        $targetPath = base_path($this->agent->skillsPath().'/'.$skillName);
+        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skillName);
 
-        if (! is_dir($targetPath)) {
+        if (! $this->pathExists($targetPath)) {
             return true;
         }
 
@@ -107,6 +145,24 @@ class SkillWriter
 
     protected function deleteDirectory(string $path): bool
     {
+        if (is_link($path)) {
+            if (@unlink($path)) {
+                return true;
+            }
+
+            // On Windows, directory symlinks can require rmdir instead of unlink,
+            // even when the symlink target no longer exists (dangling symlinks).
+            if (@rmdir($path)) {
+                return true;
+            }
+
+            return ! file_exists($path) && ! is_link($path);
+        }
+
+        if (is_file($path)) {
+            return @unlink($path);
+        }
+
         if (! is_dir($path)) {
             return false;
         }
@@ -117,10 +173,20 @@ class SkillWriter
         );
 
         foreach ($files as $file) {
-            $file->isDir() ? @rmdir($file->getRealPath()) : @unlink($file->getRealPath());
+            if ($file->isLink()) {
+                $linkPath = $file->getPathname();
+
+                if (! @unlink($linkPath) && is_dir($linkPath)) {
+                    @rmdir($linkPath);
+                }
+
+                continue;
+            }
+
+            $file->isDir() ? @rmdir($file->getPathname()) : @unlink($file->getPathname());
         }
 
-        return @rmdir($path);
+        return @rmdir($path) || ! is_dir($path);
     }
 
     protected function copyDirectory(string $source, string $target): bool
@@ -152,7 +218,7 @@ class SkillWriter
     protected function copyFile(SplFileInfo $file, string $targetDir): bool
     {
         $relativePath = $file->getRelativePathname();
-        $targetFile = $targetDir.'/'.$relativePath;
+        $targetFile = $targetDir.DIRECTORY_SEPARATOR.$relativePath;
 
         if (! $this->ensureDirectoryExists(dirname($targetFile))) {
             return false;
@@ -184,6 +250,51 @@ class SkillWriter
     protected function ensureDirectoryExists(string $path): bool
     {
         return is_dir($path) || @mkdir($path, 0755, true);
+    }
+
+    protected function createSymlink(string $target, string $link): bool
+    {
+        $resolvedTarget = realpath($target) ?: $target;
+        $resolvedLink = realpath($link) ?: $link;
+
+        if ($this->pathsMatch($resolvedTarget, $resolvedLink)) {
+            return true;
+        }
+
+        if (file_exists($link) || is_link($link)) {
+            $this->deleteDirectory($link);
+        }
+
+        if (! $this->ensureDirectoryExists(dirname($link))) {
+            return false;
+        }
+
+        return @symlink($this->relativePath($resolvedTarget, dirname($link)), $link);
+    }
+
+    protected function pathsMatch(string $left, string $right): bool
+    {
+        $resolvedLeft = realpath($left) ?: $left;
+        $resolvedRight = realpath($right) ?: $right;
+
+        return rtrim($resolvedLeft, DIRECTORY_SEPARATOR) === rtrim($resolvedRight, DIRECTORY_SEPARATOR);
+    }
+
+    protected function relativePath(string $target, string $from): string
+    {
+        $base = rtrim(str_replace('\\', '/', base_path()), '/');
+        $resolvedTarget = str_replace('\\', '/', realpath($target) ?: $target);
+        $resolvedFrom = str_replace('\\', '/', realpath($from) ?: $from);
+
+        if (! str_starts_with($resolvedTarget, $base.'/') || ! str_starts_with($resolvedFrom, $base.'/')) {
+            return $resolvedTarget;
+        }
+
+        $targetRel = ltrim(substr($resolvedTarget, strlen($base)), '/');
+        $fromRel = ltrim(substr($resolvedFrom, strlen($base)), '/');
+        $depth = $fromRel === '' ? 0 : count(explode('/', $fromRel));
+
+        return str_repeat('../', $depth).$targetRel;
     }
 
     protected function isValidSkillName(string $name): bool
