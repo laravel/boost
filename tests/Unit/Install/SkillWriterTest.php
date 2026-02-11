@@ -8,6 +8,12 @@ use Laravel\Boost\Install\SkillWriter;
 
 function cleanupSkillDirectory(string $path): void
 {
+    if (is_link($path)) {
+        @unlink($path);
+
+        return;
+    }
+
     if (! is_dir($path)) {
         return;
     }
@@ -18,6 +24,12 @@ function cleanupSkillDirectory(string $path): void
     );
 
     foreach ($files as $file) {
+        if ($file->isLink()) {
+            @unlink($file->getPathname());
+
+            continue;
+        }
+
         $file->isDir() ? @rmdir($file->getRealPath()) : @unlink($file->getRealPath());
     }
 
@@ -28,6 +40,7 @@ it('writes skill to a target directory', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
+    $canonicalSkillPath = base_path('.ai/skills/test-skill');
 
     $agent = Mockery::mock(SupportsSkills::class);
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
@@ -45,9 +58,129 @@ it('writes skill to a target directory', function (): void {
     expect($result)->toBe(SkillWriter::SUCCESS)
         ->and($absoluteTarget.'/test-skill')->toBeDirectory()
         ->and($absoluteTarget.'/test-skill/SKILL.md')->toBeFile()
-        ->and($absoluteTarget.'/test-skill/references/example.md')->toBeFile();
+        ->and($absoluteTarget.'/test-skill/references/example.md')->toBeFile()
+        ->and($canonicalSkillPath)->not->toBeDirectory();
 
     cleanupSkillDirectory($absoluteTarget);
+});
+
+it('updates existing canonical skills when installing non-custom skills', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    if (! is_dir($canonicalSkillPath)) {
+        mkdir($canonicalSkillPath, 0755, true);
+    }
+
+    file_put_contents($canonicalSkillPath.'/SKILL.md', 'old content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $content = file_get_contents($canonicalSkillPath.'/SKILL.md');
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($content)->toContain('name: test-skill');
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('symlinks skills to the canonical directory', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $canonicalBase = base_path('.ai/skills');
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = $canonicalBase.'/'.$skillName;
+
+    if (! is_dir($canonicalSkillPath)) {
+        mkdir($canonicalSkillPath, 0755, true);
+    }
+
+    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $canonicalSkillPath,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($canonicalSkillPath)->toBeDirectory();
+
+    if (is_link($linkedPath)) {
+        expect(realpath($linkedPath))->toBe(realpath($canonicalSkillPath));
+    } else {
+        expect($linkedPath)->toBeDirectory();
+    }
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('does not delete canonical skills when removing symlink', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $canonicalBase = base_path('.ai/skills');
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = $canonicalBase.'/'.$skillName;
+
+    if (! is_dir($canonicalSkillPath)) {
+        mkdir($canonicalSkillPath, 0755, true);
+    }
+
+    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $canonicalSkillPath,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+
+    $removed = $writer->remove($skillName);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($removed)->toBeTrue()
+        ->and(is_link($linkedPath))->toBeFalse()
+        ->and($linkedPath)->not->toBeDirectory()
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
 });
 
 it('returns UPDATED when skill directory already exists', function (): void {
@@ -450,6 +583,248 @@ it('sync only removes previously tracked skills', function (): void {
         ->and($untrackedDir)->toBeDirectory();
 
     cleanupSkillDirectory($absoluteTarget);
+});
+
+it('removes directory containing nested symlinks', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillDir = $absoluteTarget.'/symlink-skill';
+    $nestedDir = $skillDir.'/references';
+    $linkTargetDir = base_path('.boost-link-target-'.uniqid());
+
+    mkdir($nestedDir, 0755, true);
+    mkdir($linkTargetDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', 'test');
+    file_put_contents($linkTargetDir.'/target.md', 'link target content');
+
+    $symlinkPath = $nestedDir.'/linked-dir';
+    @symlink($linkTargetDir, $symlinkPath);
+
+    expect(is_link($symlinkPath))->toBeTrue();
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->remove('symlink-skill');
+
+    expect($result)->toBeTrue()
+        ->and($skillDir)->not->toBeDirectory()
+        ->and(is_link($symlinkPath))->toBeFalse()
+        ->and($linkTargetDir)->toBeDirectory()
+        ->and($linkTargetDir.'/target.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($linkTargetDir);
+});
+
+it('creates canonical directory and symlinks custom skill when canonical does not exist', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    if (is_link($linkedPath)) {
+        expect(realpath($linkedPath))->toBe(realpath($canonicalSkillPath));
+    } else {
+        expect($linkedPath)->toBeDirectory();
+    }
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('handles dangling symlink at target path', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+    $danglingTarget = base_path('.boost-dangling-'.uniqid());
+
+    mkdir($danglingTarget, 0755, true);
+    mkdir(dirname($linkedPath), 0755, true);
+
+    if (! @symlink($danglingTarget, $linkedPath)) {
+        cleanupSkillDirectory($danglingTarget);
+        cleanupSkillDirectory($absoluteTarget);
+        $this->markTestSkipped('Symlinks not supported in this environment');
+    }
+
+    cleanupSkillDirectory($danglingTarget);
+
+    if (! is_link($linkedPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        $this->markTestSkipped('Dangling symlink not detectable in this environment');
+    }
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::UPDATED)
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('transitions from non-custom directory to custom symlink', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+    $targetPath = $absoluteTarget.'/'.$skillName;
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $nonCustomSkill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $writer->write($nonCustomSkill);
+
+    expect($targetPath)->toBeDirectory()
+        ->and(is_link($targetPath))->toBeFalse();
+
+    $customSkill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $result = $writer->write($customSkill);
+
+    expect($result)->toBe(SkillWriter::UPDATED)
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    if (is_link($targetPath)) {
+        expect(realpath($targetPath))->toBe(realpath($canonicalSkillPath));
+    } else {
+        expect($targetPath)->toBeDirectory();
+    }
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('transitions from custom symlink to non-custom directory', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+    $targetPath = $absoluteTarget.'/'.$skillName;
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $customSkill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $writer->write($customSkill);
+
+    $wasSymlink = is_link($targetPath);
+
+    $nonCustomSkill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $result = $writer->write($nonCustomSkill);
+
+    expect($result)->toBe(SkillWriter::UPDATED)
+        ->and($targetPath)->toBeDirectory()
+        ->and(is_link($targetPath))->toBeFalse()
+        ->and($targetPath.'/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('preserves canonical directory when removing custom skill symlink via removeStale', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $writer->write($skill);
+
+    $results = $writer->removeStale([$skillName]);
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+
+    expect($results[$skillName])->toBeTrue()
+        ->and(is_link($linkedPath))->toBeFalse()
+        ->and($linkedPath)->not->toBeDirectory()
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
 });
 
 it('removes extra files when updating skill directory', function (): void {
