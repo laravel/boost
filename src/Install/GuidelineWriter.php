@@ -54,7 +54,7 @@ class GuidelineWriter
 
             // Check if guidelines already exist
             $pattern = '/<laravel-boost-guidelines>.*?<\/laravel-boost-guidelines>/s';
-            $replacement = "<laravel-boost-guidelines>\n".$guidelines."\n</laravel-boost-guidelines>";
+            $replacement = "<laravel-boost-guidelines>\n".$guidelines."\n\n</laravel-boost-guidelines>";
             $replaced = false;
 
             if (preg_match($pattern, $content)) {
