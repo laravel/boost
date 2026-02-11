@@ -796,3 +796,97 @@ test('includes Skills Activation section when skills are enabled and skills exis
         ->toContain('## Skills Activation')
         ->toContain('This project has domain-specific skills available');
 });
+
+test('loads vendor core guideline when available', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('getVendorGuidelinePath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)
+        ->toContain('Vendor Core Guideline')
+        ->toContain('loaded from the vendor directory');
+});
+
+test('falls back to .ai/ when vendor guideline path does not exist', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('getVendorGuidelinePath')->andReturn(null);
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)->toContain('=== pest/core rules ===');
+});
+
+test('guideline key is unchanged regardless of vendor or .ai/ source', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('getVendorGuidelinePath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+
+    $keys = $composer->used();
+
+    expect($keys)->toContain('pest/core');
+});
+
+test('user override works with vendor-sourced guideline', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->shouldReceive('getVendorGuidelinePath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === 'laravel/framework' ? $vendorFixture : null);
+
+    $guidelines = $composer->guidelines();
+    $laravelCore = $guidelines->get('laravel/core');
+
+    expect($laravelCore)->not->toBeNull()
+        ->and($laravelCore['content'])->toContain('User Override Laravel Core')
+        ->and($laravelCore['content'])->not->toContain('Vendor Core Guideline');
+});
+
+test('isFirstPartyPackage identifies known packages', function (): void {
+    expect(GuidelineComposer::isFirstPartyPackage('laravel/framework'))->toBeTrue()
+        ->and(GuidelineComposer::isFirstPartyPackage('livewire/livewire'))->toBeTrue()
+        ->and(GuidelineComposer::isFirstPartyPackage('pestphp/pest'))->toBeTrue()
+        ->and(GuidelineComposer::isFirstPartyPackage('some/third-party'))->toBeFalse();
+});

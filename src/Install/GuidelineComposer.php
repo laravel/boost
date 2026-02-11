@@ -10,7 +10,6 @@ use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
-use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
@@ -166,13 +165,22 @@ class GuidelineComposer
             ->mapWithKeys(fn ($config, $key): array => [$key => $this->guideline($config['path'])]);
     }
 
-    protected function getPackageGuidelines(): PackageCollection
+    protected function getPackageGuidelines(): Collection
     {
         return $this->roster->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
-            ->flatMap(function ($package): Collection {
+            ->flatMap(function (Package $package): Collection {
                 $guidelineDir = $this->normalizePackageName($package->name());
-                $guidelines = collect([$guidelineDir.'/core' => $this->guideline($guidelineDir.'/core')]);
+                $vendorPath = self::isFirstPartyPackage($package->rawName())
+                    ? $this->getVendorGuidelinePath($package)
+                    : null;
+
+                $guidelines = collect([$guidelineDir.'/core' => $this->resolveGuideline(
+                    $vendorPath ? $vendorPath.DIRECTORY_SEPARATOR.'core' : null,
+                    $guidelineDir.'/core',
+                    $guidelineDir.'/core',
+                )]);
+
                 $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
 
                 foreach ($packageGuidelines as $guideline) {
@@ -189,6 +197,22 @@ class GuidelineComposer
     }
 
     /**
+     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
+     */
+    private function resolveGuideline(?string $vendorPath, string $aiFallback, string $overrideKey): array
+    {
+        if ($vendorPath !== null) {
+            foreach (['.blade.php', '.md'] as $ext) {
+                if (file_exists($vendorPath.$ext)) {
+                    return $this->guideline($vendorPath.$ext, false, $overrideKey);
+                }
+            }
+        }
+
+        return $this->guideline($aiFallback);
+    }
+
+    /**
      * @return Collection<string, array>
      */
     protected function getThirdPartyGuidelines(): Collection
@@ -196,6 +220,10 @@ class GuidelineComposer
         $guidelines = collect();
 
         foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
+            if (self::isFirstPartyPackage($package)) {
+                continue;
+            }
+
             foreach ($this->guidelinesDir($path, true) as $guideline) {
                 $guidelines->put($package, $guideline);
             }
@@ -239,9 +267,9 @@ class GuidelineComposer
     /**
      * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
      */
-    protected function guideline(string $path, bool $thirdParty = false): array
+    protected function guideline(string $path, bool $thirdParty = false, ?string $overrideKey = null): array
     {
-        $path = $this->guidelinePath($path);
+        $path = $this->guidelinePath($path, $overrideKey);
 
         if ($path === null) {
             return [
@@ -301,7 +329,7 @@ class GuidelineComposer
         return str_replace('/', DIRECTORY_SEPARATOR, $basePath.$path);
     }
 
-    protected function guidelinePath(string $path): ?string
+    protected function guidelinePath(string $path, ?string $overrideKey = null): ?string
     {
         // Relative path, prepend our package path to it
         if (! file_exists($path)) {
@@ -317,6 +345,12 @@ class GuidelineComposer
         // If this is a custom guideline, return it unchanged
         if (str_contains($path, $this->customGuidelinePath())) {
             return $path;
+        }
+
+        if ($overrideKey !== null) {
+            $customPath = $this->prependUserGuidelinePath($overrideKey);
+
+            return file_exists($customPath) ? $customPath : $path;
         }
 
         // The path is not a custom guideline, check if the user has an override for this

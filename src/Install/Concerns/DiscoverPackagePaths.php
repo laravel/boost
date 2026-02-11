@@ -12,6 +12,28 @@ use Laravel\Roster\Roster;
 trait DiscoverPackagePaths
 {
     /**
+     * Composer package names for packages that ship guidelines within Boost's .ai/ directory.
+     *
+     * @var array<int, string>
+     */
+    protected const FIRST_PARTY_PACKAGES = [
+        'laravel/framework',
+        'laravel/folio',
+        'laravel/mcp',
+        'laravel/pennant',
+        'laravel/pint',
+        'laravel/sail',
+        'laravel/wayfinder',
+        'livewire/livewire',
+        'livewire/flux',
+        'livewire/flux-pro',
+        'livewire/volt',
+        'inertiajs/inertia-laravel',
+        'pestphp/pest',
+        'phpunit/phpunit',
+    ];
+
+    /**
      * Only include guidelines for these package names if they're a direct requirement.
      * This fixes every Boost user getting the MCP guidelines due to indirect import.
      *
@@ -94,5 +116,28 @@ trait DiscoverPackagePaths
     protected function getBoostAiPath(): string
     {
         return __DIR__.'/../../../.ai';
+    }
+
+    public static function isFirstPartyPackage(string $composerName): bool
+    {
+        return in_array($composerName, self::FIRST_PARTY_PACKAGES, true);
+    }
+
+    protected function getVendorGuidelinePath(Package $package): ?string
+    {
+        $path = base_path('vendor'.DIRECTORY_SEPARATOR
+            .str_replace('/', DIRECTORY_SEPARATOR, $package->rawName())
+            .DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.'guidelines');
+
+        return is_dir($path) ? $path : null;
+    }
+
+    protected function getVendorSkillPath(Package $package): ?string
+    {
+        $path = base_path('vendor'.DIRECTORY_SEPARATOR
+            .str_replace('/', DIRECTORY_SEPARATOR, $package->rawName())
+            .DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.'skills');
+
+        return is_dir($path) ? $path : null;
     }
 }
