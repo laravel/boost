@@ -136,6 +136,6 @@ render(function (View $view, Post $post) {
 
 ### Folio 404 Debug Checklist
 
-1. Run `{{ $assist->artisanCommand('folio:list') }}`.
-2. If routes are missing, confirm Folio is mounted (`folio:install` + provider registration, or `Folio::path(...)`) and pages are under the mounted path.
-3. Verify filename-to-route mapping (`index.blade.php`, nested paths, `[id]` vs `[Model]`), then rerun `{{ $assist->artisanCommand('folio:list') }}`.
+1. Run `{{ $assist->artisanCommand('folio:list') }}`
+2. If routes are missing, confirm Folio is mounted (`folio:install` + provider registration, or `Folio::path(...)`) and pages are under the mounted path
+3. Verify filename-to-route mapping (`index.blade.php`, nested paths, `[id]` vs `[Model]`), then rerun `{{ $assist->artisanCommand('folio:list') }}`
