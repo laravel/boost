@@ -52,7 +52,7 @@ Always create new `folio` pages and routes using `{{ $assist->artisanCommand('fo
 {{ $assist->artisanCommand('folio:page "users/[User]"') }}
 @endboostsnippet
 
-## Route Parameters vs Model Binding
+## Route Parameters vs. Model Binding
 
 Use the correct filename token based on intent:
 
