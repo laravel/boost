@@ -30,7 +30,7 @@ search-docs(['mcp tools', 'mcp resources', 'mcp validation'])
 {{ $assist->artisanCommand('make:mcp-server ServerName') }}
 @endboostsnippet
 
-### Basic Tool Pattern
+### Basic Tool Implementation
 
 @boostsnippet("Tool Example", "php")
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -56,7 +56,7 @@ class MyTool extends Tool
 }
 @endboostsnippet
 
-### Basic Resource Pattern
+### Basic Resource Implementation
 
 @boostsnippet("Resource Example", "php")
 use Laravel\Mcp\Response;
