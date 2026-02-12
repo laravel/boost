@@ -118,6 +118,24 @@ trait ReadsLogs
     }
 
     /**
+     * Truncate a log entry to a maximum number of lines to prevent
+     * oversized responses when stack traces are very large.
+     */
+    protected function truncateEntry(string $entry, int $maxLines = 30): string
+    {
+        $lines = explode("\n", $entry);
+
+        if (count($lines) <= $maxLines) {
+            return $entry;
+        }
+
+        $remaining = count($lines) - $maxLines;
+
+        return implode("\n", array_slice($lines, 0, $maxLines))
+            ."\n[... truncated {$remaining} more lines]";
+    }
+
+    /**
      * Retrieve the last $count complete PSR-3 log entries from the log file using
      * chunked reading instead of character-by-character reverse scanning.
      *

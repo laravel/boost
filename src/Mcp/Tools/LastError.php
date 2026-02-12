@@ -76,7 +76,7 @@ class LastError extends Tool
         $entry = $this->readLastErrorEntry($logFile);
 
         if ($entry !== null) {
-            return Response::text($entry);
+            return Response::text($this->truncateEntry($entry));
         }
 
         return Response::error('Unable to find an ERROR entry in the inspected portion of the log file.');
