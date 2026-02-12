@@ -48,7 +48,7 @@ Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert b
 
 ### Choosing a Component Format
 
-Before creating a component, check `config/livewire.php` for overrides, these change where files are stored. Then look at existing files in those directories (defaulting to `app/Livewire/` and `resources/views/livewire/`) to match the established convention.
+Before creating a component, check `config/livewire.php` for directory overrides, which change where files are stored. Then, look at existing files in those directories (defaulting to `app/Livewire/` and `resources/views/livewire/`) to match the established convention.
 
 ### Component Format Reference
 
