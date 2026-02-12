@@ -41,6 +41,7 @@ Use `search-docs` for detailed Livewire 4 patterns and documentation.
 # With namespace
 {{ $assist->artisanCommand('make:livewire Posts/CreatePost') }}
 ```
+
 ### Converting Between Formats
 
 Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert between single-file, multi-file, and class-based formats.
