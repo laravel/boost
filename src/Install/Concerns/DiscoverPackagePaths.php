@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Concerns;
 
 use Illuminate\Support\Collection;
+use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\Npm;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
@@ -96,36 +98,16 @@ trait DiscoverPackagePaths
         return __DIR__.'/../../../.ai';
     }
 
-    protected function getVendorGuidelinePath(Package $package): ?string
+    protected function resolveFirstPartyBoostPath(Package $package, string $subpath): ?string
     {
-        return $this->getPackageBoostPath('vendor', $package, 'guidelines');
-    }
+        if (Composer::isFirstPartyPackage($package->rawName())) {
+            return Composer::boostPath($package, $subpath);
+        }
 
-    protected function getVendorSkillPath(Package $package): ?string
-    {
-        return $this->getPackageBoostPath('vendor', $package, 'skills');
-    }
+        if (Npm::isFirstPartyPackage($package->rawName())) {
+            return Npm::boostPath($package, $subpath);
+        }
 
-    protected function getNodeModulesGuidelinePath(Package $package): ?string
-    {
-        return $this->getPackageBoostPath('node_modules', $package, 'guidelines');
-    }
-
-    protected function getNodeModulesSkillPath(Package $package): ?string
-    {
-        return $this->getPackageBoostPath('node_modules', $package, 'skills');
-    }
-
-    private function getPackageBoostPath(string $baseDir, Package $package, string $subpath): ?string
-    {
-        $path = implode(DIRECTORY_SEPARATOR, [
-            base_path($baseDir),
-            str_replace('/', DIRECTORY_SEPARATOR, $package->rawName()),
-            'resources',
-            'boost',
-            $subpath,
-        ]);
-
-        return is_dir($path) ? $path : null;
+        return null;
     }
 }

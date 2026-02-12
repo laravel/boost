@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Support;
 
+use Laravel\Roster\Package;
+
 class Npm
 {
     /** @var array<int, string> */
@@ -21,6 +23,19 @@ class Npm
         }
 
         return false;
+    }
+
+    public static function boostPath(Package $package, string $subpath): ?string
+    {
+        $path = implode(DIRECTORY_SEPARATOR, [
+            base_path('node_modules'),
+            str_replace('/', DIRECTORY_SEPARATOR, $package->rawName()),
+            'resources',
+            'boost',
+            $subpath,
+        ]);
+
+        return is_dir($path) ? $path : null;
     }
 
     /**

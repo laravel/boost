@@ -9,7 +9,6 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
-use Laravel\Boost\Support\Npm;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Yaml\Yaml;
@@ -68,7 +67,7 @@ class SkillComposer
             ->collect()
             ->flatMap(function (Package $package): Collection {
                 $name = $this->normalizePackageName($package->name());
-                $vendorSkillPath = $this->resolveFirstPartySkillPath($package);
+                $vendorSkillPath = $this->resolveFirstPartyBoostPath($package, 'skills');
 
                 $vendorSkills = $vendorSkillPath !== null
                     ? $this->discoverSkillsFromDirectory($vendorSkillPath, $name)
@@ -83,19 +82,6 @@ class SkillComposer
             });
 
         return $skills;
-    }
-
-    private function resolveFirstPartySkillPath(Package $package): ?string
-    {
-        if (Composer::isFirstPartyPackage($package->rawName())) {
-            return $this->getVendorSkillPath($package);
-        }
-
-        if (Npm::isFirstPartyPackage($package->rawName())) {
-            return $this->getNodeModulesSkillPath($package);
-        }
-
-        return null;
     }
 
     /**

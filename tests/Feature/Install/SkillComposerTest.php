@@ -143,8 +143,8 @@ test('vendor skills override .ai/ skills with the same name', function (): void 
     $composer = Mockery::mock(SkillComposer::class, [$this->roster])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getVendorSkillPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === 'livewire/livewire' ? $vendorFixture : null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'livewire/livewire' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 
@@ -163,7 +163,7 @@ test('falls back to .ai/ skills when vendor has none', function (): void {
     $composer = Mockery::mock(SkillComposer::class, [$this->roster])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getVendorSkillPath')->andReturn(null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $skills = $composer->skills();
 
@@ -184,8 +184,8 @@ test('node_modules skills override .ai/ skills for npm first-party packages', fu
     $composer = Mockery::mock(SkillComposer::class, [$this->roster])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getNodeModulesSkillPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 
@@ -204,7 +204,7 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
     $composer = Mockery::mock(SkillComposer::class, [$this->roster])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getNodeModulesSkillPath')->andReturn(null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $skills = $composer->skills();
 

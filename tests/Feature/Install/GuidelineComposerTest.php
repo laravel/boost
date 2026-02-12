@@ -812,8 +812,8 @@ test('loads vendor core guideline when available', function (): void {
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getVendorGuidelinePath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -833,7 +833,7 @@ test('falls back to .ai/ when vendor guideline path does not exist', function ()
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getVendorGuidelinePath')->andReturn(null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $guidelines = $composer->compose();
 
@@ -853,8 +853,8 @@ test('guideline key is unchanged regardless of vendor or .ai/ source', function 
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getVendorGuidelinePath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
 
     $keys = $composer->used();
 
@@ -875,8 +875,8 @@ test('user override works with vendor-sourced guideline', function (): void {
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
-    $composer->shouldReceive('getVendorGuidelinePath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === 'laravel/framework' ? $vendorFixture : null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'laravel/framework' ? $vendorFixture : null);
 
     $guidelines = $composer->guidelines();
     $laravelCore = $guidelines->get('laravel/core');
@@ -914,8 +914,8 @@ test('loads node_modules core guideline for npm first-party packages', function 
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getNodeModulesGuidelinePath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -935,7 +935,7 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('getNodeModulesGuidelinePath')->andReturn(null);
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $guidelines = $composer->compose();
 

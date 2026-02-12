@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Support;
 
+use Laravel\Roster\Package;
+
 class Composer
 {
     /** @var array<int, string> */
@@ -27,6 +29,19 @@ class Composer
     public static function isFirstPartyPackage(string $composerName): bool
     {
         return in_array($composerName, self::FIRST_PARTY_PACKAGES, true);
+    }
+
+    public static function boostPath(Package $package, string $subpath): ?string
+    {
+        $path = implode(DIRECTORY_SEPARATOR, [
+            base_path('vendor'),
+            str_replace('/', DIRECTORY_SEPARATOR, $package->rawName()),
+            'resources',
+            'boost',
+            $subpath,
+        ]);
+
+        return is_dir($path) ? $path : null;
     }
 
     public static function packagesDirectories(): array

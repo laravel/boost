@@ -9,7 +9,6 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
-use Laravel\Boost\Support\Npm;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
@@ -172,7 +171,7 @@ class GuidelineComposer
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function (Package $package): Collection {
                 $guidelineDir = $this->normalizePackageName($package->name());
-                $vendorPath = $this->resolveFirstPartyGuidelinePath($package);
+                $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
 
                 $guidelines = collect([$guidelineDir.'/core' => $this->resolveGuideline(
                     $vendorPath ? $vendorPath.DIRECTORY_SEPARATOR.'core' : null,
@@ -193,19 +192,6 @@ class GuidelineComposer
 
                 return $guidelines;
             });
-    }
-
-    private function resolveFirstPartyGuidelinePath(Package $package): ?string
-    {
-        if (Composer::isFirstPartyPackage($package->rawName())) {
-            return $this->getVendorGuidelinePath($package);
-        }
-
-        if (Npm::isFirstPartyPackage($package->rawName())) {
-            return $this->getNodeModulesGuidelinePath($package);
-        }
-
-        return null;
     }
 
     /**
