@@ -31,16 +31,47 @@ class McpWriter
     {
         $mcp = $this->buildBoostMcpCommand($sail);
 
-        if (! $this->agent->installMcp($mcp['key'], $mcp['command'], $mcp['args'])) {
+        $env = $mcp['env'] ?? [];
+        $cwd = $mcp['cwd'] ?? null;
+
+        if ($cwd !== null) {
+            config()->set('boost.mcp.server.cwd', $cwd);
+        }
+
+        if (! $this->agent->installMcp(
+            $mcp['key'],
+            $mcp['command'],
+            $mcp['args'],
+            $env,
+            $mcp['cwd'] ?? null
+        )) {
             throw new RuntimeException('Failed to install Boost MCP: could not write configuration');
         }
     }
 
     /**
-     * @return array{key: string, command: string, args: array<int, string>}
+     * @return array{
+     *     key: string,
+     *     command: string,
+     *     args: array<int, string>,
+     *     env?: array<string, string>|null,
+     *     cwd?: string|null
+     * }
      */
     protected function buildBoostMcpCommand(?Sail $sail): array
     {
+        $custom = config('boost.mcp.server');
+
+        if (! empty($custom['command'])) {
+            return [
+                'key' => 'laravel-boost',
+                'command' => $custom['command'],
+                'args' => $custom['args'] ?? [],
+                'env' => $custom['env'] ?? null,
+                'cwd' => $custom['cwd'] ?? null,
+            ];
+        }
+
         if ($sail instanceof Sail) {
             return $sail->buildMcpCommand('laravel-boost');
         }

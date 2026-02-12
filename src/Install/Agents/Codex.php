@@ -62,15 +62,17 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
         return 'mcp_servers';
     }
 
-    /** {@inheritDoc} */
-    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    /** {@inheritDoc}
+     */
+    public function mcpServerConfig(string $command, array $args = [], array $env = [], ?string $cwd = null): array
     {
         return collect([
             'command' => $command,
             'args' => $args,
-            'cwd' => base_path(),
+            'cwd' => $cwd,
             'env' => $env,
-        ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
+        ])
+            ->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
             ->toArray();
     }
 

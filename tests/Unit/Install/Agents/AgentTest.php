@@ -136,10 +136,10 @@ test('installMcp uses File strategy when configured', function (): void {
 
     $environment->shouldReceive('installFileMcp')
         ->once()
-        ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])
+        ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'], null)
         ->andReturn(true);
 
-    $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
+    $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value'], null);
 
     expect($result)->toBe(true);
 });
@@ -672,4 +672,161 @@ test('file installation handles absolute paths with spaces correctly', function 
                 ],
             ],
         ]);
+});
+
+test('mcpServerConfig includes cwd when provided', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $config = $environment->mcpServerConfig('php', ['artisan', 'boost:mcp'], [], '/custom/cwd');
+
+    expect($config)->toBe([
+        'command' => 'php',
+        'args' => ['artisan', 'boost:mcp'],
+        'cwd' => '/custom/cwd',
+    ]);
+});
+
+test('mcpServerConfig excludes cwd when null', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $config = $environment->mcpServerConfig('php', ['artisan', 'boost:mcp']);
+
+    expect($config)->toBe([
+        'command' => 'php',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('mcpServerConfig excludes cwd when empty string', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $config = $environment->mcpServerConfig('php', ['artisan', 'boost:mcp'], [], '');
+
+    expect($config)->toBe([
+        'command' => 'php',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('mcpServerConfig excludes env when empty', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $config = $environment->mcpServerConfig('php', ['artisan', 'boost:mcp'], []);
+
+    expect($config)->toBe([
+        'command' => 'php',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('mcpServerConfig includes env when provided', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $config = $environment->mcpServerConfig('php', ['artisan', 'boost:mcp'], ['APP_ENV' => 'testing']);
+
+    expect($config)->toBe([
+        'command' => 'php',
+        'args' => ['artisan', 'boost:mcp'],
+        'env' => ['APP_ENV' => 'testing'],
+    ]);
+});
+
+test('mcpServerConfig includes both env and cwd when provided', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $config = $environment->mcpServerConfig('php', ['artisan', 'boost:mcp'], ['APP_ENV' => 'testing'], '/project/path');
+
+    expect($config)->toBe([
+        'command' => 'php',
+        'args' => ['artisan', 'boost:mcp'],
+        'env' => ['APP_ENV' => 'testing'],
+        'cwd' => '/project/path',
+    ]);
+});
+
+test('installFileMcp includes cwd in config when provided', function (): void {
+    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp('test-key', 'php', ['artisan', 'boost:mcp'], [], '/project/path');
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'test-key' => [
+                    'command' => 'php',
+                    'args' => ['artisan', 'boost:mcp'],
+                    'cwd' => '/project/path',
+                ],
+            ],
+        ]);
+});
+
+test('installFileMcp excludes cwd from config when null', function (): void {
+    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp('test-key', 'php', ['artisan', 'boost:mcp'], [], null);
+
+    expect($result)->toBe(true);
+
+    $decoded = json_decode($capturedContent, true);
+    expect($decoded['mcpServers']['test-key'])->not->toHaveKey('cwd');
+});
+
+test('installMcp passes cwd to installFileMcp', function (): void {
+    $environment = Mockery::mock(TestAgent::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    $environment->shouldReceive('installFileMcp')
+        ->once()
+        ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'], '/custom/cwd')
+        ->andReturn(true);
+
+    $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value'], '/custom/cwd');
+
+    expect($result)->toBe(true);
 });
