@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.3...main)
+
+## [v2.1.3](https://github.com/laravel/boost/compare/v2.1.2...v2.1.3) - 2026-02-11
+
+### What's Changed
+
+* Remove experimental third-party MCP primitives by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/552
+* Add symlink install mode for skills by [@hosmelq](https://github.com/hosmelq) in https://github.com/laravel/boost/pull/499
+* Add additional newline before end-guideline fence by [@ChipNeedham](https://github.com/ChipNeedham) in https://github.com/laravel/boost/pull/565
+* Update Roster by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/562
+
+### New Contributors
+
+* [@hosmelq](https://github.com/hosmelq) made their first contribution in https://github.com/laravel/boost/pull/499
+* [@ChipNeedham](https://github.com/ChipNeedham) made their first contribution in https://github.com/laravel/boost/pull/565
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.2...v2.1.3
 
 ## [v2.1.2](https://github.com/laravel/boost/compare/v2.1.1...v2.1.2) - 2026-02-10
 
