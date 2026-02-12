@@ -167,11 +167,22 @@ class GuidelineComposer
 
     protected function getPackageGuidelines(): Collection
     {
+        $resolvedVendorRawNames = [];
+
         return $this->roster->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
-            ->flatMap(function (Package $package): Collection {
+            ->flatMap(function (Package $package) use (&$resolvedVendorRawNames): Collection {
                 $guidelineDir = $this->normalizePackageName($package->name());
-                $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
+
+                $vendorPath = null;
+
+                if (! in_array($package->rawName(), $resolvedVendorRawNames, true)) {
+                    $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
+
+                    if ($vendorPath !== null) {
+                        $resolvedVendorRawNames[] = $package->rawName();
+                    }
+                }
 
                 $guidelines = collect([$guidelineDir.'/core' => $this->resolveGuideline(
                     $vendorPath ? $vendorPath.DIRECTORY_SEPARATOR.'core' : null,
@@ -346,9 +357,15 @@ class GuidelineComposer
         }
 
         if ($overrideKey !== null) {
-            $customPath = $this->prependUserGuidelinePath($overrideKey);
+            foreach (['.blade.php', '.md'] as $ext) {
+                $customPath = $this->prependUserGuidelinePath($overrideKey.$ext);
 
-            return file_exists($customPath) ? $customPath : $path;
+                if (file_exists($customPath)) {
+                    return $customPath;
+                }
+            }
+
+            return $path;
         }
 
         // The path is not a custom guideline, check if the user has an override for this
