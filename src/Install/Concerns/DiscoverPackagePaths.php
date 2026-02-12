@@ -12,28 +12,6 @@ use Laravel\Roster\Roster;
 trait DiscoverPackagePaths
 {
     /**
-     * Composer package names for packages that ship guidelines within Boost's .ai/ directory.
-     *
-     * @var array<int, string>
-     */
-    protected const FIRST_PARTY_PACKAGES = [
-        'laravel/framework',
-        'laravel/folio',
-        'laravel/mcp',
-        'laravel/pennant',
-        'laravel/pint',
-        'laravel/sail',
-        'laravel/wayfinder',
-        'livewire/livewire',
-        'livewire/flux',
-        'livewire/flux-pro',
-        'livewire/volt',
-        'inertiajs/inertia-laravel',
-        'pestphp/pest',
-        'phpunit/phpunit',
-    ];
-
-    /**
      * Only include guidelines for these package names if they're a direct requirement.
      * This fixes every Boost user getting the MCP guidelines due to indirect import.
      *
@@ -118,25 +96,35 @@ trait DiscoverPackagePaths
         return __DIR__.'/../../../.ai';
     }
 
-    public static function isFirstPartyPackage(string $composerName): bool
-    {
-        return in_array($composerName, self::FIRST_PARTY_PACKAGES, true);
-    }
-
     protected function getVendorGuidelinePath(Package $package): ?string
     {
-        $path = base_path('vendor'.DIRECTORY_SEPARATOR
-            .str_replace('/', DIRECTORY_SEPARATOR, $package->rawName())
-            .DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.'guidelines');
-
-        return is_dir($path) ? $path : null;
+        return $this->getPackageBoostPath('vendor', $package, 'guidelines');
     }
 
     protected function getVendorSkillPath(Package $package): ?string
     {
-        $path = base_path('vendor'.DIRECTORY_SEPARATOR
-            .str_replace('/', DIRECTORY_SEPARATOR, $package->rawName())
-            .DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.'skills');
+        return $this->getPackageBoostPath('vendor', $package, 'skills');
+    }
+
+    protected function getNodeModulesGuidelinePath(Package $package): ?string
+    {
+        return $this->getPackageBoostPath('node_modules', $package, 'guidelines');
+    }
+
+    protected function getNodeModulesSkillPath(Package $package): ?string
+    {
+        return $this->getPackageBoostPath('node_modules', $package, 'skills');
+    }
+
+    private function getPackageBoostPath(string $baseDir, Package $package, string $subpath): ?string
+    {
+        $path = implode(DIRECTORY_SEPARATOR, [
+            base_path($baseDir),
+            str_replace('/', DIRECTORY_SEPARATOR, $package->rawName()),
+            'resources',
+            'boost',
+            $subpath,
+        ]);
 
         return is_dir($path) ? $path : null;
     }

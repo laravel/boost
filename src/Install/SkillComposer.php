@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\Npm;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Yaml\Yaml;
@@ -67,9 +68,7 @@ class SkillComposer
             ->collect()
             ->flatMap(function (Package $package): Collection {
                 $name = $this->normalizePackageName($package->name());
-                $vendorSkillPath = self::isFirstPartyPackage($package->rawName())
-                    ? $this->getVendorSkillPath($package)
-                    : null;
+                $vendorSkillPath = $this->resolveFirstPartySkillPath($package);
 
                 $vendorSkills = $vendorSkillPath !== null
                     ? $this->discoverSkillsFromDirectory($vendorSkillPath, $name)
@@ -86,13 +85,26 @@ class SkillComposer
         return $skills;
     }
 
+    private function resolveFirstPartySkillPath(Package $package): ?string
+    {
+        if (Composer::isFirstPartyPackage($package->rawName())) {
+            return $this->getVendorSkillPath($package);
+        }
+
+        if (Npm::isFirstPartyPackage($package->rawName())) {
+            return $this->getNodeModulesSkillPath($package);
+        }
+
+        return null;
+    }
+
     /**
      * @return Collection<string, Skill>
      */
     protected function getThirdPartySkills(): Collection
     {
         $skills = collect(Composer::packagesDirectoriesWithBoostSkills())
-            ->reject(fn (string $path, string $package): bool => self::isFirstPartyPackage($package))
+            ->reject(fn (string $path, string $package): bool => Composer::isFirstPartyPackage($package))
             ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package));
 
         $selectedPackages = $this->config->aiGuidelines ?? [];
