@@ -95,12 +95,12 @@ Folio pages are normal Blade files. Include practical data-loading code when cre
 
 @boostsnippet("Inline Query Example in a Folio Page", "blade")
 @php
-    use App\Models\Post;
+use App\Models\Post;
 
-    $posts = Post::query()
-        ->whereNotNull('published_at')
-        ->latest('published_at')
-        ->get();
+$posts = Post::query()
+    ->whereNotNull('published_at')
+    ->latest('published_at')
+    ->get();
 @endphp
 
 <ul>
