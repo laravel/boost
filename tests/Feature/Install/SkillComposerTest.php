@@ -144,7 +144,7 @@ test('vendor skills override .ai/ skills with the same name', function (): void 
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'livewire/livewire' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'livewire/livewire' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 
@@ -185,7 +185,7 @@ test('node_modules skills override .ai/ skills for npm first-party packages', fu
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 

@@ -184,11 +184,13 @@ class GuidelineComposer
                     }
                 }
 
-                $guidelines = collect([$guidelineDir.'/core' => $this->resolveGuideline(
-                    $vendorPath ? $vendorPath.DIRECTORY_SEPARATOR.'core' : null,
-                    $guidelineDir.'/core',
-                    $guidelineDir.'/core',
-                )]);
+                $vendorCorePath = $vendorPath !== null
+                    ? $vendorPath.DIRECTORY_SEPARATOR.'core'
+                    : null;
+
+                $guidelines = collect([
+                    $guidelineDir.'/core' => $this->resolveGuideline($vendorCorePath, $guidelineDir.'/core'),
+                ]);
 
                 $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
 
@@ -208,17 +210,17 @@ class GuidelineComposer
     /**
      * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
      */
-    private function resolveGuideline(?string $vendorPath, string $aiFallback, string $overrideKey): array
+    private function resolveGuideline(?string $vendorPath, string $guidelineKey): array
     {
         if ($vendorPath !== null) {
             foreach (['.blade.php', '.md'] as $ext) {
                 if (file_exists($vendorPath.$ext)) {
-                    return $this->guideline($vendorPath.$ext, false, $overrideKey);
+                    return $this->guideline($vendorPath.$ext, false, $guidelineKey);
                 }
             }
         }
 
-        return $this->guideline($aiFallback);
+        return $this->guideline($guidelineKey);
     }
 
     /**

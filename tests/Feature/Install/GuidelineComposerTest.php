@@ -813,7 +813,7 @@ test('loads vendor core guideline when available', function (): void {
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -854,7 +854,7 @@ test('guideline key is unchanged regardless of vendor or .ai/ source', function 
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
 
     $keys = $composer->used();
 
@@ -876,7 +876,7 @@ test('user override works with vendor-sourced guideline', function (): void {
     $composer->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'laravel/framework' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'laravel/framework' ? $vendorFixture : null);
 
     $guidelines = $composer->guidelines();
     $laravelCore = $guidelines->get('laravel/core');
@@ -915,7 +915,7 @@ test('loads node_modules core guideline for npm first-party packages', function 
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -957,10 +957,10 @@ test('vendor core is not duplicated when multiple enums share the same rawName',
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
 
     $guidelines = $composer->guidelines();
-    $vendorEntries = $guidelines->filter(fn (array $g): bool => str_contains($g['content'], 'Vendor Core Guideline'));
+    $vendorEntries = $guidelines->filter(fn (array $g): bool => str_contains((string) $g['content'], 'Vendor Core Guideline'));
 
     expect($vendorEntries)->toHaveCount(1);
 });
@@ -983,7 +983,7 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (\Laravel\Roster\Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
     $composer->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
 
