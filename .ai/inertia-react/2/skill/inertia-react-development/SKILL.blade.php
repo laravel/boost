@@ -298,20 +298,13 @@ export default function UsersIndex({ users }) {
 
 ### Polling
 
-Automatically refresh data at intervals:
+Use the `usePoll` hook to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
 
-@boostsnippet("Polling Example", "react")
-import { router } from '@inertiajs/react'
-import { useEffect } from 'react'
+@boostsnippet("Basic Polling", "react")
+import { usePoll } from '@inertiajs/react'
 
 export default function Dashboard({ stats }) {
-    useEffect(() => {
-        const interval = setInterval(() => {
-            router.reload({ only: ['stats'] })
-        }, 5000) // Poll every 5 seconds
-
-        return () => clearInterval(interval)
-    }, [])
+    usePoll(5000)
 
     return (
         <div>
@@ -321,6 +314,37 @@ export default function Dashboard({ stats }) {
     )
 }
 @endboostsnippet
+
+@boostsnippet("Polling With Request Options and Manual Control", "react")
+import { usePoll } from '@inertiajs/react'
+
+export default function Dashboard({ stats }) {
+    const { start, stop } = usePoll(5000, {
+        only: ['stats'],
+        onStart() {
+            console.log('Polling request started')
+        },
+        onFinish() {
+            console.log('Polling request finished')
+        },
+    }, {
+        autoStart: false,
+        keepAlive: true,
+    })
+
+    return (
+        <div>
+            <h1>Dashboard</h1>
+            <div>Active Users: {stats.activeUsers}</div>
+            <button onClick={start}>Start Polling</button>
+            <button onClick={stop}>Stop Polling</button>
+        </div>
+    )
+}
+@endboostsnippet
+
+- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
+- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
 
 ### WhenVisible (Infinite Scroll)
 

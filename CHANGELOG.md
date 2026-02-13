@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.4...main)
+
+## [v2.1.4](https://github.com/laravel/boost/compare/v2.1.3...v2.1.4) - 2026-02-13
+
+### What's Changed
+
+* Fix missing output key in Tinker tool error response by [@Orlando-Villanueva](https://github.com/Orlando-Villanueva) in https://github.com/laravel/boost/pull/561
+* Add file paths and format guidance to Livewire 4 skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/543
+* Add model binding and page content examples to Folio routing skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/544
+* Update MCP development skill with accurate API patterns and testing by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/545
+* Update usePoll usage in skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/570
+
+### New Contributors
+
+* [@Orlando-Villanueva](https://github.com/Orlando-Villanueva) made their first contribution in https://github.com/laravel/boost/pull/561
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.3...v2.1.4
 
 ## [v2.1.3](https://github.com/laravel/boost/compare/v2.1.2...v2.1.3) - 2026-02-11
 
