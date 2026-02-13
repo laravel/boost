@@ -328,29 +328,18 @@ defineProps({
 
 ### Polling
 
-Automatically refresh data at intervals:
+Use the `usePoll` composable to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
 
 @verbatim
-@boostsnippet("Polling Example", "vue")
+@boostsnippet("Basic Polling", "vue")
 <script setup>
-import { router } from '@inertiajs/vue3'
-import { onMounted, onUnmounted } from 'vue'
+import { usePoll } from '@inertiajs/vue3'
 
 defineProps({
     stats: Object
 })
 
-let interval
-
-onMounted(() => {
-    interval = setInterval(() => {
-        router.reload({ only: ['stats'] })
-    }, 5000) // Poll every 5 seconds
-})
-
-onUnmounted(() => {
-    clearInterval(interval)
-})
+usePoll(5000)
 </script>
 
 <template>
@@ -361,6 +350,47 @@ onUnmounted(() => {
 </template>
 @endboostsnippet
 @endverbatim
+
+#### Polling With Request Options and Manual Control
+
+Pass `router.reload`-compatible options as the second argument and hook options as the third:
+
+@verbatim
+@boostsnippet("Polling With Options", "vue")
+<script setup>
+import { usePoll } from '@inertiajs/vue3'
+
+defineProps({
+    stats: Object
+})
+
+const { start, stop } = usePoll(5000, {
+    only: ['stats'],
+    onStart() {
+        console.log('Polling request started')
+    },
+    onFinish() {
+        console.log('Polling request finished')
+    },
+}, {
+    autoStart: false,
+    keepAlive: true,
+})
+</script>
+
+<template>
+    <div>
+        <h1>Dashboard</h1>
+        <div>Active Users: {{ stats.activeUsers }}</div>
+        <button @click="start">Start Polling</button>
+        <button @click="stop">Stop Polling</button>
+    </div>
+</template>
+@endboostsnippet
+@endverbatim
+
+- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
+- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
 
 ### WhenVisible (Infinite Scroll)
 
