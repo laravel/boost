@@ -72,6 +72,7 @@ class Tinker extends Tool
                 'type' => $throwable::class,
                 'file' => $throwable->getFile(),
                 'line' => $throwable->getLine(),
+                'output' => ob_get_contents() ?: '',
             ]);
 
         } finally {
