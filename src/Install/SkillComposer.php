@@ -61,24 +61,14 @@ class SkillComposer
      */
     protected function getBoostSkills(): Collection
     {
-        $resolvedVendorRawNames = [];
-
         /** @var Collection<string, Skill> $skills */
         $skills = $this->getRoster()->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->collect()
-            ->flatMap(function (Package $package) use (&$resolvedVendorRawNames): Collection {
+            ->flatMap(function (Package $package): Collection {
                 $name = $this->normalizePackageName($package->name());
 
-                $vendorSkillPath = null;
-
-                if (! in_array($package->rawName(), $resolvedVendorRawNames, true)) {
-                    $vendorSkillPath = $this->resolveFirstPartyBoostPath($package, 'skills');
-
-                    if ($vendorSkillPath !== null) {
-                        $resolvedVendorRawNames[] = $package->rawName();
-                    }
-                }
+                $vendorSkillPath = $this->resolveFirstPartyBoostPath($package, 'skills');
 
                 $vendorSkills = $vendorSkillPath !== null
                     ? $this->discoverSkillsFromDirectory($vendorSkillPath, $name)

@@ -167,22 +167,12 @@ class GuidelineComposer
 
     protected function getPackageGuidelines(): Collection
     {
-        $resolvedVendorRawNames = [];
-
         return $this->roster->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
-            ->flatMap(function (Package $package) use (&$resolvedVendorRawNames): Collection {
+            ->flatMap(function (Package $package): Collection {
                 $guidelineDir = $this->normalizePackageName($package->name());
 
-                $vendorPath = null;
-
-                if (! in_array($package->rawName(), $resolvedVendorRawNames, true)) {
-                    $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
-
-                    if ($vendorPath !== null) {
-                        $resolvedVendorRawNames[] = $package->rawName();
-                    }
-                }
+                $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
 
                 $vendorCorePath = $vendorPath !== null
                     ? $vendorPath.DIRECTORY_SEPARATOR.'core'

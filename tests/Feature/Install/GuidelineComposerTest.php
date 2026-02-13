@@ -202,9 +202,6 @@ test('handles multiple package versions correctly', function (): void {
         ->andReturn(false);
 
     $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA, '2.1.2', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
         ->with(Packages::INERTIA_REACT, '2.1.2', '>=')
         ->andReturn(false);
     $this->roster->shouldReceive('usesVersion')
@@ -468,7 +465,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
 test('includes wayfinder guidelines with inertia integration when both packages are present', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.2'),
         new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
     ]);
@@ -496,7 +493,7 @@ test('includes wayfinder guidelines with inertia integration when both packages 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('=== wayfinder-laravel/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
@@ -504,7 +501,7 @@ test('includes wayfinder guidelines with inertia integration when both packages 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
         new Package(Packages::INERTIA_VUE, 'inertiajs/inertia-vue', '2.1.2'),
         new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
     ]);
@@ -532,7 +529,7 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('=== wayfinder-laravel/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
@@ -540,7 +537,7 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
         new Package(Packages::INERTIA_SVELTE, 'inertiajs/inertia-svelte', '2.1.2'),
         new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
     ]);
@@ -568,7 +565,7 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('=== wayfinder-laravel/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
@@ -576,7 +573,7 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -602,7 +599,7 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/core rules ===')
+        ->toContain('=== wayfinder-laravel/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Invokable Controllers')
         ->toContain('Parameter Binding')
@@ -940,29 +937,6 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
     $guidelines = $composer->compose();
 
     expect($guidelines)->toContain('=== inertia-react/core rules ===');
-});
-
-test('vendor core is not duplicated when multiple enums share the same rawName', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA, '@inertiajs/react', '2.1.0'),
-        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
-
-    $guidelines = $composer->guidelines();
-    $vendorEntries = $guidelines->filter(fn (array $g): bool => str_contains((string) $g['content'], 'Vendor Core Guideline'));
-
-    expect($vendorEntries)->toHaveCount(1);
 });
 
 test('user override resolves .md files for vendor-sourced guidelines', function (): void {

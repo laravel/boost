@@ -100,14 +100,12 @@ trait DiscoverPackagePaths
 
     protected function resolveFirstPartyBoostPath(Package $package, string $subpath): ?string
     {
-        if (Composer::isFirstPartyPackage($package->rawName())) {
-            return Composer::boostPath($package, $subpath);
+        if (! Composer::isFirstPartyPackage($package->rawName()) && ! Npm::isFirstPartyPackage($package->rawName())) {
+            return null;
         }
 
-        if (Npm::isFirstPartyPackage($package->rawName())) {
-            return Npm::boostPath($package, $subpath);
-        }
+        $path = $package->path().DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.$subpath;
 
-        return null;
+        return is_dir($path) ? $path : null;
     }
 }
