@@ -48,4 +48,24 @@ return [
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boost MCP Server Configuration
+    |--------------------------------------------------------------------------
+    |
+    | These options allow you to customize the MCP server configuration that
+    | Boost uses. When a custom command is specified, it takes precedence
+    | over the automatic configuration. Leave empty to use defaults.
+    |
+    */
+
+    'mcp' => [
+        'server' => [
+            'command' => env('BOOST_MCP_SERVER_COMMAND'),
+            'args' => [],
+            'env' => [],
+            'cwd' => env('BOOST_MCP_SERVER_CWD'),
+        ],
+    ],
+
 ];

@@ -128,11 +128,11 @@ abstract class Agent
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
      */
-    public function installMcp(string $key, string $command, array $args = [], array $env = []): bool
+    public function installMcp(string $key, string $command, array $args = [], array $env = [], ?string $cwd = null): bool
     {
         return match ($this->mcpInstallationStrategy()) {
             McpInstallationStrategy::SHELL => $this->installShellMcp($key, $command, $args, $env),
-            McpInstallationStrategy::FILE => $this->installFileMcp($key, $command, $args, $env),
+            McpInstallationStrategy::FILE => $this->installFileMcp($key, $command, $args, $env, $cwd),
             McpInstallationStrategy::NONE => false
         };
     }
@@ -144,13 +144,22 @@ abstract class Agent
      * @param  array<string, string>  $env
      * @return array<string, mixed>
      */
-    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    public function mcpServerConfig(string $command, array $args = [], array $env = [], ?string $cwd = null): array
     {
-        return [
+        $config = [
             'command' => $command,
             'args' => $args,
-            'env' => $env,
         ];
+
+        if ($env !== []) {
+            $config['env'] = $env;
+        }
+
+        if (! empty($cwd)) {
+            $config['cwd'] = $cwd;
+        }
+
+        return $config;
     }
 
     /**
@@ -205,7 +214,7 @@ abstract class Agent
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
      */
-    protected function installFileMcp(string $key, string $command, array $args = [], array $env = []): bool
+    protected function installFileMcp(string $key, string $command, array $args = [], array $env = [], ?string $cwd = null): bool
     {
         $path = $this->mcpConfigPath();
 
@@ -221,7 +230,7 @@ abstract class Agent
 
         return $writer
             ->configKey($this->mcpConfigKey())
-            ->addServerConfig($key, $this->mcpServerConfig($normalized['command'], $normalized['args'], $env))
+            ->addServerConfig($key, $this->mcpServerConfig($normalized['command'], $normalized['args'], $env, $cwd))
             ->save();
     }
 

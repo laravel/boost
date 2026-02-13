@@ -16,7 +16,7 @@ it('installs boost mcp successfully without sail', function (): void {
         ->once()
         ->andReturn('artisan');
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(true);
 
@@ -29,7 +29,7 @@ it('installs boost mcp successfully without sail', function (): void {
 it('installs boost mcp with sail', function (): void {
     $agent = Mockery::mock(SupportsMcp::class);
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(true);
 
@@ -56,7 +56,7 @@ it('throws exception when boost mcp installation returns false', function (): vo
     $agent->shouldReceive('getArtisanPath')
         ->andReturn('artisan');
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(false);
 
@@ -73,7 +73,7 @@ it('throws exception when boost mcp installation throws exception', function ():
     $agent->shouldReceive('getArtisanPath')
         ->andReturn('artisan');
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andThrow(new RuntimeException('Permission denied'));
 
@@ -92,7 +92,7 @@ it('installs herd mcp when herd is provided', function (): void {
         ->once()
         ->andReturn('artisan');
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(true);
     $agent->shouldReceive('installMcp')
@@ -120,7 +120,7 @@ it('throws exception when herd mcp installation returns false', function (): voi
         ->once()
         ->andReturn('artisan');
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(true);
     $agent->shouldReceive('installMcp')
@@ -148,7 +148,7 @@ it('throws exception when herd mcp installation throws exception', function (): 
         ->once()
         ->andReturn('artisan');
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(true);
     $agent->shouldReceive('installMcp')
@@ -176,7 +176,7 @@ it('does not install herd mcp when herd is null', function (): void {
         ->once()
         ->andReturn('artisan');
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(true);
 
@@ -189,7 +189,7 @@ it('does not install herd mcp when herd is null', function (): void {
 it('installs with both sail and herd', function (): void {
     $agent = Mockery::mock(SupportsMcp::class);
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'], [], null)
         ->once()
         ->andReturn(true);
     $agent->shouldReceive('getPhpPath')
@@ -220,4 +220,119 @@ it('installs with both sail and herd', function (): void {
     $result = $writer->write($sail, $herd);
 
     expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('uses custom mcp server configuration when command is set', function (): void {
+    config(['boost.mcp.server' => [
+        'command' => '/custom/bin/php',
+        'args' => ['-d', 'memory_limit=512M', 'artisan', 'boost:mcp'],
+        'env' => ['CUSTOM_VAR' => 'value'],
+        'cwd' => '/custom/working/dir',
+    ]]);
+
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with(
+            'laravel-boost',
+            '/custom/bin/php',
+            ['-d', 'memory_limit=512M', 'artisan', 'boost:mcp'],
+            ['CUSTOM_VAR' => 'value'],
+            '/custom/working/dir'
+        )
+        ->once()
+        ->andReturn(true);
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write();
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('uses custom mcp server configuration with only command', function (): void {
+    config(['boost.mcp.server' => [
+        'command' => '/custom/bin/php',
+        'args' => [],
+        'env' => [],
+        'cwd' => null,
+    ]]);
+
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', '/custom/bin/php', [], [], null)
+        ->once()
+        ->andReturn(true);
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write();
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('ignores custom config when command is empty', function (): void {
+    config(['boost.mcp.server' => [
+        'command' => '',
+        'args' => [],
+        'env' => [],
+        'cwd' => null,
+    ]]);
+
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')
+        ->once()
+        ->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')
+        ->once()
+        ->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'], [], null)
+        ->once()
+        ->andReturn(true);
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write();
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('custom config takes precedence over sail', function (): void {
+    config(['boost.mcp.server' => [
+        'command' => '/custom/bin/php',
+        'args' => ['artisan', 'boost:mcp'],
+        'env' => null,
+        'cwd' => null,
+    ]]);
+
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', '/custom/bin/php', ['artisan', 'boost:mcp'], [], null)
+        ->once()
+        ->andReturn(true);
+
+    $sail = Mockery::mock(Sail::class);
+    // Sail's buildMcpCommand should NOT be called when custom config is present
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write($sail);
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('stores cwd in config when provided', function (): void {
+    config(['boost.mcp.server' => [
+        'command' => '/custom/bin/php',
+        'args' => ['artisan', 'boost:mcp'],
+        'env' => null,
+        'cwd' => '/project/path',
+    ]]);
+
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', '/custom/bin/php', ['artisan', 'boost:mcp'], [], '/project/path')
+        ->once()
+        ->andReturn(true);
+
+    $writer = new McpWriter($agent);
+    $writer->write();
+
+    expect(config('boost.mcp.server.cwd'))->toBe('/project/path');
 });

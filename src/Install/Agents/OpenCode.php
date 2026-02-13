@@ -70,7 +70,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
     }
 
     /** {@inheritDoc} */
-    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    public function mcpServerConfig(string $command, array $args = [], array $env = [], ?string $cwd = null): array
     {
         return [
             'type' => 'local',

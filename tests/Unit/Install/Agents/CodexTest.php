@@ -50,21 +50,21 @@ test('returns correct MCP config key', function (): void {
 test('builds MCP server config with cwd field', function (): void {
     $codex = new Codex($this->strategyFactory);
 
-    $config = $codex->mcpServerConfig('php', ['artisan', 'boost:mcp']);
+    $config = $codex->mcpServerConfig('php', ['artisan', 'boost:mcp'], [], '/project/path');
 
     expect($config)->toHaveKey('command', 'php')
         ->toHaveKey('args', ['artisan', 'boost:mcp'])
-        ->toHaveKey('cwd');
+        ->toHaveKey('cwd', '/project/path');
 });
 
 test('builds MCP server config with env when provided', function (): void {
     $codex = new Codex($this->strategyFactory);
 
-    $config = $codex->mcpServerConfig('php', ['artisan'], ['APP_ENV' => 'local']);
+    $config = $codex->mcpServerConfig('php', ['artisan'], ['APP_ENV' => 'local'], '/project/path');
 
     expect($config)->toHaveKey('command', 'php')
         ->toHaveKey('args', ['artisan'])
-        ->toHaveKey('cwd')
+        ->toHaveKey('cwd', '/project/path')
         ->toHaveKey('env', ['APP_ENV' => 'local']);
 });
 
@@ -74,9 +74,9 @@ test('filters empty values from server config', function (): void {
     $config = $codex->mcpServerConfig('php', [], []);
 
     expect($config)->toHaveKey('command', 'php')
-        ->toHaveKey('cwd')
         ->not->toHaveKey('args')
-        ->not->toHaveKey('env');
+        ->not->toHaveKey('env')
+        ->not->toHaveKey('cwd');
 });
 
 test('includes config.toml in project detection', function (): void {
@@ -148,6 +148,32 @@ test('installMcp creates TOML config file', function (): void {
     expect($result)->toBeTrue()
         ->and($capturedContent)->toContain('[mcp_servers.laravel_boost]')
         ->and($capturedContent)->toContain('command = "php"')
+        ->and($capturedContent)->toContain('args = ["artisan", "boost:mcp"]');
+});
+
+test('installMcp creates TOML config file with cwd when provided', function (): void {
+    $codex = new Codex($this->strategyFactory);
+    $capturedContent = '';
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.codex');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.codex/config.toml')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $codex->installMcp('laravel_boost', 'php', ['artisan', 'boost:mcp'], [], '/project/path');
+
+    expect($result)->toBeTrue()
+        ->and($capturedContent)->toContain('[mcp_servers.laravel_boost]')
+        ->and($capturedContent)->toContain('command = "php"')
         ->and($capturedContent)->toContain('args = ["artisan", "boost:mcp"]')
-        ->and($capturedContent)->toContain('cwd = ');
+        ->and($capturedContent)->toContain('cwd = "/project/path"');
 });
