@@ -33,6 +33,7 @@ class ThirdPartyPackage
         ));
 
         return collect($allPackageNames)
+            ->reject(fn (string $name): bool => Composer::isFirstPartyPackage($name))
             ->mapWithKeys(fn (string $name): array => [
                 $name => new self(
                     name: $name,

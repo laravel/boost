@@ -44,3 +44,30 @@ it('returns correct display label', function (bool $hasGuidelines, bool $hasSkil
     'guidelines only' => [true, false, 'vendor/package (guideline)'],
     'skills only' => [false, true, 'vendor/package (skills)'],
 ]);
+
+it('excludes first-party packages from discover results', function (): void {
+    $packages = ThirdPartyPackage::discover();
+
+    $firstPartyNames = [
+        'laravel/framework',
+        'livewire/livewire',
+        'pestphp/pest',
+        'phpunit/phpunit',
+        'laravel/folio',
+        'laravel/mcp',
+        'laravel/pennant',
+        'laravel/pint',
+        'laravel/sail',
+        'laravel/wayfinder',
+        'livewire/flux',
+        'livewire/flux-pro',
+        'livewire/volt',
+        'inertiajs/inertia-laravel',
+    ];
+
+    foreach ($firstPartyNames as $name) {
+        expect($packages->has($name))->toBeFalse(
+            "First-party package {$name} should be excluded from discover()"
+        );
+    }
+});

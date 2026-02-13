@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Concerns;
 
 use Illuminate\Support\Collection;
+use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\Npm;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
@@ -94,5 +96,16 @@ trait DiscoverPackagePaths
     protected function getBoostAiPath(): string
     {
         return __DIR__.'/../../../.ai';
+    }
+
+    protected function resolveFirstPartyBoostPath(Package $package, string $subpath): ?string
+    {
+        if (! Composer::isFirstPartyPackage($package->rawName()) && ! Npm::isFirstPartyPackage($package->rawName())) {
+            return null;
+        }
+
+        $path = $package->path().DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.$subpath;
+
+        return is_dir($path) ? $path : null;
     }
 }
