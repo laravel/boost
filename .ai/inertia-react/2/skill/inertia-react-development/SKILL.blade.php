@@ -315,11 +315,7 @@ export default function Dashboard({ stats }) {
 }
 @endboostsnippet
 
-#### Polling With Request Options and Manual Control
-
-Pass `router.reload`-compatible options as the second argument and hook options as the third:
-
-@boostsnippet("Polling With Options", "react")
+@boostsnippet("Polling With Request Options and Manual Control", "react")
 import { usePoll } from '@inertiajs/react'
 
 export default function Dashboard({ stats }) {

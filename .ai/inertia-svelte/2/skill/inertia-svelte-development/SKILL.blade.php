@@ -276,11 +276,7 @@ usePoll(5000)
 </div>
 @endboostsnippet
 
-#### Polling With Request Options and Manual Control
-
-Pass `router.reload`-compatible options as the second argument and hook options as the third:
-
-@boostsnippet("Polling With Options", "svelte")
+@boostsnippet("Polling With Request Options and Manual Control", "svelte")
 <script>
 import { usePoll } from '@inertiajs/svelte'
 

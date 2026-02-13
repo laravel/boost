@@ -330,7 +330,6 @@ defineProps({
 
 Use the `usePoll` composable to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
 
-@verbatim
 @boostsnippet("Basic Polling", "vue")
 <script setup>
 import { usePoll } from '@inertiajs/vue3'
@@ -349,14 +348,8 @@ usePoll(5000)
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
-#### Polling With Request Options and Manual Control
-
-Pass `router.reload`-compatible options as the second argument and hook options as the third:
-
-@verbatim
-@boostsnippet("Polling With Options", "vue")
+@boostsnippet("Polling With Request Options and Manual Control", "vue")
 <script setup>
 import { usePoll } from '@inertiajs/vue3'
 
@@ -387,7 +380,6 @@ const { start, stop } = usePoll(5000, {
     </div>
 </template>
 @endboostsnippet
-@endverbatim
 
 - `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
 - `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
