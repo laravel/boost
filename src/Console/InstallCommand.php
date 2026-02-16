@@ -201,7 +201,7 @@ class InstallCommand extends Command
     {
         if ($this->sail->isInstalled() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
             $this->selectedBoostFeatures->push('sail');
-            
+
             if ($this->shouldConfigureInsideContainer()) {
                 $this->selectedBoostFeatures->push('inside_container');
             }
@@ -466,7 +466,7 @@ class InstallCommand extends Command
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: function (Agent&SupportsMcp $agent): int {
                 $writer = new McpWriter($agent);
-                
+
                 if ($this->shouldUseSail() && $this->shouldRunInsideContainer()) {
                     $result = $writer->writeInsideContainer();
                 } else {
@@ -475,7 +475,7 @@ class InstallCommand extends Command
                         $this->shouldInstallHerdMcp() ? $this->herd : null
                     );
                 }
-                
+
                 return $result;
             },
             featureName: 'MCP servers',
