@@ -29,7 +29,7 @@ it('installs boost mcp successfully without sail', function (): void {
 it('installs boost mcp with sail', function (): void {
     $agent = Mockery::mock(SupportsMcp::class);
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', (PHP_OS_FAMILY === 'Windows' ? 'vendor\bin\sail' : 'vendor/bin/sail'), ['artisan', 'boost:mcp'])
         ->once()
         ->andReturn(true);
 
@@ -39,7 +39,7 @@ it('installs boost mcp with sail', function (): void {
         ->once()
         ->andReturn([
             'key' => 'laravel-boost',
-            'command' => 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail',
+            'command' => (PHP_OS_FAMILY === 'Windows' ? 'vendor\bin\sail' : 'vendor/bin/sail'),
             'args' => ['artisan', 'boost:mcp'],
         ]);
 
@@ -189,7 +189,7 @@ it('does not install herd mcp when herd is null', function (): void {
 it('installs with both sail and herd', function (): void {
     $agent = Mockery::mock(SupportsMcp::class);
     $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail', ['artisan', 'boost:mcp'])
+        ->with('laravel-boost', (PHP_OS_FAMILY === 'Windows' ? 'vendor\bin\sail' : 'vendor/bin/sail'), ['artisan', 'boost:mcp'])
         ->once()
         ->andReturn(true);
     $agent->shouldReceive('getPhpPath')
@@ -207,7 +207,7 @@ it('installs with both sail and herd', function (): void {
         ->once()
         ->andReturn([
             'key' => 'laravel-boost',
-            'command' => 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail',
+            'command' => (PHP_OS_FAMILY === 'Windows' ? 'vendor\bin\sail' : 'vendor/bin/sail'),
             'args' => ['artisan', 'boost:mcp'],
         ]);
 
