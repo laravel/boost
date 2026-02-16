@@ -93,6 +93,16 @@ class Config
         return $this->get('herd_mcp', false);
     }
 
+    public function setNightwatchMcp(bool $installed): void
+    {
+        $this->set('nightwatch_mcp', $installed);
+    }
+
+    public function getNightwatchMcp(): bool
+    {
+        return $this->get('nightwatch_mcp', false);
+    }
+
     public function setSail(bool $useSail): void
     {
         $this->set('sail', $useSail);
