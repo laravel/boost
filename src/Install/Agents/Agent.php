@@ -138,6 +138,40 @@ abstract class Agent
     }
 
     /**
+     * Build the HTTP MCP server configuration payload for file-based installation.
+     *
+     * @return array<string, mixed>
+     */
+    public function httpMcpServerConfig(string $url): array
+    {
+        return [
+            'type' => 'http',
+            'url' => $url,
+        ];
+    }
+
+    /**
+     * Install an HTTP MCP server using the file-based strategy.
+     */
+    public function installHttpMcp(string $key, string $url): bool
+    {
+        $path = $this->mcpConfigPath();
+
+        if (! $path) {
+            return false;
+        }
+
+        $writer = str_ends_with($path, '.toml')
+            ? new TomlFileWriter($path, $this->defaultMcpConfig())
+            : new FileWriter($path, $this->defaultMcpConfig());
+
+        return $writer
+            ->configKey($this->mcpConfigKey())
+            ->addServerConfig($key, $this->httpMcpServerConfig($url))
+            ->save();
+    }
+
+    /**
      * Build the MCP server configuration payload for file-based installation.
      *
      * @param  array<int, string>  $args

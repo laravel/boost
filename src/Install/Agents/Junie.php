@@ -62,6 +62,15 @@ class Junie extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
         return '.junie/mcp/mcp.json';
     }
 
+    /** {@inheritDoc} */
+    public function httpMcpServerConfig(string $url): array
+    {
+        return [
+            'command' => 'npx',
+            'args' => ['-y', 'mcp-remote', $url],
+        ];
+    }
+
     public function guidelinesPath(): string
     {
         return config('boost.agents.junie.guidelines_path', '.junie/guidelines.md');
