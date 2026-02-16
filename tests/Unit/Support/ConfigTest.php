@@ -99,3 +99,31 @@ it('may store and retrieve packages', function (): void {
 
     expect($config->getPackages())->toEqual($packages);
 });
+
+it('may store and retrieve sail status', function (): void {
+    $config = new Config;
+
+    expect($config->getSail())->toBeFalse();
+
+    $config->setSail(true);
+
+    expect($config->getSail())->toBeTrue();
+
+    $config->setSail(false);
+
+    expect($config->getSail())->toBeFalse();
+});
+
+it('may store and retrieve running inside container status', function (): void {
+    $config = new Config;
+
+    expect($config->getRunningInsideContainer())->toBeFalse();
+
+    $config->setRunningInsideContainer(true);
+
+    expect($config->getRunningInsideContainer())->toBeTrue();
+
+    $config->setRunningInsideContainer(false);
+
+    expect($config->getRunningInsideContainer())->toBeFalse();
+});

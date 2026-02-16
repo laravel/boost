@@ -201,6 +201,10 @@ class InstallCommand extends Command
     {
         if ($this->sail->isInstalled() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
             $this->selectedBoostFeatures->push('sail');
+            
+            if ($this->shouldConfigureInsideContainer()) {
+                $this->selectedBoostFeatures->push('inside_container');
+            }
         }
 
         if ($this->herd->isMcpAvailable() && $this->shouldConfigureHerdMcp()) {
@@ -214,6 +218,15 @@ class InstallCommand extends Command
             label: 'Laravel Sail detected. Configure Boost MCP to use Sail?',
             default: $this->config->getSail(),
             hint: 'This will configure the MCP server to run through Sail. Note: Sail must be running to use Boost MCP',
+        );
+    }
+
+    protected function shouldConfigureInsideContainer(): bool
+    {
+        return confirm(
+            label: 'Is VS Code (or your AI agent) running inside the Sail container?',
+            default: $this->config->getRunningInsideContainer(),
+            hint: 'If yes, commands will use "php artisan" instead of "vendor/bin/sail artisan"',
         );
     }
 
@@ -374,6 +387,7 @@ class InstallCommand extends Command
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
+        $guidelineConfig->runningInsideContainer = $this->shouldRunInsideContainer();
         $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
 
         return $guidelineConfig;
@@ -402,6 +416,7 @@ class InstallCommand extends Command
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->config->setMcp(true);
             $this->config->setSail($this->shouldUseSail());
+            $this->config->setRunningInsideContainer($this->shouldRunInsideContainer());
             $this->config->setHerdMcp($this->shouldInstallHerdMcp());
         }
     }
@@ -418,6 +433,15 @@ class InstallCommand extends Command
         }
 
         return $this->config->getSail();
+    }
+
+    protected function shouldRunInsideContainer(): bool
+    {
+        if ($this->selectedBoostFeatures->contains('mcp')) {
+            return $this->selectedBoostFeatures->contains('inside_container');
+        }
+
+        return $this->config->getRunningInsideContainer();
     }
 
     protected function isExplicitFlagMode(): bool
@@ -440,10 +464,20 @@ class InstallCommand extends Command
             emptyMessage: 'No agents are selected for MCP installation.',
             headerMessage: 'Installing MCP servers to your selected Agents',
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
-            processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
-                $this->shouldUseSail() ? $this->sail : null,
-                $this->shouldInstallHerdMcp() ? $this->herd : null
-            ),
+            processor: function (Agent&SupportsMcp $agent): int {
+                $writer = new McpWriter($agent);
+                
+                if ($this->shouldUseSail() && $this->shouldRunInsideContainer()) {
+                    $result = $writer->writeInsideContainer();
+                } else {
+                    $result = $writer->write(
+                        $this->shouldUseSail() ? $this->sail : null,
+                        $this->shouldInstallHerdMcp() ? $this->herd : null
+                    );
+                }
+                
+                return $result;
+            },
             featureName: 'MCP servers',
             withDelay: true,
         );

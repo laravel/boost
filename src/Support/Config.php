@@ -103,6 +103,16 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function setRunningInsideContainer(bool $running): void
+    {
+        $this->set('running_inside_container', $running);
+    }
+
+    public function getRunningInsideContainer(): bool
+    {
+        return $this->get('running_inside_container', false);
+    }
+
     public function isValid(): bool
     {
         $path = base_path(self::FILE);

@@ -157,6 +157,25 @@ test('excludes Sail guidelines when Herd is configured', function (): void {
         ->not->toContain('Laravel Sail');
 });
 
+test('excludes Sail guidelines when running inside container', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->usesSail = true;
+    $config->runningInsideContainer = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->not->toContain('Laravel Sail');
+});
+
 test('composes guidelines with proper formatting', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

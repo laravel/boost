@@ -60,6 +60,21 @@ class McpWriter
         ];
     }
 
+    public function writeInsideContainer(): int
+    {
+        $mcp = [
+            'key' => 'laravel-boost',
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ];
+
+        if (! $this->agent->installMcp($mcp['key'], $mcp['command'], $mcp['args'])) {
+            throw new RuntimeException('Failed to install Boost MCP: could not write configuration');
+        }
+
+        return self::SUCCESS;
+    }
+
     private function isRunningInsideWsl(): bool
     {
         return ! empty(getenv('WSL_DISTRO_NAME')) || ! empty(getenv('IS_WSL'));

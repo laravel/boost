@@ -12,6 +12,8 @@ class GuidelineConfig
 
     public bool $usesSail = false;
 
+    public bool $runningInsideContainer = false;
+
     public bool $caresAboutLocalization = false;
 
     public bool $hasAnApi = false;

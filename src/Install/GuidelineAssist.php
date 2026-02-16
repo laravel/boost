@@ -203,7 +203,7 @@ class GuidelineAssist
             return "{$npmExecutable} {$command}";
         }
 
-        if ($this->config->usesSail) {
+        if ($this->config->usesSail && !$this->config->runningInsideContainer) {
             return Sail::nodePackageManagerCommand($this->detectedNodePackageManager())." {$command}";
         }
 
@@ -223,7 +223,7 @@ class GuidelineAssist
             return "{$composerExecutable} {$command}";
         }
 
-        if ($this->config->usesSail) {
+        if ($this->config->usesSail && !$this->config->runningInsideContainer) {
             return Sail::composerCommand()." {$command}";
         }
 
@@ -238,7 +238,7 @@ class GuidelineAssist
             return "{$vendorBinPrefix}{$command}";
         }
 
-        if ($this->config->usesSail) {
+        if ($this->config->usesSail && !$this->config->runningInsideContainer) {
             return Sail::binCommand().$command;
         }
 
@@ -253,9 +253,11 @@ class GuidelineAssist
             return "{$phpExecutable} artisan";
         }
 
-        return $this->config->usesSail
-            ? Sail::artisanCommand()
-            : 'php artisan';
+        if ($this->config->usesSail && !$this->config->runningInsideContainer) {
+            return Sail::artisanCommand();
+        }
+
+        return 'php artisan';
     }
 
     public function sailBinaryPath(): string

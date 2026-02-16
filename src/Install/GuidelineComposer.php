@@ -142,7 +142,7 @@ class GuidelineComposer
                 'path' => 'herd/core',
             ],
             'sail' => [
-                'condition' => $this->config->usesSail,
+                'condition' => $this->config->usesSail && ! $this->config->runningInsideContainer,
                 'path' => 'sail/core',
             ],
             'laravel/style' => [

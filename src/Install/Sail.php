@@ -57,4 +57,16 @@ class Sail
             'args' => ['artisan', 'boost:mcp'],
         ];
     }
+
+    /**
+     * @return array{key: string, command: string, args: array<int, string>}
+     */
+    public function buildMcpCommandInsideContainer(string $serverName): array
+    {
+        return [
+            'key' => $serverName,
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ];
+    }
 }

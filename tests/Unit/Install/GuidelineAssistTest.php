@@ -163,3 +163,51 @@ test('hasSkillsEnabled returns true when skills are enabled', function (): void 
 
     expect($assist->hasSkillsEnabled())->toBeTrue();
 });
+
+test('php executable uses plain php when running inside container', function (): void {
+    config(['boost.executable_paths.php' => null]);
+    $this->config->usesSail = true;
+    $this->config->runningInsideContainer = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->artisan())->toBe('php artisan');
+});
+
+test('composer uses plain composer when running inside container', function (): void {
+    config(['boost.executable_paths.composer' => null]);
+    $this->config->usesSail = true;
+    $this->config->runningInsideContainer = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->composerCommand('install'))->toBe('composer install');
+});
+
+test('npm uses plain npm when running inside container', function (): void {
+    config(['boost.executable_paths.npm' => null]);
+    $this->config->usesSail = true;
+    $this->config->runningInsideContainer = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->nodePackageManagerCommand('install'))->toBe('npm install');
+});
+
+test('vendor bin uses plain vendor/bin when running inside container', function (): void {
+    config(['boost.executable_paths.vendor_bin' => null]);
+    $this->config->usesSail = true;
+    $this->config->runningInsideContainer = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+});

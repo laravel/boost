@@ -221,3 +221,29 @@ it('installs with both sail and herd', function (): void {
 
     expect($result)->toBe(McpWriter::SUCCESS);
 });
+
+it('installs boost mcp for inside container', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+
+    $writer = new McpWriter($agent);
+    $result = $writer->writeInsideContainer();
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('throws exception when inside container mcp installation returns false', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(false);
+
+    $writer = new McpWriter($agent);
+
+    expect(fn (): int => $writer->writeInsideContainer())
+        ->toThrow(RuntimeException::class, 'Failed to install Boost MCP: could not write configuration');
+});
