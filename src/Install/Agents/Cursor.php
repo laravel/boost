@@ -59,7 +59,8 @@ class Cursor extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
     public function httpMcpServerConfig(string $url): array
     {
         return [
-            'url' => $url,
+            'command' => 'npx',
+            'args' => ['-y', 'mcp-remote', $url],
         ];
     }
 
