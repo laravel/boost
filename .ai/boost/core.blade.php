@@ -12,7 +12,7 @@
 - Use the `database-query` tool when you only need to read from the database.
 - Use the `database-schema` tool to inspect table structure before writing migrations or models.
 
-@if (config('boost.browser_logs', true) !== false || config('boost.browser_logs_watcher', true) !== false)
+@if (config('boost.browser_logs', false) !== false || config('boost.browser_logs_watcher', true) !== false)
 ## Reading Browser Logs With the `browser-logs` Tool
 - You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
 - Only recent browser logs will be useful - ignore old logs.
