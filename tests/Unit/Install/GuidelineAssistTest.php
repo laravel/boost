@@ -128,8 +128,7 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
-    $expected = PHP_OS_FAMILY === 'Windows' ? 'vendor\bin\pint' : 'vendor/bin/pint';
-    expect($assist->binCommand('pint'))->toBe($expected);
+    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
 });
 
 test('hasSkills property defaults to false', function (): void {
