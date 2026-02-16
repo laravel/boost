@@ -128,7 +128,7 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
-    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+    expect($assist->binCommand('pint'))->toBe('vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'pint');
 });
 
 test('hasSkills property defaults to false', function (): void {
@@ -209,5 +209,5 @@ test('vendor bin uses plain vendor/bin when running inside container', function 
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
-    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+    expect($assist->binCommand('pint'))->toBe('vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'pint');
 });

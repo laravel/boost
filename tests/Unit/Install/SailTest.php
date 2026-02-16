@@ -11,7 +11,7 @@ it('builds mcp command with sail binary', function (): void {
 
     expect($command)->toBe([
         'key' => 'laravel-boost',
-        'command' => 'vendor/bin/sail',
+        'command' => 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail',
         'args' => ['artisan', 'boost:mcp'],
     ]);
 });
