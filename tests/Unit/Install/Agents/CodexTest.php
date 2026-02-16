@@ -101,6 +101,14 @@ test('returns correct skills path', function (): void {
     expect($codex->skillsPath())->toBe('.agents/skills');
 });
 
+test('httpMcpServerConfig returns url-only config', function (): void {
+    $codex = new Codex($this->strategyFactory);
+
+    expect($codex->httpMcpServerConfig('https://nightwatch.laravel.com/mcp'))->toBe([
+        'url' => 'https://nightwatch.laravel.com/mcp',
+    ]);
+});
+
 test('system detection uses which command on Darwin', function (): void {
     $codex = new Codex($this->strategyFactory);
 
