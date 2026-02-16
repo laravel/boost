@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.4...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.5...main)
+
+## [v2.1.5](https://github.com/laravel/boost/compare/v2.1.4...v2.1.5) - 2026-02-16
+
+### What's Changed
+
+* Truncate large log entries in LastError tool response by [@leek](https://github.com/leek) in https://github.com/laravel/boost/pull/568
+* Prevent duplicate Boost guidelines in CLAUDE.md by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/577
+
+### New Contributors
+
+* [@leek](https://github.com/leek) made their first contribution in https://github.com/laravel/boost/pull/568
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.4...v2.1.5
 
 ## [v2.1.4](https://github.com/laravel/boost/compare/v2.1.3...v2.1.4) - 2026-02-13
 
