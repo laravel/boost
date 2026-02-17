@@ -100,6 +100,9 @@ class GuidelineComposer
             ->merge($this->getPackageGuidelines())
             ->merge($this->getThirdPartyGuidelines());
 
+        $excluded = config('boost.guidelines.exclude', []);
+        $base = $base->reject(fn (array $guideline, string $key): bool => in_array($key, $excluded, true));
+
         $basePaths = $base->pluck('path')->filter()->values();
 
         $customGuidelines = $this->getUserGuidelines()

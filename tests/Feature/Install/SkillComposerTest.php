@@ -116,6 +116,36 @@ test('excludes livewire skills when indirectly required', function (): void {
     expect($skills->has('livewire-development'))->toBeFalse();
 });
 
+test('excludes skills listed in config exclude list', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.skills.exclude' => ['livewire-development']]);
+
+    $skills = (new SkillComposer($this->roster))->skills();
+
+    expect($skills->has('livewire-development'))->toBeFalse();
+});
+
+test('ignores non-existent skill names in exclude list', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.skills.exclude' => ['nonexistent']]);
+
+    $skills = (new SkillComposer($this->roster))->skills();
+
+    expect($skills->has('livewire-development'))->toBeTrue();
+});
+
 test('includes livewire skills when directly required', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

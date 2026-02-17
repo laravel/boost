@@ -792,6 +792,116 @@ test('excludes Skills Activation section when skills are disabled', function ():
         ->not->toContain('This project has domain-specific skills available');
 });
 
+test('excludes guidelines listed in config exclude list', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+
+    config(['app.url' => 'http://myapp.test']);
+    config(['boost.guidelines.exclude' => ['herd', 'tests']]);
+
+    $config = new GuidelineConfig;
+    $config->enforceTests = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->not->toContain('=== herd rules ===')
+        ->not->toContain('=== tests rules ===')
+        ->toContain('=== foundation rules ===');
+});
+
+test('excludes core guidelines when listed in exclude config', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.guidelines.exclude' => ['php']]);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->not->toContain('=== php rules ===')
+        ->toContain('=== foundation rules ===')
+        ->toContain('=== boost rules ===');
+});
+
+test('excludes package guidelines when listed in exclude config', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.guidelines.exclude' => ['pest/core']]);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->not->toContain('=== pest/core rules ===')
+        ->toContain('=== foundation rules ===');
+});
+
+test('does not exclude user guidelines via config', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+
+    config(['boost.guidelines.exclude' => ['.ai/custom-rule']]);
+
+    expect($composer->compose())
+        ->toContain('=== .ai/custom-rule rules ===');
+});
+
+test('ignores non-existent keys in guidelines exclude list', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.guidelines.exclude' => ['nonexistent']]);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== foundation rules ===')
+        ->toContain('=== boost rules ===')
+        ->toContain('=== php rules ===');
+});
+
+test('excludes guidelines from used() list', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.guidelines.exclude' => ['pest/core']]);
+
+    $used = $this->composer->used();
+
+    expect($used)
+        ->not->toContain('pest/core')
+        ->toContain('foundation');
+});
+
 test('includes Skills Activation section when skills are enabled and skills exist', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
