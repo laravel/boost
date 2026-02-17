@@ -850,6 +850,23 @@ test('excludes package guidelines when listed in exclude config', function (): v
         ->toContain('=== foundation rules ===');
 });
 
+test('excludes versioned package guidelines when listed in exclude config', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '12.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.guidelines.exclude' => ['laravel/v12']]);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->not->toContain('=== laravel/v12 rules ===')
+        ->toContain('=== laravel/core rules ===')
+        ->toContain('=== foundation rules ===');
+});
+
 test('does not exclude user guidelines via config', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
