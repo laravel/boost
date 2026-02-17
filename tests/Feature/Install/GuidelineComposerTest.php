@@ -24,6 +24,7 @@ beforeEach(function (): void {
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
 
     $this->app->instance(Roster::class, $this->roster);
+    $this->roster->shouldReceive('uses')->andReturn(false)->byDefault();
 
     $this->composer = new GuidelineComposer($this->roster, $this->herd);
 });
