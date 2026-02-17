@@ -465,7 +465,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
 test('includes wayfinder guidelines with inertia integration when both packages are present', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.2'),
         new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
     ]);
@@ -493,7 +493,7 @@ test('includes wayfinder guidelines with inertia integration when both packages 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder-laravel/core rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
@@ -501,7 +501,7 @@ test('includes wayfinder guidelines with inertia integration when both packages 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
         new Package(Packages::INERTIA_VUE, 'inertiajs/inertia-vue', '2.1.2'),
         new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
     ]);
@@ -529,7 +529,7 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder-laravel/core rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
@@ -537,7 +537,7 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
         new Package(Packages::INERTIA_SVELTE, 'inertiajs/inertia-svelte', '2.1.2'),
         new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
     ]);
@@ -565,7 +565,7 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder-laravel/core rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Inertia: Use `.form()` with `<Form>` component');
 });
@@ -573,7 +573,7 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER_LARAVEL, 'laravel/wayfinder', '1.0.0'),
+        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
@@ -599,7 +599,7 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder-laravel/core rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Invokable Controllers')
         ->toContain('Parameter Binding')
