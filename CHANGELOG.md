@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.6...main)
+
+## [v2.1.6](https://github.com/laravel/boost/compare/v2.1.5...v2.1.6) - 2026-02-16
+
+### What's Changed
+
+* Fix default value for browser_logs config in core guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/574
+* Add support for Nightwatch MCP by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/boost/pull/575
+
+### New Contributors
+
+* [@jessarcher](https://github.com/jessarcher) made their first contribution in https://github.com/laravel/boost/pull/575
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.5...v2.1.6
 
 ## [v2.1.5](https://github.com/laravel/boost/compare/v2.1.4...v2.1.5) - 2026-02-16
 
