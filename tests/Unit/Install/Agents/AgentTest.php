@@ -673,3 +673,54 @@ test('file installation handles absolute paths with spaces correctly', function 
             ],
         ]);
 });
+
+test('httpMcpServerConfig returns default http type config', function (): void {
+    $environment = new TestSupportsMcp($this->strategyFactory);
+
+    expect($environment->httpMcpServerConfig('https://example.com/mcp'))->toBe([
+        'type' => 'http',
+        'url' => 'https://example.com/mcp',
+    ]);
+});
+
+test('installHttpMcp creates config file with http server', function (): void {
+    $environment = new TestSupportsMcp($this->strategyFactory);
+
+    $capturedContent = '';
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installHttpMcp('example', 'https://example.com/mcp');
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'example' => [
+                    'type' => 'http',
+                    'url' => 'https://example.com/mcp',
+                ],
+            ],
+        ]);
+});
+
+test('installHttpMcp returns false when mcpConfigPath is null', function (): void {
+    $environment = new TestAgent($this->strategyFactory);
+
+    $result = $environment->installHttpMcp('example', 'https://example.com/mcp');
+
+    expect($result)->toBe(false);
+});
