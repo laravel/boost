@@ -188,9 +188,11 @@ class SkillComposer
             return null;
         }
 
-        $content = file_get_contents($skillFile);
+        $content = str_ends_with($skillFile, '.blade.php')
+            ? $this->renderBladeFile($skillFile)
+            : file_get_contents($skillFile);
 
-        if ($content === false) {
+        if ($content === false || $content === '') {
             return null;
         }
 
@@ -249,6 +251,6 @@ class SkillComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config, $this->skills());
+        return new GuidelineAssist($this->roster, $this->config, $this->skills ?? collect());
     }
 }

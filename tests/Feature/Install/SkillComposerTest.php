@@ -15,6 +15,7 @@ use Laravel\Roster\Roster;
 beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
     $this->roster->shouldReceive('nodePackageManager')->andReturn(NodePackageManager::NPM);
+    $this->roster->shouldReceive('usesVersion')->andReturn(false);
 
     $this->app->instance(Roster::class, $this->roster);
 });
@@ -239,4 +240,40 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
     $skills = $composer->skills();
 
     expect($skills->has('inertia-react-development'))->toBeTrue();
+});
+
+test('blade skills with code before frontmatter are parsed correctly', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skillDir = base_path('.ai/skills/blade-frontmatter-test');
+    @mkdir($skillDir, 0755, true);
+
+    file_put_contents($skillDir.'/SKILL.blade.php', <<<'BLADE'
+        @php
+        $dynamicValue = 'dynamic-description';
+        @endphp
+        ---
+        name: blade-frontmatter-test
+        description: This skill has a {{ $dynamicValue }} in the frontmatter
+        ---
+
+        # Test Skill
+
+        This skill tests that blade code before frontmatter is processed correctly.
+        BLADE);
+
+    try {
+        $skills = (new SkillComposer($this->roster))->skills();
+
+        expect($skills->has('blade-frontmatter-test'))->toBeTrue()
+            ->and($skills->get('blade-frontmatter-test')->description)
+            ->toBe('This skill has a dynamic-description in the frontmatter');
+    } finally {
+        @unlink($skillDir.'/SKILL.blade.php');
+        @rmdir($skillDir);
+    }
 });

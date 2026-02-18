@@ -21,6 +21,7 @@ beforeEach(function (): void {
     $this->roster->shouldReceive('nodePackageManager')->andReturnUsing(
         fn (): NodePackageManager => $this->nodePackageManager
     );
+    $this->roster->shouldReceive('usesVersion')->andReturn(false)->byDefault();
 
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
