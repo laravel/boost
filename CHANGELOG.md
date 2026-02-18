@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.6...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.7...main)
+
+## [v2.1.7](https://github.com/laravel/boost/compare/v2.1.6...v2.1.7) - 2026-02-18
+
+### What's Changed
+
+* Add option to exclude specific guidelines and skills via config by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/580
+* fix: blade skills with code before frontmatter are parsed correctly by [@calebdw](https://github.com/calebdw) in https://github.com/laravel/boost/pull/582
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.6...v2.1.7
 
 ## [v2.1.6](https://github.com/laravel/boost/compare/v2.1.5...v2.1.6) - 2026-02-16
 
