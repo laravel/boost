@@ -49,9 +49,12 @@ class SkillComposer
             return $this->skills;
         }
 
+        $excluded = config('boost.skills.exclude', []);
+
         return $this->skills = collect()
             ->merge($this->getBoostSkills())
             ->merge($this->getThirdPartySkills())
+            ->reject(fn (Skill $skill, string $key): bool => in_array($key, $excluded, true))
             ->merge($this->getUserSkills());
     }
 
