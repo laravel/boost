@@ -16,7 +16,7 @@ class McpWriter
         //
     }
 
-    public function write(?Sail $sail = null, ?Herd $herd = null, ?Nightwatch $nightwatch = null): int
+    public function write(?Sail $sail = null, ?Herd $herd = null, ?Nightwatch $nightwatch = null, ?Svelte $svelte = null): int
     {
         $this->installBoostMcp($sail);
 
@@ -26,6 +26,10 @@ class McpWriter
 
         if ($nightwatch instanceof Nightwatch) {
             $this->installNightwatchMcp($nightwatch);
+        }
+
+        if ($svelte instanceof Svelte) {
+            $this->installSvelteMcp($svelte);
         }
 
         return self::SUCCESS;
@@ -87,6 +91,13 @@ class McpWriter
 
         if (! $installed) {
             throw new RuntimeException('Failed to install Herd MCP: could not write configuration');
+        }
+    }
+
+    protected function installSvelteMcp(Svelte $svelte): void
+    {
+        if (! $this->agent->installHttpMcp('svelte', $svelte->mcpUrl())) {
+            throw new RuntimeException('Failed to install Svelte MCP: could not write configuration');
         }
     }
 }

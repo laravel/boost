@@ -24,6 +24,7 @@ use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
+use Laravel\Boost\Install\Svelte;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
@@ -72,6 +73,7 @@ class InstallCommand extends Command
         private readonly Herd $herd,
         private readonly Nightwatch $nightwatch,
         private readonly Sail $sail,
+        private readonly Svelte $svelte,
         private readonly Terminal $terminal
     ) {
         parent::__construct();
@@ -212,6 +214,10 @@ class InstallCommand extends Command
         if ($this->nightwatch->isInstalled() && $this->shouldConfigureNightwatchMcp()) {
             $this->selectedBoostFeatures->push('nightwatch_mcp');
         }
+
+        if ($this->svelte->isInstalled() && $this->shouldConfigureSvelteMcp()) {
+            $this->selectedBoostFeatures->push('svelte_mcp');
+        }
     }
 
     protected function shouldConfigureSail(): bool
@@ -238,6 +244,15 @@ class InstallCommand extends Command
             label: 'Would you like to install Nightwatch MCP alongside Boost MCP?',
             default: $this->config->getNightwatchMcp(),
             hint: 'The Nightwatch MCP provides tools for browsing issues, viewing stack traces, and managing application errors',
+        );
+    }
+
+    protected function shouldConfigureSvelteMcp(): bool
+    {
+        return confirm(
+            label: 'Svelte detected. Would you like to install the Svelte MCP alongside Boost MCP?',
+            default: $this->config->getSvelteMcp(),
+            hint: 'The Svelte MCP provides documentation, code analysis, and autofixing for Svelte components',
         );
     }
 
@@ -419,6 +434,7 @@ class InstallCommand extends Command
             $this->config->setSail($this->shouldUseSail());
             $this->config->setHerdMcp($this->shouldInstallHerdMcp());
             $this->config->setNightwatchMcp($this->shouldInstallNightwatchMcp());
+            $this->config->setSvelteMcp($this->shouldInstallSvelteMcp());
         }
     }
 
@@ -430,6 +446,11 @@ class InstallCommand extends Command
     protected function shouldInstallNightwatchMcp(): bool
     {
         return $this->selectedBoostFeatures->contains('nightwatch_mcp');
+    }
+
+    protected function shouldInstallSvelteMcp(): bool
+    {
+        return $this->selectedBoostFeatures->contains('svelte_mcp');
     }
 
     protected function shouldUseSail(): bool
@@ -464,7 +485,8 @@ class InstallCommand extends Command
             processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
                 $this->shouldUseSail() ? $this->sail : null,
                 $this->shouldInstallHerdMcp() ? $this->herd : null,
-                $this->shouldInstallNightwatchMcp() ? $this->nightwatch : null
+                $this->shouldInstallNightwatchMcp() ? $this->nightwatch : null,
+                $this->shouldInstallSvelteMcp() ? $this->svelte : null
             ),
             featureName: 'MCP servers',
             withDelay: true,

@@ -103,6 +103,16 @@ class Config
         return $this->get('nightwatch_mcp', false);
     }
 
+    public function setSvelteMcp(bool $installed): void
+    {
+        $this->set('svelte_mcp', $installed);
+    }
+
+    public function getSvelteMcp(): bool
+    {
+        return $this->get('svelte_mcp', false);
+    }
+
     public function setSail(bool $useSail): void
     {
         $this->set('sail', $useSail);
