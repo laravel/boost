@@ -117,6 +117,12 @@ class BoostServiceProvider extends ServiceProvider
         Route::post('/_boost/browser-logs', function (Request $request) {
             $logs = $request->input('logs', []);
 
+            // Handle sendBeacon's text/plain content type.
+            if (empty($logs) && ! $request->isJson()) {
+                $decoded = json_decode($request->getContent(), true);
+                $logs = $decoded['logs'] ?? [];
+            }
+
             /** @var Logger $logger */
             $logger = Log::channel('browser');
 
