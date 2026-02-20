@@ -35,6 +35,22 @@ describe('boost.enabled configuration', function (): void {
         expect(app()->bound(Laravel\Roster\Roster::class))->toBeTrue()
             ->and(config('logging.channels.browser'))->not->toBeNull();
     });
+
+    it('does not override an existing browser log channel', function (): void {
+        Config::set('boost.enabled', true);
+        Config::set('logging.channels.browser', [
+            'driver' => 'daily',
+            'path' => storage_path('logs/custom-browser.log'),
+        ]);
+        app()->detectEnvironment(fn (): string => 'local');
+
+        $provider = new BoostServiceProvider(app());
+        $provider->register();
+        $provider->boot(app('router'));
+
+        expect(config('logging.channels.browser.driver'))->toBe('daily')
+            ->and(config('logging.channels.browser.path'))->toBe(storage_path('logs/custom-browser.log'));
+    });
 });
 
 describe('environment restrictions', function (): void {
