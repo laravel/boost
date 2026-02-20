@@ -66,8 +66,14 @@ class DatabaseQuery extends Tool
         $isReadOnly = in_array($firstWord, $allowList, true);
 
         // Additional validation for WITH … SELECT.
-        if ($firstWord === 'WITH' && ! preg_match('/with\s+.*select\b/i', $query)) {
-            $isReadOnly = false;
+        if ($firstWord === 'WITH') {
+            if (! preg_match('/\)\s*SELECT\b/i', $query)) {
+                $isReadOnly = false;
+            }
+
+            if (preg_match('/\)\s*(DELETE|UPDATE|INSERT|DROP|ALTER|TRUNCATE|REPLACE|RENAME|CREATE)\b/i', $query)) {
+                $isReadOnly = false;
+            }
         }
 
         if (! $isReadOnly) {

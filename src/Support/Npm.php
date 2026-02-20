@@ -4,67 +4,78 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Support;
 
-class Composer
+class Npm
 {
     /** @var array<int, string> */
-    public const FIRST_PARTY_PACKAGES = [
-        'laravel/framework',
-        'laravel/folio',
-        'laravel/mcp',
-        'laravel/pennant',
-        'laravel/pint',
-        'laravel/sail',
-        'laravel/wayfinder',
-        'livewire/livewire',
-        'livewire/flux',
-        'livewire/flux-pro',
-        'livewire/volt',
-        'inertiajs/inertia-laravel',
-        'pestphp/pest',
-        'phpunit/phpunit',
+    public const FIRST_PARTY_SCOPES = [
+        '@inertiajs',
+        '@laravel',
     ];
 
-    public static function isFirstPartyPackage(string $composerName): bool
+    /** @var array<int, string> */
+    public const FIRST_PARTY_PACKAGES = [
+        'laravel-echo',
+        'laravel-precognition',
+        'laravel-vite-plugin',
+    ];
+
+    public static function isFirstPartyPackage(string $npmName): bool
     {
-        return in_array($composerName, self::FIRST_PARTY_PACKAGES, true);
+        if (collect(self::FIRST_PARTY_SCOPES)->contains(fn (string $scope): bool => str_starts_with($npmName, $scope.'/'))) {
+            return true;
+        }
+
+        return in_array($npmName, self::FIRST_PARTY_PACKAGES, true);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function packagesDirectories(): array
     {
         return collect(static::packages())
             ->mapWithKeys(fn (string $key, string $package): array => [$package => implode(DIRECTORY_SEPARATOR, [
-                base_path('vendor'),
+                base_path('node_modules'),
                 str_replace('/', DIRECTORY_SEPARATOR, $package),
             ])])
             ->filter(fn (string $path): bool => is_dir($path))
             ->toArray();
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function packages(): array
     {
-        $composerJsonPath = base_path('composer.json');
+        $packageJsonPath = base_path('package.json');
 
-        if (! file_exists($composerJsonPath)) {
+        if (! file_exists($packageJsonPath)) {
             return [];
         }
 
-        $composerData = json_decode(file_get_contents($composerJsonPath), true);
+        $packageData = json_decode(file_get_contents($packageJsonPath), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return [];
         }
 
-        return collect($composerData['require'] ?? [])
-            ->merge($composerData['require-dev'] ?? [])
+        return collect($packageData['dependencies'] ?? [])
+            ->merge($packageData['devDependencies'] ?? [])
             ->mapWithKeys(fn (string $key, string $package): array => [$package => $key])
             ->toArray();
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function packagesDirectoriesWithBoostGuidelines(): array
     {
         return self::packagesDirectoriesWithBoostSubpath('guidelines');
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function packagesDirectoriesWithBoostSkills(): array
     {
         return self::packagesDirectoriesWithBoostSubpath('skills');
