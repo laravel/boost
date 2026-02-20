@@ -17,7 +17,10 @@ test('it returns config value when key exists', function (): void {
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolTextContains('"key": "test.key"', '"value": "test_value"');
+        ->toolTextContains('"test.key"', '"test_value"');
+
+    expect(json_decode((string) $response->content(), true))
+        ->toBe(['key' => 'test.key', 'value' => 'test_value']);
 });
 
 test('it returns nested config value', function (): void {
@@ -25,8 +28,10 @@ test('it returns nested config value', function (): void {
     $response = $tool->handle(new Request(['key' => 'nested.config.key']));
 
     expect($response)->isToolResult()
-        ->toolHasNoError()
-        ->toolTextContains('"key": "nested.config.key"', '"value": "nested_value"');
+        ->toolHasNoError();
+
+    expect(json_decode((string) $response->content(), true))
+        ->toBe(['key' => 'nested.config.key', 'value' => 'nested_value']);
 });
 
 test('it returns error when config key does not exist', function (): void {
@@ -43,6 +48,8 @@ test('it works with built-in Laravel config keys', function (): void {
     $response = $tool->handle(new Request(['key' => 'app.name']));
 
     expect($response)->isToolResult()
-        ->toolHasNoError()
-        ->toolTextContains('"key": "app.name"', '"value": "Test App"');
+        ->toolHasNoError();
+
+    expect(json_decode((string) $response->content(), true))
+        ->toBe(['key' => 'app.name', 'value' => 'Test App']);
 });

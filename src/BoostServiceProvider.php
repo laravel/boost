@@ -171,6 +171,10 @@ class BoostServiceProvider extends ServiceProvider
 
     protected function registerBrowserLogger(): void
     {
+        if (config('logging.channels.browser') !== null) {
+            return;
+        }
+
         config([
             'logging.channels.browser' => [
                 'driver' => 'single',
