@@ -76,6 +76,7 @@ class TinkerExecutor
                 'type' => $throwable::class,
                 'file' => $throwable->getFile(),
                 'line' => $throwable->getLine(),
+                'output' => ob_get_contents() ?: '',
             ];
         } finally {
             ob_end_clean();
