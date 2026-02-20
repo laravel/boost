@@ -160,6 +160,88 @@ test('includes livewire skills when directly required', function (): void {
     expect($skills->has('livewire-development'))->toBeTrue();
 });
 
+test('vendor skills override .ai/ skills with the same name', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
+    expect($vendorFixture)->not->toBeFalse();
+
+    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'livewire/livewire' ? $vendorFixture : null);
+
+    $skills = $composer->skills();
+
+    expect($skills->has('livewire-development'))->toBeTrue()
+        ->and($skills->get('livewire-development')->description)->toBe('Vendor-overridden Livewire skill');
+});
+
+test('falls back to .ai/ skills when vendor has none', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+
+    $skills = $composer->skills();
+
+    expect($skills->has('livewire-development'))->toBeTrue();
+});
+
+test('node_modules skills override .ai/ skills for npm first-party packages', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
+    expect($vendorFixture)->not->toBeFalse();
+
+    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+
+    $skills = $composer->skills();
+
+    $npmSkill = $skills->first(fn ($skill): bool => $skill->description === 'Vendor-overridden Livewire skill');
+    expect($npmSkill)->not->toBeNull();
+});
+
+test('falls back to .ai/ skills when node_modules has none for npm package', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+
+    $skills = $composer->skills();
+
+    expect($skills->has('inertia-react-development'))->toBeTrue();
+});
+
 test('blade skills with code before frontmatter are parsed correctly', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

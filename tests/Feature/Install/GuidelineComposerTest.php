@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\Npm;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
@@ -200,9 +202,6 @@ test('handles multiple package versions correctly', function (): void {
         ->with(Packages::INERTIA_VUE, '2.1.0', '>=')
         ->andReturn(false);
 
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA, '2.1.2', '>=')
-        ->andReturn(false);
     $this->roster->shouldReceive('usesVersion')
         ->with(Packages::INERTIA_REACT, '2.1.2', '>=')
         ->andReturn(false);
@@ -938,4 +937,181 @@ test('includes Skills Activation section when skills are enabled and skills exis
     expect($guidelines)
         ->toContain('## Skills Activation')
         ->toContain('This project has domain-specific skills available');
+});
+
+test('loads vendor core guideline when available', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)
+        ->toContain('Vendor Core Guideline')
+        ->toContain('loaded from the vendor directory');
+});
+
+test('falls back to .ai/ when vendor guideline path does not exist', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)->toContain('=== pest/core rules ===');
+});
+
+test('guideline key is unchanged regardless of vendor or .ai/ source', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+
+    $keys = $composer->used();
+
+    expect($keys)->toContain('pest/core');
+});
+
+test('user override works with vendor-sourced guideline', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'laravel/framework' ? $vendorFixture : null);
+
+    $guidelines = $composer->guidelines();
+    $laravelCore = $guidelines->get('laravel/core');
+
+    expect($laravelCore)->not->toBeNull()
+        ->and($laravelCore['content'])->toContain('User Override Laravel Core')
+        ->and($laravelCore['content'])->not->toContain('Vendor Core Guideline');
+});
+
+test('isFirstPartyPackage identifies known packages', function (): void {
+    expect(Composer::isFirstPartyPackage('laravel/framework'))->toBeTrue()
+        ->and(Composer::isFirstPartyPackage('livewire/livewire'))->toBeTrue()
+        ->and(Composer::isFirstPartyPackage('pestphp/pest'))->toBeTrue()
+        ->and(Composer::isFirstPartyPackage('some/third-party'))->toBeFalse();
+});
+
+test('isFirstPartyPackage identifies scoped npm packages', function (): void {
+    expect(Npm::isFirstPartyPackage('@inertiajs/react'))->toBeTrue()
+        ->and(Npm::isFirstPartyPackage('@inertiajs/vue3'))->toBeTrue()
+        ->and(Npm::isFirstPartyPackage('@laravel/vite-plugin-wayfinder'))->toBeTrue()
+        ->and(Npm::isFirstPartyPackage('some-npm-package'))->toBeFalse()
+        ->and(Npm::isFirstPartyPackage('@other/package'))->toBeFalse();
+});
+
+test('loads node_modules core guideline for npm first-party packages', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)
+        ->toContain('Vendor Core Guideline')
+        ->toContain('loaded from the vendor directory');
+});
+
+test('falls back to .ai/ when node_modules guideline path does not exist for npm package', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)->toContain('=== inertia-react/core rules ===');
+});
+
+test('user override resolves .md files for vendor-sourced guidelines', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $mdOverrideDir = testDirectory('Fixtures/.ai/guidelines-md-override');
+    @mkdir($mdOverrideDir.'/pest', 0755, true);
+    file_put_contents($mdOverrideDir.'/pest/core.md', '# Pest Markdown Override');
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
+
+    $guidelines = $composer->guidelines();
+    $pestCore = $guidelines->get('pest/core');
+
+    expect($pestCore)->not->toBeNull()
+        ->and($pestCore['content'])->toContain('Pest Markdown Override')
+        ->and($pestCore['content'])->not->toContain('Vendor Core Guideline');
+
+    @unlink($mdOverrideDir.'/pest/core.md');
+    @rmdir($mdOverrideDir.'/pest');
+    @rmdir($mdOverrideDir);
 });

@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Yaml\Yaml;
 
@@ -63,12 +64,28 @@ class SkillComposer
      */
     protected function getBoostSkills(): Collection
     {
-        return $this->discoverPackagePaths($this->getBoostAiPath())
-            ->flatMap(fn (array $package): Collection => $this->discoverSkillsFromPath(
-                $package['path'],
-                $package['name'],
-                $package['version']
-            ));
+        /** @var Collection<string, Skill> $skills */
+        $skills = $this->getRoster()->packages()
+            ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
+            ->collect()
+            ->flatMap(function (Package $package): Collection {
+                $name = $this->normalizePackageName($package->name());
+
+                $vendorSkillPath = $this->resolveFirstPartyBoostPath($package, 'skills');
+
+                $vendorSkills = $vendorSkillPath !== null
+                    ? $this->discoverSkillsFromDirectory($vendorSkillPath, $name)
+                    : collect();
+
+                $aiPath = $this->getBoostAiPath().DIRECTORY_SEPARATOR.$name;
+                $aiSkills = is_dir($aiPath)
+                    ? $this->discoverSkillsFromPath($aiPath, $name, $package->majorVersion())
+                    : collect();
+
+                return $aiSkills->merge($vendorSkills);
+            });
+
+        return $skills;
     }
 
     /**
@@ -77,6 +94,7 @@ class SkillComposer
     protected function getThirdPartySkills(): Collection
     {
         $skills = collect(Composer::packagesDirectoriesWithBoostSkills())
+            ->reject(fn (string $path, string $package): bool => Composer::isFirstPartyPackage($package))
             ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package));
 
         $selectedPackages = $this->config->aiGuidelines ?? [];
