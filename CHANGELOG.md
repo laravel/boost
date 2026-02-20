@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.7...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.8...main)
+
+## [v2.1.8](https://github.com/laravel/boost/compare/v2.1.7...v2.1.8) - 2026-02-20
+
+### What's Changed
+
+* Fix read-only bypass in DatabaseQuery via CTE-wrapped writes by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/588
+* Fix sendBeacon browser logs silently dropped on page unload by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/590
+* Fix post-install Next steps URL by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/587
+* Fix issue with Codex not automatically triggering the login flow by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/boost/pull/592
+* Scope Pint guideline to PHP file changes only by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/593
+* Allow overriding the browser log channel by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/594
+
+### New Contributors
+
+* [@sulimanbenhalim](https://github.com/sulimanbenhalim) made their first contribution in https://github.com/laravel/boost/pull/588
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.7...v2.1.8
 
 ## [v2.1.7](https://github.com/laravel/boost/compare/v2.1.6...v2.1.7) - 2026-02-18
 
