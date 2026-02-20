@@ -16,7 +16,7 @@ class Npm
     public const FIRST_PARTY_PACKAGES = [
         'laravel-echo',
         'laravel-precognition',
-        'laravel-vite-plugin'
+        'laravel-vite-plugin',
     ];
 
     public static function isFirstPartyPackage(string $npmName): bool
