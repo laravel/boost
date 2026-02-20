@@ -16,13 +16,16 @@ class Npm
     public const FIRST_PARTY_PACKAGES = [
         'laravel-echo',
         'laravel-precognition',
-        'laravel-vite-plugin'
+        'laravel-vite-plugin',
     ];
 
     public static function isFirstPartyPackage(string $npmName): bool
     {
-        return array_any(self::FIRST_PARTY_SCOPES, fn (string $scope): bool => str_starts_with($npmName, $scope.'/'))
-            || in_array($npmName, self::FIRST_PARTY_PACKAGES, true);
+        if (collect(self::FIRST_PARTY_SCOPES)->contains(fn (string $scope): bool => str_starts_with($npmName, $scope.'/'))) {
+            return true;
+        }
+
+        return in_array($npmName, self::FIRST_PARTY_PACKAGES, true);
     }
 
     /**
