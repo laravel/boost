@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.10...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.11...1.x)
+
+## [v1.8.11](https://github.com/laravel/boost/compare/v1.8.10...v1.8.11) - 2026-02-20
+
+### What's Changed
+
+* [1.x] Improve Pint guidelines to support for Pint Agent Formatter by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/425
+* Update README to include Livewire v4 and Filament v5 in supported versions by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/433
+* [1.x] Add configurable PHP and Composer paths by [@aivis](https://github.com/aivis) in https://github.com/laravel/boost/pull/437
+* Sync changes of executable paths config by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/514
+* Allow overriding the browser log channel by [@SanderMuller](https://github.com/SanderMuller) in https://github.com/laravel/boost/pull/589
+
+### New Contributors
+
+* [@aivis](https://github.com/aivis) made their first contribution in https://github.com/laravel/boost/pull/437
+* [@SanderMuller](https://github.com/SanderMuller) made their first contribution in https://github.com/laravel/boost/pull/589
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.10...v1.8.11
 
 ## [v1.8.10](https://github.com/laravel/boost/compare/v1.8.9...v1.8.10) - 2026-01-14
 
