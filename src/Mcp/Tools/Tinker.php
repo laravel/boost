@@ -11,7 +11,6 @@ use Laravel\Boost\Mcp\Tools\Tinker\TinkerExecutor;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use Throwable;
 
 class Tinker extends Tool
 {
