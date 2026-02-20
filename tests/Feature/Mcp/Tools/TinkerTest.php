@@ -159,3 +159,35 @@ test('executes code without trailing semicolon', function (): void {
             'output' => 'Hi',
         ]);
 });
+
+test('error responses include output key for consistency', function (): void {
+    $tool = new Tinker;
+
+    $syntaxErrorResponse = $tool->handle(new Request(['code' => 'invalid syntax']));
+    $syntaxErrorData = json_decode((string) $syntaxErrorResponse->content(), true);
+
+    expect($syntaxErrorData)->toHaveKey('output')
+        ->and($syntaxErrorData['output'])->toBeString();
+
+    $runtimeErrorResponse = $tool->handle(new Request(['code' => 'throw new Exception("test");']));
+    $runtimeErrorData = json_decode((string) $runtimeErrorResponse->content(), true);
+
+    expect($runtimeErrorData)->toHaveKey('output')
+        ->and($runtimeErrorData['output'])->toBeString();
+});
+
+test('error and success responses have matching structure', function (): void {
+    $tool = new Tinker;
+
+    $successResponse = $tool->handle(new Request(['code' => 'echo "test"; return 42;']));
+    $successData = json_decode((string) $successResponse->content(), true);
+
+    $errorResponse = $tool->handle(new Request(['code' => 'invalid syntax']));
+    $errorData = json_decode((string) $errorResponse->content(), true);
+
+    expect($successData)->toHaveKey('output');
+    expect($errorData)->toHaveKey('output');
+
+    expect(strtolower($successData['output'] ?? ''))->toBeString();
+    expect(strtolower($errorData['output'] ?? ''))->toBeString();
+});

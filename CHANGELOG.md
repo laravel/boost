@@ -1,6 +1,64 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.1.6...main)
+
+## [v2.1.6](https://github.com/laravel/boost/compare/v2.1.5...v2.1.6) - 2026-02-16
+
+### What's Changed
+
+* Fix default value for browser_logs config in core guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/574
+* Add support for Nightwatch MCP by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/boost/pull/575
+
+### New Contributors
+
+* [@jessarcher](https://github.com/jessarcher) made their first contribution in https://github.com/laravel/boost/pull/575
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.5...v2.1.6
+
+## [v2.1.5](https://github.com/laravel/boost/compare/v2.1.4...v2.1.5) - 2026-02-16
+
+### What's Changed
+
+* Truncate large log entries in LastError tool response by [@leek](https://github.com/leek) in https://github.com/laravel/boost/pull/568
+* Prevent duplicate Boost guidelines in CLAUDE.md by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/577
+
+### New Contributors
+
+* [@leek](https://github.com/leek) made their first contribution in https://github.com/laravel/boost/pull/568
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.4...v2.1.5
+
+## [v2.1.4](https://github.com/laravel/boost/compare/v2.1.3...v2.1.4) - 2026-02-13
+
+### What's Changed
+
+* Fix missing output key in Tinker tool error response by [@Orlando-Villanueva](https://github.com/Orlando-Villanueva) in https://github.com/laravel/boost/pull/561
+* Add file paths and format guidance to Livewire 4 skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/543
+* Add model binding and page content examples to Folio routing skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/544
+* Update MCP development skill with accurate API patterns and testing by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/545
+* Update usePoll usage in skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/570
+
+### New Contributors
+
+* [@Orlando-Villanueva](https://github.com/Orlando-Villanueva) made their first contribution in https://github.com/laravel/boost/pull/561
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.3...v2.1.4
+
+## [v2.1.3](https://github.com/laravel/boost/compare/v2.1.2...v2.1.3) - 2026-02-11
+
+### What's Changed
+
+* Remove experimental third-party MCP primitives by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/552
+* Add symlink install mode for skills by [@hosmelq](https://github.com/hosmelq) in https://github.com/laravel/boost/pull/499
+* Add additional newline before end-guideline fence by [@ChipNeedham](https://github.com/ChipNeedham) in https://github.com/laravel/boost/pull/565
+* Update Roster by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/562
+
+### New Contributors
+
+* [@hosmelq](https://github.com/hosmelq) made their first contribution in https://github.com/laravel/boost/pull/499
+* [@ChipNeedham](https://github.com/ChipNeedham) made their first contribution in https://github.com/laravel/boost/pull/565
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.2...v2.1.3
 
 ## [v2.1.2](https://github.com/laravel/boost/compare/v2.1.1...v2.1.2) - 2026-02-10
 

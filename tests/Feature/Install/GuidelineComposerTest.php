@@ -758,6 +758,21 @@ test('user guidelines are sorted by filename for predictable ordering', function
     expect($userGuidelineKeys)->toBe(['.ai/00-first', '.ai/10-middle', '.ai/20-second']);
 });
 
+test('excludes boost package from Roster discovery to prevent duplicate core guidelines', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::BOOST, 'laravel/boost', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->guidelines();
+    $keys = $guidelines->keys();
+
+    expect($keys->contains('boost'))->toBeTrue()
+        ->and($keys->contains('boost/core'))->toBeFalse();
+});
+
 test('excludes Skills Activation section when skills are disabled', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

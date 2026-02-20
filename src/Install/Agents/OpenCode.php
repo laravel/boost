@@ -70,6 +70,16 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
     }
 
     /** {@inheritDoc} */
+    public function httpMcpServerConfig(string $url): array
+    {
+        return [
+            'type' => 'remote',
+            'enabled' => true,
+            'url' => $url,
+        ];
+    }
+
+    /** {@inheritDoc} */
     public function mcpServerConfig(string $command, array $args = [], array $env = []): array
     {
         return [

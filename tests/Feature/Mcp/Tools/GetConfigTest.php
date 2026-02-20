@@ -17,7 +17,7 @@ test('it returns config value when key exists', function (): void {
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolTextContains('"key": "test.key"', '"value": "test_value"');
+        ->toolJsonContentToMatchArray(['key' => 'test.key', 'value' => 'test_value']);
 });
 
 test('it returns nested config value', function (): void {
@@ -26,7 +26,7 @@ test('it returns nested config value', function (): void {
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolTextContains('"key": "nested.config.key"', '"value": "nested_value"');
+        ->toolJsonContentToMatchArray(['key' => 'nested.config.key', 'value' => 'nested_value']);
 });
 
 test('it returns error when config key does not exist', function (): void {
@@ -44,5 +44,5 @@ test('it works with built-in Laravel config keys', function (): void {
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolTextContains('"key": "app.name"', '"value": "Test App"');
+        ->toolJsonContentToMatchArray(['key' => 'app.name', 'value' => 'Test App']);
 });

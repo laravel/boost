@@ -7,6 +7,7 @@ namespace Laravel\Boost\Mcp\Tools;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\ReadsLogs;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -76,7 +77,7 @@ class LastError extends Tool
         $entry = $this->readLastErrorEntry($logFile);
 
         if ($entry !== null) {
-            return Response::text($entry);
+            return Response::text(Str::limit($entry, 500, '... more logs', true));
         }
 
         return Response::error('Unable to find an ERROR entry in the inspected portion of the log file.');
