@@ -117,3 +117,55 @@ it('handles package.json with no dependencies', function (): void {
 
     expect(Npm::packages())->toBe([]);
 });
+
+it('returns non-scoped package directories with boost guidelines', function (): void {
+    file_put_contents(base_path('package.json'), json_encode([
+        'dependencies' => [
+            'laravel-echo' => '^2.0.0',
+            'axios' => '^1.0.0',
+        ],
+    ]));
+
+    $withGuidelines = base_path(implode(DIRECTORY_SEPARATOR, [
+        'node_modules', 'laravel-echo', 'resources', 'boost', 'guidelines',
+    ]));
+    File::ensureDirectoryExists($withGuidelines);
+
+    $withoutGuidelines = base_path(implode(DIRECTORY_SEPARATOR, [
+        'node_modules', 'axios',
+    ]));
+    File::ensureDirectoryExists($withoutGuidelines);
+
+    $result = Npm::packagesDirectoriesWithBoostGuidelines();
+
+    expect($result)
+        ->toHaveKey('laravel-echo')
+        ->not->toHaveKey('axios');
+});
+
+it('returns non-scoped package directories with boost skills', function (): void {
+    file_put_contents(base_path('package.json'), json_encode([
+        'dependencies' => [
+            'laravel-echo' => '^2.0.0',
+        ],
+    ]));
+
+    $withSkills = base_path(implode(DIRECTORY_SEPARATOR, [
+        'node_modules', 'laravel-echo', 'resources', 'boost', 'skills',
+    ]));
+    File::ensureDirectoryExists($withSkills);
+
+    $result = Npm::packagesDirectoriesWithBoostSkills();
+
+    expect($result)->toHaveKey('laravel-echo');
+});
+
+it('identifies non-scoped first party packages', function (): void {
+    expect(Npm::isFirstPartyPackage('laravel-echo'))->toBeTrue();
+});
+
+it('does not identify unknown packages as first party', function (): void {
+    expect(Npm::isFirstPartyPackage('axios'))->toBeFalse()
+        ->and(Npm::isFirstPartyPackage('lodash'))->toBeFalse()
+        ->and(Npm::isFirstPartyPackage('unknown-package'))->toBeFalse();
+});
