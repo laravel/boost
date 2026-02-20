@@ -136,7 +136,7 @@ class InstallCommand extends Command
 
     protected function outro(): void
     {
-        $url = 'https://laravel.com/docs/master/boost';
+        $url = 'https://laravel.com/docs/boost';
         $link = $this->hyperlink($url, $url);
         $text = 'Enjoy the boost 🚀 Next steps: ';
 
