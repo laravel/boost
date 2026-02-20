@@ -105,7 +105,7 @@ trait DiscoverPackagePaths
             return null;
         }
 
-        $path = $package->path().DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.$subpath;
+        $path = implode(DIRECTORY_SEPARATOR, [$package->path(), 'resources', 'boost', $subpath]);
 
         return is_dir($path) ? $path : null;
     }

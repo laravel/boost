@@ -178,7 +178,7 @@ class GuidelineComposer
                 $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
 
                 $vendorCorePath = $vendorPath !== null
-                    ? $vendorPath.DIRECTORY_SEPARATOR.'core'
+                    ? implode(DIRECTORY_SEPARATOR, [$vendorPath, 'core'])
                     : null;
 
                 $guidelines = collect([
