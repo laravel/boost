@@ -101,11 +101,12 @@ test('returns correct skills path', function (): void {
     expect($codex->skillsPath())->toBe('.agents/skills');
 });
 
-test('httpMcpServerConfig returns url-only config', function (): void {
+test('httpMcpServerConfig returns npx mcp-remote config', function (): void {
     $codex = new Codex($this->strategyFactory);
 
     expect($codex->httpMcpServerConfig('https://nightwatch.laravel.com/mcp'))->toBe([
-        'url' => 'https://nightwatch.laravel.com/mcp',
+        'command' => 'npx',
+        'args' => ['-y', 'mcp-remote', 'https://nightwatch.laravel.com/mcp'],
     ]);
 });
 

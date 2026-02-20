@@ -66,7 +66,8 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
     public function httpMcpServerConfig(string $url): array
     {
         return [
-            'url' => $url,
+            'command' => 'npx',
+            'args' => ['-y', 'mcp-remote', $url],
         ];
     }
 
