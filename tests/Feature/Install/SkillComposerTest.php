@@ -242,6 +242,87 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
     expect($skills->has('inertia-react-development'))->toBeTrue();
 });
 
+test('returns all third-party skills when aiGuidelines is uninitialized', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
+    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+
+    try {
+        $skills = (new SkillComposer($this->roster))->skills();
+
+        expect($skills->has('third-party-skill'))->toBeTrue();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
+        @rmdir(base_path('vendor/some/third-party/resources/boost'));
+        @rmdir(base_path('vendor/some/third-party/resources'));
+        @rmdir(base_path('vendor/some/third-party'));
+        @rmdir(base_path('vendor/some'));
+        @rmdir(base_path('vendor'));
+        @unlink(base_path('composer.json'));
+    }
+});
+
+test('filters third-party skills to matching packages when aiGuidelines is set', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
+    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+
+    try {
+        $config = new GuidelineConfig;
+        $config->aiGuidelines = ['some/third-party'];
+
+        $skills = (new SkillComposer($this->roster))->config($config)->skills();
+
+        expect($skills->has('third-party-skill'))->toBeTrue();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
+        @rmdir(base_path('vendor/some/third-party/resources/boost'));
+        @rmdir(base_path('vendor/some/third-party/resources'));
+        @rmdir(base_path('vendor/some/third-party'));
+        @rmdir(base_path('vendor/some'));
+        @rmdir(base_path('vendor'));
+        @unlink(base_path('composer.json'));
+    }
+});
+
+test('excludes third-party skills for packages not in aiGuidelines', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
+    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+
+    try {
+        $config = new GuidelineConfig;
+        $config->aiGuidelines = ['other/package'];
+
+        $skills = (new SkillComposer($this->roster))->config($config)->skills();
+
+        expect($skills->has('third-party-skill'))->toBeFalse();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
+        @rmdir(base_path('vendor/some/third-party/resources/boost'));
+        @rmdir(base_path('vendor/some/third-party/resources'));
+        @rmdir(base_path('vendor/some/third-party'));
+        @rmdir(base_path('vendor/some'));
+        @rmdir(base_path('vendor'));
+        @unlink(base_path('composer.json'));
+    }
+});
+
 test('blade skills with code before frontmatter are parsed correctly', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
