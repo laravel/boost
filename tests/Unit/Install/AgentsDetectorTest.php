@@ -6,6 +6,7 @@ use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
 use Laravel\Boost\BoostManager;
 use Laravel\Boost\Install\Agents\Agent;
+use Laravel\Boost\Install\Agents\Amp;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
@@ -30,9 +31,9 @@ it('returns collection of all registered agents', function (): void {
     $agents = $this->detector->getAgents();
 
     expect($agents)->toBeInstanceOf(Collection::class)
-        ->and($agents->count())->toBe(7)
+        ->and($agents->count())->toBe(8)
         ->and($agents->keys()->toArray())->toBe([
-            'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'opencode', 'gemini',
+            'amp', 'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'opencode', 'gemini',
         ]);
 
     $agents->each(function ($agent): void {
@@ -53,6 +54,7 @@ it('returns an array of detected agents names for system discovery', function ()
     $mockOther->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
     $mockOther->shouldReceive('name')->andReturn('other');
 
+    $this->container->bind(Amp::class, fn () => $mockOther);
     $this->container->bind(Junie::class, fn () => $mockJunie);
     $this->container->bind(Cursor::class, fn () => $mockCursor);
     $this->container->bind(ClaudeCode::class, fn () => $mockOther);
@@ -72,6 +74,7 @@ it('returns an empty array when no agents are detected for system discovery', fu
     $mockAgent->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
     $mockAgent->shouldReceive('name')->andReturn('mock');
 
+    $this->container->bind(Amp::class, fn () => $mockAgent);
     $this->container->bind(Junie::class, fn () => $mockAgent);
     $this->container->bind(Cursor::class, fn () => $mockAgent);
     $this->container->bind(ClaudeCode::class, fn () => $mockAgent);
@@ -101,6 +104,7 @@ it('returns an array of detected agent names for project discovery', function ()
     $mockOther->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
     $mockOther->shouldReceive('name')->andReturn('other');
 
+    $this->container->bind(Amp::class, fn () => $mockOther);
     $this->container->bind(Junie::class, fn () => $mockJunie);
     $this->container->bind(Cursor::class, fn () => $mockOther);
     $this->container->bind(ClaudeCode::class, fn () => $mockClaudeCode);
@@ -122,6 +126,7 @@ it('returns an empty array when no agents are detected for project discovery', f
     $mockAgent->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
     $mockAgent->shouldReceive('name')->andReturn('mock');
 
+    $this->container->bind(Amp::class, fn () => $mockAgent);
     $this->container->bind(Junie::class, fn () => $mockAgent);
     $this->container->bind(Cursor::class, fn () => $mockAgent);
     $this->container->bind(ClaudeCode::class, fn () => $mockAgent);
