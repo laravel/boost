@@ -163,3 +163,47 @@ test('it includes both views and routines when both are true', function (): void
                 ->and($schemaArray)->toHaveKey('engine');
         });
 });
+
+test('it returns only table names and column types in summary mode', function (): void {
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['summary' => true]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray)->toHaveKey('engine')
+                ->and($schemaArray)->toHaveKey('tables')
+                ->and($schemaArray)->not->toHaveKey('views')
+                ->and($schemaArray)->not->toHaveKey('routines');
+
+            $exampleTable = $schemaArray['tables']['examples'];
+            expect($exampleTable)->toBeArray()
+                ->and($exampleTable)->toHaveKeys(['id', 'name'])
+                ->and($exampleTable['id'])->toContain('integer')
+                ->and($exampleTable['name'])->toContain('varchar')
+                ->and($exampleTable)->not->toHaveKey('columns')
+                ->and($exampleTable)->not->toHaveKey('indexes')
+                ->and($exampleTable)->not->toHaveKey('foreign_keys');
+        });
+});
+
+test('it filters tables in summary mode', function (): void {
+    Schema::create('users', function (Blueprint $table): void {
+        $table->id();
+        $table->string('email');
+    });
+
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['summary' => true, 'filter' => 'user']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray['tables'])->toHaveKey('users')
+                ->and($schemaArray['tables'])->not->toHaveKey('examples');
+
+            expect($schemaArray['tables']['users'])->toHaveKeys(['id', 'email'])
+                ->and($schemaArray['tables']['users']['id'])->toContain('integer')
+                ->and($schemaArray['tables']['users']['email'])->toContain('varchar');
+        });
+});

@@ -24,7 +24,7 @@ class DatabaseSchema extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Read the database schema for this application. Returns table names, tables, columns (type only), indexes, foreign keys. Params: "database" - connection name; "filter" - substring match on table names; "include_column_details" (default false) - adds nullable, default, auto_increment, comments; "include_views" (default false); "include_routines" (default false) - stored procedures, functions, sequences.';
+    protected string $description = 'Read the database schema for this application. Returns table names, columns, indexes, and foreign keys. Use "summary" mode first to get an overview (table names with column types only), then call again without "summary" and with a "filter" to get full details for specific tables. Params: "summary" (default false) - returns only table names and column types; "database" - connection name; "filter" - substring match on table names; "include_column_details" (default false) - adds nullable, default, auto_increment, comments; "include_views" (default false); "include_routines" (default false) - stored procedures, functions, sequences.';
 
     /**
      * Get the tool's input schema.
@@ -34,6 +34,8 @@ class DatabaseSchema extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
+            'summary' => $schema->boolean()
+                ->description('Return only table names and their column types. Use this first to understand the database structure, then request full details for specific tables using "filter". Defaults to false.'),
             'database' => $schema->string()
                 ->description("Name of the database connection to dump (defaults to app's default connection, often not needed)"),
             'filter' => $schema->string()
@@ -52,6 +54,7 @@ class DatabaseSchema extends Tool
      */
     public function handle(Request $request): Response
     {
+        $summary = $request->get('summary', false);
         $connection = $request->get('database') ?? config('database.default');
         $filter = $request->get('filter') ?? '';
         $includeViews = $request->get('include_views', false);
@@ -59,9 +62,10 @@ class DatabaseSchema extends Tool
         $includeColumnDetails = $request->get('include_column_details', false);
 
         $cacheKey = sprintf(
-            'boost:mcp:database-schema:%s:%s:%d:%d:%d',
+            'boost:mcp:database-schema:%s:%s:%d:%d:%d:%d',
             $connection,
             $filter,
+            (int) $summary,
             (int) $includeViews,
             (int) $includeRoutines,
             (int) $includeColumnDetails
@@ -71,11 +75,12 @@ class DatabaseSchema extends Tool
             fn () => Cache::remember($cacheKey, 20, fn (): array => $this->getDatabaseStructure(
                 $connection,
                 $filter,
+                $summary,
                 $includeViews,
                 $includeRoutines,
                 $includeColumnDetails
             )),
-            fn (): array => $this->getDatabaseStructure($connection, $filter, $includeViews, $includeRoutines, $includeColumnDetails),
+            fn (): array => $this->getDatabaseStructure($connection, $filter, $summary, $includeViews, $includeRoutines, $includeColumnDetails),
             report: false
         );
 
@@ -88,16 +93,23 @@ class DatabaseSchema extends Tool
     protected function getDatabaseStructure(
         ?string $connection,
         string $filter = '',
+        bool $summary = false,
         bool $includeViews = false,
         bool $includeRoutines = false,
         bool $includeColumnDetails = false
     ): array {
-        $driver = SchemaDriverFactory::make($connection);
-
         $result = [
             'engine' => DB::connection($connection)->getDriverName(),
-            'tables' => $this->getAllTablesStructure($connection, $filter, $includeColumnDetails),
+            'tables' => $summary
+                ? $this->getAllTableColumnTypes($connection, $filter)
+                : $this->getAllTablesStructure($connection, $filter, $includeColumnDetails),
         ];
+
+        if ($summary) {
+            return $result;
+        }
+
+        $driver = SchemaDriverFactory::make($connection);
 
         if ($includeViews) {
             $result['views'] = $driver->getViews();
@@ -132,6 +144,28 @@ class DatabaseSchema extends Tool
         }
 
         return $structures;
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    protected function getAllTableColumnTypes(?string $connection, string $filter = ''): array
+    {
+        $tables = [];
+
+        foreach ($this->getAllTables($connection) as $table) {
+            $tableName = is_object($table) ? $table->name : ($table['name'] ?? '');
+
+            if ($filter !== '' && ! str_contains(strtolower($tableName), strtolower($filter))) {
+                continue;
+            }
+
+            $tables[$tableName] = collect(Schema::connection($connection)->getColumns($tableName))
+                ->pluck('type', 'name')
+                ->all();
+        }
+
+        return $tables;
     }
 
     /**
