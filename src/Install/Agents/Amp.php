@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Agents;
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
@@ -47,64 +46,17 @@ class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkil
 
     public function mcpInstallationStrategy(): McpInstallationStrategy
     {
-        return McpInstallationStrategy::SHELL;
-    }
-
-    public function shellMcpCommand(): string
-    {
-        return 'amp mcp add {key} --workspace -- "{command}" {args}';
+        return McpInstallationStrategy::FILE;
     }
 
     /**
-     * Install MCP server, falling back to direct file write when env vars are present.
-     *
-     * The Amp CLI does not support passing environment variables, so when env
-     * vars are provided (e.g. Herd MCP with SITE_PATH), we write directly to
-     * .amp/settings.json instead of using the shell command.
+     * Install MCP server directly in .amp/settings.json.
      *
      * @param  array<int, string>  $args
      * @param  array<string, string>  $env
      */
     public function installMcp(string $key, string $command, array $args = [], array $env = []): bool
     {
-        if ($env === []) {
-            return parent::installMcp($key, $command, $args, $env);
-        }
-
-        return $this->writeToSettingsFile($key, $command, $args, $env);
-    }
-
-    /** {@inheritDoc} */
-    public function installHttpMcp(string $key, string $url): bool
-    {
-        $result = Process::run("amp mcp add {$key} --workspace {$url}");
-
-        if ($result->successful()) {
-            return true;
-        }
-
-        return str_contains($result->errorOutput(), 'already exists');
-    }
-
-    /**
-     * Write MCP server config directly to .amp/settings.json.
-     *
-     * Bypasses FileWriter because Amp's config key "amp.mcpServers" contains
-     * a dot, which conflicts with Laravel's data_set() dot-notation.
-     *
-     * @param  array<int, string>  $args
-     * @param  array<string, string>  $env
-     */
-    protected function writeToSettingsFile(string $key, string $command, array $args = [], array $env = []): bool
-    {
-        $path = base_path('.amp/settings.json');
-
-        File::ensureDirectoryExists(dirname($path));
-
-        $config = File::exists($path) && File::size($path) >= 3
-            ? json_decode(File::get($path), true) ?? []
-            : [];
-
         $normalized = $this->normalizeCommand($command, $args);
 
         $serverConfig = collect([
@@ -113,12 +65,55 @@ class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkil
             'env' => $env,
         ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))->toArray();
 
+        return $this->writeToSettingsFile($key, $serverConfig);
+    }
+
+    /** {@inheritDoc} */
+    public function installHttpMcp(string $key, string $url): bool
+    {
+        return $this->writeToSettingsFile($key, ['url' => $url]);
+    }
+
+    /**
+     * Write MCP server config directly to .amp/settings.json, updating existing keys.
+     *
+     * Bypasses FileWriter because Amp's config key "amp.mcpServers" contains
+     * a dot, which conflicts with Laravel's data_set() dot-notation.
+     *
+     * @param  array<string, mixed>  $serverConfig
+     */
+    protected function writeToSettingsFile(string $key, array $serverConfig): bool
+    {
+        $path = base_path('.amp/settings.json');
+
+        File::ensureDirectoryExists(dirname($path));
+
+        $config = $this->readSettingsFile($path);
+
+        if ($config === null) {
+            return false;
+        }
+
         $config['amp.mcpServers'] ??= [];
         $config['amp.mcpServers'][$key] = $serverConfig;
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        return $json && File::put($path, str_replace("\r\n", "\n", $json)) !== false;
+        return is_string($json) && File::put($path, str_replace("\r\n", "\n", $json)) !== false;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function readSettingsFile(string $path): ?array
+    {
+        if (! File::exists($path) || File::size($path) < 3) {
+            return [];
+        }
+
+        $decoded = json_decode(File::get($path), true);
+
+        return is_array($decoded) ? $decoded : null;
     }
 
     public function guidelinesPath(): string
