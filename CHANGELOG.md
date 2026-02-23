@@ -1,6 +1,44 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.8...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.2.0...main)
+
+## [v2.2.0](https://github.com/laravel/boost/compare/v2.1.8...v2.2.0) - 2026-02-20
+
+### What’s Changed
+
+- Added support for loading guidelines and skills directly from vendor packages by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/566
+
+#### Minor Breaking Changes
+
+This release introduces a small structural update to how Inertia guidelines are organized.
+
+**Previously**
+
+```
+.ai/inertia-laravel/core.blade.php
+
+
+```
+**Now merged into individual version guideline**
+
+```
+.ai/inertia-laravel/2/core.blade.php
+.ai/inertia-laravel/1/core.blade.php
+
+
+```
+Guidelines are now resolved using the following priority order:
+
+| Priority | Source | Maintained By |
+|----------|--------|---------------|
+| 1st | `.ai/guidelines/` in the user project | Project developer |
+| 2nd | `vendor/{pkg}/resources/boost/guidelines/` | Composer package maintainer |
+| 2nd | `node_modules/{pkg}/resources/boost/guidelines/` | npm package maintainer |
+| 3rd | Built-in Boost `.ai/` directory | Boost team |
+
+Make sure you update to the latest version of all related packages to stay compatible.
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.8...v2.2.0
 
 ## [v2.1.8](https://github.com/laravel/boost/compare/v2.1.7...v2.1.8) - 2026-02-20
 
