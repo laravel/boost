@@ -42,10 +42,13 @@ test('subprocess proves fresh process isolation', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(buildSubprocessCommand(...));
+        ->andReturnUsing(fn () => [
+            PHP_BINARY, '-r',
+            'echo json_encode(["isError" => false, "content" => [["type" => "text", "text" => (string) getmypid()]]]);',
+        ]);
 
-    $response1 = $executor->execute(Tinker::class, ['code' => 'echo getmypid();']);
-    $response2 = $executor->execute(Tinker::class, ['code' => 'echo getmypid();']);
+    $response1 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
+    $response2 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
 
     expect($response1->isError())->toBeFalse()
         ->and($response2->isError())->toBeFalse();
