@@ -44,17 +44,17 @@ test('subprocess proves fresh process isolation', function (): void {
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(buildSubprocessCommand(...));
 
-    $response1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
-    $response2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
+    $response1 = $executor->execute(Tinker::class, ['code' => 'echo getmypid();']);
+    $response2 = $executor->execute(Tinker::class, ['code' => 'echo getmypid();']);
 
     expect($response1->isError())->toBeFalse()
         ->and($response2->isError())->toBeFalse();
 
-    $pid1 = json_decode((string) $response1->content(), true)['result'];
-    $pid2 = json_decode((string) $response2->content(), true)['result'];
+    $pid1 = (int) trim((string) $response1->content());
+    $pid2 = (int) trim((string) $response2->content());
 
-    expect($pid1)->toBeInt()->not->toBe(getmypid())
-        ->and($pid2)->toBeInt()->not->toBe(getmypid())
+    expect($pid1)->toBeGreaterThan(0)->not->toBe(getmypid())
+        ->and($pid2)->toBeGreaterThan(0)->not->toBe(getmypid())
         ->and($pid1)->not()->toBe($pid2);
 });
 
@@ -115,7 +115,7 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
         (\Illuminate\Container\Container::class.'::setInstance($app); ').
         '$kernel = $app->make("Illuminate\Contracts\Console\Kernel"); '.
         '$kernel->bootstrap(); '.
-        // Register the ExecuteToolCommand
+        'app()->register(\Laravel\Tinker\TinkerServiceProvider::class); '.
         '$kernel->registerCommand(new \Laravel\Boost\Console\ExecuteToolCommand()); '.
         '$output = new BufferedOutput(); '.
         '$result = Artisan::call("boost:execute-tool", ['.
@@ -140,7 +140,7 @@ test('respects custom timeout parameter', function (): void {
 
     // Test with custom timeout - should succeed with fast code
     $response = $executor->execute(Tinker::class, [
-        'code' => 'return "timeout test";',
+        'code' => 'echo "timeout test";',
         'timeout' => 30,
     ]);
 

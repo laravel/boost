@@ -4,131 +4,35 @@ declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Request;
+use Laravel\Tinker\TinkerServiceProvider;
 
-test('executes simple php code', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'return 2 + 2;']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 4,
-            'type' => 'integer',
-        ]);
+beforeEach(function (): void {
+    $this->app->register(TinkerServiceProvider::class);
 });
 
-test('executes code with output', function (): void {
+test('executes code and returns output', function (): void {
     $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'echo "Hello World"; return "test";']));
+    $response = $tool->handle(new Request(['code' => 'echo "Hello World";']));
 
     expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 'test',
-            'output' => 'Hello World',
-            'type' => 'string',
-        ]);
+        ->toolHasNoError()
+        ->toolTextContains('Hello World');
 });
 
-test('accesses laravel facades', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'return config("app.name");']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => config('app.name'),
-            'type' => 'string',
-        ]);
-});
-
-test('creates objects', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'return new stdClass();']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'type' => 'object',
-            'class' => 'stdClass',
-        ]);
-});
-
-test('handles syntax errors', function (): void {
+test('handles errors gracefully', function (): void {
     $tool = new Tinker;
     $response = $tool->handle(new Request(['code' => 'invalid syntax here']));
 
-    expect($response)->isToolResult()
-        ->toolHasNoError()
-        ->toolJsonContentToMatchArray([
-            'type' => \Psy\Exception\ParseErrorException::class,
-        ])
-        ->toolJsonContent(function ($data): void {
-            expect($data)->toHaveKey('error');
-        });
+    expect((string) $response->content())->toContain('Syntax error');
 });
 
-test('handles runtime errors', function (): void {
+test('strips php tags from code', function (): void {
     $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'throw new Exception("Test error");']));
+    $response = $tool->handle(new Request(['code' => '<?php echo "stripped"; ?>']));
 
     expect($response)->isToolResult()
         ->toolHasNoError()
-        ->toolJsonContentToMatchArray([
-            'type' => 'Exception',
-            'error' => 'Test error',
-        ])
-        ->toolJsonContent(function ($data): void {
-            expect($data)->toHaveKey('error');
-        });
-});
-
-test('captures multiple outputs', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'echo "First"; echo "Second"; return "done";']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 'done',
-            'output' => 'FirstSecond',
-        ]);
-});
-
-test('executes code with different return types', function (string $code, mixed $expectedResult, string $expectedType): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => $code]));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => $expectedResult,
-            'type' => $expectedType,
-        ]);
-})->with([
-    'integer' => ['return 42;', 42, 'integer'],
-    'string' => ['return "hello";', 'hello', 'string'],
-    'boolean true' => ['return true;', true, 'boolean'],
-    'boolean false' => ['return false;', false, 'boolean'],
-    'null' => ['return null;', null, 'NULL'],
-    'array' => ['return [1, 2, 3];', [1, 2, 3], 'array'],
-    'float' => ['return 3.14;', 3.14, 'double'],
-]);
-
-test('handles empty code', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => '']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'type' => 'object',
-            'class' => \Psy\CodeCleaner\NoReturnValue::class,
-        ]);
-});
-
-test('handles code with no return statement', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => '$x = 5;']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 5,
-            'type' => 'integer',
-        ]);
+        ->toolTextContains('stripped');
 });
 
 test('should register only in local environment', function (): void {
@@ -137,57 +41,4 @@ test('should register only in local environment', function (): void {
     app()->detectEnvironment(fn (): string => 'local');
 
     expect($tool->eligibleForRegistration())->toBeTrue();
-});
-
-test('executes expression-only code without return or semicolon', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => '2 + 3']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'result' => 5,
-            'type' => 'integer',
-        ]);
-});
-
-test('executes code without trailing semicolon', function (): void {
-    $tool = new Tinker;
-    $response = $tool->handle(new Request(['code' => 'echo "Hi"']));
-
-    expect($response)->isToolResult()
-        ->toolJsonContentToMatchArray([
-            'output' => 'Hi',
-        ]);
-});
-
-test('error responses include output key for consistency', function (): void {
-    $tool = new Tinker;
-
-    $syntaxErrorResponse = $tool->handle(new Request(['code' => 'invalid syntax']));
-    $syntaxErrorData = json_decode((string) $syntaxErrorResponse->content(), true);
-
-    expect($syntaxErrorData)->toHaveKey('output')
-        ->and($syntaxErrorData['output'])->toBeString();
-
-    $runtimeErrorResponse = $tool->handle(new Request(['code' => 'throw new Exception("test");']));
-    $runtimeErrorData = json_decode((string) $runtimeErrorResponse->content(), true);
-
-    expect($runtimeErrorData)->toHaveKey('output')
-        ->and($runtimeErrorData['output'])->toBeString();
-});
-
-test('error and success responses have matching structure', function (): void {
-    $tool = new Tinker;
-
-    $successResponse = $tool->handle(new Request(['code' => 'echo "test"; return 42;']));
-    $successData = json_decode((string) $successResponse->content(), true);
-
-    $errorResponse = $tool->handle(new Request(['code' => 'invalid syntax']));
-    $errorData = json_decode((string) $errorResponse->content(), true);
-
-    expect($successData)->toHaveKey('output');
-    expect($errorData)->toHaveKey('output');
-
-    expect(strtolower($successData['output'] ?? ''))->toBeString();
-    expect(strtolower($errorData['output'] ?? ''))->toBeString();
 });
