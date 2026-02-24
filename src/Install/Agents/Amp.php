@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
-use Illuminate\Support\Facades\File;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
-use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
 class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
@@ -44,76 +42,20 @@ class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkil
         ];
     }
 
-    public function mcpInstallationStrategy(): McpInstallationStrategy
+    public function mcpConfigPath(): string
     {
-        return McpInstallationStrategy::FILE;
+        return base_path('.amp/settings.json');
     }
 
-    /**
-     * Install MCP server directly in .amp/settings.json.
-     *
-     * @param  array<int, string>  $args
-     * @param  array<string, string>  $env
-     */
-    public function installMcp(string $key, string $command, array $args = [], array $env = []): bool
+    public function mcpConfigKey(): string
     {
-        $normalized = $this->normalizeCommand($command, $args);
-
-        $serverConfig = collect([
-            'command' => $normalized['command'],
-            'args' => $normalized['args'],
-            'env' => $env,
-        ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))->toArray();
-
-        return $this->writeToSettingsFile($key, $serverConfig);
+        return 'amp.mcpServers';
     }
 
     /** {@inheritDoc} */
-    public function installHttpMcp(string $key, string $url): bool
+    public function httpMcpServerConfig(string $url): array
     {
-        return $this->writeToSettingsFile($key, ['url' => $url]);
-    }
-
-    /**
-     * Write MCP server config directly to .amp/settings.json, updating existing keys.
-     *
-     * Bypasses FileWriter because Amp's config key "amp.mcpServers" contains
-     * a dot, which conflicts with Laravel's data_set() dot-notation.
-     *
-     * @param  array<string, mixed>  $serverConfig
-     */
-    protected function writeToSettingsFile(string $key, array $serverConfig): bool
-    {
-        $path = base_path('.amp/settings.json');
-
-        File::ensureDirectoryExists(dirname($path));
-
-        $config = $this->readSettingsFile($path);
-
-        if ($config === null) {
-            return false;
-        }
-
-        $config['amp.mcpServers'] ??= [];
-        $config['amp.mcpServers'][$key] = $serverConfig;
-
-        $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-        return is_string($json) && File::put($path, str_replace("\r\n", "\n", $json)) !== false;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    protected function readSettingsFile(string $path): ?array
-    {
-        if (! File::exists($path) || File::size($path) < 3) {
-            return [];
-        }
-
-        $decoded = json_decode(File::get($path), true);
-
-        return is_array($decoded) ? $decoded : null;
+        return ['url' => $url];
     }
 
     public function guidelinesPath(): string

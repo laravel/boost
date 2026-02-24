@@ -68,6 +68,10 @@ class FileWriter
             return $this->updatePlainJsonFile($content);
         }
 
+        if (! $this->hasJson5Features($content)) {
+            return false;
+        }
+
         return $this->updateJson5File($content);
     }
 
@@ -342,23 +346,25 @@ class FileWriter
      */
     protected function isPlainJson(string $content): bool
     {
-        if ($this->hasUnquotedComments($content)) {
-            return false;
-        }
-
-        // Trailing commas (,] or ,}) - supported in JSON 5
-        if (preg_match('/,\s*[\]}]/', $content)) {
-            return false;
-        }
-
-        // Unquoted keys - supported in JSON 5
-        if (preg_match('/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/m', $content)) {
+        if ($this->hasJson5Features($content)) {
             return false;
         }
 
         json_decode($content);
 
         return json_last_error() === JSON_ERROR_NONE;
+    }
+
+    protected function hasJson5Features(string $content): bool
+    {
+        if ($this->hasUnquotedComments($content)) {
+            return true;
+        }
+
+        if (preg_match('/,\s*[\]}]/', $content)) {
+            return true;
+        }
+        return (bool) preg_match('/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/m', $content);
     }
 
     protected function hasUnquotedComments(string $content): bool
@@ -391,7 +397,7 @@ class FileWriter
     protected function addServersToConfig(array &$config): void
     {
         foreach ($this->serversToAdd as $key => $serverConfig) {
-            data_set($config, $this->configKey.'.'.$key, $serverConfig);
+            $config[$this->configKey][$key] = $serverConfig;
         }
     }
 
