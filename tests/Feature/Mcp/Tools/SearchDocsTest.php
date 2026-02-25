@@ -191,6 +191,48 @@ test('it handles packages passed as a JSON-encoded string', function (): void {
     ]);
 });
 
+test('it returns error for malformed JSON in queries string', function (): void {
+    $roster = Mockery::mock(Roster::class);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request(['queries' => '["authentication","testing"']));
+
+    expect($response)->isToolResult()->toolHasError();
+});
+
+test('it returns error for non-array JSON in queries string', function (): void {
+    $roster = Mockery::mock(Roster::class);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request(['queries' => '"authentication"']));
+
+    expect($response)->isToolResult()->toolHasError();
+});
+
+test('it returns error for malformed JSON in packages string', function (): void {
+    $roster = Mockery::mock(Roster::class);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request([
+        'queries' => ['test'],
+        'packages' => '["livewire/livewire"',
+    ]));
+
+    expect($response)->isToolResult()->toolHasError();
+});
+
+test('it returns error for non-array JSON in packages string', function (): void {
+    $roster = Mockery::mock(Roster::class);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request([
+        'queries' => ['test'],
+        'packages' => '"livewire/livewire"',
+    ]));
+
+    expect($response)->isToolResult()->toolHasError();
+});
+
 test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 

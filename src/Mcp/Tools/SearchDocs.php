@@ -56,11 +56,31 @@ class SearchDocs extends Tool
     {
         $apiUrl = config('boost.hosted.api_url', 'https://boost.laravel.com').'/api/docs';
         $packagesFilterRaw = $request->get('packages');
-        $packagesFilter = is_string($packagesFilterRaw) ? json_decode($packagesFilterRaw, true) ?? null : $packagesFilterRaw;
+
+        if (is_string($packagesFilterRaw)) {
+            $packagesFilter = json_decode($packagesFilterRaw, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($packagesFilter)) {
+                return Response::error('Invalid packages parameter: '.json_last_error_msg());
+            }
+        } else {
+            $packagesFilter = $packagesFilterRaw;
+        }
 
         $rawQueries = $request->get('queries');
+
+        if (is_string($rawQueries)) {
+            $decodedQueries = json_decode($rawQueries, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decodedQueries)) {
+                return Response::error('Invalid queries parameter: '.json_last_error_msg());
+            }
+
+            $rawQueries = $decodedQueries;
+        }
+
         $queries = array_filter(
-            array_map(trim(...), is_string($rawQueries) ? json_decode($rawQueries, true) ?? [] : $rawQueries),
+            array_map(trim(...), $rawQueries),
             fn (string $query): bool => $query !== '' && $query !== '*'
         );
 
