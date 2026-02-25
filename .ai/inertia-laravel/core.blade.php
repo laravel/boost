@@ -11,8 +11,14 @@
 - IMPORTANT: Activate `inertia-svelte-development` when working with Inertia Svelte client-side patterns.
 @endif
 
+@if($assist->inertia()->gte('2.0.0'))
 # Inertia v2
 
 - Use all Inertia features from v1 and v2. Check the documentation before making changes to ensure the correct approach.
 - New features: deferred props, infinite scrolling (merging props + `WhenVisible`), lazy loading on scroll, polling, prefetching.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
+@else
+# Inertia v1
+
+- Inertia v1 does not support the following v2 features: deferred props, infinite scrolling (merging props + `WhenVisible`), lazy loading on scroll, polling, or prefetching. Do not use these.
+@endif
