@@ -185,12 +185,7 @@ class GuidelineComposer
                     $guidelineDir.'/core' => $this->resolveGuideline($vendorCorePath, $guidelineDir.'/core'),
                 ]);
 
-                if ($vendorPath !== null) {
-                    $versionDir = implode(DIRECTORY_SEPARATOR, [$vendorPath, $package->majorVersion()]);
-                    $packageGuidelines = is_dir($versionDir) ? $this->guidelinesDir($versionDir) : [];
-                } else {
-                    $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
-                }
+                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
 
                 foreach ($packageGuidelines as $guideline) {
                     $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
