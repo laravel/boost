@@ -53,6 +53,15 @@ test('strips php tags from code', function (): void {
         ->toolTextContains('stripped');
 });
 
+test('executes code without semicolon', function (): void {
+    $tool = new Tinker;
+    $response = $tool->handle(new Request(['code' => 'echo 1']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('1');
+});
+
 test('should register only in local environment', function (): void {
     $tool = new Tinker;
 
