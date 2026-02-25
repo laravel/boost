@@ -55,10 +55,12 @@ class SearchDocs extends Tool
     public function handle(Request $request): Response|Generator
     {
         $apiUrl = config('boost.hosted.api_url', 'https://boost.laravel.com').'/api/docs';
-        $packagesFilter = $request->get('packages');
+        $packagesFilterRaw = $request->get('packages');
+        $packagesFilter = is_string($packagesFilterRaw) ? json_decode($packagesFilterRaw, true) ?? null : $packagesFilterRaw;
 
+        $rawQueries = $request->get('queries');
         $queries = array_filter(
-            array_map(trim(...), $request->get('queries')),
+            array_map(trim(...), is_string($rawQueries) ? json_decode($rawQueries, true) ?? [] : $rawQueries),
             fn (string $query): bool => $query !== '' && $query !== '*'
         );
 

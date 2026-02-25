@@ -143,6 +143,54 @@ test('it uses custom token_limit when provided', function (): void {
     Http::assertSent(fn ($request): bool => $request->data()['token_limit'] === 5000);
 });
 
+test('it handles queries passed as a JSON-encoded string', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $roster = Mockery::mock(Roster::class);
+    $roster->shouldReceive('packages')->andReturn($packages);
+
+    Http::fake([
+        'https://boost.laravel.com/api/docs' => Http::response('Documentation search results', 200),
+    ]);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request(['queries' => '["authentication","testing"]']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Documentation search results');
+
+    Http::assertSent(fn ($request): bool => $request->data()['queries'] === ['authentication', 'testing']);
+});
+
+test('it handles packages passed as a JSON-encoded string', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.5.1'),
+    ]);
+
+    $roster = Mockery::mock(Roster::class);
+    $roster->shouldReceive('packages')->andReturn($packages);
+
+    Http::fake([
+        'https://boost.laravel.com/api/docs' => Http::response('Filtered results', 200),
+    ]);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request([
+        'queries' => ['test'],
+        'packages' => '["livewire/livewire"]',
+    ]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+
+    Http::assertSent(fn ($request): bool => $request->data()['packages'] === [
+        ['name' => 'livewire/livewire', 'version' => '3.x'],
+    ]);
+});
+
 test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 
