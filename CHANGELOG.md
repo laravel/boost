@@ -1,6 +1,39 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.2.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.2.1...main)
+
+## [v2.2.1](https://github.com/laravel/boost/compare/v2.2.0...v2.2.1) - 2026-02-25
+
+### What's Changed
+
+* Fix third-party skills excluded when aiGuidelines is uninitialized by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/596
+* Add summary mode to DatabaseSchema tool by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/595
+* Add support for Ampcode by [@dringrayson](https://github.com/dringrayson) in https://github.com/laravel/boost/pull/598
+* Simplify Tinker tool to wrap artisan tinker --execute by [@soleinjast](https://github.com/soleinjast) in https://github.com/laravel/boost/pull/557
+* Consolidate Inertia versioned guidelines into single core file by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/603
+
+#### Minor Breaking Chnage
+
+If you have custom overrides in:
+
+```text
+.ai/guidelines/inertia-laravel/1/core.blade.php
+.ai/guidelines/inertia-laravel/2/core.blade.php
+
+
+```
+move them to:
+
+```text
+.ai/guidelines/inertia-laravel/core.blade.php
+
+
+```
+### New Contributors
+
+* [@dringrayson](https://github.com/dringrayson) made their first contribution in https://github.com/laravel/boost/pull/598
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.0...v2.2.1
 
 ## [v2.2.0](https://github.com/laravel/boost/compare/v2.1.8...v2.2.0) - 2026-02-20
 
@@ -18,12 +51,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 .ai/inertia-laravel/core.blade.php
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 ```
