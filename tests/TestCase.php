@@ -19,10 +19,6 @@ abstract class TestCase extends OrchestraTestCase
         $app->singleton('mcp', Registrar::class);
 
         $app->useStoragePath(realpath(__DIR__.'/../workbench/storage'));
-
-        $vendorDir = dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2);
-        $_ENV['COMPOSER_VENDOR_DIR'] = $vendorDir;
-        putenv("COMPOSER_VENDOR_DIR={$vendorDir}");
     }
 
     protected function setUp(): void
