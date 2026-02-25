@@ -1115,3 +1115,26 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     @rmdir($mdOverrideDir.'/pest');
     @rmdir($mdOverrideDir);
 });
+
+test('skips versioned guidelines from .ai/ when vendor ships its own guidelines', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+
+    $keys = $composer->used();
+
+    expect($keys)
+        ->toContain('pest/core')
+        ->not->toContain('pest/v3');
+});
