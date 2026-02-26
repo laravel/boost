@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,24 @@ LOG);
         ->toolHasNoError()
         ->toolTextContains('browser.WARNING: Warning message', 'browser.ERROR: JavaScript error occurred')
         ->toolTextDoesNotContain('browser.DEBUG: console log message');
+});
+
+test('it filters log entries by timestamp', function (): void {
+    createBrowserLogFile(<<<'LOG'
+[2024-01-15 10:00:00] browser.DEBUG: console log message {"url":"http://example.com","user_agent":"Mozilla/5.0","timestamp":"2023-01-15T10:00:00.000000Z"}
+[2025-01-15 10:01:00] browser.ERROR: JavaScript error occurred {"url":"http://example.com/page","user_agent":"Mozilla/5.0","timestamp":"2024-01-15T10:01:00.000000Z"}
+[2026-01-15 10:02:00] browser.WARNING: Warning message {"url":"http://example.com/other","user_agent":"Mozilla/5.0","timestamp":"2025-01-15T10:02:00.000000Z"}
+LOG);
+
+    Carbon::setTestNow('2026-01-15 10:05:00');
+
+    $tool = new BrowserLogs;
+    $response = $tool->handle(new Request(['entries' => 2, 'since' => '5 mins ago']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('browser.WARNING: Warning message')
+        ->toolTextDoesNotContain('browser.ERROR: JavaScript error occurred', 'browser.DEBUG: console log message');
 });
 
 test('it returns error when entries argument is invalid', function (): void {

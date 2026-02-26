@@ -6,6 +6,7 @@ namespace Laravel\Boost\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Support\Carbon;
 use Laravel\Boost\Concerns\ReadsLogs;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -33,6 +34,8 @@ class BrowserLogs extends Tool
             'entries' => $schema->integer()
                 ->description('Number of log entries to return.')
                 ->required(),
+            'since' => $schema->string()
+                ->description('Timestamp in any format understood by Carbon. Only log entries after this timestamp will be returned.'),
         ];
     }
 
@@ -58,6 +61,25 @@ class BrowserLogs extends Tool
 
         if ($entries === []) {
             return Response::text('Unable to retrieve log entries, or no logs');
+        }
+
+        if ($request->has('since')) {
+            $since = Carbon::parse($request->get('since'));
+
+            $entries = array_filter($entries, function ($entry) use ($since) {
+                $timestamp = str($entry)
+                    ->match('/'.$this->getTimestampRegex().'/')
+                    ->ltrim('[')
+                    ->rtrim(']');
+
+                if ($timestamp->isNotEmpty()) {
+                    $entryTimestamp = Carbon::parse($timestamp->toString());
+
+                    return $entryTimestamp->gte($since);
+                }
+
+                return false;
+            });
         }
 
         $logs = implode("\n\n", $entries);
