@@ -110,7 +110,7 @@ class GitHubSkillProvider
             'https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1',
             $this->repository->owner,
             $this->repository->repo,
-            $this->resolveDefaultBranch()
+            urlencode($this->resolveDefaultBranch())
         );
 
         $response = $this->client()->get($url);

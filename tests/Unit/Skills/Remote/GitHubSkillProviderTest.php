@@ -384,6 +384,27 @@ it('resolves non-main default branch from github api', function (): void {
     Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'git/trees/0.x'));
 });
 
+it('url-encodes branch names containing slashes', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo('release/1.x'),
+        'api.github.com/repos/owner/repo/git/trees/release%2F1.x?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'url' => 'https://api.github.com/repos/owner/repo/git/trees/abc123',
+            'tree' => [
+                ['path' => 'my-skill', 'type' => 'tree', 'sha' => 'aaa'],
+                ['path' => 'my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $skills = $fetcher->discoverSkills();
+
+    expect($skills)->toHaveCount(1)
+        ->and($skills->has('my-skill'))->toBeTrue();
+});
+
 it('uses services.github.token for authentication when boost.github.token is not set', function (): void {
     config(['services.github.token' => 'gh-token-456']);
 
