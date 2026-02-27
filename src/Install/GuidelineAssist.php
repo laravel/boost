@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
@@ -67,36 +68,43 @@ class GuidelineAssist
     protected function discover(callable $cb): array
     {
         $classes = [];
-        $appPath = app_path();
+        $paths = $this->roster->uses(Approaches::MODULAR)
+            ? array_filter([
+                base_path('modules'),
+                base_path('Modules'),
+                base_path('app-modules'),
+                app_path(),
+            ], is_dir(...))
+            : [app_path()];
+        $cacheKey = md5(implode('|', $paths));
 
-        if (! is_dir($appPath)) {
-            return ['app-path-isnt-a-directory' => $appPath];
+        if ($paths === []) {
+            return [];
         }
 
-        if (self::$classes === []) {
+        if (! isset(self::$classes[$cacheKey])) {
+            self::$classes[$cacheKey] = [];
             $finder = Finder::create()
-                ->in($appPath)
+                ->in($paths)
                 ->files()
                 ->name('/[A-Z].*\.php$/');
 
             foreach ($finder as $file) {
-                $relativePath = $file->getRelativePathname();
-                $namespace = app()->getNamespace();
-                $className = $namespace.str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    $relativePath
-                );
-
                 try {
-                    $path = $appPath.DIRECTORY_SEPARATOR.$relativePath;
+                    $path = $file->getRealPath();
+
+                    if (! $path) {
+                        continue;
+                    }
 
                     if (! $this->fileHasClassLike($path)) {
                         continue;
                     }
 
-                    if (class_exists($className, false)) {
-                        self::$classes[$className] = $path;
+                    $className = $this->classNameFromFile($path);
+
+                    if ($className && class_exists($className)) {
+                        self::$classes[$cacheKey][$className] = $path;
                     }
                 } catch (Throwable) {
                     // Ignore exceptions and errors from class loading/reflection
@@ -104,13 +112,62 @@ class GuidelineAssist
             }
         }
 
-        foreach (self::$classes as $className => $path) {
+        foreach (self::$classes[$cacheKey] as $className => $path) {
             if ($cb(new ReflectionClass($className))) {
                 $classes[$className] = $path;
             }
         }
 
         return $classes;
+    }
+
+    protected function classNameFromFile(string $path): ?string
+    {
+        $code = file_get_contents($path);
+
+        if ($code === false) {
+            return null;
+        }
+
+        $namespace = null;
+        $class = null;
+
+        $tokens = token_get_all($code);
+        $count = count($tokens);
+
+        for ($i = 0; $i < $count; $i++) {
+            if (is_array($tokens[$i]) && $tokens[$i][0] === T_NAMESPACE) {
+                $namespace = '';
+
+                for ($j = $i + 1; $j < $count; $j++) {
+                    if (is_array($tokens[$j]) && in_array($tokens[$j][0], [T_STRING, T_NS_SEPARATOR, T_NAME_QUALIFIED], true)) {
+                        $namespace .= $tokens[$j][1];
+
+                        continue;
+                    }
+
+                    if ($tokens[$j] === ';' || $tokens[$j] === '{') {
+                        break;
+                    }
+                }
+            }
+
+            if (is_array($tokens[$i]) && in_array($tokens[$i][0], [T_CLASS, T_ENUM], true)) {
+                for ($j = $i + 1; $j < $count; $j++) {
+                    if (is_array($tokens[$j]) && $tokens[$j][0] === T_STRING) {
+                        $class = $tokens[$j][1];
+
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (! $class) {
+            return null;
+        }
+
+        return $namespace ? "{$namespace}\\{$class}" : $class;
     }
 
     public function fileHasClassLike(string $path): bool
