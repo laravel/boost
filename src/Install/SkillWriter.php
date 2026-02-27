@@ -72,6 +72,16 @@ class SkillWriter
             return self::FAILED;
         }
 
+        // When the canonical directory contains Blade files that need compilation,
+        // copy (with rendering) instead of symlinking raw templates
+        if ($this->directoryContainsBladeFiles($canonicalPath) && ! $this->pathsMatch($canonicalPath, $targetPath)) {
+            if (! $this->copyDirectory($canonicalPath, $targetPath)) {
+                return self::FAILED;
+            }
+
+            return $existed ? self::UPDATED : self::SUCCESS;
+        }
+
         if (! $this->createSymlink($canonicalPath, $targetPath) && ! $this->copyDirectory($skill->path, $targetPath)) {
             return self::FAILED;
         }
@@ -295,6 +305,17 @@ class SkillWriter
         $depth = $fromRel === '' ? 0 : count(explode('/', $fromRel));
 
         return str_repeat('../', $depth).$targetRel;
+    }
+
+    protected function directoryContainsBladeFiles(string $path): bool
+    {
+        if (! is_dir($path)) {
+            return false;
+        }
+
+        $matches = glob($path.DIRECTORY_SEPARATOR.'*.blade.php');
+
+        return $matches !== false && $matches !== [];
     }
 
     protected function isValidSkillName(string $name): bool
