@@ -55,28 +55,17 @@ class SearchDocs extends Tool
     public function handle(Request $request): Response|Generator
     {
         $apiUrl = config('boost.hosted.api_url', 'https://boost.laravel.com').'/api/docs';
-        $packagesFilterRaw = $request->get('packages');
 
-        if (is_string($packagesFilterRaw)) {
-            $packagesFilter = json_decode($packagesFilterRaw, true);
+        $packagesFilter = $this->resolveArrayParam($request->get('packages'));
 
-            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($packagesFilter)) {
-                return Response::error('Invalid packages parameter: '.json_last_error_msg());
-            }
-        } else {
-            $packagesFilter = $packagesFilterRaw;
+        if ($packagesFilter instanceof Response) {
+            return $packagesFilter;
         }
 
-        $rawQueries = $request->get('queries');
+        $rawQueries = $this->resolveArrayParam($request->get('queries'));
 
-        if (is_string($rawQueries)) {
-            $decodedQueries = json_decode($rawQueries, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decodedQueries)) {
-                return Response::error('Invalid queries parameter: '.json_last_error_msg());
-            }
-
-            $rawQueries = $decodedQueries;
+        if ($rawQueries instanceof Response) {
+            return $rawQueries;
         }
 
         $queries = array_filter(
@@ -128,5 +117,27 @@ class SearchDocs extends Tool
         }
 
         return Response::text($response->body());
+    }
+
+    /**
+     * @return array<int, mixed>|null|Response
+     */
+    private function resolveArrayParam(mixed $value): array|null|Response
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $decoded = json_decode($value, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return Response::error('Invalid parameter: '.json_last_error_msg());
+        }
+
+        if (! is_array($decoded) || ! array_is_list($decoded)) {
+            return Response::error('Invalid parameter: expected a JSON array.');
+        }
+
+        return $decoded;
     }
 }

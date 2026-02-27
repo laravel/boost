@@ -233,6 +233,27 @@ test('it returns error for non-array JSON in packages string', function (): void
     expect($response)->isToolResult()->toolHasError();
 });
 
+test('it returns error for JSON object string in queries', function (): void {
+    $roster = Mockery::mock(Roster::class);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request(['queries' => '{"q":"authentication"}']));
+
+    expect($response)->isToolResult()->toolHasError();
+});
+
+test('it returns error for JSON object string in packages', function (): void {
+    $roster = Mockery::mock(Roster::class);
+
+    $tool = new SearchDocs($roster);
+    $response = $tool->handle(new Request([
+        'queries' => ['test'],
+        'packages' => '{"pkg":"laravel/framework"}',
+    ]));
+
+    expect($response)->isToolResult()->toolHasError();
+});
+
 test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 

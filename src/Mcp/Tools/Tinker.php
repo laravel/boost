@@ -50,8 +50,8 @@ class Tinker extends Tool
                 '--no-ansi' => true,
                 '--no-interaction' => true,
             ], $output);
-        } catch (Throwable $e) {
-            return Response::text($e->getMessage());
+        } catch (Throwable $throwable) {
+            return Response::text($throwable->getMessage());
         }
 
         if ($exitCode !== CommandAlias::SUCCESS) {
