@@ -827,6 +827,48 @@ it('preserves canonical directory when removing custom skill symlink via removeS
     cleanupSkillDirectory($canonicalSkillPath);
 });
 
+it('compiles blade to markdown instead of symlinking when custom skill source is canonical path', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'blade-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    mkdir($canonicalSkillPath.'/references', 0755, true);
+    copy(fixture('skills/blade-skill/SKILL.blade.php'), $canonicalSkillPath.'/SKILL.blade.php');
+    copy(fixture('skills/blade-skill/references/ref.blade.php'), $canonicalSkillPath.'/references/ref.blade.php');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $canonicalSkillPath,
+        description: 'Blade skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $targetSkillPath = $absoluteTarget.'/'.$skillName;
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($targetSkillPath)->toBeDirectory()
+        ->and(is_link($targetSkillPath))->toBeFalse()
+        ->and($targetSkillPath.'/SKILL.md')->toBeFile()
+        ->and($targetSkillPath.'/references/ref.md')->toBeFile();
+
+    expect(glob($targetSkillPath.'/*.blade.php') ?: [])->toBeEmpty();
+
+    $content = file_get_contents($targetSkillPath.'/SKILL.md');
+    expect($content)->toContain('The answer is 2')
+        ->not->toContain('{{ 1 + 1 }}');
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
 it('removes extra files when updating skill directory', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
