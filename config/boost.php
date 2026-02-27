@@ -48,4 +48,28 @@ return [
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Adaptive Context Engine (ACE)
+    |--------------------------------------------------------------------------
+    |
+    | ACE consolidates MCP tools and guidelines into a compact manifest
+    | with batched context resolution. Skills remain delivered via
+    | .claude/skills/ files and are not affected by ACE.
+    |
+    | When legacy_tools is false (default), ACE replaces the 15 legacy
+    | tools with a 3-tool interface (manifest, resolve, execute) for
+    | significant token reduction. Set legacy_tools to true to keep
+    | legacy tools alongside ACE during a gradual migration.
+    |
+    */
+
+    'ace' => [
+        'enabled' => env('BOOST_ACE_ENABLED', false),
+        'legacy_tools' => false,
+        'bundles' => [
+            'exclude' => [],
+        ],
+    ],
+
 ];

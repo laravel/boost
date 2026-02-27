@@ -54,6 +54,22 @@ class GuidelineComposer
         return self::composeGuidelines($this->guidelines());
     }
 
+    /**
+     * Resolve a single guideline by key and return its rendered content.
+     */
+    public function resolveSlice(string $key): string
+    {
+        $guidelines = $this->guidelines();
+
+        if ($guidelines->has($key)) {
+            return trim($guidelines[$key]['content']);
+        }
+
+        $guideline = $this->guideline($key);
+
+        return trim($guideline['content']);
+    }
+
     public function customGuidelinePath(string $path = ''): string
     {
         return base_path($this->userGuidelineDir.'/'.ltrim($path, '/'));
