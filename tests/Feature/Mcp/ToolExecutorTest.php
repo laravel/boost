@@ -42,7 +42,7 @@ test('subprocess proves fresh process isolation', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn () => [
+        ->andReturnUsing(fn (): array => [
             PHP_BINARY, '-r',
             'echo json_encode(["isError" => false, "content" => [["type" => "text", "text" => (string) getmypid()]]]);',
         ]);
@@ -118,7 +118,7 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
         (\Illuminate\Container\Container::class.'::setInstance($app); ').
         '$kernel = $app->make("Illuminate\Contracts\Console\Kernel"); '.
         '$kernel->bootstrap(); '.
-        'app()->register(\Laravel\Tinker\TinkerServiceProvider::class); '.
+        ('app()->register('.\Laravel\Tinker\TinkerServiceProvider::class.'::class); ').
         '$kernel->registerCommand(new \Laravel\Boost\Console\ExecuteToolCommand()); '.
         '$output = new BufferedOutput(); '.
         '$result = Artisan::call("boost:execute-tool", ['.

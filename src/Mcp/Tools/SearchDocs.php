@@ -55,10 +55,21 @@ class SearchDocs extends Tool
     public function handle(Request $request): Response|Generator
     {
         $apiUrl = config('boost.hosted.api_url', 'https://boost.laravel.com').'/api/docs';
-        $packagesFilter = $request->get('packages');
+
+        $packagesFilter = $this->resolveArrayParam($request->get('packages'));
+
+        if ($packagesFilter instanceof Response) {
+            return $packagesFilter;
+        }
+
+        $rawQueries = $this->resolveArrayParam($request->get('queries'));
+
+        if ($rawQueries instanceof Response) {
+            return $rawQueries;
+        }
 
         $queries = array_filter(
-            array_map(trim(...), $request->get('queries')),
+            array_map(trim(...), $rawQueries),
             fn (string $query): bool => $query !== '' && $query !== '*'
         );
 
@@ -106,5 +117,27 @@ class SearchDocs extends Tool
         }
 
         return Response::text($response->body());
+    }
+
+    /**
+     * @return array<int, mixed>|null|Response
+     */
+    private function resolveArrayParam(mixed $value): array|null|Response
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $decoded = json_decode($value, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return Response::error('Invalid parameter: '.json_last_error_msg());
+        }
+
+        if (! is_array($decoded) || ! array_is_list($decoded)) {
+            return Response::error('Invalid parameter: expected a JSON array.');
+        }
+
+        return $decoded;
     }
 }
