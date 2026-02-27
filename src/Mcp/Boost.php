@@ -8,10 +8,12 @@ use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\Prompts\LaravelCodeSimplifier\LaravelCodeSimplifier;
 use Laravel\Boost\Mcp\Prompts\UpgradeLivewirev4\UpgradeLivewireV4;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
+use Laravel\Boost\Mcp\Tools\BoostManifest;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema;
+use Laravel\Boost\Mcp\Tools\Execute;
 use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
 use Laravel\Boost\Mcp\Tools\GetConfig;
 use Laravel\Boost\Mcp\Tools\LastError;
@@ -20,6 +22,7 @@ use Laravel\Boost\Mcp\Tools\ListAvailableConfigKeys;
 use Laravel\Boost\Mcp\Tools\ListAvailableEnvVars;
 use Laravel\Boost\Mcp\Tools\ListRoutes;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
+use Laravel\Boost\Mcp\Tools\ResolveContext;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Server;
@@ -76,7 +79,10 @@ class Boost extends Server
         $this->resources = $this->discoverResources();
         $this->prompts = $this->discoverPrompts();
 
-        // Override the tools/call method to use our ToolExecutor
+        if ($this->aceEnabled()) {
+            $this->instructions = 'Laravel Boost MCP server with Adaptive Context Engine. Call boost-manifest first to see available context slices and bundles, then use resolve-context to load what you need in a single batched call. Use execute for running PHP code.';
+        }
+
         $this->methods['tools/call'] = CallToolWithExecutor::class;
     }
 
@@ -85,7 +91,44 @@ class Boost extends Server
      */
     protected function discoverTools(): array
     {
-        return $this->filterPrimitives([
+        if ($this->aceEnabled()) {
+            return $this->discoverAceTools();
+        }
+
+        return $this->filterPrimitives($this->legacyTools(), 'tools');
+    }
+
+    /**
+     * @return array<int, class-string<Tool>>
+     */
+    protected function discoverAceTools(): array
+    {
+        $tools = [
+            BoostManifest::class,
+            ResolveContext::class,
+            Execute::class,
+        ];
+
+        if (config('boost.ace.legacy_tools', true)) {
+            $legacyTools = array_filter(
+                $this->legacyTools(),
+                fn (string $tool): bool => $tool !== Tinker::class,
+            );
+
+            $tools = array_merge($tools, $legacyTools);
+        }
+
+        return $this->filterPrimitives($tools, 'tools');
+    }
+
+    /**
+     * The original set of individual MCP tools.
+     *
+     * @return array<int, class-string<Tool>>
+     */
+    protected function legacyTools(): array
+    {
+        return [
             ApplicationInfo::class,
             BrowserLogs::class,
             DatabaseConnections::class,
@@ -101,7 +144,12 @@ class Boost extends Server
             ReadLogEntries::class,
             SearchDocs::class,
             Tinker::class,
-        ], 'tools');
+        ];
+    }
+
+    protected function aceEnabled(): bool
+    {
+        return (bool) config('boost.ace.enabled', false);
     }
 
     /**

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Generator;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Boost\Concerns\MakesHttpRequests;
@@ -52,7 +51,7 @@ class SearchDocs extends Tool
     /**
      * Handle the tool request.
      */
-    public function handle(Request $request): Response|Generator
+    public function handle(Request $request): Response
     {
         $apiUrl = config('boost.hosted.api_url', 'https://boost.laravel.com').'/api/docs';
         $packagesFilter = $request->get('packages');
