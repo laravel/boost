@@ -201,7 +201,7 @@ class InstallCommand extends Command
 
     protected function configureMcpOptions(): void
     {
-        if ($this->sail->isInstalled() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
+        if ($this->sail->isInstalled() && ! $this->sail->isRunningInDevcontainer() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
             $this->selectedBoostFeatures->push('sail');
         }
 

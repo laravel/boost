@@ -43,7 +43,22 @@ class Sail
 
     public function isActive(): bool
     {
-        return get_current_user() === 'sail' || getenv('LARAVEL_SAIL') === '1';
+        if (getenv('LARAVEL_SAIL') === '1') {
+            return true;
+        }
+
+        // Inside a Docker container without LARAVEL_SAIL set means we're in a
+        // devcontainer where the sail binary can't be invoked from the host
+        if ($this->isRunningInDevcontainer()) {
+            return false;
+        }
+
+        return get_current_user() === 'sail';
+    }
+
+    public function isRunningInDevcontainer(): bool
+    {
+        return file_exists('/.dockerenv') || file_exists('/run/.containerenv');
     }
 
     /**
