@@ -43,7 +43,16 @@ class Sail
 
     public function isActive(): bool
     {
+        if ($this->isRunningInDevcontainer()) {
+            return false;
+        }
+
         return get_current_user() === 'sail' || getenv('LARAVEL_SAIL') === '1';
+    }
+
+    public function isRunningInDevcontainer(): bool
+    {
+        return getenv('REMOTE_CONTAINERS') === 'true';
     }
 
     /**
