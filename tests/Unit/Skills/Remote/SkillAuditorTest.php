@@ -65,7 +65,7 @@ it('sends correct query parameters', function (): void {
     $auditor = new SkillAuditor;
     $auditor->audit('owner/repo', ['skill-one', 'skill-two']);
 
-    Http::assertSent(fn($request): bool => str_contains((string) $request->url(), 'source=owner%2Frepo')
+    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'source=owner%2Frepo')
         && str_contains((string) $request->url(), 'skills=skill-one%2Cskill-two'));
 });
 

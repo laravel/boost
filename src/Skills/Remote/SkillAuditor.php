@@ -62,6 +62,7 @@ class SkillAuditor
                 if (! is_array($audit)) {
                     continue;
                 }
+
                 if (! isset($audit['risk'])) {
                     continue;
                 }
