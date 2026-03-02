@@ -869,6 +869,102 @@ it('compiles blade to markdown instead of symlinking when custom skill source is
     cleanupSkillDirectory($canonicalSkillPath);
 });
 
+it('replaces existing custom skill symlink when canonical skill contains root blade files', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'blade-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+    $targetSkillPath = $absoluteTarget.'/'.$skillName;
+
+    mkdir($canonicalSkillPath.'/references', 0755, true);
+    copy(fixture('skills/blade-skill/SKILL.blade.php'), $canonicalSkillPath.'/SKILL.blade.php');
+    copy(fixture('skills/blade-skill/references/ref.blade.php'), $canonicalSkillPath.'/references/ref.blade.php');
+    mkdir(dirname($targetSkillPath), 0755, true);
+
+    if (! @symlink($canonicalSkillPath, $targetSkillPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        cleanupSkillDirectory($canonicalSkillPath);
+        $this->markTestSkipped('Symlinks not supported in this environment');
+    }
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $canonicalSkillPath,
+        description: 'Blade skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::UPDATED)
+        ->and($targetSkillPath)->toBeDirectory()
+        ->and(is_link($targetSkillPath))->toBeFalse()
+        ->and($targetSkillPath.'/SKILL.md')->toBeFile()
+        ->and($targetSkillPath.'/references/ref.md')->toBeFile()
+        ->and($targetSkillPath.'/SKILL.blade.php')->not->toBeFile()
+        ->and($targetSkillPath.'/references/ref.blade.php')->not->toBeFile();
+
+    $content = file_get_contents($targetSkillPath.'/SKILL.md');
+    expect($content)->toContain('The answer is 2')
+        ->not->toContain('{{ 1 + 1 }}');
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('replaces existing custom skill symlink when canonical skill only contains nested blade files', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'nested-blade-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+    $targetSkillPath = $absoluteTarget.'/'.$skillName;
+
+    mkdir($canonicalSkillPath.'/references', 0755, true);
+    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
+    file_put_contents($canonicalSkillPath.'/references/ref.blade.php', "# Nested reference\n\nThe answer is {{ 2 + 2 }}\n");
+    mkdir(dirname($targetSkillPath), 0755, true);
+
+    if (! @symlink($canonicalSkillPath, $targetSkillPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        cleanupSkillDirectory($canonicalSkillPath);
+        $this->markTestSkipped('Symlinks not supported in this environment');
+    }
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $canonicalSkillPath,
+        description: 'Nested blade skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::UPDATED)
+        ->and($canonicalSkillPath.'/references/ref.blade.php')->toBeFile()
+        ->and($targetSkillPath)->toBeDirectory()
+        ->and(is_link($targetSkillPath))->toBeFalse()
+        ->and($targetSkillPath.'/SKILL.md')->toBeFile()
+        ->and($targetSkillPath.'/references/ref.md')->toBeFile()
+        ->and($targetSkillPath.'/references/ref.blade.php')->not->toBeFile();
+
+    $content = file_get_contents($targetSkillPath.'/references/ref.md');
+    expect($content)->toContain('The answer is 4')
+        ->not->toContain('{{ 2 + 2 }}');
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
 it('removes extra files when updating skill directory', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();

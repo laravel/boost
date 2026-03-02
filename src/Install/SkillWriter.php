@@ -71,8 +71,8 @@ class SkillWriter
         if (! $this->ensureDirectoryExists(dirname($targetPath))) {
             return self::FAILED;
         }
-        
-        if ($this->directoryContainsBladeFiles($canonicalPath) && ! $this->pathsMatch($canonicalPath, $targetPath)) {
+
+        if ($this->directoryContainsBladeFiles($canonicalPath)) {
             if (! $this->copyDirectory($canonicalPath, $targetPath)) {
                 return self::FAILED;
             }
@@ -311,9 +311,17 @@ class SkillWriter
             return false;
         }
 
-        $matches = glob($path.DIRECTORY_SEPARATOR.'*.blade.php');
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)
+        );
 
-        return $matches !== false && $matches !== [];
+        foreach ($files as $file) {
+            if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function isValidSkillName(string $name): bool
