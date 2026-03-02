@@ -71,9 +71,7 @@ class SkillWriter
         if (! $this->ensureDirectoryExists(dirname($targetPath))) {
             return self::FAILED;
         }
-
-        // When the canonical directory contains Blade files that need compilation,
-        // copy (with rendering) instead of symlinking raw templates
+        
         if ($this->directoryContainsBladeFiles($canonicalPath) && ! $this->pathsMatch($canonicalPath, $targetPath)) {
             if (! $this->copyDirectory($canonicalPath, $targetPath)) {
                 return self::FAILED;
