@@ -355,7 +355,6 @@ class AddSkillCommand extends Command
             $rows[] = $row;
         }
 
-        $this->newLine();
         note('Security Audit');
         table($headers, $rows);
     }
