@@ -24,13 +24,13 @@ test('isActive returns false when running in devcontainer without LARAVEL_SAIL',
     expect($sail->isActive())->toBeFalse();
 });
 
-test('isActive returns true when LARAVEL_SAIL is set even inside a devcontainer', function (): void {
+test('isActive returns false when LARAVEL_SAIL is set inside a devcontainer', function (): void {
     putenv('LARAVEL_SAIL=1');
 
     $sail = Mockery::mock(Sail::class)->makePartial();
     $sail->shouldReceive('isRunningInDevcontainer')->andReturn(true);
 
-    expect($sail->isActive())->toBeTrue();
+    expect($sail->isActive())->toBeFalse();
 
     putenv('LARAVEL_SAIL=');
 });
@@ -43,4 +43,18 @@ test('isActive returns false when not sail user and no env var and not in contai
 
     // get_current_user() won't return 'sail' in the test environment
     expect($sail->isActive())->toBeFalse();
+});
+
+test('isRunningInDevcontainer returns true when REMOTE_CONTAINERS is true', function (): void {
+    putenv('REMOTE_CONTAINERS=true');
+
+    expect((new Sail)->isRunningInDevcontainer())->toBeTrue();
+
+    putenv('REMOTE_CONTAINERS=');
+});
+
+test('isRunningInDevcontainer returns false when REMOTE_CONTAINERS is not set', function (): void {
+    putenv('REMOTE_CONTAINERS=');
+
+    expect((new Sail)->isRunningInDevcontainer())->toBeFalse();
 });
