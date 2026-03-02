@@ -4,8 +4,22 @@ declare(strict_types=1);
 
 use Laravel\Boost\Skills\Remote\AuditResult;
 
+it('returns correct risk weight', function (string $risk, int $expectedWeight): void {
+    $result = new AuditResult(partner: 'ath', risk: $risk);
+
+    expect($result->riskWeight())->toBe($expectedWeight);
+})->with([
+    ['critical', 5],
+    ['high', 4],
+    ['medium', 3],
+    ['low', 2],
+    ['safe', 1],
+    ['unknown', 0],
+    ['something-else', 0],
+]);
+
 it('returns correct risk label', function (string $risk, string $expectedLabel): void {
-    $result = new AuditResult(partner: 'Ath', risk: $risk);
+    $result = new AuditResult(partner: 'ath', risk: $risk);
 
     expect($result->riskLabel())->toBe($expectedLabel);
 })->with([
@@ -19,7 +33,7 @@ it('returns correct risk label', function (string $risk, string $expectedLabel):
 ]);
 
 it('returns correct risk color', function (string $risk, string $expectedColor): void {
-    $result = new AuditResult(partner: 'Ath', risk: $risk);
+    $result = new AuditResult(partner: 'ath', risk: $risk);
 
     expect($result->riskColor())->toBe($expectedColor);
 })->with([
@@ -33,7 +47,7 @@ it('returns correct risk color', function (string $risk, string $expectedColor):
 
 it('stores optional alerts and analyzedAt', function (): void {
     $result = new AuditResult(
-        partner: 'Socket',
+        partner: 'socket',
         risk: 'low',
         alerts: 5,
         analyzedAt: '2025-01-01T00:00:00Z',
@@ -44,7 +58,7 @@ it('stores optional alerts and analyzedAt', function (): void {
 });
 
 it('defaults optional fields to null', function (): void {
-    $result = new AuditResult(partner: 'Ath', risk: 'safe');
+    $result = new AuditResult(partner: 'ath', risk: 'safe');
 
     expect($result->alerts)->toBeNull()
         ->and($result->analyzedAt)->toBeNull();

@@ -15,6 +15,18 @@ class AuditResult
         //
     }
 
+    public function riskWeight(): int
+    {
+        return match ($this->risk) {
+            'critical' => 5,
+            'high' => 4,
+            'medium' => 3,
+            'low' => 2,
+            'safe' => 1,
+            default => 0,
+        };
+    }
+
     public function riskLabel(): string
     {
         return match ($this->risk) {

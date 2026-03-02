@@ -164,16 +164,16 @@ class AddSkillCommand extends Command
             return self::SUCCESS;
         }
 
+        if (! $this->runAuditBeforeInstall($selectedSkills)) {
+            return self::SUCCESS;
+        }
+
         $results = $this->downloadSkills($selectedSkills);
 
         if ($results['installedNames'] !== []) {
             $this->info('Skills installed:');
 
             grid($results['installedNames']);
-
-            if (! $this->option('skip-audit')) {
-                $this->runAudit($results['installedNames']);
-            }
 
             $this->runBoostUpdate();
             $this->showOutro();
@@ -282,10 +282,16 @@ class AddSkillCommand extends Command
     }
 
     /**
-     * @param  array<int, string>  $skillNames
+     * @param  Collection<string, RemoteSkill>  $selectedSkills
      */
-    protected function runAudit(array $skillNames): void
+    protected function runAuditBeforeInstall(Collection $selectedSkills): bool
     {
+        if ($this->option('skip-audit')) {
+            return true;
+        }
+
+        $skillNames = $selectedSkills->map(fn (RemoteSkill $skill): string => $skill->name)->values()->all();
+
         /** @var array<string, array<int, AuditResult>> $auditResults */
         $auditResults = spin(
             callback: fn (): array => (new SkillAuditor)->audit(
@@ -295,34 +301,95 @@ class AddSkillCommand extends Command
             message: 'Running security audit...',
         );
 
-        $this->displayAuditResults($auditResults);
+        if (! $this->hasRiskySkills($auditResults)) {
+            return true;
+        }
+
+        $this->displayAuditResults($auditResults, $skillNames);
+
+        if (! stream_isatty(STDIN)) {
+            return true;
+        }
+
+        return confirm('Do you want to install these skills?');
+    }
+
+    /**
+     * @param  array<string, array<int, AuditResult>>  $auditResults
+     * @param  array<int, string>  $skillNames
+     */
+    protected function displayAuditResults(array $auditResults, array $skillNames): void
+    {
+        $partnerKeys = collect($auditResults)
+            ->flatMap(fn (array $results): array => array_map(fn (AuditResult $r): string => $r->partner, $results))
+            ->unique()
+            ->values()
+            ->all();
+
+        $headers = array_merge(['Skill'], array_map(ucfirst(...), $partnerKeys), ['Risk']);
+
+        $rows = [];
+
+        foreach ($skillNames as $skillName) {
+            $partnerResults = $auditResults[$skillName] ?? [];
+            $partnerMap = [];
+
+            foreach ($partnerResults as $result) {
+                $partnerMap[$result->partner] = $result;
+            }
+
+            $worstResult = $this->overallRisk($partnerResults);
+
+            $row = [$skillName];
+
+            foreach ($partnerKeys as $partnerKey) {
+                $row[] = isset($partnerMap[$partnerKey])
+                    ? $this->colorizeRisk($partnerMap[$partnerKey])
+                    : '—';
+            }
+
+            $row[] = $worstResult instanceof AuditResult
+                ? $this->colorizeRisk($worstResult)
+                : '—';
+
+            $rows[] = $row;
+        }
+
+        $this->newLine();
+        note('Security Audit');
+        table($headers, $rows);
     }
 
     /**
      * @param  array<string, array<int, AuditResult>>  $auditResults
      */
-    protected function displayAuditResults(array $auditResults): void
+    protected function hasRiskySkills(array $auditResults): bool
     {
-        if ($auditResults === []) {
-            return;
-        }
-
-        $rows = [];
-
-        foreach ($auditResults as $skill => $partnerResults) {
+        foreach ($auditResults as $partnerResults) {
             foreach ($partnerResults as $result) {
-                $rows[] = [
-                    $skill,
-                    $result->partner,
-                    $this->colorizeRisk($result),
-                    $result->alerts !== null ? (string) $result->alerts : '—',
-                ];
+                if ($result->riskWeight() >= 3) {
+                    return true;
+                }
             }
         }
 
-        $this->newLine();
-        note('Security Audit');
-        table(['Skill', 'Partner', 'Risk', 'Alerts'], $rows);
+        return false;
+    }
+
+    /**
+     * @param  array<int, AuditResult>  $results
+     */
+    protected function overallRisk(array $results): ?AuditResult
+    {
+        $worst = null;
+
+        foreach ($results as $result) {
+            if (! $worst instanceof AuditResult || $result->riskWeight() > $worst->riskWeight()) {
+                $worst = $result;
+            }
+        }
+
+        return $worst;
     }
 
     protected function colorizeRisk(AuditResult $result): string

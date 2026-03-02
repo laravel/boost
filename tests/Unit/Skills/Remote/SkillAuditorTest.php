@@ -27,12 +27,12 @@ it('returns audit results for skills', function (): void {
     expect($results)->toHaveKey('skill-one')
         ->and($results['skill-one'])->toHaveCount(3)
         ->and($results['skill-one'][0])->toBeInstanceOf(AuditResult::class)
-        ->and($results['skill-one'][0]->partner)->toBe('Ath')
+        ->and($results['skill-one'][0]->partner)->toBe('ath')
         ->and($results['skill-one'][0]->risk)->toBe('safe')
-        ->and($results['skill-one'][1]->partner)->toBe('Socket')
+        ->and($results['skill-one'][1]->partner)->toBe('socket')
         ->and($results['skill-one'][1]->risk)->toBe('low')
         ->and($results['skill-one'][1]->alerts)->toBe(2)
-        ->and($results['skill-one'][2]->partner)->toBe('Snyk')
+        ->and($results['skill-one'][2]->partner)->toBe('snyk')
         ->and($results['skill-one'][2]->risk)->toBe('safe');
 });
 
@@ -116,7 +116,7 @@ it('skips partner entries without risk field', function (): void {
     $results = $auditor->audit('owner/repo', ['skill-one']);
 
     expect($results['skill-one'])->toHaveCount(1)
-        ->and($results['skill-one'][0]->partner)->toBe('Ath');
+        ->and($results['skill-one'][0]->partner)->toBe('ath');
 });
 
 it('skips non-array partner data', function (): void {
