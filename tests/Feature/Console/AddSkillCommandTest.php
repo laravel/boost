@@ -261,6 +261,139 @@ it('shows available skill count when listing', function (): void {
         ->assertSuccessful();
 });
 
+it('displays audit results after installing skills', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
+            ---
+            name: skill-one
+            description: First skill
+            ---
+            # SKILL Content
+            YAML),
+        'add-skill.vercel.sh/audit*' => Http::response([
+            'skill-one' => [
+                'ath' => ['risk' => 'safe', 'analyzedAt' => '2025-01-01T00:00:00Z'],
+                'socket' => ['risk' => 'low', 'alerts' => 2, 'analyzedAt' => '2025-01-01T00:00:00Z'],
+                'snyk' => ['risk' => 'safe', 'analyzedAt' => '2025-01-01T00:00:00Z'],
+            ],
+        ]),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo',
+        '--all' => true,
+    ])
+        ->expectsOutputToContain('Security Audit')
+        ->assertSuccessful();
+
+    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'add-skill.vercel.sh/audit'));
+});
+
+it('skips audit when --skip-audit flag is used', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
+            ---
+            name: skill-one
+            description: First skill
+            ---
+            # SKILL Content
+            YAML),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo',
+        '--all' => true,
+        '--skip-audit' => true,
+    ])
+        ->expectsOutputToContain('Skills installed')
+        ->assertSuccessful();
+
+    Http::assertNotSent(fn ($request): bool => str_contains((string) $request->url(), 'add-skill.vercel.sh'));
+});
+
+it('succeeds when audit api fails', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
+            ---
+            name: skill-one
+            description: First skill
+            ---
+            # SKILL Content
+            YAML),
+        'add-skill.vercel.sh/audit*' => Http::response(null, 500),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo',
+        '--all' => true,
+    ])
+        ->expectsOutputToContain('Skills installed')
+        ->assertSuccessful();
+
+    $this->assertFilenameExists('.ai/skills/skill-one/SKILL.md');
+});
+
+it('sends correct source and skills to audit api', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+                ['path' => 'skill-two', 'type' => 'tree', 'sha' => 'jkl'],
+                ['path' => 'skill-two/SKILL.md', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
+            ---
+            name: skill
+            description: A skill
+            ---
+            # Content
+            YAML),
+        'add-skill.vercel.sh/audit*' => Http::response([]),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo',
+        '--all' => true,
+    ])->assertSuccessful();
+
+    Http::assertSent(function ($request): bool {
+        if (! str_contains((string) $request->url(), 'add-skill.vercel.sh/audit')) {
+            return false;
+        }
+
+        return str_contains((string) $request->url(), 'source=owner%2Frepo')
+            && str_contains((string) $request->url(), 'skills=');
+    });
+});
+
 it('displays error when rate limit is exceeded', function (): void {
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response(

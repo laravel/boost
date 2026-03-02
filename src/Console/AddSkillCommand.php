@@ -11,9 +11,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Skills\Remote\AuditResult;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
+use Laravel\Boost\Skills\Remote\SkillAuditor;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 
@@ -22,6 +24,7 @@ use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\spin;
+use function Laravel\Prompts\table;
 use function Laravel\Prompts\text;
 
 class AddSkillCommand extends Command
@@ -34,7 +37,8 @@ class AddSkillCommand extends Command
         {--list : List available skills}
         {--all : Install all skills}
         {--skill=* : Specific skills to install}
-        {--force : Overwrite existing skills}';
+        {--force : Overwrite existing skills}
+        {--skip-audit : Skip security audit}';
 
     /** @var string */
     protected $description = 'Add skills from a remote GitHub repository';
@@ -167,6 +171,10 @@ class AddSkillCommand extends Command
 
             grid($results['installedNames']);
 
+            if (! $this->option('skip-audit')) {
+                $this->runAudit($results['installedNames']);
+            }
+
             $this->runBoostUpdate();
             $this->showOutro();
         }
@@ -271,6 +279,64 @@ class AddSkillCommand extends Command
         }
 
         return $results;
+    }
+
+    /**
+     * @param  array<int, string>  $skillNames
+     */
+    protected function runAudit(array $skillNames): void
+    {
+        /** @var array<string, array<int, AuditResult>> $auditResults */
+        $auditResults = spin(
+            callback: fn (): array => (new SkillAuditor)->audit(
+                $this->repository->fullName(),
+                $skillNames,
+            ),
+            message: 'Running security audit...',
+        );
+
+        $this->displayAuditResults($auditResults);
+    }
+
+    /**
+     * @param  array<string, array<int, AuditResult>>  $auditResults
+     */
+    protected function displayAuditResults(array $auditResults): void
+    {
+        if ($auditResults === []) {
+            return;
+        }
+
+        $rows = [];
+
+        foreach ($auditResults as $skill => $partnerResults) {
+            foreach ($partnerResults as $result) {
+                $rows[] = [
+                    $skill,
+                    $result->partner,
+                    $this->colorizeRisk($result),
+                    $result->alerts !== null ? (string) $result->alerts : '—',
+                ];
+            }
+        }
+
+        if ($rows === []) {
+            return;
+        }
+
+        $this->newLine();
+        note('Security Audit');
+        table(['Skill', 'Partner', 'Risk', 'Alerts'], $rows);
+    }
+
+    protected function colorizeRisk(AuditResult $result): string
+    {
+        return match ($result->riskColor()) {
+            'red' => $this->red($result->riskLabel()),
+            'yellow' => $this->yellow($result->riskLabel()),
+            'green' => $this->green($result->riskLabel()),
+            default => $this->dim($result->riskLabel()),
+        };
     }
 
     protected function runBoostUpdate(): void
