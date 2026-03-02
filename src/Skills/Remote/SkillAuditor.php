@@ -56,22 +56,23 @@ class SkillAuditor
                 continue;
             }
 
-            $results[$skill] = [];
+            $skillResults = [];
 
             foreach ($partners as $partner => $audit) {
-                if (! is_array($audit)) {
+                if (! is_array($audit) || ! isset($audit['risk'])) {
                     continue;
                 }
 
-                if (! isset($audit['risk'])) {
-                    continue;
-                }
-                $results[$skill][] = new AuditResult(
+                $skillResults[] = new AuditResult(
                     partner: ucfirst((string) $partner),
                     risk: (string) $audit['risk'],
                     alerts: isset($audit['alerts']) ? (int) $audit['alerts'] : null,
                     analyzedAt: isset($audit['analyzedAt']) ? (string) $audit['analyzedAt'] : null,
                 );
+            }
+
+            if ($skillResults !== []) {
+                $results[$skill] = $skillResults;
             }
         }
 

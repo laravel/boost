@@ -320,10 +320,6 @@ class AddSkillCommand extends Command
             }
         }
 
-        if ($rows === []) {
-            return;
-        }
-
         $this->newLine();
         note('Security Audit');
         table(['Skill', 'Partner', 'Risk', 'Alerts'], $rows);
