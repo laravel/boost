@@ -71,7 +71,7 @@ class SkillWriter
         if (! $this->ensureDirectoryExists(dirname($targetPath))) {
             return self::FAILED;
         }
-        
+
         if ($this->directoryContainsBladeFiles($canonicalPath) && ! $this->pathsMatch($canonicalPath, $targetPath)) {
             if (! $this->copyDirectory($canonicalPath, $targetPath)) {
                 return self::FAILED;
