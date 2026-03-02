@@ -43,7 +43,6 @@ class Sail
 
     public function isActive(): bool
     {
-        // DevContiner doesn't need to be setup as sail environemnt
         if ($this->isRunningInDevcontainer()) {
             return false;
         }
