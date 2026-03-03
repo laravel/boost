@@ -1,6 +1,27 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.2.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.2.2...main)
+
+## [v2.2.2](https://github.com/laravel/boost/compare/v2.2.1...v2.2.2) - 2026-03-03
+
+### What's Changed
+
+* Fix SearchDocs crashing when MCP client passes array params as JSON strings by [@digitall-it](https://github.com/digitall-it) in https://github.com/laravel/boost/pull/604
+* Fix skill discovery for repos with non-main default branches by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/610
+* Fix crash in GuidelineAssist when app/ directory does not exist by [@mforcer](https://github.com/mforcer) in https://github.com/laravel/boost/pull/617
+* Fix Sail is incorrectly detected as active inside devcontainers by [@Taimst](https://github.com/Taimst) in https://github.com/laravel/boost/pull/614
+* Compile custom Blade skills to markdown instead of symlinking raw templates by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/611
+* Widen laravel/mcp version constraint to support v0.6.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/623
+* Update Junie agent to use configurable mcp path by [@cswgr](https://github.com/cswgr) in https://github.com/laravel/boost/pull/626
+* Support SKILL.blade.php in GitHubSkillProvider discovery by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/627
+
+### New Contributors
+
+* [@mforcer](https://github.com/mforcer) made their first contribution in https://github.com/laravel/boost/pull/617
+* [@Taimst](https://github.com/Taimst) made their first contribution in https://github.com/laravel/boost/pull/614
+* [@cswgr](https://github.com/cswgr) made their first contribution in https://github.com/laravel/boost/pull/626
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.1...v2.2.2
 
 ## [v2.2.1](https://github.com/laravel/boost/compare/v2.2.0...v2.2.1) - 2026-02-25
 
@@ -21,11 +42,13 @@ If you have custom overrides in:
 .ai/guidelines/inertia-laravel/2/core.blade.php
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 ```
@@ -52,12 +75,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
