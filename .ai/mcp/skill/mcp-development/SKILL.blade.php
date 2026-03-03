@@ -23,12 +23,13 @@ search-docs(['mcp tools', 'mcp resources', 'mcp validation'])
 
 ### Artisan Commands
 
-@boostsnippet("Create MCP Primitives", "bash")
+Create MCP Primitives"
+```bash
 {{ $assist->artisanCommand('make:mcp-tool ToolName') }}
 {{ $assist->artisanCommand('make:mcp-resource ResourceName') }}
 {{ $assist->artisanCommand('make:mcp-prompt PromptName') }}
 {{ $assist->artisanCommand('make:mcp-server ServerName') }}
-@endboostsnippet
+```
 
 ### Basic Tool Implementation
 
@@ -108,10 +109,11 @@ $response->assertSentNotification('event/type', ['data' => 'value']);
 
 Test interactively using the inspector:
 
-@boostsnippet("Launch MCP Inspector", "bash")
+<!--Launch MCP Inspector-->
+```bash
 {{ $assist->artisanCommand('mcp:inspector mcp/my-server') }}  # Web server
 {{ $assist->artisanCommand('mcp:inspector my-server') }}      # Local server
-@endboostsnippet
+```
 
 ## Available Features
 
