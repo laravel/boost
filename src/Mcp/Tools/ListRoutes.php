@@ -38,6 +38,7 @@ class ListRoutes extends Tool
             'except_path' => $schema->string()->description('Do not display the routes matching the given path pattern.'),
             'except_vendor' => $schema->boolean()->description('Do not display routes defined by vendor packages.'),
             'only_vendor' => $schema->boolean()->description('Only display routes defined by vendor packages.'),
+            'json' => $schema->boolean()->description('Output as JSON for full untruncated details.'),
         ];
     }
 
@@ -55,6 +56,7 @@ class ListRoutes extends Tool
             'except_path' => 'except-path', // Convert underscore back to hyphen
             'except_vendor' => 'except-vendor',
             'only_vendor' => 'only-vendor',
+            'json'=>'json'
         ];
 
         $options = [
