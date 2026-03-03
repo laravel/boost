@@ -15,19 +15,8 @@ class GitHubSkillProvider
 {
     protected ?string $defaultBranch = null;
 
-    protected string $resolvedPath = '';
-
     /** @var array<string, mixed>|null */
     protected ?array $cachedTree = null;
-
-    /** @var array<int, string> */
-    protected array $commonSkillPaths = [
-        'skills',
-        '.ai/skills',
-        '.cursor/skills',
-        '.claude/skills',
-        'resources/boost/skills',
-    ];
 
     public function __construct(protected GitHubRepository $repository)
     {
@@ -45,21 +34,28 @@ class GitHubSkillProvider
             return collect();
         }
 
-        $this->resolvedPath = $this->resolveSkillsPath();
+        $basePath = $this->repository->path;
 
-        $directories = $this->findSkillDirectoriesInTree($tree['tree'], $this->resolvedPath);
+        $skillMarkers = collect($tree['tree'])
+            ->filter(fn (array $item): bool => $item['type'] === 'blob' && in_array(basename((string) $item['path']), ['SKILL.md', 'SKILL.blade.php'], true));
 
-        if ($directories->isEmpty()) {
-            return collect();
+        if ($basePath !== '') {
+            $prefix = $basePath.'/';
+
+            $skillMarkers = $skillMarkers->filter(function (array $item) use ($prefix): bool {
+                $skillDir = dirname((string) $item['path']);
+
+                return str_starts_with($skillDir, $prefix) && ! str_contains(substr($skillDir, strlen($prefix)), '/');
+            });
         }
 
-        $validSkills = $this->validateSkillDirectories($directories, $tree['tree']);
-
-        return $validSkills->map(fn (array $item): RemoteSkill => new RemoteSkill(
-            name: $item['name'],
-            repo: $this->repository->fullName(),
-            path: $item['path'],
-        ))->keyBy(fn (RemoteSkill $skill): string => $skill->name);
+        return $skillMarkers
+            ->map(fn (array $item): RemoteSkill => new RemoteSkill(
+                name: basename(dirname((string) $item['path'])),
+                repo: $this->repository->fullName(),
+                path: dirname((string) $item['path']),
+            ))
+            ->keyBy(fn (RemoteSkill $skill): string => $skill->name);
     }
 
     public function downloadSkill(RemoteSkill $skill, string $targetPath): bool
@@ -157,136 +153,6 @@ class GitHubSkillProvider
         $this->cachedTree = $tree;
 
         return $tree;
-    }
-
-    protected function resolveSkillsPath(): string
-    {
-        if ($this->repository->path !== '') {
-            return $this->repository->path;
-        }
-
-        $tree = $this->fetchRepositoryTree();
-
-        if ($tree === null) {
-            return '';
-        }
-
-        $treeItems = collect($tree['tree']);
-
-        $rootDirs = $treeItems
-            ->filter(fn (array $item): bool => $this->isDirectChildOf($item, '', 'tree'))
-            ->pluck('path')
-            ->toArray();
-
-        if ($this->hasValidSkillsAtPath($treeItems, '', $rootDirs)) {
-            return '';
-        }
-
-        foreach ($this->commonSkillPaths as $commonPath) {
-            $topLevel = explode('/', $commonPath)[0];
-
-            if (! in_array($topLevel, $rootDirs, true)) {
-                continue;
-            }
-
-            $pathExists = $treeItems->contains(
-                fn (array $item): bool => $item['path'] === $commonPath && $item['type'] === 'tree'
-            );
-
-            if (! $pathExists) {
-                continue;
-            }
-
-            $dirsAtPath = $treeItems
-                ->filter(fn (array $item): bool => $this->isDirectChildOf($item, $commonPath, 'tree'))
-                ->map(fn (array $item): string => basename((string) $item['path']))
-                ->toArray();
-
-            if ($this->hasValidSkillsAtPath($treeItems, $commonPath, $dirsAtPath)) {
-                return $commonPath;
-            }
-        }
-
-        return '';
-    }
-
-    /**
-     * @param  Collection<int, array<string, mixed>>  $treeItems
-     * @param  array<int, string>  $dirNames
-     */
-    protected function hasValidSkillsAtPath(Collection $treeItems, string $basePath, array $dirNames): bool
-    {
-        $prefix = $basePath === '' ? '' : $basePath.'/';
-
-        return collect($dirNames)->contains(
-            fn (string $dirName): bool => $this->treeContainsBlob($treeItems, $prefix.$dirName.'/SKILL.md')
-        );
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $tree
-     * @return Collection<int, array{name: string, path: string, type: string}>
-     */
-    protected function findSkillDirectoriesInTree(array $tree, string $basePath): Collection
-    {
-        return collect($tree)
-            ->filter(fn (array $item): bool => $this->isDirectChildOf($item, $basePath, 'tree'))
-            ->map(fn (array $item): array => [
-                'name' => basename((string) $item['path']),
-                'path' => $item['path'],
-                'type' => 'dir',
-            ])
-            ->values();
-    }
-
-    /**
-     * @param  array<string, mixed>  $item
-     */
-    protected function isDirectChildOf(array $item, string $basePath, string $type): bool
-    {
-        if ($item['type'] !== $type) {
-            return false;
-        }
-
-        $path = (string) $item['path'];
-
-        if ($basePath === '') {
-            return ! str_contains($path, '/');
-        }
-
-        $expectedPrefix = $basePath.'/';
-
-        if (! str_starts_with($path, $expectedPrefix)) {
-            return false;
-        }
-
-        $remainder = substr($path, strlen($expectedPrefix));
-
-        return ! str_contains($remainder, '/');
-    }
-
-    /**
-     * @param  Collection<int, array{name: string, path: string, type: string}>  $directories
-     * @param  array<int, array<string, mixed>>  $tree
-     * @return Collection<int, array{name: string, path: string, type: string}>
-     */
-    protected function validateSkillDirectories(Collection $directories, array $tree): Collection
-    {
-        $treeCollection = collect($tree);
-
-        return $directories->filter(
-            fn (array $dir): bool => $this->treeContainsBlob($treeCollection, $dir['path'].'/SKILL.md')
-        );
-    }
-
-    /**
-     * @param  Collection<int, array<string, mixed>>  $treeItems
-     */
-    protected function treeContainsBlob(Collection $treeItems, string $path): bool
-    {
-        return $treeItems->contains(
-            fn (array $item): bool => $item['path'] === $path && $item['type'] === 'blob'
-        );
     }
 
     /**
