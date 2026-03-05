@@ -172,7 +172,7 @@ Context::add('tenant_id', $request->header('X-Tenant-ID'));
 $tenantId = Context::get('tenant_id');
 ```
 
-Context data automatically propagates to queued jobs and is included in log entries. Use `Context::addHidden()` for sensitive data that should appear in logs but not be exposed to jobs.
+Context data automatically propagates to queued jobs and is included in log entries. Use `Context::addHidden()` for sensitive data that should be available in queued jobs but excluded from log context. If data must not leave the current process, do not store it in `Context`.
 
 ## Use `Concurrency::run()` for Parallel Execution
 

@@ -14,7 +14,7 @@ Incorrect:
 ```php
 class User extends Model
 {
-    // No $fillable or $guarded — all fields are assignable
+    protected $guarded = []; // All fields are mass assignable
 }
 ```
 

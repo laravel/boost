@@ -220,7 +220,7 @@ These rules teach patterns and principles. For version-specific method signature
 - Add indexes in the migration, not as an afterthought
 - Add `->index()` for FK columns (Postgres needs explicit indexes)
 - Mirror column defaults in model `$attributes`
-- Leave `down()` empty to prevent data loss
+- Write reversible `down()` methods by default; use forward fix migrations for intentionally irreversible changes
 - One concern per migration, never mix DDL and DML
 
 ### 19. Collections (MEDIUM)

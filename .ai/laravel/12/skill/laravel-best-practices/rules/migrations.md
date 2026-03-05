@@ -103,16 +103,20 @@ protected $attributes = [
 ];
 ```
 
-## Leave `down()` Empty
+## Write Reversible `down()` Methods by Default
 
-Empty `down()` prevents accidental data loss during rollbacks. A new forward migration is always safer.
+Implement `down()` for schema changes that can be safely reversed so `migrate:rollback` works in CI and failed deployments.
 
 ```php
 public function down(): void
 {
-    //
+    Schema::table('posts', function (Blueprint $table) {
+        $table->dropColumn('slug');
+    });
 }
 ```
+
+For intentionally irreversible migrations (e.g., destructive data backfills), leave a clear comment and require a forward fix migration instead of pretending rollback is supported.
 
 ## Keep Migrations Focused
 
