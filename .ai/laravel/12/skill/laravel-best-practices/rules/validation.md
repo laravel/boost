@@ -29,18 +29,16 @@ public function store(StorePostRequest $request)
 }
 ```
 
-## Use Array Notation for Rules
+## Array vs String Notation for Rules
 
-Array syntax is more readable and works with Rule objects.
+Array syntax is more readable and composes cleanly with `Rule::` objects. Prefer it in new code, but check existing Form Requests first and match whatever notation the project already uses.
 
-Incorrect:
 ```php
-'email' => 'required|email|unique:users',
-```
-
-Correct:
-```php
+// Preferred for new code
 'email' => ['required', 'email', Rule::unique('users')],
+
+// Follow existing convention if the project uses string notation
+'email' => 'required|email|unique:users',
 ```
 
 ## Always Use `validated()`
@@ -55,25 +53,6 @@ Post::create($request->all());
 Correct:
 ```php
 Post::create($request->validated());
-```
-
-## Create Invokable Rule Classes
-
-For complex reusable validation logic, create dedicated Rule classes.
-
-```php
-class Uppercase implements ValidationRule
-{
-    public function validate(string $attribute, mixed $value, Closure $fail): void
-    {
-        if (strtoupper($value) !== $value) {
-            $fail('The :attribute must be uppercase.');
-        }
-    }
-}
-
-// Usage
-'code' => ['required', 'string', new Uppercase],
 ```
 
 ## Use `Rule::when()` for Conditional Validation

@@ -12,6 +12,19 @@ metadata:
 
 This skill complements your Boost foundation guidelines. Where Boost guidelines provide broad conventions (use Form Requests, prefer eager loading, etc.), these rules go deeper with code examples, anti-patterns, and nuanced patterns. When both apply, follow the more specific guidance here.
 
+## Consistency First — Most Important Rule
+
+Before applying any pattern from this skill, **check what the application already does**.
+
+Laravel offers multiple valid ways to accomplish most things. The best choice is almost always the one that matches what the codebase already uses — even if a different pattern would be theoretically "better". Inconsistency is a greater problem than a suboptimal pattern.
+
+**How to apply this:**
+1. Look at sibling files, related controllers, existing models, or nearby tests for the established pattern
+2. If a pattern already exists in the app, follow it — do not introduce a second way of doing the same thing
+3. Only fall back to the rules in this skill when no pattern exists yet in the codebase
+
+These rules are defaults and fallbacks, not overrides of what's already there.
+
 ## Important: Use `search-docs` for Syntax
 
 These rules teach patterns and principles. For version-specific method signatures and usage examples, call `search-docs` before writing code. The rules tell you *what* exists; the docs tell you *how* to use it in your version.
@@ -95,7 +108,6 @@ These rules teach patterns and principles. For version-specific method signature
 - Use correct relationship types with return type hints
 - Use local scopes for reusable query constraints
 - Apply global scopes sparingly, document their existence
-- Use observers for cross-cutting lifecycle events
 - Define attribute casts in the `casts()` method
 - Always cast date columns, use Carbon instances in templates
 - Use `whereBelongsTo($model)` for cleaner queries
@@ -103,9 +115,8 @@ These rules teach patterns and principles. For version-specific method signature
 ### 6. Validation & Forms (HIGH)
 
 - Use Form Request classes, not inline validation
-- Use `['required', 'email']` not `'required|email'`
+- Prefer array notation `['required', 'email']` for new code; follow existing project convention
 - Always use `$request->validated()`, never `$request->all()`
-- Create invokable Rule classes for complex reusable logic
 - Use `Rule::when()` for conditional validation rules
 - Use `after()` instead of `withValidator()`
 
@@ -181,7 +192,7 @@ These rules teach patterns and principles. For version-specific method signature
 
 ### 15. Error Handling (MEDIUM)
 
-- Put `report()` and `render()` on the exception class itself
+- Co-locate `report()`/`render()` on exception classes or centralize in `bootstrap/app.php` — follow existing project pattern
 - Use `ShouldntReport` for exceptions that should never log
 - Throttle high-volume exceptions to protect log sinks
 - Enable `dontReportDuplicates()` for multi-catch scenarios
@@ -218,7 +229,6 @@ These rules teach patterns and principles. For version-specific method signature
 - Use `constrained()` for foreign keys
 - Never modify migrations that have run in production
 - Add indexes in the migration, not as an afterthought
-- Add `->index()` for FK columns (Postgres needs explicit indexes)
 - Mirror column defaults in model `$attributes`
 - Write reversible `down()` methods by default; use forward fix migrations for intentionally irreversible changes
 - One concern per migration, never mix DDL and DML

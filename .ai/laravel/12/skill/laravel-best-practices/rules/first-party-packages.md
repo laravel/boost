@@ -1,12 +1,14 @@
 ---
-title: Prefer First-Party Packages
+title: Package Selection
 impact: MEDIUM
 tags: architecture, packages, laravel
 ---
 
-# Prefer First-Party Packages
+# Package Selection
 
-Official Laravel packages integrate more tightly and follow the same conventions. Prefer them before reaching for third-party alternatives.
+When adding a package, prefer official Laravel packages first — they integrate more tightly and follow the same conventions. When no first-party option exists, reach for well-maintained third-party packages from trusted ecosystems such as [Spatie](https://spatie.be/open-source), [The PHP League](https://thephpleague.com/), and other reputable maintainers.
+
+Always use the latest stable version of a package and keep dependencies up to date. Outdated packages accumulate security vulnerabilities and drift from the framework's conventions.
 
 ## Authentication & Authorization
 

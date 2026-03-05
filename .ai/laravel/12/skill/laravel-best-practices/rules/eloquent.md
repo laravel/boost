@@ -73,37 +73,6 @@ Post::published()->paginate(); // Explicit
 Post::paginate(); // Admin sees all
 ```
 
-## Use Observers for Lifecycle Events
-
-When the same model event logic appears in multiple places, consolidate it into an observer.
-
-Incorrect (event logic scattered in controllers):
-```php
-public function store(StorePostRequest $request): RedirectResponse
-{
-    $post = Post::create($request->validated());
-    $post->update(['slug' => Str::slug($post->title)]);
-    Cache::forget('posts.recent');
-    return redirect()->route('posts.show', $post);
-}
-```
-
-Correct (observer handles cross-cutting events):
-```php
-class PostObserver
-{
-    public function saving(Post $post): void
-    {
-        $post->slug = Str::slug($post->title);
-    }
-
-    public function saved(Post $post): void
-    {
-        Cache::forget('posts.recent');
-    }
-}
-```
-
 ## Define Attribute Casts
 
 Use the `casts()` method (or `$casts` property following project convention) for automatic type conversion.

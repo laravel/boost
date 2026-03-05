@@ -75,20 +75,6 @@ Schema::create('orders', function (Blueprint $table) {
 });
 ```
 
-## Index Foreign Keys Explicitly
-
-MySQL auto-creates indexes for FKs. Postgres does not. Always add `->index()` explicitly.
-
-Incorrect:
-```php
-$table->foreignId('post_id')->constrained();
-```
-
-Correct:
-```php
-$table->foreignId('post_id')->index()->constrained();
-```
-
 ## Mirror Defaults in Model `$attributes`
 
 When a column has a database default, mirror it in the model so new instances have correct values before saving.

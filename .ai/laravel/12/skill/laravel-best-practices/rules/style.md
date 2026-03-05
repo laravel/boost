@@ -24,7 +24,6 @@ tags: conventions, naming, syntax, comments
 | Object | descriptive, singular | `$activeUser` | `$users` |
 | View | kebab-case | `show-filtered.blade.php` | `showFiltered.blade.php` |
 | Config | snake_case | `google_calendar.php` | `googleCalendar.php` |
-| FormRequest | singular | `UpdateUserRequest` | `UpdateUserFormRequest` |
 | Enum | singular | `UserType` | `UserTypes` |
 
 ## Prefer Shorter Readable Syntax

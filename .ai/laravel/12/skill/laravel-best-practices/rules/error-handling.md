@@ -6,9 +6,11 @@ tags: exceptions, error-handling, logging
 
 # Error Handling Best Practices
 
-## Put `report()` and `render()` on the Exception Class
+## Exception Reporting and Rendering
 
-Co-locate exception behavior with the exception itself instead of centralizing everything in `bootstrap/app.php`.
+There are two valid approaches — choose one and apply it consistently across the project.
+
+**Co-location on the exception class** — keeps behavior alongside the exception definition, easier to find:
 
 ```php
 class InvalidOrderException extends Exception
@@ -21,6 +23,19 @@ class InvalidOrderException extends Exception
     }
 }
 ```
+
+**Centralized in `bootstrap/app.php`** — all exception handling in one place, easier to see the full picture:
+
+```php
+->withExceptions(function (Exceptions $exceptions) {
+    $exceptions->report(function (InvalidOrderException $e) { /* ... */ });
+    $exceptions->render(function (InvalidOrderException $e, Request $request) {
+        return response()->view('errors.invalid-order', status: 422);
+    });
+})
+```
+
+Check the existing codebase and follow whichever pattern is already established.
 
 ## Use `ShouldntReport` for Exceptions That Should Never Log
 
