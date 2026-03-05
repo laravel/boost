@@ -4,9 +4,9 @@ impact: HIGH
 tags: validation, form-request, rules
 ---
 
-## Validation & Forms Best Practices
+# Validation & Forms Best Practices
 
-### Use Form Request Classes
+## Use Form Request Classes
 
 Extract validation from controllers into dedicated Form Request classes.
 
@@ -31,7 +31,7 @@ public function store(StorePostRequest $request)
 }
 ```
 
-### Use Array Notation for Rules
+## Use Array Notation for Rules
 
 Array syntax is more readable and works with Rule objects.
 
@@ -47,7 +47,7 @@ Array syntax is more readable and works with Rule objects.
 'email' => ['required', 'email', Rule::unique('users')],
 ```
 
-### Always Use validated()
+## Always Use `validated()`
 
 Get only validated data. Never use `$request->all()` for mass operations.
 
@@ -63,7 +63,7 @@ Post::create($request->all());
 Post::create($request->validated());
 ```
 
-### Create Invokable Rule Classes
+## Create Invokable Rule Classes
 
 For complex reusable validation logic, create dedicated Rule classes.
 
@@ -82,7 +82,7 @@ class Uppercase implements ValidationRule
 'code' => ['required', 'string', new Uppercase],
 ```
 
-### Use Rule::when() for Conditional Validation
+## Use `Rule::when()` for Conditional Validation
 
 ```php
 'company_name' => [
@@ -90,7 +90,7 @@ class Uppercase implements ValidationRule
 ],
 ```
 
-### Use the after() Method for Custom Validation
+## Use the `after()` Method for Custom Validation
 
 Use `after()` instead of `withValidator()` for custom validation logic that depends on multiple fields.
 

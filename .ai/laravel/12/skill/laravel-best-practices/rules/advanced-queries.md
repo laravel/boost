@@ -4,11 +4,11 @@ impact: HIGH
 tags: database, performance, eloquent, subqueries, indexing
 ---
 
-## Advanced Query Patterns
+# Advanced Query Patterns
 
-### Use addSelect() Subqueries for Single Values from Has-Many
+## Use `addSelect()` Subqueries for Single Values from Has-Many
 
-Instead of eager-loading an entire has-many relationship just to get one value (like the latest timestamp), use a correlated subquery via `addSelect()`. This pulls the value directly in the main SQL query — zero extra queries.
+Instead of eager-loading an entire has-many relationship for a single value (like the latest timestamp), use a correlated subquery via `addSelect()`. This pulls the value directly in the main SQL query — zero extra queries.
 
 ```php
 public function scopeWithLastLoginAt($query): void
@@ -22,9 +22,9 @@ public function scopeWithLastLoginAt($query): void
 }
 ```
 
-### Create Dynamic Relationships via Subquery FK
+## Create Dynamic Relationships via Subquery FK
 
-Extend the `addSelect()` pattern to fetch a foreign key via subquery, then define a `belongsTo` relationship on that virtual attribute. This gives you a fully-hydrated related model without loading the entire collection.
+Extend the `addSelect()` pattern to fetch a foreign key via subquery, then define a `belongsTo` relationship on that virtual attribute. This provides a fully-hydrated related model without loading the entire collection.
 
 ```php
 public function lastLogin(): BelongsTo
@@ -43,7 +43,7 @@ public function scopeWithLastLogin($query): void
 }
 ```
 
-### Use Conditional Aggregates Instead of Multiple Count Queries
+## Use Conditional Aggregates Instead of Multiple Count Queries
 
 Replace N separate `count()` queries with a single query using `CASE WHEN` inside `selectRaw()`. Use `toBase()` to skip model hydration when you only need scalar values.
 
@@ -55,7 +55,7 @@ $statuses = Feature::toBase()
     ->first();
 ```
 
-### Use setRelation() to Prevent Circular N+1
+## Use `setRelation()` to Prevent Circular N+1
 
 When a parent model is eager-loaded with its children, and the view also needs `$child->parent`, use `setRelation()` to inject the already-loaded parent rather than letting Eloquent fire N additional queries.
 
@@ -64,7 +64,7 @@ $feature->load('comments.user');
 $feature->comments->each->setRelation('feature', $feature);
 ```
 
-### Prefer whereIn + pluck() Over whereHas
+## Prefer `whereIn` + `pluck()` Over `whereHas`
 
 `whereHas()` emits a correlated `EXISTS` subquery that re-executes per row. A separate `pluck()` query followed by `whereIn()` lets the database use an index lookup instead.
 
@@ -80,11 +80,11 @@ $query->whereHas('company', fn ($q) => $q->where('name', 'like', $term));
 $query->whereIn('company_id', Company::where('name', 'like', $term)->pluck('id'));
 ```
 
-### Sometimes Two Simple Queries Beat One Complex Query
+## Sometimes Two Simple Queries Beat One Complex Query
 
 Running a small, targeted secondary query and passing its results via `whereIn` is often faster than a single complex correlated subquery or join. The additional round-trip is worthwhile when the secondary query is highly selective and uses its own index.
 
-### Use Compound Indexes Matching orderBy Column Order
+## Use Compound Indexes Matching `orderBy` Column Order
 
 When ordering by multiple columns, create a single compound index in the same column order as the `ORDER BY` clause. Individual single-column indexes cannot combine for multi-column sorts — the database will filesort without a compound index.
 
@@ -96,7 +96,7 @@ $table->index(['last_name', 'first_name']);
 User::query()->orderBy('last_name')->orderBy('first_name')->paginate();
 ```
 
-### Use Correlated Subqueries for Has-Many Ordering
+## Use Correlated Subqueries for Has-Many Ordering
 
 When sorting by a value from a has-many relationship, avoid joins (they duplicate rows). Use a correlated subquery inside `orderBy()` instead, paired with an `addSelect` scope for eager loading.
 

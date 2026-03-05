@@ -4,9 +4,9 @@ impact: MEDIUM
 tags: collections, lazy-collections, eloquent
 ---
 
-## Collection Best Practices
+# Collection Best Practices
 
-### Use Higher-Order Messages for Simple Operations
+## Use Higher-Order Messages for Simple Operations
 
 **Incorrect:**
 
@@ -20,7 +20,7 @@ $users->each(function (User $user) {
 
 Works with `each`, `map`, `sum`, `filter`, `reject`, `contains`, etc.
 
-### Choose cursor() vs lazy() Correctly
+## Choose `cursor()` vs `lazy()` Correctly
 
 - `cursor()` — one model in memory, but cannot eager-load relationships (N+1 risk).
 - `lazy()` — chunked pagination returning a flat LazyCollection, supports eager loading.
@@ -29,11 +29,11 @@ Works with `each`, `map`, `sum`, `filter`, `reject`, `contains`, etc.
 
 **Correct:** `User::with('roles')->lazy()` for relationship access; `User::cursor()` for attribute-only work.
 
-### Use lazyById() When Updating Records While Iterating
+## Use `lazyById()` When Updating Records While Iterating
 
 `lazy()` uses offset pagination — updating records during iteration can skip or double-process. `lazyById()` uses `id > last_id`, safe against mutation.
 
-### Use toQuery() for Bulk Operations on Collections
+## Use `toQuery()` for Bulk Operations on Collections
 
 Avoids manual `whereIn` construction.
 
@@ -41,7 +41,7 @@ Avoids manual `whereIn` construction.
 
 **Correct:** `$users->toQuery()->update([...]);`
 
-### Use #[CollectedBy] for Custom Collection Classes
+## Use `#[CollectedBy]` for Custom Collection Classes
 
 More declarative than overriding `newCollection()`.
 

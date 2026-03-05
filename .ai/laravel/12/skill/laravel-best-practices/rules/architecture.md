@@ -4,9 +4,9 @@ impact: MEDIUM
 tags: architecture, actions, dependency-injection, interfaces, packages, concurrency, storage
 ---
 
-## Architecture Best Practices
+# Architecture Best Practices
 
-### Single-Purpose Action Classes
+## Single-Purpose Action Classes
 
 Extract discrete business operations into invokable Action classes.
 
@@ -27,7 +27,7 @@ class CreateOrderAction
 }
 ```
 
-### Use Dependency Injection
+## Use Dependency Injection
 
 Always use constructor injection. Avoid `app()` or `resolve()` inside classes.
 
@@ -48,7 +48,7 @@ public function __construct(
 $this->user->create($data);
 ```
 
-### Code to Interfaces
+## Code to Interfaces
 
 Depend on contracts at system boundaries (payment gateways, notification channels, external APIs) for testability and swappability.
 
@@ -81,7 +81,7 @@ Bind in a service provider:
 $this->app->bind(PaymentGateway::class, StripeGateway::class);
 ```
 
-### Default Sort by Descending
+## Default Sort by Descending
 
 When no explicit order is specified, sort by `id` or `created_at` descending. Explicit ordering prevents cross-database inconsistencies between MySQL and Postgres.
 
@@ -97,7 +97,7 @@ $posts = Post::paginate();
 $posts = Post::latest()->paginate();
 ```
 
-### Use Atomic Locks for Race Conditions
+## Use Atomic Locks for Race Conditions
 
 Prevent race conditions with `Cache::lock()` or `lockForUpdate()`.
 
@@ -110,7 +110,7 @@ Cache::lock('order-processing-'.$order->id, 10)->block(5, function () use ($orde
 $product = Product::where('id', $id)->lockForUpdate()->first();
 ```
 
-### Use mb_* String Functions
+## Use `mb_*` String Functions
 
 When no Laravel helper exists, prefer `mb_strlen`, `mb_strtolower`, etc. for UTF-8 safety. Standard PHP string functions count bytes, not characters.
 
@@ -132,7 +132,7 @@ Str::length('José');          // 4
 Str::lower('MÜNCHEN');        // 'münchen'
 ```
 
-### Plan for Ephemeral Storage
+## Plan for Ephemeral Storage
 
 On Laravel Cloud/Vapor, local disk is ephemeral — files disappear between deployments. Use S3 for persistent storage.
 
@@ -154,7 +154,7 @@ $url = Storage::disk('s3')->temporaryUploadUrl(
 );
 ```
 
-### Convention Over Configuration
+## Convention Over Configuration
 
 Follow Laravel conventions. Don't override defaults unnecessarily.
 

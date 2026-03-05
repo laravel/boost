@@ -4,9 +4,9 @@ impact: HIGH
 tags: cache, performance, redis
 ---
 
-## Caching Best Practices
+# Caching Best Practices
 
-### Use Cache::remember() Instead of Manual Get/Put
+## Use `Cache::remember()` Instead of Manual Get/Put
 
 Atomic pattern prevents race conditions and removes boilerplate.
 
@@ -26,7 +26,7 @@ if (! $val) {
 $val = Cache::remember('stats', 60, fn () => $this->computeStats());
 ```
 
-### Use Cache::flexible() for Stale-While-Revalidate
+## Use `Cache::flexible()` for Stale-While-Revalidate
 
 On high-traffic keys, one user always gets a slow response when the cache expires. `flexible()` serves slightly stale data while refreshing in the background.
 
@@ -34,13 +34,13 @@ On high-traffic keys, one user always gets a slow response when the cache expire
 
 **Correct:** `Cache::flexible('users', [300, 600], fn () => User::all());` — fresh for 5 min, stale-but-served up to 10 min, refreshes via deferred function.
 
-### Use Cache::memo() to Avoid Redundant Hits Within a Request
+## Use `Cache::memo()` to Avoid Redundant Hits Within a Request
 
 If the same cache key is read multiple times per request (e.g., a service called from multiple places), `memo()` stores the resolved value in memory.
 
 `Cache::memo()->get('settings');` — 5 calls = 1 Redis round-trip instead of 5.
 
-### Use Cache Tags to Invalidate Related Groups
+## Use Cache Tags to Invalidate Related Groups
 
 Without tags, invalidating a group of entries requires tracking every key. Tags let you flush atomically. Only works with `redis`, `memcached`, `dynamodb` — not `file` or `database`.
 
@@ -48,7 +48,7 @@ Without tags, invalidating a group of entries requires tracking every key. Tags 
 Cache::tags(['user-1'])->flush();
 ```
 
-### Use Cache::add() for Atomic Conditional Writes
+## Use `Cache::add()` for Atomic Conditional Writes
 
 `add()` only writes if the key does not exist — atomic, no race condition between checking and writing.
 
@@ -56,7 +56,7 @@ Cache::tags(['user-1'])->flush();
 
 **Correct:** `Cache::add('lock', true, 10);`
 
-### Configure Failover Cache Stores in Production
+## Configure Failover Cache Stores in Production
 
 If Redis goes down, the app falls back to a secondary store automatically.
 

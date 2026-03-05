@@ -4,9 +4,9 @@ impact: CRITICAL
 tags: security, mass-assignment, authorization, sql-injection, xss, csrf, uploads, encryption
 ---
 
-## Security Best Practices
+# Security Best Practices
 
-### Mass Assignment Protection
+## Mass Assignment Protection
 
 Every model must define `$fillable` (whitelist) or `$guarded` (blacklist).
 
@@ -34,7 +34,7 @@ class User extends Model
 
 Never use `$guarded = []` on models that accept user input.
 
-### Authorize Every Action
+## Authorize Every Action
 
 Use policies or gates in controllers. Never skip authorization.
 
@@ -66,7 +66,7 @@ public function authorize(): bool
 }
 ```
 
-### Prevent SQL Injection
+## Prevent SQL Injection
 
 Always use parameter binding. Never interpolate user input into queries.
 
@@ -85,7 +85,7 @@ User::where('name', $request->name)->get();
 User::whereRaw('LOWER(name) = ?', [strtolower($request->name)])->get();
 ```
 
-### Escape Output to Prevent XSS
+## Escape Output to Prevent XSS
 
 Use `{{ }}` for HTML escaping. Only use `{!! !!}` for trusted, pre-sanitized content.
 
@@ -101,9 +101,9 @@ Use `{{ }}` for HTML escaping. Only use `{!! !!}` for trusted, pre-sanitized con
 {{ $user->bio }}
 ```
 
-### CSRF Protection
+## CSRF Protection
 
-Include `@csrf` in all POST/PUT/DELETE only in Blade forms and not in Inertia.
+Include `@csrf` in all POST/PUT/DELETE Blade forms. Not needed in Inertia.
 
 **Incorrect:**
 
@@ -122,7 +122,7 @@ Include `@csrf` in all POST/PUT/DELETE only in Blade forms and not in Inertia.
 </form>
 ```
 
-### Rate Limit Auth and API Routes
+## Rate Limit Auth and API Routes
 
 Apply `throttle` middleware to authentication and API routes.
 
@@ -134,7 +134,7 @@ RateLimiter::for('login', function (Request $request) {
 Route::post('/login', LoginController::class)->middleware('throttle:login');
 ```
 
-### Validate File Uploads
+## Validate File Uploads
 
 Validate MIME type, extension, and size. Never trust client-provided filenames.
 
@@ -153,7 +153,7 @@ Store with generated filenames:
 $path = $request->file('avatar')->store('avatars', 'public');
 ```
 
-### Keep Secrets Out of Code
+## Keep Secrets Out of Code
 
 Never commit `.env`. Access secrets via `config()` only.
 
@@ -173,7 +173,7 @@ $key = env('API_KEY');
 $key = config('services.api_key');
 ```
 
-### Audit Dependencies
+## Audit Dependencies
 
 Run `composer audit` periodically to check for known vulnerabilities in dependencies. Automate this in CI to catch issues before deployment.
 
@@ -181,7 +181,7 @@ Run `composer audit` periodically to check for known vulnerabilities in dependen
 composer audit
 ```
 
-### Encrypt Sensitive Database Fields
+## Encrypt Sensitive Database Fields
 
 Use `encrypted` cast for API keys/tokens and mark the attribute as `hidden`.
 

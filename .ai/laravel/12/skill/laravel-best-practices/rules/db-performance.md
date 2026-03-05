@@ -4,9 +4,9 @@ impact: CRITICAL
 tags: database, performance, n+1, memory, indexing
 ---
 
-## Database Performance Best Practices
+# Database Performance Best Practices
 
-### Always Eager Load Relationships
+## Always Eager Load Relationships
 
 Lazy loading causes N+1 query problems — one query per loop iteration. Always use `with()` to load relationships upfront.
 
@@ -39,9 +39,9 @@ $users = User::with(['posts' => function ($query) {
 }])->get();
 ```
 
-### Prevent Lazy Loading in Development
+## Prevent Lazy Loading in Development
 
-Enable this in `AppServiceProvider::boot()` to make N+1 issues impossible to miss during development.
+Enable this in `AppServiceProvider::boot()` to catch N+1 issues during development.
 
 ```php
 public function boot(): void
@@ -52,7 +52,7 @@ public function boot(): void
 
 Throws `LazyLoadingViolationException` when a relationship is accessed without being eager-loaded.
 
-### Select Only Needed Columns
+## Select Only Needed Columns
 
 Avoid `SELECT *` — especially when tables have large text or JSON columns.
 
@@ -72,7 +72,7 @@ $posts = Post::select('id', 'title', 'user_id', 'created_at')
 
 When selecting columns on eager-loaded relationships, always include the foreign key column or the relationship won't match.
 
-### Chunk Large Datasets
+## Chunk Large Datasets
 
 Never load thousands of records at once. Use chunking for batch processing.
 
@@ -103,7 +103,7 @@ User::where('active', false)->chunkById(200, function ($users) {
 });
 ```
 
-### Add Database Indexes
+## Add Database Indexes
 
 Index columns that appear in `WHERE`, `ORDER BY`, `JOIN`, and `GROUP BY` clauses.
 
@@ -132,7 +132,7 @@ Schema::create('orders', function (Blueprint $table) {
 
 Add composite indexes for common query patterns (e.g., `WHERE status = ? ORDER BY created_at`).
 
-### Use withCount for Counting Relations
+## Use `withCount()` for Counting Relations
 
 Never load entire collections just to count them.
 
@@ -165,7 +165,7 @@ $posts = Post::withCount([
 ])->get();
 ```
 
-### Use cursor() for Memory-Efficient Iteration
+## Use `cursor()` for Memory-Efficient Iteration
 
 For read-only iteration over large result sets, `cursor()` loads one record at a time via a PHP generator.
 
@@ -185,7 +185,7 @@ foreach (User::where('active', true)->cursor() as $user) {
 
 Use `cursor()` for read-only iteration. Use `chunk()` / `chunkById()` when modifying records.
 
-### No Queries in Blade Templates
+## No Queries in Blade Templates
 
 Never execute queries in Blade templates. Pass data from controllers.
 

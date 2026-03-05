@@ -4,9 +4,9 @@ impact: MEDIUM
 tags: routing, controllers, model-binding, rest
 ---
 
-## Routing & Controllers Best Practices
+# Routing & Controllers Best Practices
 
-### Use Implicit Route Model Binding
+## Use Implicit Route Model Binding
 
 Let Laravel resolve models automatically from route parameters.
 
@@ -28,7 +28,7 @@ public function show(Post $post)
 }
 ```
 
-### Use Scoped Bindings for Nested Resources
+## Use Scoped Bindings for Nested Resources
 
 Enforce parent-child relationships automatically.
 
@@ -38,7 +38,7 @@ Route::get('/users/{user}/posts/{post}', function (User $user, Post $post) {
 })->scopeBindings();
 ```
 
-### Use Resource Controllers
+## Use Resource Controllers
 
 Use `Route::resource()` or `apiResource()` for RESTful endpoints.
 
@@ -47,7 +47,7 @@ Route::resource('posts', PostController::class);
 Route::apiResource('api/posts', Api\PostController::class);
 ```
 
-### Keep Controllers Thin
+## Keep Controllers Thin
 
 Aim for under 10 lines per method. Extract business logic to action or service classes.
 
@@ -78,7 +78,7 @@ public function store(StorePostRequest $request)
 }
 ```
 
-### Type-hint Form Requests
+## Type-Hint Form Requests
 
 Type-hinting Form Requests triggers automatic validation and authorization before the method executes.
 

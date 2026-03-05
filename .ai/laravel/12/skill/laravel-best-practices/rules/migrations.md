@@ -4,9 +4,9 @@ impact: MEDIUM
 tags: migration, schema, foreign-key, indexes, rollback
 ---
 
-## Migration Best Practices
+# Migration Best Practices
 
-### Generate Migrations with Artisan
+## Generate Migrations with Artisan
 
 Always use `php artisan make:migration` for consistent naming and timestamps.
 
@@ -23,7 +23,7 @@ php artisan make:migration create_posts_table
 php artisan make:migration add_slug_to_posts_table
 ```
 
-### Use constrained() for Foreign Keys
+## Use `constrained()` for Foreign Keys
 
 Automatic naming and referential integrity.
 
@@ -34,7 +34,7 @@ $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 $table->foreignId('author_id')->constrained('users');
 ```
 
-### Never Modify Deployed Migrations
+## Never Modify Deployed Migrations
 
 Once a migration has run in production, treat it as immutable. Create a new migration to change the table.
 
@@ -54,9 +54,9 @@ Schema::table('posts', function (Blueprint $table) {
 });
 ```
 
-### Add Indexes in the Migration
+## Add Indexes in the Migration
 
-Add indexes when you create the table, not as an afterthought. Columns used in `WHERE`, `ORDER BY`, and `JOIN` clauses need indexes.
+Add indexes when creating the table, not as an afterthought. Columns used in `WHERE`, `ORDER BY`, and `JOIN` clauses need indexes.
 
 **Incorrect:**
 
@@ -81,7 +81,7 @@ Schema::create('orders', function (Blueprint $table) {
 });
 ```
 
-### Index Foreign Keys Explicitly
+## Index Foreign Keys Explicitly
 
 MySQL auto-creates indexes for FKs. Postgres does not. Always add `->index()` explicitly.
 
@@ -97,7 +97,7 @@ $table->foreignId('post_id')->constrained();
 $table->foreignId('post_id')->index()->constrained();
 ```
 
-### Mirror Defaults in Model $attributes
+## Mirror Defaults in Model `$attributes`
 
 When a column has a database default, mirror it in the model so new instances have correct values before saving.
 
@@ -111,7 +111,7 @@ protected $attributes = [
 ];
 ```
 
-### Leave down() Empty
+## Leave `down()` Empty
 
 Empty `down()` prevents accidental data loss during rollbacks. A new forward migration is always safer.
 
@@ -122,7 +122,7 @@ public function down(): void
 }
 ```
 
-### Keep Migrations Focused
+## Keep Migrations Focused
 
 One concern per migration. Never mix DDL (schema changes) and DML (data manipulation).
 

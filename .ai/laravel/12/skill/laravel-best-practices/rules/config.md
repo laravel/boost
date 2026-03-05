@@ -4,9 +4,9 @@ impact: HIGH
 tags: config, env, secrets, environment
 ---
 
-## Configuration Best Practices
+# Configuration Best Practices
 
-### env() Only in Config Files
+## `env()` Only in Config Files
 
 Direct `env()` calls return `null` when config is cached.
 
@@ -26,7 +26,7 @@ $key = env('API_KEY');
 $key = config('services.key');
 ```
 
-### Use Encrypted Env or External Secrets
+## Use Encrypted Env or External Secrets
 
 Never store production secrets in plain `.env` files in version control.
 
@@ -47,7 +47,7 @@ php artisan env:decrypt --env=production
 
 For cloud deployments, prefer the platform's native secret store (AWS Secrets Manager, Vault, etc.) and inject at runtime.
 
-### Use App::environment() for Environment Checks
+## Use `App::environment()` for Environment Checks
 
 **Incorrect:**
 
@@ -63,7 +63,7 @@ if (app()->isProduction()) {
 if (App::environment('production')) {
 ```
 
-### Use Constants and Language Files
+## Use Constants and Language Files
 
 Use config values, language files, and class constants instead of hardcoded strings.
 
