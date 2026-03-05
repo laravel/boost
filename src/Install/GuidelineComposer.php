@@ -301,7 +301,8 @@ class GuidelineComposer
             'name' => str_replace(['.blade.php', '.md'], '', basename($path)),
             'description' => $description,
             'path' => $path,
-            'custom' => str_contains($path, $this->customGuidelinePath()),
+            'custom' => ($resolvedCustomBase = realpath($this->customGuidelinePath())) !== false
+                && str_contains($path, $resolvedCustomBase),
             'third_party' => $thirdParty,
             'tokens' => round(str_word_count($rendered) * 1.3),
         ];
@@ -347,7 +348,9 @@ class GuidelineComposer
         $path = realpath($path);
 
         // If this is a custom guideline, return it unchanged
-        if (str_contains($path, $this->customGuidelinePath())) {
+        $resolvedCustomBase = realpath($this->customGuidelinePath());
+
+        if ($resolvedCustomBase !== false && str_contains($path, $resolvedCustomBase)) {
             return $path;
         }
 
@@ -356,7 +359,7 @@ class GuidelineComposer
                 $customPath = $this->prependUserGuidelinePath($overrideKey.$ext);
 
                 if (file_exists($customPath)) {
-                    return $customPath;
+                    return realpath($customPath);
                 }
             }
 
@@ -372,6 +375,6 @@ class GuidelineComposer
 
         $customPath = $this->prependUserGuidelinePath($relativePath);
 
-        return file_exists($customPath) ? $customPath : $path;
+        return file_exists($customPath) ? realpath($customPath) : $path;
     }
 }
