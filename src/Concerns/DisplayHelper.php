@@ -54,12 +54,12 @@ trait DisplayHelper
     protected function displayTagline(string $featureName): void
     {
         $tagline = " ✦ Laravel Boost :: {$featureName} :: We Must Ship ✦ ";
-        $this->output->writeln($this->displayBadge($tagline));
+        $this->output->writeln('  '.$this->displayBadge($tagline));
     }
 
     protected function displayNote(string $projectName): void
     {
-        note("Let's give {$this->displayBadge($projectName)} a Boost");
+        note(" Let's give {$this->displayBadge($projectName)} a Boost");
     }
 
     protected function displayOutro(string $text, string $link = '', int $terminalWidth = 80): void
