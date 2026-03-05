@@ -68,14 +68,12 @@ $feature->comments->each->setRelation('feature', $feature);
 
 `whereHas()` emits a correlated `EXISTS` subquery that re-executes per row. A separate `pluck()` query followed by `whereIn()` lets the database use an index lookup instead.
 
-**Slow:**
-
+Slow:
 ```php
 $query->whereHas('company', fn ($q) => $q->where('name', 'like', $term));
 ```
 
-**Fast:**
-
+Fast:
 ```php
 $query->whereIn('company_id', Company::where('name', 'like', $term)->pluck('id'));
 ```

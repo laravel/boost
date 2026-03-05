@@ -31,15 +31,13 @@ class CreateOrderAction
 
 Always use constructor injection. Avoid `app()` or `resolve()` inside classes.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 $user = new User;
 $user->create($data);
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function __construct(
     private User $user,
@@ -52,8 +50,7 @@ $this->user->create($data);
 
 Depend on contracts at system boundaries (payment gateways, notification channels, external APIs) for testability and swappability.
 
-**Incorrect (concrete dependency):**
-
+Incorrect (concrete dependency):
 ```php
 class OrderService
 {
@@ -61,8 +58,7 @@ class OrderService
 }
 ```
 
-**Correct (interface dependency):**
-
+Correct (interface dependency):
 ```php
 interface PaymentGateway
 {
@@ -85,14 +81,12 @@ $this->app->bind(PaymentGateway::class, StripeGateway::class);
 
 When no explicit order is specified, sort by `id` or `created_at` descending. Explicit ordering prevents cross-database inconsistencies between MySQL and Postgres.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 $posts = Post::paginate();
 ```
 
-**Correct:**
-
+Correct:
 ```php
 $posts = Post::latest()->paginate();
 ```
@@ -114,15 +108,13 @@ $product = Product::where('id', $id)->lockForUpdate()->first();
 
 When no Laravel helper exists, prefer `mb_strlen`, `mb_strtolower`, etc. for UTF-8 safety. Standard PHP string functions count bytes, not characters.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 strlen('José');          // 5 (bytes, not characters)
 strtolower('MÜNCHEN');  // 'mÜnchen' — fails on multibyte
 ```
 
-**Correct:**
-
+Correct:
 ```php
 mb_strlen('José');             // 4 (characters)
 mb_strtolower('MÜNCHEN');     // 'münchen'
@@ -136,14 +128,12 @@ Str::lower('MÜNCHEN');        // 'münchen'
 
 On Laravel Cloud/Vapor, local disk is ephemeral — files disappear between deployments. Use S3 for persistent storage.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 $request->file('avatar')->store('avatars', 'local');
 ```
 
-**Correct:**
-
+Correct:
 ```php
 $request->file('avatar')->store('avatars', 's3');
 
@@ -154,12 +144,56 @@ $url = Storage::disk('s3')->temporaryUploadUrl(
 );
 ```
 
+## Use `defer()` for Post-Response Work
+
+For lightweight tasks that don't need to survive a crash (logging, analytics, cleanup), use `defer()` instead of dispatching a job. The callback runs after the HTTP response is sent — no queue overhead.
+
+Incorrect (job overhead for trivial work):
+```php
+dispatch(new LogPageView($page));
+```
+
+Correct (runs after response, same process):
+```php
+defer(fn () => PageView::create(['page_id' => $page->id, 'user_id' => auth()->id()]));
+```
+
+Use jobs when the work must survive process crashes or needs retry logic. Use `defer()` for fire-and-forget work.
+
+## Use `Context` for Request-Scoped Data
+
+The `Context` facade passes data through the entire request lifecycle — middleware, controllers, jobs, logs — without passing arguments manually.
+
+```php
+// In middleware
+Context::add('tenant_id', $request->header('X-Tenant-ID'));
+
+// Anywhere later — controllers, jobs, log context
+$tenantId = Context::get('tenant_id');
+```
+
+Context data automatically propagates to queued jobs and is included in log entries. Use `Context::addHidden()` for sensitive data that should appear in logs but not be exposed to jobs.
+
+## Use `Concurrency::run()` for Parallel Execution
+
+Run independent operations in parallel using child processes — no async libraries needed.
+
+```php
+use Illuminate\Support\Facades\Concurrency;
+
+[$users, $orders] = Concurrency::run([
+    fn () => User::count(),
+    fn () => Order::where('status', 'pending')->count(),
+]);
+```
+
+Each closure runs in a separate process with full Laravel access. Use for independent database queries, API calls, or computations that would otherwise run sequentially.
+
 ## Convention Over Configuration
 
 Follow Laravel conventions. Don't override defaults unnecessarily.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 class Customer extends Model
 {
@@ -173,8 +207,7 @@ class Customer extends Model
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 class Customer extends Model
 {

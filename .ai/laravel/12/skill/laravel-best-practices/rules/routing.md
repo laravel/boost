@@ -10,8 +10,7 @@ tags: routing, controllers, model-binding, rest
 
 Let Laravel resolve models automatically from route parameters.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 public function show(int $id)
 {
@@ -19,8 +18,7 @@ public function show(int $id)
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function show(Post $post)
 {
@@ -51,8 +49,7 @@ Route::apiResource('api/posts', Api\PostController::class);
 
 Aim for under 10 lines per method. Extract business logic to action or service classes.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 public function store(Request $request)
 {
@@ -67,8 +64,7 @@ public function store(Request $request)
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function store(StorePostRequest $request)
 {
@@ -82,8 +78,7 @@ public function store(StorePostRequest $request)
 
 Type-hinting Form Requests triggers automatic validation and authorization before the method executes.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 public function store(Request $request): RedirectResponse
 {
@@ -98,8 +93,7 @@ public function store(Request $request): RedirectResponse
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function store(StorePostRequest $request): RedirectResponse
 {

@@ -1,6 +1,6 @@
 ---
 name: laravel-best-practices
-description: "Laravel framework best practices and performance optimization guidelines. Contains 125+ rules across 19 categories, prioritized by impact. Activates when writing, reviewing, or refactoring Laravel code — models, controllers, migrations, jobs, form requests, routes, services, HTTP client calls, mailables, events, blade views, caching, scheduling, or any PHP code in a Laravel project. Also activates when the user mentions best practices, code quality, performance, security, or asks for a code review. Use this skill proactively whenever generating Laravel code to ensure it follows established patterns — even for simple tasks like creating a model, adding a migration, or writing a controller."
+description: "Laravel 12 best practices — 130+ rules across 21 categories, prioritized by impact. Use this skill proactively whenever generating, reviewing, or refactoring any code in a Laravel project. Covers database performance, security, Eloquent, caching, queues, testing, deployment, and architecture. Also activates for code quality questions, performance optimization, or code reviews — even if the user doesn't explicitly say 'best practices.'"
 license: MIT
 metadata:
   author: laravel
@@ -8,7 +8,9 @@ metadata:
 
 # Laravel Best Practices
 
-125+ rules across 19 categories, prioritized by impact. Each rule teaches *what* to do and *why* — for exact API syntax, verify with `search-docs` for the installed Laravel version.
+130+ rules across 21 categories for Laravel 12, prioritized by impact. Each rule teaches *what* to do and *why* — for exact API syntax, verify with `search-docs`.
+
+This skill complements your Boost foundation guidelines. Where Boost guidelines provide broad conventions (use Form Requests, prefer eager loading, etc.), these rules go deeper with code examples, anti-patterns, and nuanced patterns. When both apply, follow the more specific guidance here.
 
 ## Important: Use `search-docs` for Syntax
 
@@ -85,6 +87,7 @@ These rules teach patterns and principles. For version-specific method signature
 - Use `Cache::memo()` to avoid redundant cache hits within a request
 - Use cache tags to invalidate related groups
 - Use `Cache::add()` for atomic conditional writes
+- Use `once()` to memoize expensive computations per-request or per-object lifetime
 - Configure failover cache stores in production
 
 ### 5. Eloquent Patterns (HIGH)
@@ -204,6 +207,9 @@ These rules teach patterns and principles. For version-specific method signature
 - Use `Cache::lock()` or `lockForUpdate()` for race conditions
 - Use `mb_*` string functions for UTF-8 safety
 - Use S3 on Cloud/Vapor, local disk is ephemeral
+- Use `defer()` for lightweight post-response work (logging, cleanup) without job overhead
+- Use `Context` facade to pass request-scoped data through middleware, jobs, and logs
+- Use `Concurrency::run()` for parallel PHP execution without manual process management
 - Follow Laravel conventions, don't override defaults
 
 ### 18. Migrations (MEDIUM)
@@ -246,19 +252,24 @@ These rules teach patterns and principles. For version-specific method signature
 
 ## How to Use
 
-**Use the quick reference above for everyday code generation.** It covers 125+ patterns — most tasks won't need deeper detail.
+The quick reference above is sufficient for most tasks. It covers all 130+ patterns with enough detail to generate correct code. Only read deeper when a bullet's intent is clear but you need the full code example or edge case details.
 
-When you need code examples or a one-liner is ambiguous, **delegate rule file reads to a sub-agent** to keep the main context clean. Each category is a single file:
+### When to read a rule file
 
-```
-rules/db-performance.md        # Database Performance
-rules/security.md              # Security
-rules/eloquent.md              # Eloquent Patterns
-rules/queue-jobs.md            # Queue & Job Patterns
-rules/architecture.md          # Architecture
-rules/migrations.md            # Migrations
-```
+Read the rule file (via sub-agent to protect context) when:
+- The quick reference bullet is ambiguous and you need the Incorrect/Correct code pair
+- The task involves a nuanced pattern (e.g., advanced subqueries, complex job retry logic)
+- You need to understand *why* a pattern matters to make a judgment call
 
-**Context management:** Rule files contain verbose code examples (100–200+ lines each). Reading them directly bloats the main context. Spawn a sub-agent to read the relevant rule file(s), apply the patterns, and return only the result.
+Files worth reading deeper (100+ lines with substantial code examples):
+- `rules/db-performance.md`, `rules/advanced-queries.md`, `rules/security.md`
+- `rules/eloquent.md`, `rules/queue-jobs.md`, `rules/http-client.md`
+- `rules/architecture.md`, `rules/routing.md`, `rules/migrations.md`
 
-After identifying which patterns apply, use `search-docs` to verify exact API syntax for the user's installed Laravel version.
+Files where the quick reference is sufficient (thin files that mirror the bullets above):
+- `rules/blade-views.md`, `rules/mail.md`, `rules/scheduling.md`, `rules/collections.md`
+
+Reference (not rules):
+- `rules/first-party-packages.md` — package directory; read when choosing between first-party and third-party packages
+
+After identifying which patterns apply, use `search-docs` to verify exact API syntax for the installed Laravel version.

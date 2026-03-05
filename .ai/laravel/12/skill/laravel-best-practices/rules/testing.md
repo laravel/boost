@@ -12,9 +12,9 @@ tags: testing, pest, factories, assertions
 
 ## Use Model Assertions Over Raw Database Assertions
 
-**Incorrect:** `$this->assertDatabaseHas('users', ['id' => $user->id]);`
+Incorrect: `$this->assertDatabaseHas('users', ['id' => $user->id]);`
 
-**Correct:** `$this->assertModelExists($user);`
+Correct: `$this->assertModelExists($user);`
 
 More expressive, type-safe, and fails with clearer messages.
 
@@ -22,9 +22,9 @@ More expressive, type-safe, and fails with clearer messages.
 
 Named states make tests self-documenting. Sequences eliminate repetitive setup.
 
-**Incorrect:** `User::factory()->create(['email_verified_at' => null]);`
+Incorrect: `User::factory()->create(['email_verified_at' => null]);`
 
-**Correct:** `User::factory()->unverified()->create();`
+Correct: `User::factory()->unverified()->create();`
 
 ## Use `Exceptions::fake()` to Assert Exception Reporting
 
@@ -34,9 +34,9 @@ Instead of `withoutExceptionHandling()`, use `Exceptions::fake()` to assert the 
 
 Model factories rely on model events (e.g., `creating` to generate UUIDs). Calling `Event::fake()` before factory calls silences those events, producing broken models.
 
-**Incorrect:** `Event::fake(); $user = User::factory()->create();`
+Incorrect: `Event::fake(); $user = User::factory()->create();`
 
-**Correct:** `$user = User::factory()->create(); Event::fake();`
+Correct: `$user = User::factory()->create(); Event::fake();`
 
 ## Use `recycle()` to Share Relationship Instances Across Factories
 

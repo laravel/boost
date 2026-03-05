@@ -18,9 +18,9 @@ A queued mailable dispatched inside a transaction may process before the commit.
 
 `Mail::assertSent()` only catches synchronous mail. Queued mailables silently pass `assertSent`, giving false confidence.
 
-**Incorrect:** `Mail::assertSent(OrderShipped::class);` when mailable implements `ShouldQueue`.
+Incorrect: `Mail::assertSent(OrderShipped::class);` when mailable implements `ShouldQueue`.
 
-**Correct:** `Mail::assertQueued(OrderShipped::class);`
+Correct: `Mail::assertQueued(OrderShipped::class);`
 
 ## Use Markdown Mailables for Transactional Emails
 

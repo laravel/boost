@@ -10,8 +10,7 @@ tags: security, mass-assignment, authorization, sql-injection, xss, csrf, upload
 
 Every model must define `$fillable` (whitelist) or `$guarded` (blacklist).
 
-**Incorrect:**
-
+Incorrect:
 ```php
 class User extends Model
 {
@@ -19,8 +18,7 @@ class User extends Model
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 class User extends Model
 {
@@ -38,8 +36,7 @@ Never use `$guarded = []` on models that accept user input.
 
 Use policies or gates in controllers. Never skip authorization.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 public function update(Request $request, Post $post)
 {
@@ -47,8 +44,7 @@ public function update(Request $request, Post $post)
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function update(UpdatePostRequest $request, Post $post)
 {
@@ -70,14 +66,12 @@ public function authorize(): bool
 
 Always use parameter binding. Never interpolate user input into queries.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 DB::select("SELECT * FROM users WHERE name = '{$request->name}'");
 ```
 
-**Correct:**
-
+Correct:
 ```php
 User::where('name', $request->name)->get();
 
@@ -89,14 +83,12 @@ User::whereRaw('LOWER(name) = ?', [strtolower($request->name)])->get();
 
 Use `{{ }}` for HTML escaping. Only use `{!! !!}` for trusted, pre-sanitized content.
 
-**Incorrect:**
-
+Incorrect:
 ```blade
 {!! $user->bio !!}
 ```
 
-**Correct:**
-
+Correct:
 ```blade
 {{ $user->bio }}
 ```
@@ -105,16 +97,14 @@ Use `{{ }}` for HTML escaping. Only use `{!! !!}` for trusted, pre-sanitized con
 
 Include `@csrf` in all POST/PUT/DELETE Blade forms. Not needed in Inertia.
 
-**Incorrect:**
-
+Incorrect:
 ```blade
 <form method="POST" action="/posts">
     <input type="text" name="title">
 </form>
 ```
 
-**Correct:**
-
+Correct:
 ```blade
 <form method="POST" action="/posts">
     @csrf
@@ -157,14 +147,12 @@ $path = $request->file('avatar')->store('avatars', 'public');
 
 Never commit `.env`. Access secrets via `config()` only.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 $key = env('API_KEY');
 ```
 
-**Correct:**
-
+Correct:
 ```php
 // config/services.php
 'api_key' => env('API_KEY'),
@@ -185,8 +173,7 @@ composer audit
 
 Use `encrypted` cast for API keys/tokens and mark the attribute as `hidden`.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 class Integration extends Model
 {
@@ -199,8 +186,7 @@ class Integration extends Model
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 class Integration extends Model
 {

@@ -10,8 +10,7 @@ tags: validation, form-request, rules
 
 Extract validation from controllers into dedicated Form Request classes.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 public function store(Request $request)
 {
@@ -22,8 +21,7 @@ public function store(Request $request)
 }
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function store(StorePostRequest $request)
 {
@@ -35,14 +33,12 @@ public function store(StorePostRequest $request)
 
 Array syntax is more readable and works with Rule objects.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 'email' => 'required|email|unique:users',
 ```
 
-**Correct:**
-
+Correct:
 ```php
 'email' => ['required', 'email', Rule::unique('users')],
 ```
@@ -51,14 +47,12 @@ Array syntax is more readable and works with Rule objects.
 
 Get only validated data. Never use `$request->all()` for mass operations.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 Post::create($request->all());
 ```
 
-**Correct:**
-
+Correct:
 ```php
 Post::create($request->validated());
 ```

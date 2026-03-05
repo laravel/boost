@@ -28,7 +28,14 @@ Queue workers, Horizon, Reverb, and Octane hold stale code in memory. Restart th
 php artisan reload
 ```
 
-On Laravel Cloud this is handled automatically. On self-managed servers, use a process monitor (Supervisor) to auto-restart terminated workers.
+On Laravel Cloud this is handled automatically. On self-managed servers without `reload` support, restart services individually:
+
+```bash
+php artisan queue:restart
+php artisan horizon:terminate
+```
+
+Use a process monitor (Supervisor) to auto-restart terminated workers.
 
 ## Disable Debug Mode in Production
 
@@ -49,17 +56,3 @@ Laravel ships with a `/up` health check route. Use it for load balancers, uptime
 ```
 
 Listen for `DiagnosingHealth` to add custom checks (database, cache, external services).
-
-## Restart Queue Workers on Deploy
-
-Queue workers are long-lived processes. They won't pick up code changes until restarted.
-
-```bash
-php artisan queue:restart
-```
-
-For Horizon:
-
-```bash
-php artisan horizon:terminate
-```

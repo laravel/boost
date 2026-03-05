@@ -10,14 +10,12 @@ tags: config, env, secrets, environment
 
 Direct `env()` calls return `null` when config is cached.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 $key = env('API_KEY');
 ```
 
-**Correct:**
-
+Correct:
 ```php
 // config/services.php
 'key' => env('API_KEY'),
@@ -30,16 +28,14 @@ $key = config('services.key');
 
 Never store production secrets in plain `.env` files in version control.
 
-**Incorrect:**
-
+Incorrect:
 ```bash
 # .env committed to repo or shared in Slack
 STRIPE_SECRET=sk_live_abc123
 AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI
 ```
 
-**Correct:**
-
+Correct:
 ```bash
 php artisan env:encrypt --env=production --readable
 php artisan env:decrypt --env=production
@@ -49,14 +45,12 @@ For cloud deployments, prefer the platform's native secret store (AWS Secrets Ma
 
 ## Use `App::environment()` for Environment Checks
 
-**Incorrect:**
-
+Incorrect:
 ```php
 if (env('APP_ENV') === 'production') {
 ```
 
-**Correct:**
-
+Correct:
 ```php
 if (app()->isProduction()) {
 // or
@@ -67,8 +61,7 @@ if (App::environment('production')) {
 
 Use config values, language files, and class constants instead of hardcoded strings.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 public function isNormal(): bool
 {
@@ -78,8 +71,7 @@ public function isNormal(): bool
 return back()->with('message', 'Your article has been added!');
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function isNormal(): bool
 {

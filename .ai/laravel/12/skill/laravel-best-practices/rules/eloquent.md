@@ -26,8 +26,7 @@ public function author(): BelongsTo
 
 Extract reusable query constraints into local scopes to avoid duplication.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 $active = User::where('verified', true)->whereNotNull('activated_at')->get();
 $articles = Article::whereHas('user', function ($q) {
@@ -35,8 +34,7 @@ $articles = Article::whereHas('user', function ($q) {
 })->get();
 ```
 
-**Correct:**
-
+Correct:
 ```php
 public function scopeActive(Builder $query): Builder
 {
@@ -52,8 +50,7 @@ $articles = Article::whereHas('user', fn ($q) => $q->active())->get();
 
 Global scopes silently modify every query on the model, making debugging difficult. Prefer local scopes and reserve global scopes for truly universal constraints like soft deletes or multi-tenancy.
 
-**Incorrect (global scope for a conditional filter):**
-
+Incorrect (global scope for a conditional filter):
 ```php
 class PublishedScope implements Scope
 {
@@ -65,8 +62,7 @@ class PublishedScope implements Scope
 // Now admin panels, reports, and background jobs all silently skip drafts
 ```
 
-**Correct (local scope you opt into):**
-
+Correct (local scope you opt into):
 ```php
 public function scopePublished(Builder $query): Builder
 {
@@ -81,8 +77,7 @@ Post::paginate(); // Admin sees all
 
 When the same model event logic appears in multiple places, consolidate it into an observer.
 
-**Incorrect (event logic scattered in controllers):**
-
+Incorrect (event logic scattered in controllers):
 ```php
 public function store(StorePostRequest $request): RedirectResponse
 {
@@ -93,8 +88,7 @@ public function store(StorePostRequest $request): RedirectResponse
 }
 ```
 
-**Correct (observer handles cross-cutting events):**
-
+Correct (observer handles cross-cutting events):
 ```php
 class PostObserver
 {
@@ -129,14 +123,12 @@ protected function casts(): array
 
 Always cast date columns. Use Carbon instances in templates instead of formatting strings manually.
 
-**Incorrect:**
-
+Incorrect:
 ```blade
 {{ Carbon::createFromFormat('Y-d-m H-i', $order->ordered_at)->toDateString() }}
 ```
 
-**Correct:**
-
+Correct:
 ```php
 protected function casts(): array
 {
@@ -155,14 +147,12 @@ protected function casts(): array
 
 Cleaner than manually specifying foreign keys.
 
-**Incorrect:**
-
+Incorrect:
 ```php
 Post::where('user_id', $user->id)->get();
 ```
 
-**Correct:**
-
+Correct:
 ```php
 Post::whereBelongsTo($user)->get();
 Post::whereBelongsTo($user, 'author')->get();

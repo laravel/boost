@@ -10,8 +10,7 @@ tags: queue, job, retry, backoff, unique, batching, horizon, concurrency
 
 If `retry_after` is shorter than the job's `timeout`, the queue worker re-dispatches the job while it's still running, causing duplicate execution.
 
-**Incorrect (`retry_after` ≤ `timeout`):**
-
+Incorrect (`retry_after` ≤ `timeout`):
 ```php
 class ProcessReport implements ShouldQueue
 {
@@ -21,8 +20,7 @@ class ProcessReport implements ShouldQueue
 // config/queue.php — retry_after: 90 ← job retried while still running!
 ```
 
-**Correct (`retry_after` > `timeout`):**
-
+Correct (`retry_after` > `timeout`):
 ```php
 class ProcessReport implements ShouldQueue
 {
@@ -36,8 +34,7 @@ class ProcessReport implements ShouldQueue
 
 Use progressively longer delays between retries to avoid hammering failing services.
 
-**Incorrect (fixed retry interval):**
-
+Incorrect (fixed retry interval):
 ```php
 class SyncWithStripe implements ShouldQueue
 {
@@ -46,8 +43,7 @@ class SyncWithStripe implements ShouldQueue
 }
 ```
 
-**Correct (exponential backoff):**
-
+Correct (exponential backoff):
 ```php
 class SyncWithStripe implements ShouldQueue
 {
