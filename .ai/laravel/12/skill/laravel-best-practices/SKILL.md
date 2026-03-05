@@ -8,11 +8,11 @@ metadata:
 
 # Laravel Best Practices
 
-125+ rules across 19 categories, prioritized by impact. Each rule teaches *what* to do and *why* — for exact API syntax, always verify via `search-docs` against the installed Laravel version.
+125+ rules across 19 categories, prioritized by impact. Each rule teaches *what* to do and *why* — for exact API syntax, verify with `search-docs` for the installed Laravel version.
 
 ## Important: Use `search-docs` for Syntax
 
-These rules teach patterns and principles. For version-specific method signatures, parameters, and usage examples, always call `search-docs` before writing code. The rules tell you *what* exists; the docs tell you *how* to use it in your version.
+These rules teach patterns and principles. For version-specific method signatures and usage examples, call `search-docs` before writing code. The rules tell you *what* exists; the docs tell you *how* to use it in your version.
 
 ## Rule Categories
 
@@ -48,7 +48,7 @@ These rules teach patterns and principles. For version-specific method signature
 - Enable `Model::preventLazyLoading()` in development
 - Select only needed columns instead of `SELECT *`
 - Use `chunk()` or `chunkById()` for large datasets
-- Add indexes on columns used in WHERE, ORDER BY, and JOIN
+- Add indexes on columns used in `WHERE`, `ORDER BY`, and `JOIN`
 - Use `withCount()` instead of loading relations to count
 - Use `cursor()` for memory-efficient read-only iteration
 - Never execute queries in Blade templates
@@ -93,7 +93,7 @@ These rules teach patterns and principles. For version-specific method signature
 - Use local scopes for reusable query constraints
 - Apply global scopes sparingly, document their existence
 - Use observers for cross-cutting lifecycle events
-- Define attribute casts in `casts()` method
+- Define attribute casts in the `casts()` method
 - Always cast date columns, use Carbon instances in templates
 - Use `whereBelongsTo($model)` for cleaner queries
 
@@ -104,7 +104,7 @@ These rules teach patterns and principles. For version-specific method signature
 - Always use `$request->validated()`, never `$request->all()`
 - Create invokable Rule classes for complex reusable logic
 - Use `Rule::when()` for conditional validation rules
-- Use the `after()` method instead of `withValidator()`
+- Use `after()` instead of `withValidator()`
 
 ### 7. Configuration (HIGH)
 
@@ -139,7 +139,7 @@ These rules teach patterns and principles. For version-specific method signature
 - Use `RateLimited` middleware for external API calls
 - Use `Bus::batch()` for related jobs
 - When using `retryUntil()`, set `$tries = 0`
-- Use `WithoutOverlappingUntilProcessing` for concurrency control
+- Use `WithoutOverlapping::untilProcessing()` for concurrency control
 - Use Horizon for complex multi-queue scenarios
 
 ### 11. Routing & Controllers (MEDIUM)
@@ -248,7 +248,7 @@ These rules teach patterns and principles. For version-specific method signature
 
 **Use the quick reference above for everyday code generation.** It covers 125+ patterns — most tasks won't need deeper detail.
 
-When you do need code examples or the one-liner is ambiguous, **delegate rule file reads to a sub-agent** to keep the main conversation context clean. Each category is a single file:
+When you need code examples or a one-liner is ambiguous, **delegate rule file reads to a sub-agent** to keep the main context clean. Each category is a single file:
 
 ```
 rules/db-performance.md        # Database Performance
@@ -259,6 +259,6 @@ rules/architecture.md          # Architecture
 rules/migrations.md            # Migrations
 ```
 
-**Context management:** Rule files contain verbose code examples (100-200+ lines each). Reading them directly bloats the main context. Instead, spawn a sub-agent to read the relevant rule file(s), apply the patterns, and return only the result. This preserves main context for the user's actual task.
+**Context management:** Rule files contain verbose code examples (100–200+ lines each). Reading them directly bloats the main context. Spawn a sub-agent to read the relevant rule file(s), apply the patterns, and return only the result.
 
 After identifying which patterns apply, use `search-docs` to verify exact API syntax for the user's installed Laravel version.
