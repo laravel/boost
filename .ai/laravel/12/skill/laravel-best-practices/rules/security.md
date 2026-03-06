@@ -1,9 +1,3 @@
----
-title: Security Best Practices
-impact: CRITICAL
-tags: security, mass-assignment, authorization, sql-injection, xss, csrf, uploads, encryption
----
-
 # Security Best Practices
 
 ## Mass Assignment Protection

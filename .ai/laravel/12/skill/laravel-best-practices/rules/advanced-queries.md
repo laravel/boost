@@ -1,9 +1,3 @@
----
-title: Advanced Query Patterns
-impact: HIGH
-tags: database, performance, eloquent, subqueries, indexing
----
-
 # Advanced Query Patterns
 
 ## Use `addSelect()` Subqueries for Single Values from Has-Many
@@ -68,12 +62,14 @@ $feature->comments->each->setRelation('feature', $feature);
 
 `whereHas()` emits a correlated `EXISTS` subquery that re-executes per row. A separate `pluck()` query followed by `whereIn()` lets the database use an index lookup instead.
 
-Slow:
+Incorrect (correlated EXISTS re-executes per row):
+
 ```php
 $query->whereHas('company', fn ($q) => $q->where('name', 'like', $term));
 ```
 
-Fast:
+Correct (index-friendly lookup):
+
 ```php
 $query->whereIn('company_id', Company::where('name', 'like', $term)->pluck('id'));
 ```

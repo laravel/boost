@@ -1,9 +1,3 @@
----
-title: Blade & Views Best Practices
-impact: MEDIUM
-tags: blade, views, components, templates
----
-
 # Blade & Views Best Practices
 
 ## Use `$attributes->merge()` in Component Templates

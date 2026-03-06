@@ -1,9 +1,3 @@
----
-title: Migration Best Practices
-impact: MEDIUM
-tags: migration, schema, foreign-key, indexes, rollback
----
-
 # Migration Best Practices
 
 ## Generate Migrations with Artisan

@@ -1,9 +1,3 @@
----
-title: Events & Notifications Best Practices
-impact: MEDIUM
-tags: events, listeners, notifications, queue
----
-
 # Events & Notifications Best Practices
 
 ## Rely on Event Discovery

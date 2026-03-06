@@ -1,9 +1,3 @@
----
-title: Caching Best Practices
-impact: HIGH
-tags: cache, performance, redis
----
-
 # Caching Best Practices
 
 ## Use `Cache::remember()` Instead of Manual Get/Put

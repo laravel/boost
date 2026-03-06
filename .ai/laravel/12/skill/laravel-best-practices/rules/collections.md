@@ -1,9 +1,3 @@
----
-title: Collection Best Practices
-impact: MEDIUM
-tags: collections, lazy-collections, eloquent
----
-
 # Collection Best Practices
 
 ## Use Higher-Order Messages for Simple Operations

@@ -1,9 +1,3 @@
----
-title: Database Performance Best Practices
-impact: CRITICAL
-tags: database, performance, n+1, memory, indexing
----
-
 # Database Performance Best Practices
 
 ## Always Eager Load Relationships

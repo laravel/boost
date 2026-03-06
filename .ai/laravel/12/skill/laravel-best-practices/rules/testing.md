@@ -1,9 +1,3 @@
----
-title: Testing Best Practices
-impact: HIGH
-tags: testing, pest, factories, assertions
----
-
 # Testing Best Practices
 
 ## Use `LazilyRefreshDatabase` Over `RefreshDatabase`

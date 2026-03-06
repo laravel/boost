@@ -1,9 +1,3 @@
----
-title: Architecture Best Practices
-impact: MEDIUM
-tags: architecture, actions, dependency-injection, interfaces, packages, concurrency, storage
----
-
 # Architecture Best Practices
 
 ## Single-Purpose Action Classes

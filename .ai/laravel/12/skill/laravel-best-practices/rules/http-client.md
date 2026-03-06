@@ -1,9 +1,3 @@
----
-title: HTTP Client Best Practices
-impact: MEDIUM
-tags: http-client, resilience, testing, concurrency
----
-
 # HTTP Client Best Practices
 
 ## Always Set Explicit Timeouts

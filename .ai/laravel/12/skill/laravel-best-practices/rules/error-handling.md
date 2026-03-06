@@ -1,9 +1,3 @@
----
-title: Error Handling Best Practices
-impact: MEDIUM
-tags: exceptions, error-handling, logging
----
-
 # Error Handling Best Practices
 
 ## Exception Reporting and Rendering

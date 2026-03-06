@@ -1,9 +1,3 @@
----
-title: Validation & Forms Best Practices
-impact: HIGH
-tags: validation, form-request, rules
----
-
 # Validation & Forms Best Practices
 
 ## Use Form Request Classes

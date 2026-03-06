@@ -1,9 +1,3 @@
----
-title: Eloquent Best Practices
-impact: HIGH
-tags: eloquent, relationships, scopes, observers, casts
----
-
 # Eloquent Best Practices
 
 ## Use Correct Relationship Types

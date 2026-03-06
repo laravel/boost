@@ -1,9 +1,3 @@
----
-title: Configuration Best Practices
-impact: HIGH
-tags: config, env, secrets, environment
----
-
 # Configuration Best Practices
 
 ## `env()` Only in Config Files

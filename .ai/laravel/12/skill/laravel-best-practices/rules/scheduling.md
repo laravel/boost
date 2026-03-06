@@ -1,9 +1,3 @@
----
-title: Task Scheduling Best Practices
-impact: MEDIUM
-tags: scheduling, cron, tasks
----
-
 # Task Scheduling Best Practices
 
 ## Use `withoutOverlapping()` on Variable-Duration Tasks

@@ -1,9 +1,3 @@
----
-title: Routing & Controllers Best Practices
-impact: MEDIUM
-tags: routing, controllers, model-binding, rest
----
-
 # Routing & Controllers Best Practices
 
 ## Use Implicit Route Model Binding

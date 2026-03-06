@@ -1,9 +1,3 @@
----
-title: Queue & Job Best Practices
-impact: MEDIUM
-tags: queue, job, retry, backoff, unique, batching, horizon, concurrency
----
-
 # Queue & Job Best Practices
 
 ## Set `retry_after` Greater Than `timeout`

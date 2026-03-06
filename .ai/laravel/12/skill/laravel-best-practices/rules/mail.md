@@ -1,9 +1,3 @@
----
-title: Mail Best Practices
-impact: MEDIUM
-tags: mail, mailable, queue
----
-
 # Mail Best Practices
 
 ## Implement `ShouldQueue` on the Mailable Class
