@@ -59,6 +59,13 @@ class GuidelineComposer
         return base_path($this->userGuidelineDir.'/'.ltrim($path, '/'));
     }
 
+    protected function isCustomGuideline(string $path): bool
+    {
+        $resolvedBase = realpath($this->customGuidelinePath());
+
+        return $resolvedBase !== false && str_contains($path, $resolvedBase);
+    }
+
     /**
      * Static method to compose guidelines from a collection.
      * Can be used without Laravel dependencies.
@@ -301,8 +308,7 @@ class GuidelineComposer
             'name' => str_replace(['.blade.php', '.md'], '', basename($path)),
             'description' => $description,
             'path' => $path,
-            'custom' => ($resolvedCustomBase = realpath($this->customGuidelinePath())) !== false
-                && str_contains($path, $resolvedCustomBase),
+            'custom' => $this->isCustomGuideline($path),
             'third_party' => $thirdParty,
             'tokens' => round(str_word_count($rendered) * 1.3),
         ];
@@ -347,10 +353,7 @@ class GuidelineComposer
 
         $path = realpath($path);
 
-        // If this is a custom guideline, return it unchanged
-        $resolvedCustomBase = realpath($this->customGuidelinePath());
-
-        if ($resolvedCustomBase !== false && str_contains($path, $resolvedCustomBase)) {
+        if ($this->isCustomGuideline($path)) {
             return $path;
         }
 
