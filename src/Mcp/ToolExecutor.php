@@ -6,10 +6,15 @@ namespace Laravel\Boost\Mcp;
 
 use Dotenv\Dotenv;
 use Illuminate\Support\Env;
+use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use ReflectionClass;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
+use Throwable;
 
 class ToolExecutor
 {
@@ -19,7 +24,50 @@ class ToolExecutor
             return Response::error("Tool not registered or not allowed: {$toolClass}");
         }
 
+        if ($this->shouldExecuteInProcess($toolClass)) {
+            return $this->executeInProcess($toolClass, $arguments);
+        }
+
         return $this->executeInSubprocess($toolClass, $arguments);
+    }
+
+    protected function shouldExecuteInProcess(string $toolClass): bool
+    {
+        if (! config('boost.ace.enabled', false)) {
+            return false;
+        }
+
+        $reflection = new ReflectionClass($toolClass);
+
+        return ! empty($reflection->getAttributes(IsReadOnly::class));
+    }
+
+    /**
+     * Execute a tool in the current process. Used by both the MCP pipeline
+     * and ToolSliceResolver to avoid duplicating instantiation logic.
+     *
+     * @param  array<string, mixed>  $arguments
+     */
+    public function runInProcess(string $toolClass, array $arguments): Response
+    {
+        /** @var Tool $tool */
+        $tool = app($toolClass);
+
+        $request = new Request($arguments);
+
+        return $tool->handle($request); // @phpstan-ignore-line
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     */
+    protected function executeInProcess(string $toolClass, array $arguments): Response
+    {
+        try {
+            return $this->runInProcess($toolClass, $arguments);
+        } catch (Throwable $e) {
+            return Response::error("Tool execution failed: {$e->getMessage()}");
+        }
     }
 
     protected function executeInSubprocess(string $toolClass, array $arguments): Response
