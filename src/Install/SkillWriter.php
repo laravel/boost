@@ -316,7 +316,7 @@ class SkillWriter
         );
 
         foreach ($files as $file) {
-            if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
+            if ($file->isFile() && str_ends_with((string) $file->getFilename(), '.blade.php')) {
                 return true;
             }
         }

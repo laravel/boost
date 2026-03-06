@@ -6,6 +6,7 @@ namespace Laravel\Boost\Mcp;
 
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\Prompts\LaravelCodeSimplifier\LaravelCodeSimplifier;
+use Laravel\Boost\Mcp\Prompts\UpgradeInertiav3\UpgradeInertiaV3;
 use Laravel\Boost\Mcp\Prompts\UpgradeLivewirev4\UpgradeLivewireV4;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
@@ -121,6 +122,7 @@ class Boost extends Server
     {
         return $this->filterPrimitives([
             LaravelCodeSimplifier::class,
+            UpgradeInertiaV3::class,
             UpgradeLivewireV4::class,
         ], 'prompts');
     }
