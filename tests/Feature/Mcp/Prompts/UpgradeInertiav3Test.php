@@ -43,10 +43,12 @@ test('it contains core upgrade content', function (): void {
     expect($response)->isToolResult()
         ->toolTextContains('Inertia v2 to v3 Upgrade Specialist')
         ->toolTextContains('Axios removed')
-        ->toolTextContains('qs removed')
+        ->toolTextContains('`qs` dependency removed')
         ->toolTextContains('Event renames')
         ->toolTextContains('`LazyProp` removed')
-        ->toolTextContains('Config restructuring');
+        ->toolTextContains('Config restructuring')
+        ->toolTextContains('router.cancelAll()')
+        ->toolTextContains('hideProgress()');
 });
 
 test('it properly compiles blade assist helpers', function (): void {
@@ -54,15 +56,35 @@ test('it properly compiles blade assist helpers', function (): void {
     $text = (string) $response->content();
 
     expect($text)
-        ->toContain('composer require inertiajs/inertia-laravel')
+        ->toContain('composer require inertiajs/inertia-laravel:^3.0.0-beta')
         ->toContain('composer show inertiajs/inertia-laravel')
-        ->toContain('php artisan optimize:clear')
-        ->toContain('php artisan vendor:publish --tag=inertia-config --force')
+        ->toContain('npm install @inertiajs/vite@^3.0.0-beta')
+        ->toContain('php artisan vendor:publish --provider=')
         ->toContain('php artisan view:clear')
         ->not->toContain('$assist->composerCommand')
         ->not->toContain('$assist->artisanCommand')
         ->not->toContain('$assist->nodePackageManagerCommand')
-        ->not->toContain('{{ $assist');
+        ->not->toContain('{{ $assist')
+        ->not->toContain('@if(')
+        ->not->toContain('@endif')
+        ->not->toContain('--tag=inertia-config');
+});
+
+test('it avoids the outdated migration guidance from the original draft', function (): void {
+    $text = (string) $this->prompt->handle()->content();
+
+    expect($text)
+        ->not->toContain('replace with `fetch`')
+        ->not->toContain('Use the native `URLSearchParams` API instead')
+        ->not->toContain('onBefore')
+        ->not->toContain('onStart')
+        ->not->toContain('partialComponent')
+        ->not->toContain('defaultComponent')
+        ->not->toContain('Inertia::testing()')
+        ->not->toContain('children render immediately; props may be undefined initially')
+        ->not->toContain('React Setup')
+        ->not->toContain('Vue Setup')
+        ->not->toContain('Svelte Setup');
 });
 
 test('it shows react-specific content when react adapter is installed', function (): void {
@@ -72,13 +94,13 @@ test('it shows react-specific content when react adapter is installed', function
     $text = (string) $this->prompt->handle()->content();
 
     expect($text)
-        ->toContain('@inertiajs/react@^3.0')
+        ->toContain('@inertiajs/react@^3.0.0-beta')
         ->toContain('React 19+')
-        ->toContain('React Setup')
-        ->not->toContain('@inertiajs/vue3@^3.0')
-        ->not->toContain('@inertiajs/svelte@^3.0')
-        ->not->toContain('Vue Setup')
-        ->not->toContain('Svelte Setup');
+        ->toContain('Deferred` component behavior (React)')
+        ->toContain("import { progress } from '@inertiajs/react'")
+        ->not->toContain('@inertiajs/vue3@^3.0.0-beta')
+        ->not->toContain('@inertiajs/svelte@^3.0.0-beta')
+        ->not->toContain('Svelte 5 runes syntax');
 });
 
 test('it shows vue-specific content when vue adapter is installed', function (): void {
@@ -88,13 +110,12 @@ test('it shows vue-specific content when vue adapter is installed', function ():
     $text = (string) $this->prompt->handle()->content();
 
     expect($text)
-        ->toContain('@inertiajs/vue3@^3.0')
-        ->toContain('Vue 3.x')
-        ->toContain('Vue Setup')
-        ->not->toContain('@inertiajs/react@^3.0')
-        ->not->toContain('@inertiajs/svelte@^3.0')
-        ->not->toContain('React Setup')
-        ->not->toContain('Svelte Setup');
+        ->toContain('@inertiajs/vue3@^3.0.0-beta')
+        ->toContain("import { progress } from '@inertiajs/vue3'")
+        ->not->toContain('@inertiajs/react@^3.0.0-beta')
+        ->not->toContain('@inertiajs/svelte@^3.0.0-beta')
+        ->not->toContain('Deferred` component behavior (React)')
+        ->not->toContain('Svelte 5 runes syntax');
 });
 
 test('it shows svelte-specific content when svelte adapter is installed', function (): void {
@@ -104,11 +125,11 @@ test('it shows svelte-specific content when svelte adapter is installed', functi
     $text = (string) $this->prompt->handle()->content();
 
     expect($text)
-        ->toContain('@inertiajs/svelte@^3.0')
+        ->toContain('@inertiajs/svelte@^3.0.0-beta')
         ->toContain('Svelte 5+')
-        ->toContain('Svelte Setup')
-        ->not->toContain('@inertiajs/react@^3.0')
-        ->not->toContain('@inertiajs/vue3@^3.0')
-        ->not->toContain('React Setup')
-        ->not->toContain('Vue Setup');
+        ->toContain('Svelte 5 runes syntax')
+        ->toContain("import { progress } from '@inertiajs/svelte'")
+        ->not->toContain('@inertiajs/react@^3.0.0-beta')
+        ->not->toContain('@inertiajs/vue3@^3.0.0-beta')
+        ->not->toContain('Deferred` component behavior (React)');
 });
