@@ -14,6 +14,7 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
+use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -119,6 +120,9 @@ class InstallCommand extends Command
 
     protected function performInstallation(): void
     {
+        app()->instance(GuidelineConfig::class, $this->buildGuidelineConfig());
+        app()->forgetInstance(GuidelineAssist::class);
+
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->installGuidelines();
         }
