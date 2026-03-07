@@ -69,11 +69,12 @@ For icons not available in Heroicons, use [Lucide](https://lucide.dev/). Import 
 
 @boostsnippet("Table", "blade")
 <flux:table>
-    <flux:table.head>
-        <flux:table.row>
-            <flux:table.cell>Name</flux:table.cell>
-        </flux:table.row>
-    </flux:table.head>
+    <flux:table.columns>
+        <flux:table.cell>Column Name</flux:table.cell>
+    </flux:table.columns>
+    <flux:table.row>
+        <flux:table.cell>Value</flux:table.cell>
+    </flux:table.row>
 </flux:table>
 @endboostsnippet
 
