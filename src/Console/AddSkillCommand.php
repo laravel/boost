@@ -11,9 +11,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Skills\Remote\AuditResult;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
+use Laravel\Boost\Skills\Remote\SkillAuditor;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 
@@ -22,6 +24,7 @@ use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\spin;
+use function Laravel\Prompts\table;
 use function Laravel\Prompts\text;
 
 class AddSkillCommand extends Command
@@ -34,7 +37,8 @@ class AddSkillCommand extends Command
         {--list : List available skills}
         {--all : Install all skills}
         {--skill=* : Specific skills to install}
-        {--force : Overwrite existing skills}';
+        {--force : Overwrite existing skills}
+        {--skip-audit : Skip security audit}';
 
     /** @var string */
     protected $description = 'Add skills from a remote GitHub repository';
@@ -160,6 +164,10 @@ class AddSkillCommand extends Command
             return self::SUCCESS;
         }
 
+        if (! $this->runAuditBeforeInstall($selectedSkills)) {
+            return self::SUCCESS;
+        }
+
         $results = $this->downloadSkills($selectedSkills);
 
         if ($results['installedNames'] !== []) {
@@ -271,6 +279,126 @@ class AddSkillCommand extends Command
         }
 
         return $results;
+    }
+
+    /**
+     * @param  Collection<string, RemoteSkill>  $selectedSkills
+     */
+    protected function runAuditBeforeInstall(Collection $selectedSkills): bool
+    {
+        if ($this->option('skip-audit')) {
+            return true;
+        }
+
+        $skillNames = $selectedSkills->map(fn (RemoteSkill $skill): string => $skill->name)->values()->all();
+
+        /** @var array<string, array<int, AuditResult>> $auditResults */
+        $auditResults = spin(
+            callback: fn (): array => (new SkillAuditor)->audit(
+                $this->repository->fullName(),
+                $skillNames,
+            ),
+            message: 'Running security audit...',
+        );
+
+        if (! $this->hasRiskySkills($auditResults)) {
+            return true;
+        }
+
+        $this->displayAuditResults($auditResults, $skillNames);
+
+        if (! stream_isatty(STDIN)) {
+            return true;
+        }
+
+        return confirm('Do you want to install these skills?');
+    }
+
+    /**
+     * @param  array<string, array<int, AuditResult>>  $auditResults
+     * @param  array<int, string>  $skillNames
+     */
+    protected function displayAuditResults(array $auditResults, array $skillNames): void
+    {
+        $partnerKeys = collect($auditResults)
+            ->flatMap(fn (array $results): array => array_map(fn (AuditResult $r): string => $r->partner, $results))
+            ->unique()
+            ->values()
+            ->all();
+
+        $headers = array_merge(['Skill'], array_map(ucfirst(...), $partnerKeys), ['Risk']);
+
+        $rows = [];
+
+        foreach ($skillNames as $skillName) {
+            $partnerResults = $auditResults[$skillName] ?? [];
+            $partnerMap = [];
+
+            foreach ($partnerResults as $result) {
+                $partnerMap[$result->partner] = $result;
+            }
+
+            $worstResult = $this->overallRisk($partnerResults);
+
+            $row = [$skillName];
+
+            foreach ($partnerKeys as $partnerKey) {
+                $row[] = isset($partnerMap[$partnerKey])
+                    ? $this->colorizeRisk($partnerMap[$partnerKey])
+                    : '—';
+            }
+
+            $row[] = $worstResult instanceof AuditResult
+                ? $this->colorizeRisk($worstResult)
+                : '—';
+
+            $rows[] = $row;
+        }
+
+        note('Security Audit');
+        table($headers, $rows);
+    }
+
+    /**
+     * @param  array<string, array<int, AuditResult>>  $auditResults
+     */
+    protected function hasRiskySkills(array $auditResults): bool
+    {
+        foreach ($auditResults as $partnerResults) {
+            foreach ($partnerResults as $result) {
+                if ($result->riskWeight() >= 3) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<int, AuditResult>  $results
+     */
+    protected function overallRisk(array $results): ?AuditResult
+    {
+        $worst = null;
+
+        foreach ($results as $result) {
+            if (! $worst instanceof AuditResult || $result->riskWeight() > $worst->riskWeight()) {
+                $worst = $result;
+            }
+        }
+
+        return $worst;
+    }
+
+    protected function colorizeRisk(AuditResult $result): string
+    {
+        return match ($result->riskColor()) {
+            'red' => $this->red($result->riskLabel()),
+            'yellow' => $this->yellow($result->riskLabel()),
+            'green' => $this->green($result->riskLabel()),
+            default => $this->dim($result->riskLabel()),
+        };
     }
 
     protected function runBoostUpdate(): void
