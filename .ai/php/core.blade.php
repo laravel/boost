@@ -6,6 +6,7 @@
 @if($assist->shouldEnforceStrictTypes())
 - Always use strict typing at the head of a `.php` file: `declare(strict_types=1);`.
 @endif
+- Always use curly braces for control structures, even for single-line bodies.
 
 ## Constructors
 - Use PHP 8 constructor property promotion in `__construct()`.
@@ -13,7 +14,8 @@
 - Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
 
 ## Type Declarations
-- Use appropriate PHP type hints for method parameters and return type declarations for methods and functions.
+- Always use explicit return type declarations for methods and functions.
+- Use appropriate PHP type hints for method parameters.
 
 <!-- Explicit Return Types and Method Params -->
 ```php

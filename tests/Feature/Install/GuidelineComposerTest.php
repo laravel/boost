@@ -42,9 +42,9 @@ test('includes Inertia React conditional guidelines based on version', function 
 
     $guidelines = $this->composer->compose();
 
-    // Verify core guidelines contain Inertia content (skill activation moved to foundation)
+    // Verify core guidelines reference the skill (detailed examples are in skills now)
     expect($guidelines)
-        ->toContain('Inertia + React');
+        ->toContain('inertia-react-development');
 })->with([
     'version 2.0.9' => ['2.0.9'],
     'version 2.1.0' => ['2.1.0'],
@@ -351,6 +351,7 @@ test('includes laravel/mcp guidelines when directly required', function (): void
 
     expect($this->composer->compose())
         ->toContain('Laravel MCP')
+        ->toContain('mcp-development')
         ->not->toContain('Mcp::web');
 });
 
@@ -454,6 +455,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
         ->toContain('Package manager: npm install')
         // Volt guidelines should be included but not skill content
         ->toContain('Livewire Volt')
+        ->toContain('volt-development')
         // Skill content should NOT be in guidelines (it's in the skill file)
         ->not->toContain('`@volt`') // This is in the skill, not the guideline
         ->not->toContain('@endvolt')
