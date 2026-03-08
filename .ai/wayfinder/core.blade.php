@@ -5,7 +5,6 @@
 
 Wayfinder generates TypeScript functions for Laravel routes. Import from `@/actions/` (controllers) or `@/routes/` (named routes).
 
-- IMPORTANT: Activate `wayfinder-development` skill whenever referencing backend routes in frontend components.
 - Invokable Controllers: `import StorePost from '@/actions/.../StorePostController'; StorePost()`.
 - Parameter Binding: Detects route keys (`{post:slug}`) — `show({ slug: "my-post" })`.
 - Query Merging: `show(1, { mergeQuery: { page: 2, sort: null } })` merges with current URL, `null` removes params.
