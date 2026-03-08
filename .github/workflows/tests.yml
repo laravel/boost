@@ -15,6 +15,7 @@ permissions:
 jobs:
   tests:
     runs-on: ${{ matrix.os }}
+
     defaults:
       run:
         shell: bash
@@ -22,12 +23,14 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04, windows-latest ]
-        php: [ 8.2, 8.3, 8.4, 8.5 ]
-        laravel: [ 11, 12 ]
+        os: [ubuntu-22.04, windows-latest]
+        php: [8.2, 8.3, 8.4, 8.5]
+        laravel: [11, 12, 13]
         exclude:
           - php: 8.5
             laravel: 11
+          - laravel: '13'
+            php: 8.2
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} - ${{ matrix.os }}
 

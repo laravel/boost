@@ -1115,3 +1115,63 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     @rmdir($mdOverrideDir.'/pest');
     @rmdir($mdOverrideDir);
 });
+
+test('symlinked custom guidelines directory does not produce duplicates', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $realGuidelinesDir = realpath(testDirectory('Fixtures/.ai/guidelines'));
+    $symlinkDir = testDirectory('Fixtures/.ai/symlinked-guidelines');
+
+    @unlink($symlinkDir);
+    symlink($realGuidelinesDir, $symlinkDir);
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $symlinkDir.'/'.ltrim((string) $path, '/'));
+
+        $composed = $composer->compose();
+        $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
+
+        expect($overrideCount)->toBe(1);
+    } finally {
+        @unlink($symlinkDir);
+    }
+});
+
+test('symlinked custom guideline file does not produce duplicates', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $customDir = testDirectory('Fixtures/.ai/symlinked-file-guidelines');
+    $externalFile = realpath(testDirectory('Fixtures/.ai/guidelines/laravel/core.blade.php'));
+
+    @rmdir($customDir.'/laravel');
+    @rmdir($customDir);
+    mkdir($customDir.'/laravel', 0755, true);
+    symlink($externalFile, $customDir.'/laravel/core.blade.php');
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $composed = $composer->compose();
+        $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
+
+        expect($overrideCount)->toBe(1);
+    } finally {
+        @unlink($customDir.'/laravel/core.blade.php');
+        @rmdir($customDir.'/laravel');
+        @rmdir($customDir);
+    }
+});
