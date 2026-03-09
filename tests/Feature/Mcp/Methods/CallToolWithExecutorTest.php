@@ -2,7 +2,7 @@
 
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\ToolExecutor;
-use Laravel\Boost\Mcp\Tools\GetConfig;
+use Laravel\Boost\Mcp\Tools\DatabaseConnections;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Exceptions\JsonRpcException;
 use Laravel\Mcp\Server\ServerContext;
@@ -50,7 +50,7 @@ test('throws JsonRpcException when name parameter is missing', function (): void
 
 test('throws JsonRpcException when tool does not exist', function (): void {
     $method = new CallToolWithExecutor(app(ToolExecutor::class));
-    $context = createServerContext([GetConfig::class]);
+    $context = createServerContext([DatabaseConnections::class]);
 
     $method->handle(createToolRequest('non-existent-tool'), $context);
 })->throws(JsonRpcException::class, 'Tool [non-existent-tool] not found.', -32602);
@@ -59,13 +59,13 @@ test('successful tool execution returns proper response', function (): void {
     $executor = Mockery::mock(ToolExecutor::class);
     $executor->shouldReceive('execute')
         ->once()
-        ->with(GetConfig::class, [])
+        ->with(DatabaseConnections::class, [])
         ->andReturn(Response::text('Success result'));
 
     $method = new CallToolWithExecutor($executor);
-    $context = createServerContext([GetConfig::class]);
+    $context = createServerContext([DatabaseConnections::class]);
 
-    $response = $method->handle(createToolRequest('get-config', id: 42), $context);
+    $response = $method->handle(createToolRequest('database-connections', id: 42), $context);
 
     expect($response->toArray())
         ->toMatchArray(['jsonrpc' => '2.0', 'id' => 42])
@@ -77,13 +77,13 @@ test('tool execution exceptions are caught and returned as error responses', fun
     $executor = Mockery::mock(ToolExecutor::class);
     $executor->shouldReceive('execute')
         ->once()
-        ->with(GetConfig::class, [])
+        ->with(DatabaseConnections::class, [])
         ->andThrow(new RuntimeException('Database connection failed'));
 
     $method = new CallToolWithExecutor($executor);
-    $context = createServerContext([GetConfig::class]);
+    $context = createServerContext([DatabaseConnections::class]);
 
-    $response = $method->handle(createToolRequest('get-config'), $context);
+    $response = $method->handle(createToolRequest('database-connections'), $context);
 
     expect($response->toArray())
         ->toHaveKey('result.isError', true)
@@ -97,13 +97,13 @@ test('arguments are properly passed to executor', function (): void {
     $executor = Mockery::mock(ToolExecutor::class);
     $executor->shouldReceive('execute')
         ->once()
-        ->with(GetConfig::class, $expectedArgs)
+        ->with(DatabaseConnections::class, $expectedArgs)
         ->andReturn(Response::text('{"key":"app.name","value":"Laravel"}'));
 
     $method = new CallToolWithExecutor($executor);
-    $context = createServerContext([GetConfig::class]);
+    $context = createServerContext([DatabaseConnections::class]);
 
-    $response = $method->handle(createToolRequest('get-config', $expectedArgs), $context);
+    $response = $method->handle(createToolRequest('database-connections', $expectedArgs), $context);
 
     expect($response->toArray())->toHaveKey('result.isError', false);
 });
