@@ -54,7 +54,19 @@ test('builds MCP server config with cwd field', function (): void {
 
     expect($config)->toHaveKey('command', 'php')
         ->toHaveKey('args', ['artisan', 'boost:mcp'])
-        ->toHaveKey('cwd');
+        ->toHaveKey('cwd', base_path());
+});
+
+test('builds MCP server config with configured cwd override', function (): void {
+    config()->set('boost.agents.codex.mcp_cwd', '/Users/developer/projects/app');
+
+    $codex = new Codex($this->strategyFactory);
+
+    $config = $codex->mcpServerConfig('php', ['artisan', 'boost:mcp']);
+
+    expect($config)->toHaveKey('command', 'php')
+        ->toHaveKey('args', ['artisan', 'boost:mcp'])
+        ->toHaveKey('cwd', '/Users/developer/projects/app');
 });
 
 test('builds MCP server config with env when provided', function (): void {

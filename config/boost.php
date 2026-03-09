@@ -48,4 +48,20 @@ return [
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boost Agent Configuration
+    |--------------------------------------------------------------------------
+    |
+    | These options allow you to customize generated files for specific AI
+    | agents when their execution environment differs from Laravel's.
+    |
+    */
+
+    'agents' => [
+        'codex' => [
+            'mcp_cwd' => env('BOOST_CODEX_MCP_CWD'),
+        ],
+    ],
+
 ];
