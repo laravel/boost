@@ -44,7 +44,7 @@ class ToolExecutor
         try {
             $process->mustRun();
 
-            $output = $process->getOutput();
+            $output = $this->extractJson($process->getOutput());
             $decoded = json_decode($output, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -114,6 +114,29 @@ class ToolExecutor
         }
 
         return Response::text('');
+    }
+
+    /**
+     * Extract the JSON object from process output, stripping any leading
+     * non-JSON content such as PHP warnings or deprecation notices.
+     */
+    protected function extractJson(string $output): string
+    {
+        $objectStart = strpos($output, '{');
+        $arrayStart = strpos($output, '[');
+
+        $jsonStart = match (true) {
+            $objectStart === false && $arrayStart === false => false,
+            $objectStart === false => $arrayStart,
+            $arrayStart === false => $objectStart,
+            default => min($objectStart, $arrayStart),
+        };
+
+        if ($jsonStart === false || $jsonStart === 0) {
+            return $output;
+        }
+
+        return substr($output, $jsonStart);
     }
 
     /**

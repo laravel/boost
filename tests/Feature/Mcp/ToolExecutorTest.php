@@ -150,6 +150,35 @@ test('respects custom timeout parameter', function (): void {
     expect($response->isError())->toBeFalse();
 });
 
+test('extractJson strips leading non-JSON content from output', function (): void {
+    $executor = new ToolExecutor;
+    $reflection = new ReflectionClass($executor);
+    $method = $reflection->getMethod('extractJson');
+
+    $clean = '{"isError":false,"content":[]}';
+    expect($method->invoke($executor, $clean))->toBe($clean);
+
+    $noisy = "Deprecated: Some\\Class::method(): Implicitly marking parameter \$x as nullable is deprecated in /path/to/file.php on line 28\n{\"isError\":false}";
+    expect($method->invoke($executor, $noisy))->toBe('{"isError":false}');
+
+    $multi = "Warning: something\nDeprecated: another\n{\"isError\":false}";
+    expect($method->invoke($executor, $multi))->toBe('{"isError":false}');
+
+    $arrayJson = 'Deprecated: something\n[{"id":1}]';
+    expect($method->invoke($executor, $arrayJson))->toBe('[{"id":1}]');
+
+    $cleanArray = '[{"id":1}]';
+    expect($method->invoke($executor, $cleanArray))->toBe($cleanArray);
+
+    $withArrays = '{"isError":false,"content":[{"type":"text","text":"[1,2,3]"}]}';
+    expect($method->invoke($executor, $withArrays))->toBe($withArrays);
+
+    $noisyWithArrays = "Deprecated: something\n" . '{"isError":false,"content":[{"type":"text","text":"value"}]}';
+    expect($method->invoke($executor, $noisyWithArrays))->toBe('{"isError":false,"content":[{"type":"text","text":"value"}]}');
+
+    expect($method->invoke($executor, ''))->toBe('');
+});
+
 test('clamps timeout values correctly', function (): void {
     $executor = new ToolExecutor;
 
