@@ -58,7 +58,7 @@ test('builds MCP server config with cwd field', function (): void {
 });
 
 test('builds MCP server config with configured cwd override', function (): void {
-    config()->set('boost.agents.codex.mcp_cwd', '/Users/developer/projects/app');
+    config()->set('boost.mcp.cwd', '/Users/developer/projects/app');
 
     $codex = new Codex($this->strategyFactory);
 

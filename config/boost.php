@@ -50,18 +50,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Boost Agent Configuration
+    | Boost MCP Configuration
     |--------------------------------------------------------------------------
     |
-    | These options allow you to customize generated files for specific AI
-    | agents when their execution environment differs from Laravel's.
+    | These options allow you to customize generated MCP server
+    | configuration when your Laravel application and MCP client run in
+    | different environments.
     |
     */
 
-    'agents' => [
-        'codex' => [
-            'mcp_cwd' => env('BOOST_CODEX_MCP_CWD'),
-        ],
+    'mcp' => [
+        'cwd' => env('BOOST_MCP_CWD'),
     ],
 
 ];
