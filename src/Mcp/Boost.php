@@ -13,15 +13,9 @@ use Laravel\Boost\Mcp\Tools\DatabaseConnections;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema;
 use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
-use Laravel\Boost\Mcp\Tools\GetConfig;
 use Laravel\Boost\Mcp\Tools\LastError;
-use Laravel\Boost\Mcp\Tools\ListArtisanCommands;
-use Laravel\Boost\Mcp\Tools\ListAvailableConfigKeys;
-use Laravel\Boost\Mcp\Tools\ListAvailableEnvVars;
-use Laravel\Boost\Mcp\Tools\ListRoutes;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
-use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Resource;
@@ -42,7 +36,7 @@ class Boost extends Server
     /**
      * The MCP server's instructions for the LLM.
      */
-    protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, Artisan commands, error logs, Tinker execution, semantic documentation search and more. Boost helps with code generation.';
+    protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, error logs, semantic documentation search and more. Boost helps with code generation.';
 
     /**
      * The default pagination length for resources that support pagination.
@@ -92,15 +86,9 @@ class Boost extends Server
             DatabaseQuery::class,
             DatabaseSchema::class,
             GetAbsoluteUrl::class,
-            GetConfig::class,
             LastError::class,
-            ListArtisanCommands::class,
-            ListAvailableConfigKeys::class,
-            ListAvailableEnvVars::class,
-            ListRoutes::class,
             ReadLogEntries::class,
             SearchDocs::class,
-            Tinker::class,
         ], 'tools');
     }
 

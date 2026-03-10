@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Boost\Mcp\ToolRegistry;
-use Laravel\Boost\Mcp\Tools\GetConfig;
+use Laravel\Boost\Mcp\Tools\DatabaseConnections;
+use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Symfony\Component\Console\Command\Command;
 use Tests\Fixtures\ThrowingTool;
 
@@ -28,26 +29,26 @@ it('exits with error when the tool class is not in the registry', function (): v
 });
 
 it('exits with error when the tool is in the exclude config', function (): void {
-    config()->set('boost.mcp.tools.exclude', [GetConfig::class]);
+    config()->set('boost.mcp.tools.exclude', [DatabaseConnections::class]);
     ToolRegistry::clearCache();
 
     $this->artisan('boost:execute-tool', [
-        'tool' => GetConfig::class,
-        'arguments' => base64_encode(json_encode(['key' => 'app.name'])),
+        'tool' => DatabaseConnections::class,
+        'arguments' => base64_encode('{}'),
     ])->assertExitCode(Command::FAILURE)
         ->expectsOutputToContain('Tool not registered or not allowed');
 });
 
 it('throws TypeError when base64 decoding fails', function (): void {
     $this->artisan('boost:execute-tool', [
-        'tool' => GetConfig::class,
+        'tool' => DatabaseConnections::class,
         'arguments' => '!!!invalid-base64!!!',
     ])->assertFailed();
 })->throws(TypeError::class);
 
 it('exits with error when decoded arguments contain invalid JSON', function (): void {
     $this->artisan('boost:execute-tool', [
-        'tool' => GetConfig::class,
+        'tool' => DatabaseConnections::class,
         'arguments' => base64_encode('{not valid json'),
     ])->assertExitCode(Command::FAILURE)
         ->expectsOutputToContain('Invalid arguments format');
@@ -56,8 +57,8 @@ it('exits with error when decoded arguments contain invalid JSON', function (): 
 it('outputs JSON with isError false on successful tool execution', function (): void {
     ob_start();
     $exitCode = Artisan::call('boost:execute-tool', [
-        'tool' => GetConfig::class,
-        'arguments' => base64_encode(json_encode(['key' => 'app.name'])),
+        'tool' => DatabaseConnections::class,
+        'arguments' => base64_encode('{}'),
     ]);
     $rawOutput = ob_get_clean();
 
@@ -71,8 +72,8 @@ it('outputs JSON with isError false on successful tool execution', function (): 
 it('outputs JSON with isError true when the tool returns an error response', function (): void {
     ob_start();
     Artisan::call('boost:execute-tool', [
-        'tool' => GetConfig::class,
-        'arguments' => base64_encode(json_encode(['key' => 'nonexistent.key'])),
+        'tool' => DatabaseQuery::class,
+        'arguments' => base64_encode(json_encode(['query' => 'DELETE FROM users'])),
     ]);
     $rawOutput = ob_get_clean();
 
