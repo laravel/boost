@@ -641,7 +641,6 @@ test('the guidelines are in correct order', function (): void {
         ->and($testsPos)->toBeLessThan($pestPos);
 });
 
-
 test('composeGuidelines filters out empty guidelines', function (): void {
     $guidelines = collect([
         'test/empty' => [
