@@ -11,6 +11,7 @@ use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\OpenCode;
+use Laravel\Boost\Install\Agents\Vibe;
 use Tests\Unit\Install\ExampleAgent;
 
 it('returns default agents', function (): void {
@@ -26,6 +27,7 @@ it('returns default agents', function (): void {
         'copilot' => Copilot::class,
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
+        'vibe' => Vibe::class,
     ]);
 });
 
