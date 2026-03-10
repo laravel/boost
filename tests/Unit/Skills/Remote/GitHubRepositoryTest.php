@@ -22,7 +22,7 @@ it('parses valid repository input', function (string $input, string $owner, stri
 ]);
 
 it('throws for invalid input', function (string $input, string $message): void {
-    expect(fn (): \Laravel\Boost\Skills\Remote\GitHubRepository => GitHubRepository::fromInput($input))
+    expect(fn (): GitHubRepository => GitHubRepository::fromInput($input))
         ->toThrow(InvalidArgumentException::class, $message);
 })->with([
     'no slash' => ['invalid-format', 'Invalid repository format'],

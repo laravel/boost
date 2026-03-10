@@ -177,7 +177,7 @@ test('handles missing environment variable on windows', function (): void {
 });
 
 test('identifies absolute paths correctly', function (): void {
-    $reflectionClass = new \ReflectionClass($this->strategy);
+    $reflectionClass = new ReflectionClass($this->strategy);
     $isAbsolutePathMethod = $reflectionClass->getMethod('isAbsolutePath');
 
     // Unix absolute paths
