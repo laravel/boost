@@ -254,6 +254,74 @@ test('it returns error for JSON object string in packages', function (): void {
     expect($response)->isToolResult()->toolHasError();
 });
 
+test('it uses proxy configuration from environment variables', function (): void {
+    $packages = new PackageCollection([]);
+
+    $roster = Mockery::mock(Roster::class);
+    $roster->shouldReceive('packages')->andReturn($packages);
+
+    Http::fake([
+        'https://boost.laravel.com/api/docs' => Http::response('Proxy results', 200),
+    ]);
+
+    putenv('HTTPS_PROXY=http://proxy.example.com:8080');
+    putenv('HTTP_PROXY=http://proxy.example.com:8080');
+    putenv('NO_PROXY=localhost,127.0.0.1');
+
+    try {
+        $tool = new SearchDocs($roster);
+
+        $client = $tool->client();
+        $options = $client->getOptions();
+
+        expect($options['proxy'])->toBe([
+            'http' => 'http://proxy.example.com:8080',
+            'https' => 'http://proxy.example.com:8080',
+            'no' => ['localhost', '127.0.0.1'],
+        ]);
+    } finally {
+        putenv('HTTPS_PROXY');
+        putenv('HTTP_PROXY');
+        putenv('NO_PROXY');
+    }
+});
+
+test('it does not set proxy when environment variables are not set', function (): void {
+    putenv('HTTPS_PROXY');
+    putenv('HTTP_PROXY');
+    putenv('NO_PROXY');
+    putenv('https_proxy');
+    putenv('http_proxy');
+    putenv('no_proxy');
+
+    $tool = new SearchDocs(Mockery::mock(Roster::class));
+
+    $client = $tool->client();
+    $options = $client->getOptions();
+
+    expect($options)->not->toHaveKey('proxy');
+});
+
+test('it supports lowercase proxy environment variables', function (): void {
+    putenv('https_proxy=http://lower.proxy.com:3128');
+    putenv('http_proxy=http://lower.proxy.com:3128');
+
+    try {
+        $tool = new SearchDocs(Mockery::mock(Roster::class));
+
+        $client = $tool->client();
+        $options = $client->getOptions();
+
+        expect($options['proxy'])->toBe([
+            'http' => 'http://lower.proxy.com:3128',
+            'https' => 'http://lower.proxy.com:3128',
+        ]);
+    } finally {
+        putenv('https_proxy');
+        putenv('http_proxy');
+    }
+});
+
 test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 
