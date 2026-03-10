@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void registerAgent(string $key, string $className)
  * @method static array getAgents()
  *
- * @see \Laravel\Boost\BoostManager
+ * @see BoostManager
  */
 class Boost extends Facade
 {
