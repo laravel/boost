@@ -198,6 +198,8 @@ router.on('httpException', (event) => {})
 router.on('networkError', (event) => {})
 @endboostsnippet
 
+If you use document-level event listeners, update the event names accordingly (e.g. `document.addEventListener('inertia:httpException', ...)`).
+
 You may also handle these events per-visit using the new `onHttpException` and `onNetworkError` callbacks:
 
 @boostsnippet('Per-Visit Event Callbacks', 'js')
