@@ -21,10 +21,6 @@ class ExecuteToolCommand extends Command
 
     public function handle(): int
     {
-        // Ensure PHP warnings/deprecations go to stderr, not stdout,
-        // so they don't corrupt the JSON output expected by the MCP protocol.
-        ini_set('display_errors', 'stderr');
-
         $toolClass = $this->argument('tool');
         $argumentsEncoded = $this->argument('arguments');
 

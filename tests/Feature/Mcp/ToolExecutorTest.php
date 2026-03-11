@@ -149,6 +149,31 @@ test('respects custom timeout parameter', function (): void {
     expect($response->isError())->toBeFalse();
 });
 
+test('output buffering discards stray stdout during tool execution', function (): void {
+    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $executor->shouldReceive('buildCommand')
+        ->andReturnUsing(buildSubprocessCommand(...));
+
+    $toolPath = dirname(__DIR__, 3).'/src/Mcp/Tools/DatabaseConnections.php';
+    $originalContent = file_get_contents($toolPath);
+
+    try {
+        $modifiedContent = str_replace(
+            'public function handle(Request $request): Response',
+            "public function handle(Request \$request): Response\n    {\n        echo \"Deprecated: Implicitly marking parameter as nullable\\n\";\n        return \$this->handleOriginal(\$request);\n    }\n\n    public function handleOriginal(Request \$request): Response",
+            $originalContent
+        );
+        file_put_contents($toolPath, $modifiedContent);
+
+        $response = $executor->execute(DatabaseConnections::class, []);
+
+        expect($response->isError())->toBeFalse();
+    } finally {
+        file_put_contents($toolPath, $originalContent);
+    }
+});
+
 test('clamps timeout values correctly', function (): void {
     $executor = new ToolExecutor;
 
