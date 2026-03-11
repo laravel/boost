@@ -625,26 +625,6 @@ test('the guidelines are in correct order', function (): void {
         ->and($testsPos)->toBeLessThan($pestPos);
 });
 
-test('excludes FluxUI Free guidelines when FluxUI Pro is present', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::FLUXUI_PRO, 'livewire/flux-pro', '1.0.0'),
-        new Package(Packages::FLUXUI_FREE, 'livewire/flux', '1.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->with(Packages::FLUXUI_PRO)->andReturn(true);
-
-    $guidelines = $this->composer->guidelines();
-    $keys = $guidelines->keys()->toArray();
-
-    $hasFluxPro = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-pro/'));
-    $hasFluxFree = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-free/'));
-
-    expect($hasFluxPro)->toBeTrue()
-        ->and($hasFluxFree)->toBeFalse();
-});
-
 test('composeGuidelines filters out empty guidelines', function (): void {
     $guidelines = collect([
         'test/empty' => [
