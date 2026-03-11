@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Config;
 use Laravel\Boost\Boost;
 use Laravel\Boost\BoostManager;
 use Laravel\Boost\BoostServiceProvider;
+use Laravel\Roster\Roster;
 
 beforeEach(function (): void {
     $this->refreshApplication();
@@ -32,7 +33,7 @@ describe('boost.enabled configuration', function (): void {
         $provider->register();
         $provider->boot(app('router'));
 
-        expect(app()->bound(Laravel\Roster\Roster::class))->toBeTrue()
+        expect(app()->bound(Roster::class))->toBeTrue()
             ->and(config('logging.channels.browser'))->not->toBeNull();
     });
 
