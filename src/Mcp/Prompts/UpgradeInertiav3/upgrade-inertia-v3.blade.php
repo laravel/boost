@@ -371,9 +371,26 @@ All Inertia packages are now ESM-only. Replace any CommonJS `require()` imports 
 
 The `clearHistory` and `encryptHistory` keys are now omitted from the page object unless they are `true`. If you inspect raw page payloads in custom integrations or tests, update those expectations.
 
+## Next steps: New features in v3
+
+After completing the upgrade, the following new features are available. Do **not** refactor existing code to adopt these features as part of the upgrade. Just complete the breaking changes above. These are listed as next steps so you can explore them separately.
+
+- **Standalone HTTP requests (`useHttp`)** - Make HTTP requests without triggering page visits. Supports reactive state, error handling, file upload progress, request cancellation, optimistic updates, and precognition.
+- **Optimistic updates** - Chain `router.optimistic()` before a visit to apply changes instantly on the client. Props revert automatically on failure. Works with router visits, `<Form>`, `useForm`, and `useHttp`.
+- **Instant visits** - Swap to the target page component immediately via `<Link href="/dashboard" component="Dashboard">` while the server request fires in the background.
+- **Layout props (`useLayoutProps`)** - Persistent layouts can declare defaults that pages override via `setLayoutProps()`. Supports named layouts, nested layouts, and static props.
+- **Exception handling (`handleExceptionsUsing`)** - Full control over error page rendering with access to shared data via `withSharedData()`.
+- **Default layout** - Set a default layout in `createInertiaApp()` instead of on every page.
+- **Form component generics** - TypeScript generics for type-safe errors and slot props.
+- **Enum support** - Use PHP enums directly in `Inertia::render()` responses.
+- **`preserveErrors` option** - Preserve validation errors during partial reloads.
+- **Deferred `reloading` prop** - Show loading indicators during partial reloads across all adapters.
+
+Consult the `search-docs` tool for implementation details when you're ready to adopt any of these features.
+
 ## Getting help
 
 If you encounter issues during the upgrade:
 
-- Check the [documentation](https://inertiajs.com) for detailed feature guides
+- Check the [upgrade guide](https://inertiajs.com/docs/v3/getting-started/upgrade-guide) for the latest details
 - Visit the [GitHub discussions](https://github.com/inertiajs/inertia/discussions) for community support
