@@ -327,6 +327,7 @@ it('returns correct count of JSON log entries', function (): void {
     ]);
 
     $entries = [];
+
     for ($i = 1; $i <= 10; $i++) {
         $entries[] = '{"message":"Log entry '.$i.'","context":{},"level":200,"level_name":"INFO","channel":"local","datetime":"2024-01-15T10:'.str_pad((string) $i, 2, '0', STR_PAD_LEFT).':00+00:00"}';
     }
