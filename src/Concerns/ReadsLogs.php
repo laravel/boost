@@ -114,6 +114,10 @@ trait ReadsLogs
      */
     protected function isErrorEntry(string $line): bool
     {
+        if (str_starts_with(trim($line), '{')) {
+            return $this->isJsonErrorEntry($line);
+        }
+
         return preg_match($this->getErrorEntryRegex(), $line) === 1;
     }
 
@@ -166,6 +170,44 @@ trait ReadsLogs
     }
 
     /**
+     * Determine if the log content uses JSON format (one JSON object per line).
+     */
+    protected function isJsonLogFormat(string $content): bool
+    {
+        $firstLine = strtok($content, "\n");
+
+        if ($firstLine === false || trim($firstLine) === '') {
+            return false;
+        }
+
+        $trimmed = trim($firstLine);
+
+        if (! str_starts_with($trimmed, '{')) {
+            return false;
+        }
+
+        json_decode($trimmed);
+
+        return json_last_error() === JSON_ERROR_NONE;
+    }
+
+    /**
+     * Determine if the given entry is a JSON-formatted ERROR log entry.
+     */
+    protected function isJsonErrorEntry(string $entry): bool
+    {
+        $decoded = json_decode(trim($entry), true);
+
+        if (! is_array($decoded)) {
+            return false;
+        }
+
+        $level = $decoded['level'] ?? $decoded['level_name'] ?? '';
+
+        return strtoupper((string) $level) === 'ERROR' || (int) ($decoded['level'] ?? 0) >= 400;
+    }
+
+    /**
      * Scan the last $chunkSize bytes of the log file and return an array of
      * complete log entries (oldest ➜ newest).
      *
@@ -195,6 +237,13 @@ trait ReadsLogs
             }
 
             $content = stream_get_contents($handle);
+
+            if ($this->isJsonLogFormat($content)) {
+                return array_values(array_filter(
+                    explode("\n", $content),
+                    fn (string $line): bool => trim($line) !== '',
+                ));
+            }
 
             // Split by beginning-of-entry look-ahead (PSR-3 timestamp pattern).
             $entries = preg_split($this->getEntrySplitRegex(), $content, -1, PREG_SPLIT_NO_EMPTY);
