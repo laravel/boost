@@ -96,6 +96,6 @@ class UpdateCommand extends Command
 
     protected function isInteractiveMode(): bool
     {
-        return $this->input?->isInteractive() ?? false;
+        return $this->input->isInteractive();
     }
 }
