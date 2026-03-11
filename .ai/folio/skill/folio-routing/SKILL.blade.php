@@ -34,7 +34,7 @@ Pages are usually in `resources/views/pages/` and the file structure determines 
 
 ### Listing Routes
 
-You may list available Folio routes using `{{ $assist->artisanCommand('folio:list') }}` or using the `list-routes` tool.
+You may list available Folio routes using `{{ $assist->artisanCommand('folio:list') }}`.
 
 ### Creating Pages
 

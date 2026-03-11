@@ -5,6 +5,9 @@ license: MIT
 metadata:
   author: laravel
 ---
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 # Flux UI Development
 
 ## When to Apply
@@ -28,10 +31,9 @@ Flux UI is a component library for Livewire built with Tailwind CSS. It provides
 
 Use Flux UI components when available. Fall back to standard Blade components when no Flux component exists for your needs.
 
-<!-- Basic Button -->
-```blade
+@boostsnippet("Basic Button", "blade")
 <flux:button variant="primary">Click me</flux:button>
-```
+@endboostsnippet
 
 ## Available Components (Pro Edition)
 
@@ -41,42 +43,40 @@ Available: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, c
 
 Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Search for exact icon names on the Heroicons site - do not guess or invent icon names.
 
-<!-- Icon Button -->
-```blade
+@boostsnippet("Icon Button", "blade")
 <flux:button icon="arrow-down-tray">Export</flux:button>
-```
+@endboostsnippet
 
 For icons not available in Heroicons, use [Lucide](https://lucide.dev/). Import the icons you need with the Artisan command:
 
 ```bash
-php artisan flux:icon crown grip-vertical github
+{{ $assist->artisanCommand('flux:icon crown grip-vertical github') }}
 ```
 
 ## Common Patterns
 
 ### Form Fields
 
-<!-- Form Field -->
-```blade
+@boostsnippet("Form Field", "blade")
 <flux:field>
     <flux:label>Email</flux:label>
     <flux:input type="email" wire:model="email" />
     <flux:error name="email" />
 </flux:field>
-```
+@endboostsnippet
 
 ### Tables
 
-<!-- Table -->
-```blade
+@boostsnippet("Table", "blade")
 <flux:table>
-    <flux:table.head>
-        <flux:table.row>
-            <flux:table.cell>Name</flux:table.cell>
-        </flux:table.row>
-    </flux:table.head>
+    <flux:table.columns>
+        <flux:table.cell>Column Name</flux:table.cell>
+    </flux:table.columns>
+    <flux:table.row>
+        <flux:table.cell>Value</flux:table.cell>
+    </flux:table.row>
 </flux:table>
-```
+@endboostsnippet
 
 ## Verification
 

@@ -119,6 +119,8 @@ class InstallCommand extends Command
 
     protected function performInstallation(): void
     {
+        app()->instance(GuidelineConfig::class, $this->buildGuidelineConfig());
+
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->installGuidelines();
         }

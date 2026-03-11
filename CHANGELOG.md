@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.2.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.2.3...main)
+
+## [v2.2.3](https://github.com/laravel/boost/compare/v2.2.2...v2.2.3) - 2026-03-06
+
+### What's Changed
+
+* Add two spaces by [@xiCO2k](https://github.com/xiCO2k) in https://github.com/laravel/boost/pull/632
+* Fix duplicate guidelines when using symlinked paths by [@damianlewis](https://github.com/damianlewis) in https://github.com/laravel/boost/pull/634
+* Laravel 13.x Compatibility by [@laravel-shift](https://github.com/laravel-shift) in https://github.com/laravel/boost/pull/633
+* Add First Party Packages by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/635
+* Use configured executable paths when rendering skill templates by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/638
+
+### New Contributors
+
+* [@damianlewis](https://github.com/damianlewis) made their first contribution in https://github.com/laravel/boost/pull/634
+* [@laravel-shift](https://github.com/laravel-shift) made their first contribution in https://github.com/laravel/boost/pull/633
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.2...v2.2.3
 
 ## [v2.2.2](https://github.com/laravel/boost/compare/v2.2.1...v2.2.2) - 2026-03-03
 
@@ -43,11 +60,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -76,12 +95,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
