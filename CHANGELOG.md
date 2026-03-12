@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.3.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.3.1...main)
+
+## [v2.3.1](https://github.com/laravel/boost/compare/v2.3.0...v2.3.1) - 2026-03-12
+
+### What's Changed
+
+* Decode HTML entities in Blade guideline output by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/654
+* Add configurable Codex MCP cwd by [@cyppe](https://github.com/cyppe) in https://github.com/laravel/boost/pull/642
+
+### New Contributors
+
+* [@cyppe](https://github.com/cyppe) made their first contribution in https://github.com/laravel/boost/pull/642
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.3.0...v2.3.1
 
 ## [v2.3.0](https://github.com/laravel/boost/compare/v2.2.3...v2.3.0) - 2026-03-11
 
@@ -84,11 +97,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -121,12 +136,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
