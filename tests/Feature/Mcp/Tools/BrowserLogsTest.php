@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Http\Response;
+use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -90,7 +92,7 @@ test('@boostJs blade directive renders browser logger script', function (): void
 
     $blade = Blade::compileString('@boostJs');
 
-    expect($blade)->toBe('<?php echo '.\Laravel\Boost\Services\BrowserLogger::class.'::getScript(); ?>');
+    expect($blade)->toBe('<?php echo '.BrowserLogger::class.'::getScript(); ?>');
 
     // Test that the script contains expected content
     $script = BrowserLogger::getScript();
@@ -107,7 +109,7 @@ test('@boostJs blade directive renders browser logger script', function (): void
 test('browser logs endpoint processes logs correctly', function (): void {
     Log::shouldReceive('channel')
         ->with('browser')
-        ->andReturn($logger = Mockery::mock(\Illuminate\Log\Logger::class));
+        ->andReturn($logger = Mockery::mock(Logger::class));
 
     $logger->shouldReceive('write')
         ->once()
@@ -153,7 +155,7 @@ test('browser logs endpoint handles complex nested data', function (): void {
 
     Log::shouldReceive('channel')
         ->with('browser')
-        ->andReturn($logger = Mockery::mock(\Illuminate\Log\Logger::class));
+        ->andReturn($logger = Mockery::mock(Logger::class));
 
     $logger->shouldReceive('write')
         ->once()
@@ -199,9 +201,9 @@ test('InjectBoost middleware injects script into HTML response', function (): vo
 HTML;
 
     $request = HttpRequest::create('/');
-    $response = new \Illuminate\Http\Response($html, 200, ['Content-Type' => 'text/html']);
+    $response = new Response($html, 200, ['Content-Type' => 'text/html']);
 
-    $result = $middleware->handle($request, fn ($req): \Illuminate\Http\Response => $response);
+    $result = $middleware->handle($request, fn ($req): Response => $response);
 
     $content = $result->getContent();
     expect($content)->toContain('browser-logger-active')
@@ -216,9 +218,9 @@ test('InjectBoost middleware does not inject into non-HTML responses', function 
     $json = json_encode(['status' => 'ok']);
 
     $request = HttpRequest::create('/');
-    $response = new \Illuminate\Http\Response($json);
+    $response = new Response($json);
 
-    $result = $middleware->handle($request, fn ($req): \Illuminate\Http\Response => $response);
+    $result = $middleware->handle($request, fn ($req): Response => $response);
 
     $content = $result->getContent();
     expect($content)->toBe($json)
@@ -242,9 +244,9 @@ test('InjectBoost middleware does not inject script twice', function (): void {
 HTML;
 
     $request = HttpRequest::create('/');
-    $response = new \Illuminate\Http\Response($html);
+    $response = new Response($html);
 
-    $result = $middleware->handle($request, fn ($req): \Illuminate\Http\Response => $response);
+    $result = $middleware->handle($request, fn ($req): Response => $response);
 
     $content = $result->getContent();
     expect(substr_count($content, 'browser-logger-active'))->toBe(1);
@@ -263,9 +265,9 @@ test('InjectBoost middleware injects before body tag when no head tag', function
 HTML;
 
     $request = HttpRequest::create('/');
-    $response = new \Illuminate\Http\Response($html, 200, ['Content-Type' => 'text/html']);
+    $response = new Response($html, 200, ['Content-Type' => 'text/html']);
 
-    $result = $middleware->handle($request, fn ($req): \Illuminate\Http\Response => $response);
+    $result = $middleware->handle($request, fn ($req): Response => $response);
 
     $content = $result->getContent();
     expect($content)->toContain('browser-logger-active')

@@ -20,7 +20,7 @@ class GuidelineWriter
     public function __construct(protected Agent $agent) {}
 
     /**
-     * @return \Laravel\Boost\Install\GuidelineWriter::NEW|\Laravel\Boost\Install\GuidelineWriter::REPLACED|\Laravel\Boost\Install\GuidelineWriter::FAILED|\Laravel\Boost\Install\GuidelineWriter::NOOP
+     * @return GuidelineWriter::NEW|GuidelineWriter::REPLACED|GuidelineWriter::FAILED|GuidelineWriter::NOOP
      */
     public function write(string $guidelines): int
     {

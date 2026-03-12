@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Container\Container;
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\GetConfig;
 use Laravel\Boost\Mcp\Tools\Tinker;
@@ -112,7 +113,7 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
         'use Symfony\Component\Console\Output\BufferedOutput; '.
         // Bootstrap testbench like all.php does
         '$app = Testbench::createFromConfig(new TestbenchConfig([]), options: ["enables_package_discoveries" => false]); '.
-        (\Illuminate\Container\Container::class.'::setInstance($app); ').
+        (Container::class.'::setInstance($app); ').
         '$kernel = $app->make("Illuminate\Contracts\Console\Kernel"); '.
         '$kernel->bootstrap(); '.
         // Register the ExecuteToolCommand
