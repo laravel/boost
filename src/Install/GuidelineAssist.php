@@ -272,6 +272,11 @@ class GuidelineAssist
         return Sail::BINARY_PATH;
     }
 
+    public function appPath(string $path = ''): string
+    {
+        return ltrim(str_replace(base_path(), '', app_path($path)), '/');
+    }
+
     /**
      * @return Collection<string, Skill>
      */
