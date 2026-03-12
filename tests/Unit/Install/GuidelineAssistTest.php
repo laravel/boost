@@ -190,7 +190,7 @@ test('appPath returns default app path', function (): void {
     $assist->shouldReceive('discover')->andReturn([]);
 
     expect($assist->appPath())->toBe('app');
-    expect($assist->appPath('path/to/a/file.php'))->toBe('app/path/to/a/file.php');
+    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('app'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
 });
 
 test('appPath returns customized path', function(): void {
@@ -201,5 +201,5 @@ test('appPath returns customized path', function(): void {
     app()->useAppPath('src');
 
     expect($assist->appPath())->toBe('src');
-    expect($assist->appPath('path/to/a/file.php'))->toBe('src/path/to/a/file.php');
+    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('src'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
 });

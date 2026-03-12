@@ -274,7 +274,7 @@ class GuidelineAssist
 
     public function appPath(string $path = ''): string
     {
-        return ltrim(str_replace(base_path(), '', app_path($path)), '/');
+        return ltrim(str_replace(base_path(), '', app_path($path)), DIRECTORY_SEPARATOR);
     }
 
     /**
