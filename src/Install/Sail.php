@@ -35,7 +35,13 @@ class Sail
 
     public static function binaryPath(): string
     {
-        return config('boost.executable_paths.sail', 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail');
+        $sailBinary = config('boost.executable_paths.sail');
+
+        if ($sailBinary !== null) {
+            return $sailBinary;
+        }
+
+        return 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail';
     }
 
     public function isInstalled(): bool
