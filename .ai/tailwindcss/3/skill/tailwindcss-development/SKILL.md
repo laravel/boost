@@ -18,7 +18,7 @@ Activate this skill when:
 
 ## Documentation
 
-Use `search-docs` for detailed Tailwind CSS v3 patterns and documentation to get the correct classes for utilities.
+Use `search-docs` for detailed Tailwind CSS v3 patterns and documentation.
 
 ## Basic Usage
 
