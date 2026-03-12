@@ -1,27 +1,27 @@
 # Laravel 12
 
 - CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
-@if (file_exists(base_path('app/Http/Kernel.php')))
+@if (file_exists(app_path('Http/Kernel.php')))
 - This project upgraded from Laravel 10 without migrating to the new streamlined Laravel file structure.
 - This is perfectly fine and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the new Laravel structure unless the user explicitly requests it.
 
 ## Laravel 10 Structure
-- Middleware typically lives in `app/Http/Middleware/` and service providers in `app/Providers/`.
+- Middleware typically lives in `{{ $assist->appPath('Http/Middleware/') }}` and service providers in `{{ $assist->appPath('Providers/') }}`.
 - There is no `bootstrap/app.php` application configuration in a Laravel 10 structure:
-    - Middleware registration happens in `app/Http/Kernel.php`
-    - Exception handling is in `app/Exceptions/Handler.php`
-    - Console commands and schedule register in `app/Console/Kernel.php`
-    - Rate limits likely exist in `RouteServiceProvider` or `app/Http/Kernel.php`
+    - Middleware registration happens in `{{ $assist->appPath('Http/Kernel.php') }}`
+    - Exception handling is in `{{ $assist->appPath('Exceptions/Handler.php') }}`
+    - Console commands and schedule register in `{{ $assist->appPath('Console/Kernel.php') }}`
+    - Rate limits likely exist in `RouteServiceProvider` or `{{ $assist->appPath('Http/Kernel.php') }}`
 @else
 - Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
 
 ## Laravel 12 Structure
-- In Laravel 12, middleware are no longer registered in `app/Http/Kernel.php`.
+- In Laravel 12, middleware are no longer registered in `{{ $assist->appPath('Http/Kernel.php') }}`.
 - Middleware are configured declaratively in `bootstrap/app.php` using `Application::configure()->withMiddleware()`.
 - `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
 - `bootstrap/providers.php` contains application specific service providers.
-- The `app\Console\Kernel.php` file no longer exists; use `bootstrap/app.php` or `routes/console.php` for console configuration.
-- Console commands in `app/Console/Commands/` are automatically available and do not require manual registration.
+- The `{{ $assist->appPath('Console/Kernel.php') }}` file no longer exists; use `bootstrap/app.php` or `routes/console.php` for console configuration.
+- Console commands in `{{ $assist->appPath('Console/Commands/') }}` are automatically available and do not require manual registration.
 @endif
 
 ## Database
