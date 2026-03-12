@@ -242,4 +242,11 @@ class GuidelineAssist
     {
         return Sail::BINARY_PATH;
     }
+
+    public function hasPackage(Packages $package): bool
+    {
+        return $this->roster->packages()->contains(
+            fn ($pkg): bool => $pkg->package() === $package
+        );
+    }
 }

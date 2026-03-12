@@ -5,6 +5,9 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Sail;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 
 beforeEach(function (): void {
@@ -129,4 +132,28 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
     $assist->shouldReceive('discover')->andReturn([]);
 
     expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+});
+
+test('hasPackage returns true when package exists', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
+        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.2'),
+    ]));
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->hasPackage(Packages::INERTIA_REACT))->toBeTrue();
+});
+
+test('hasPackage returns false when package does not exist', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
+        new Package(Packages::INERTIA_VUE, 'inertiajs/inertia-vue', '2.1.2'),
+    ]));
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->hasPackage(Packages::INERTIA_REACT))->toBeFalse();
 });
