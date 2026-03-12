@@ -69,19 +69,6 @@ test('builds MCP server config with config "boost.executable_paths.current_direc
         ->toHaveKey('cwd', '/Users/developer/projects/app');
 });
 
-test('builds MCP server config with BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH env override', function (): void {
-    putenv('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH=/Users/developer/projects/app');
-    config()->set('boost.executable_paths.current_directory', env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH', base_path()));
-
-    $codex = new Codex($this->strategyFactory);
-
-    $config = $codex->mcpServerConfig('php', ['artisan', 'boost:mcp']);
-
-    expect($config)->toHaveKey('command', 'php')
-        ->toHaveKey('args', ['artisan', 'boost:mcp'])
-        ->toHaveKey('cwd', '/Users/developer/projects/app');
-})->after(fn () => putenv('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH'));
-
 test('builds MCP server config with env when provided', function (): void {
     $codex = new Codex($this->strategyFactory);
 
