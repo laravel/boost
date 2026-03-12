@@ -58,3 +58,15 @@ test('isRunningInDevcontainer returns false when REMOTE_CONTAINERS is not set', 
 
     expect((new Sail)->isRunningInDevcontainer())->toBeFalse();
 });
+
+test('sail binary path can be overridden via config', function (): void {
+    config(['boost.executable_paths.sail' => '/custom/path/sail']);
+
+    expect(Sail::binaryPath())->toBe('/custom/path/sail');
+});
+
+test('sail binary path defaults to vendor/bin/sail', function (): void {
+    config(['boost.executable_paths.sail' => null]);
+
+    expect(Sail::binaryPath())->toBe('vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail');
+});
