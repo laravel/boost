@@ -145,6 +145,19 @@ test('html entities from blade expressions are decoded back to plain text for ma
         ->not->toContain('&quot;');
 });
 
+test('all common html entities are decoded', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = 'Use {{ "a < b & c > d" }}';
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('a < b & c > d')
+        ->not->toContain('&lt;')
+        ->not->toContain('&amp;')
+        ->not->toContain('&gt;');
+});
+
 test('renderBladeFile returns empty string for non-existent file', function (): void {
     $result = $this->renderer->renderFile('/non/existent/guideline.blade.php');
 
