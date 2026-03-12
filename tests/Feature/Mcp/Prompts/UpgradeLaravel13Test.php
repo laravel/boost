@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Install\Herd;
-use Laravel\Boost\Mcp\Prompts\UpgradeLaravel13\UpgradeLaravel13;
+use Laravel\Boost\Mcp\Prompts\UpgradeLaravelv13\UpgradeLaravelV13;
 
 beforeEach(function (): void {
-    $this->prompt = new UpgradeLaravel13;
+    $this->prompt = new UpgradeLaravelV13;
 
     $herd = Mockery::mock(Herd::class);
     $herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
@@ -14,7 +14,7 @@ beforeEach(function (): void {
 });
 
 test('it has the correct name', function (): void {
-    expect($this->prompt->name())->toBe('upgrade-laravel-13');
+    expect($this->prompt->name())->toBe('upgrade-laravel-v13');
 });
 
 test('it returns a valid response', function (): void {
