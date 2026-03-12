@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.11...1.x)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.12...1.x)
+
+## [v1.8.12](https://github.com/laravel/boost/compare/v1.8.11...v1.8.12) - 2026-03-12
+
+### What's Changed
+
+* Backport PR #421 and #534 to 1.x branch by [@lancechentw](https://github.com/lancechentw) in https://github.com/laravel/boost/pull/655
+
+### New Contributors
+
+* [@lancechentw](https://github.com/lancechentw) made their first contribution in https://github.com/laravel/boost/pull/655
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.11...v1.8.12
 
 ## [v1.8.11](https://github.com/laravel/boost/compare/v1.8.10...v1.8.11) - 2026-02-20
 
