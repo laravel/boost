@@ -183,3 +183,23 @@ test('hasSkillsEnabled returns true when skills are enabled', function (): void 
 
     expect($assist->hasSkillsEnabled())->toBeTrue();
 });
+
+test('appPath returns default app path', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->appPath())->toBe('app');
+    expect($assist->appPath('path/to/a/file.php'))->toBe('app/path/to/a/file.php');
+});
+
+test('appPath returns customized path', function(): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    app()->useAppPath('src');
+
+    expect($assist->appPath())->toBe('src');
+    expect($assist->appPath('path/to/a/file.php'))->toBe('src/path/to/a/file.php');
+});
