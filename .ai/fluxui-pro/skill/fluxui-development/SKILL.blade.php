@@ -1,10 +1,13 @@
 ---
 name: fluxui-development
-description: "Develops UIs with Flux UI Pro components. Activates when creating buttons, forms, modals, inputs, tables, charts, date pickers, or UI components; replacing HTML elements with Flux; working with flux: components; or when the user mentions Flux, component library, UI components, form fields, or asks about available Flux components."
+description: "Use this skill for Flux UI development in Livewire applications only. Trigger when working with <flux:*> components, building or customizing Livewire component UIs, creating forms, modals, tables, or other interactive elements. Covers: flux: components (buttons, inputs, modals, forms, tables, date-pickers, kanban, badges, tooltips, etc.), component composition, Tailwind CSS styling, Heroicons/Lucide icon integration, validation patterns, responsive design, and theming. Do not use for non-Livewire frameworks or non-component styling."
 license: MIT
 metadata:
   author: laravel
 ---
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 # Flux UI Development
 
 ## When to Apply
@@ -28,10 +31,9 @@ Flux UI is a component library for Livewire built with Tailwind CSS. It provides
 
 Use Flux UI components when available. Fall back to standard Blade components when no Flux component exists for your needs.
 
-<!-- Basic Button -->
-```blade
+@boostsnippet("Basic Button", "blade")
 <flux:button variant="primary">Click me</flux:button>
-```
+@endboostsnippet
 
 ## Available Components (Pro Edition)
 
@@ -41,42 +43,40 @@ Available: accordion, autocomplete, avatar, badge, brand, breadcrumbs, button, c
 
 Flux includes [Heroicons](https://heroicons.com/) as its default icon set. Search for exact icon names on the Heroicons site - do not guess or invent icon names.
 
-<!-- Icon Button -->
-```blade
+@boostsnippet("Icon Button", "blade")
 <flux:button icon="arrow-down-tray">Export</flux:button>
-```
+@endboostsnippet
 
 For icons not available in Heroicons, use [Lucide](https://lucide.dev/). Import the icons you need with the Artisan command:
 
 ```bash
-php artisan flux:icon crown grip-vertical github
+{{ $assist->artisanCommand('flux:icon crown grip-vertical github') }}
 ```
 
 ## Common Patterns
 
 ### Form Fields
 
-<!-- Form Field -->
-```blade
+@boostsnippet("Form Field", "blade")
 <flux:field>
     <flux:label>Email</flux:label>
     <flux:input type="email" wire:model="email" />
     <flux:error name="email" />
 </flux:field>
-```
+@endboostsnippet
 
 ### Tables
 
-<!-- Table -->
-```blade
+@boostsnippet("Table", "blade")
 <flux:table>
-    <flux:table.head>
-        <flux:table.row>
-            <flux:table.cell>Name</flux:table.cell>
-        </flux:table.row>
-    </flux:table.head>
+    <flux:table.columns>
+        <flux:table.cell>Column Name</flux:table.cell>
+    </flux:table.columns>
+    <flux:table.row>
+        <flux:table.cell>Value</flux:table.cell>
+    </flux:table.row>
 </flux:table>
-```
+@endboostsnippet
 
 ## Verification
 

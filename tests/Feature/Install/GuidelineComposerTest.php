@@ -339,22 +339,6 @@ test('excludes laravel/mcp guidelines when indirectly required', function (): vo
     expect($this->composer->compose())->not->toContain('Mcp::web');
 });
 
-test('includes laravel/mcp guidelines when directly required', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::MCP, 'laravel/mcp', '0.2.2'))->setDirect(true),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
-    $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
-
-    expect($this->composer->compose())
-        ->toContain('Laravel MCP')
-        ->toContain('mcp-development')
-        ->not->toContain('Mcp::web');
-});
-
 test('excludes livewire guidelines when indirectly required', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -639,26 +623,6 @@ test('the guidelines are in correct order', function (): void {
         ->and($firstUserGuidelinePos)->toBeLessThan($foundationPos)
         ->and($foundationPos)->toBeLessThan($testsPos)
         ->and($testsPos)->toBeLessThan($pestPos);
-});
-
-test('excludes FluxUI Free guidelines when FluxUI Pro is present', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::FLUXUI_PRO, 'livewire/flux-pro', '1.0.0'),
-        new Package(Packages::FLUXUI_FREE, 'livewire/flux', '1.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->with(Packages::FLUXUI_PRO)->andReturn(true);
-
-    $guidelines = $this->composer->guidelines();
-    $keys = $guidelines->keys()->toArray();
-
-    $hasFluxPro = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-pro/'));
-    $hasFluxFree = collect($keys)->contains(fn ($key): bool => str_contains((string) $key, 'fluxui-free/'));
-
-    expect($hasFluxPro)->toBeTrue()
-        ->and($hasFluxFree)->toBeFalse();
 });
 
 test('composeGuidelines filters out empty guidelines', function (): void {
@@ -1114,4 +1078,64 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     @unlink($mdOverrideDir.'/pest/core.md');
     @rmdir($mdOverrideDir.'/pest');
     @rmdir($mdOverrideDir);
+});
+
+test('symlinked custom guidelines directory does not produce duplicates', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $realGuidelinesDir = realpath(testDirectory('Fixtures/.ai/guidelines'));
+    $symlinkDir = testDirectory('Fixtures/.ai/symlinked-guidelines');
+
+    @unlink($symlinkDir);
+    symlink($realGuidelinesDir, $symlinkDir);
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $symlinkDir.'/'.ltrim((string) $path, '/'));
+
+        $composed = $composer->compose();
+        $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
+
+        expect($overrideCount)->toBe(1);
+    } finally {
+        @unlink($symlinkDir);
+    }
+});
+
+test('symlinked custom guideline file does not produce duplicates', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $customDir = testDirectory('Fixtures/.ai/symlinked-file-guidelines');
+    $externalFile = realpath(testDirectory('Fixtures/.ai/guidelines/laravel/core.blade.php'));
+
+    @rmdir($customDir.'/laravel');
+    @rmdir($customDir);
+    mkdir($customDir.'/laravel', 0755, true);
+    symlink($externalFile, $customDir.'/laravel/core.blade.php');
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $composed = $composer->compose();
+        $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
+
+        expect($overrideCount)->toBe(1);
+    } finally {
+        @unlink($customDir.'/laravel/core.blade.php');
+        @rmdir($customDir.'/laravel');
+        @rmdir($customDir);
+    }
 });

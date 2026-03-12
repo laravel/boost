@@ -1,6 +1,58 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.2.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.3.1...main)
+
+## [v2.3.1](https://github.com/laravel/boost/compare/v2.3.0...v2.3.1) - 2026-03-12
+
+### What's Changed
+
+* Decode HTML entities in Blade guideline output by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/654
+* Add configurable Codex MCP cwd by [@cyppe](https://github.com/cyppe) in https://github.com/laravel/boost/pull/642
+
+### New Contributors
+
+* [@cyppe](https://github.com/cyppe) made their first contribution in https://github.com/laravel/boost/pull/642
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.3.0...v2.3.1
+
+## [v2.3.0](https://github.com/laravel/boost/compare/v2.2.3...v2.3.0) - 2026-03-11
+
+### What's Changed
+
+* Fix table snippet in SKILL.blade.php by [@AndrasMa](https://github.com/AndrasMa) in https://github.com/laravel/boost/pull/640
+* Remove Artisan wrapper MCP tools and update guidelines to use CLI directly by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/629
+* Remove redundant MCP guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/644
+* Remove redundant Pennant guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/645
+* Makes imports consistent by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/646
+* Support JSON-formatted log entries in log reading tools by [@HeathNaylor](https://github.com/HeathNaylor) in https://github.com/laravel/boost/pull/650
+* Remove redundant Flux UI guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/647
+* Add UpgradeInertiaV3 prompt for Inertia v2 to v3 upgrades by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/636
+* Prevent non-JSON stdout output from corrupting MCP tool responses by [@OmarFaruk-0x01](https://github.com/OmarFaruk-0x01) in https://github.com/laravel/boost/pull/641
+
+### New Contributors
+
+* [@AndrasMa](https://github.com/AndrasMa) made their first contribution in https://github.com/laravel/boost/pull/640
+* [@HeathNaylor](https://github.com/HeathNaylor) made their first contribution in https://github.com/laravel/boost/pull/650
+* [@OmarFaruk-0x01](https://github.com/OmarFaruk-0x01) made their first contribution in https://github.com/laravel/boost/pull/641
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.3...v2.3.0
+
+## [v2.2.3](https://github.com/laravel/boost/compare/v2.2.2...v2.2.3) - 2026-03-06
+
+### What's Changed
+
+* Add two spaces by [@xiCO2k](https://github.com/xiCO2k) in https://github.com/laravel/boost/pull/632
+* Fix duplicate guidelines when using symlinked paths by [@damianlewis](https://github.com/damianlewis) in https://github.com/laravel/boost/pull/634
+* Laravel 13.x Compatibility by [@laravel-shift](https://github.com/laravel-shift) in https://github.com/laravel/boost/pull/633
+* Add First Party Packages by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/635
+* Use configured executable paths when rendering skill templates by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/638
+
+### New Contributors
+
+* [@damianlewis](https://github.com/damianlewis) made their first contribution in https://github.com/laravel/boost/pull/634
+* [@laravel-shift](https://github.com/laravel-shift) made their first contribution in https://github.com/laravel/boost/pull/633
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.2...v2.2.3
 
 ## [v2.2.2](https://github.com/laravel/boost/compare/v2.2.1...v2.2.2) - 2026-03-03
 
@@ -43,11 +95,17 @@ If you have custom overrides in:
 
 
 
+
+
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
+
+
 
 
 
@@ -76,12 +134,18 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
+
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
+
+
 
 
 

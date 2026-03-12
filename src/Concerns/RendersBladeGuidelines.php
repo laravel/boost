@@ -11,7 +11,7 @@ trait RendersBladeGuidelines
 {
     private array $storedSnippets = [];
 
-    protected function renderContent(string $content, string $path): string
+    protected function renderContent(string $content, string $path, array $data = []): string
     {
         $isBladeTemplate = str_ends_with($path, '.blade.php');
 
@@ -31,7 +31,10 @@ trait RendersBladeGuidelines
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
         $rendered = Blade::render($content, [
             'assist' => $this->getGuidelineAssist(),
+            ...$data,
         ]);
+
+        $rendered = html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
@@ -51,7 +54,7 @@ trait RendersBladeGuidelines
         }, $content);
     }
 
-    protected function renderBladeFile(string $bladePath): string
+    protected function renderBladeFile(string $bladePath, array $data = []): string
     {
         if (! file_exists($bladePath)) {
             return '';
@@ -60,7 +63,7 @@ trait RendersBladeGuidelines
         $content = file_get_contents($bladePath);
         $content = $this->processBoostSnippets($content);
 
-        $rendered = $this->renderContent($content, $bladePath);
+        $rendered = $this->renderContent($content, $bladePath, $data);
 
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
 

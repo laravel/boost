@@ -45,10 +45,14 @@ class ExecuteToolCommand extends Command
 
         $request = new Request($arguments ?? []);
 
+        ob_start();
+
         try {
             /** @var Response $response */
             $response = $tool->handle($request); // @phpstan-ignore-line
         } catch (Throwable $throwable) {
+            ob_end_clean();
+
             $errorResult = Response::error("Tool execution failed (E_THROWABLE): {$throwable->getMessage()}");
 
             $this->error(json_encode([
@@ -60,6 +64,8 @@ class ExecuteToolCommand extends Command
 
             return static::FAILURE;
         }
+
+        ob_end_clean();
 
         echo json_encode([
             'isError' => $response->isError(),

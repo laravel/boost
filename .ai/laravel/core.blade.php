@@ -3,12 +3,12 @@
 @endphp
 # Do Things the Laravel Way
 
-- Use `{{ $assist->artisanCommand('make:') }}` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
+- Use `{{ $assist->artisanCommand('make:') }}` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `{{ $assist->artisanCommand('list') }}` and check their parameters with `{{ $assist->artisanCommand('[command] --help') }}`.
 - If you're creating a generic PHP class, use `{{ $assist->artisanCommand('make:class') }}`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
-## Model Creation
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `list-artisan-commands` to check the available options to `{{ $assist->artisanCommand('make:model') }}`.
+### Model Creation
+- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `{{ $assist->artisanCommand('make:model --help') }}` to check the available options.
 
 ## APIs & Eloquent Resources
 - For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
