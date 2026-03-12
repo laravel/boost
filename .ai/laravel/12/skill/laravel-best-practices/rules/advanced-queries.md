@@ -58,9 +58,9 @@ $feature->load('comments.user');
 $feature->comments->each->setRelation('feature', $feature);
 ```
 
-## Prefer `whereIn` + `pluck()` Over `whereHas`
+## Prefer `whereIn` + Subquery Over `whereHas`
 
-`whereHas()` emits a correlated `EXISTS` subquery that re-executes per row. A separate `pluck()` query followed by `whereIn()` lets the database use an index lookup instead.
+`whereHas()` emits a correlated `EXISTS` subquery that re-executes per row. Using `whereIn()` with a `select('id')` subquery lets the database use an index lookup instead, without loading data into PHP memory.
 
 Incorrect (correlated EXISTS re-executes per row):
 
@@ -68,10 +68,10 @@ Incorrect (correlated EXISTS re-executes per row):
 $query->whereHas('company', fn ($q) => $q->where('name', 'like', $term));
 ```
 
-Correct (index-friendly lookup):
+Correct (index-friendly subquery, no PHP memory overhead):
 
 ```php
-$query->whereIn('company_id', Company::where('name', 'like', $term)->pluck('id'));
+$query->whereIn('company_id', Company::where('name', 'like', $term)->select('id'));
 ```
 
 ## Sometimes Two Simple Queries Beat One Complex Query
