@@ -47,6 +47,7 @@ return [
         'npm' => env('BOOST_NPM_EXECUTABLE_PATH'),
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
         'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH', base_path()),
+        'sail' => env('BOOST_SAIL_EXECUTABLE_PATH'),
     ],
 
 ];
