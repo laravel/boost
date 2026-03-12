@@ -77,7 +77,7 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
         return collect([
             'command' => $command,
             'args' => $args,
-            'cwd' => config('boost.mcp.cwd') ?: base_path(),
+            'cwd' => config('boost.executable_paths.current_directory', base_path()),
             'env' => $env,
         ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
             ->toArray();

@@ -46,21 +46,7 @@ return [
         'composer' => env('BOOST_COMPOSER_EXECUTABLE_PATH'),
         'npm' => env('BOOST_NPM_EXECUTABLE_PATH'),
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Boost MCP Configuration
-    |--------------------------------------------------------------------------
-    |
-    | These options allow you to customize generated MCP server
-    | configuration when your Laravel application and MCP client run in
-    | different environments.
-    |
-    */
-
-    'mcp' => [
-        'cwd' => env('BOOST_MCP_CWD'),
+        'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH', base_path()),
     ],
 
 ];
