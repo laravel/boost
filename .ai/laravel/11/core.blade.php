@@ -9,7 +9,7 @@
 - This is perfectly fine and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the Laravel 11 structure unless the user explicitly requests it.
 
 ## Laravel 10 Structure
-- Middleware typically lives in `{{ $assist->appPath('Http/Middleware/') }}` and service providers in `{{ $assist->appPath('}Providers/') }}`.
+- Middleware typically lives in `{{ $assist->appPath('Http/Middleware/') }}` and service providers in `{{ $assist->appPath('Providers/') }}`.
 - There is no `bootstrap/app.php` application configuration in a Laravel 10 structure:
     - Middleware registration is in `{{ $assist->appPath('Http/Kernel.php') }}`
     - Exception handling is in `{{ $assist->appPath('Exceptions/Handler.php') }}`
