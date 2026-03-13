@@ -60,9 +60,12 @@ class UpdateCommand extends Command
         $availableSkills = $this->resolveAvailableSkills($guidelineConfig);
 
         $installedSkillKeys = $config->getSkills();
+        $dismissedSkillKeys = $config->getDismissedSkills();
 
         $newSkills = $availableSkills->filter(
-            fn (Skill $skill, string $key): bool => ! in_array($key, $installedSkillKeys, true)
+            fn (Skill $skill, string $key): bool =>
+                ! in_array($key, $installedSkillKeys, true) &&
+                ! in_array($key, $dismissedSkillKeys, true)
         );
 
         if ($newSkills->isEmpty()) {
@@ -77,12 +80,14 @@ class UpdateCommand extends Command
                 ->toArray(),
             scroll: 10,
             required: false,
-            hint: 'Press Enter to skip, or select skills to add them',
+            hint: 'Space to select, Enter to confirm. Unselected skills will not be prompted again.',
         );
 
-        if ($selected === []) {
-            $this->warn('No new skills selected.');
+        $newSkillKeys = $newSkills->keys()->all();
 
+        $config->setDismissedSkills(array_merge($dismissedSkillKeys, $newSkillKeys));
+
+        if ($selected === []) {
             return;
         }
 

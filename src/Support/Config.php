@@ -41,6 +41,22 @@ class Config
         return $this->getSkills() !== [];
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function getDismissedSkills(): array
+    {
+        return $this->get('dismissed_skills', []);
+    }
+
+    /**
+     * @param  array<int, string>  $skills
+     */
+    public function setDismissedSkills(array $skills): void
+    {
+        $this->set('dismissed_skills', array_values(array_unique($skills)));
+    }
+
     public function getMcp(): bool
     {
         return $this->get('mcp', false);
