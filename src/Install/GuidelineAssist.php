@@ -270,7 +270,7 @@ class GuidelineAssist
 
     public function sailBinaryPath(): string
     {
-        return Sail::BINARY_PATH;
+        return Sail::binaryPath();
     }
 
     public function appPath(string $path = ''): string
