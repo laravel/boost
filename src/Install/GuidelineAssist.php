@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
@@ -274,7 +275,7 @@ class GuidelineAssist
 
     public function appPath(string $path = ''): string
     {
-        return ltrim(str_replace(base_path(), '', app_path($path)), DIRECTORY_SEPARATOR);
+        return ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
     }
 
     /**

@@ -193,7 +193,7 @@ test('appPath returns default app path', function (): void {
     expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('app'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
 });
 
-test('appPath returns customized path', function(): void {
+test('appPath returns customized path', function (): void {
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
@@ -202,4 +202,4 @@ test('appPath returns customized path', function(): void {
 
     expect($assist->appPath())->toBe('src');
     expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('src'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
-});
+})->after(fn () => app()->useAppPath('app'));
