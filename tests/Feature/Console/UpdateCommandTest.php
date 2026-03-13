@@ -105,6 +105,7 @@ it('calls install command with skills flag when skills are configured', function
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $command->shouldReceive('shouldDiscover')->andReturn(false);
+    $command->shouldReceive('applySkillFilter');
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -133,6 +134,7 @@ it('calls install command with both flags when guidelines and skills are enabled
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $command->shouldReceive('shouldDiscover')->andReturn(false);
+    $command->shouldReceive('applySkillFilter');
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -219,6 +221,7 @@ it('preserves sail configuration when updating skills', function (): void {
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $command->shouldReceive('shouldDiscover')->andReturn(false);
+    $command->shouldReceive('applySkillFilter');
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -286,6 +289,7 @@ it('does not run discovery when --discover flag is not set', function (): void {
         ->shouldAllowMockingProtectedMethods();
     $command->shouldReceive('shouldDiscover')->andReturn(false);
     $command->shouldNotReceive('discoverNewContent');
+    $command->shouldReceive('applySkillFilter');
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -316,6 +320,7 @@ it('does not change config when no new packages or skills are found with --disco
     $command->shouldReceive('shouldDiscover')->andReturn(true);
     $command->shouldReceive('resolveNewPackages')->andReturn(collect());
     $command->shouldReceive('resolveNewSkills')->andReturn(collect());
+    $command->shouldReceive('applySkillFilter');
     $command->shouldReceive('callSilently')->once()->andReturn(0);
     $command->setLaravel($this->app);
 
@@ -399,6 +404,7 @@ it('skips package prompt and only shows skills prompt when no new packages found
     $command->shouldReceive('resolveNewPackages')->andReturn(collect());
     $command->shouldReceive('resolveNewSkills')
         ->andReturn(collect(['new-skill' => $newSkill]));
+    $command->shouldReceive('applySkillFilter');
     $command->shouldReceive('callSilently')->andReturn(0);
     $command->setLaravel($this->app);
 
@@ -410,3 +416,33 @@ it('skips package prompt and only shows skills prompt when no new packages found
         ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
         ->and($config->getPackages())->toBe([]);
 })->skipOnWindows();
+
+it('excludes skills not in config from the runtime exclude list before running install', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['commit']);
+
+    $commitSkill = new Skill('commit', 'boost', '/path', 'Commit');
+    $deploySkill = new Skill('deploy', 'boost', '/path', 'Deploy');
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
+    $command->shouldReceive('resolveAvailableSkills')
+        ->andReturn(collect([
+            'commit' => $commitSkill,
+            'deploy' => $deploySkill,
+        ]));
+    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setOutput($output);
+
+    $command->handle($config);
+
+    expect(config('boost.skills.exclude'))->toContain('deploy')
+        ->and(config('boost.skills.exclude'))->not->toContain('commit');
+});

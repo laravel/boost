@@ -41,6 +41,8 @@ class UpdateCommand extends Command
             return self::SUCCESS;
         }
 
+        $this->applySkillFilter($config);
+
         $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
@@ -90,6 +92,29 @@ class UpdateCommand extends Command
             if ($selectedSkills !== []) {
                 $config->setSkills(array_merge($config->getSkills(), $selectedSkills));
             }
+        }
+    }
+
+    protected function applySkillFilter(Config $config): void
+    {
+        if (! $config->hasSkills()) {
+            return;
+        }
+
+        $guidelineConfig = new GuidelineConfig;
+        $guidelineConfig->aiGuidelines = $config->getPackages();
+        $guidelineConfig->hasSkills = true;
+
+        $allSkillKeys = $this->resolveAvailableSkills($guidelineConfig)->keys()->all();
+        $configuredSkillKeys = $config->getSkills();
+
+        $toExclude = array_values(array_diff($allSkillKeys, $configuredSkillKeys));
+
+        if ($toExclude !== []) {
+            config(['boost.skills.exclude' => array_unique(array_merge(
+                config('boost.skills.exclude', []),
+                $toExclude,
+            ))]);
         }
     }
 
