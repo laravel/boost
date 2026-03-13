@@ -22,10 +22,19 @@ class UpgradeInertiaV3 extends Prompt
 
     public function shouldRegister(Roster $roster): bool
     {
-        return $roster->uses(Packages::INERTIA_LARAVEL)
-            || $roster->uses(Packages::INERTIA_REACT)
-            || $roster->uses(Packages::INERTIA_VUE)
-            || $roster->uses(Packages::INERTIA_SVELTE);
+        if ($roster->uses(Packages::INERTIA_LARAVEL)) {
+            return true;
+        }
+
+        if ($roster->uses(Packages::INERTIA_REACT)) {
+            return true;
+        }
+
+        if ($roster->uses(Packages::INERTIA_VUE)) {
+            return true;
+        }
+
+        return $roster->uses(Packages::INERTIA_SVELTE);
     }
 
     public function handle(): Response
