@@ -523,3 +523,32 @@ it('passes updated skills to install command after selection', function (): void
         ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
         ->and($config->getDismissedSkills())->not->toContain('new-skill');
 })->skipOnWindows();
+
+it('adds dismissed skills to boost.skills.exclude config before running install', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['existing-skill']);
+    $config->setDismissedSkills(['dismissed-skill']);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('isInteractiveMode')->once()->andReturn(false);
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->with(InstallCommand::class, [
+            '--no-interaction' => true,
+            '--guidelines' => false,
+            '--skills' => true,
+        ])
+        ->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setOutput($output);
+
+    $command->handle($config);
+
+    expect(config('boost.skills.exclude'))->toContain('dismissed-skill');
+});
