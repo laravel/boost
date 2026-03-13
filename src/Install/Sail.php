@@ -37,7 +37,7 @@ class Sail
 
     public static function binaryPath(): string
     {
-        return config('boost.executable_paths.sail', self::DEFAULT_BINARY_PATH);
+        return config('boost.executable_paths.sail') ?? self::DEFAULT_BINARY_PATH;
     }
 
     public function isInstalled(): bool
