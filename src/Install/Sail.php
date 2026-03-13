@@ -8,6 +8,8 @@ use const DIRECTORY_SEPARATOR;
 
 class Sail
 {
+    public const DEFAULT_BINARY_PATH = 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail';
+
     public static function artisanCommand(): string
     {
         return self::command('artisan');
@@ -35,18 +37,15 @@ class Sail
 
     public static function binaryPath(): string
     {
-        $sailBinary = config('boost.executable_paths.sail');
-
-        if ($sailBinary !== null) {
-            return $sailBinary;
-        }
-
-        return 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail';
+        return config('boost.executable_paths.sail', self::DEFAULT_BINARY_PATH);
     }
 
     public function isInstalled(): bool
     {
-        return file_exists(base_path(self::binaryPath())) &&
+        $binaryPath = self::binaryPath();
+        $resolvedPath = str_starts_with($binaryPath, DIRECTORY_SEPARATOR) ? $binaryPath : base_path($binaryPath);
+
+        return file_exists($resolvedPath) &&
             (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
     }
 
