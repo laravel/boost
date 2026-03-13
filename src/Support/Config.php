@@ -44,17 +44,17 @@ class Config
     /**
      * @return array<int, string>
      */
-    public function getDismissedSkills(): array
+    public function getExcludedSkills(): array
     {
-        return $this->get('dismissed_skills', []);
+        return $this->get('excluded_skills', []);
     }
 
     /**
      * @param  array<int, string>  $skills
      */
-    public function setDismissedSkills(array $skills): void
+    public function setExcludedSkills(array $skills): void
     {
-        $this->set('dismissed_skills', array_values(array_unique($skills)));
+        $this->set('excluded_skills', array_values(array_unique($skills)));
     }
 
     public function getMcp(): bool

@@ -323,7 +323,7 @@ it('updates config when user selects new skills from prompt', function (): void 
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
-        ->and($config->getDismissedSkills())->not->toContain('new-skill');
+        ->and($config->getExcludedSkills())->not->toContain('new-skill');
 })->skipOnWindows();
 
 it('does not update skills skills config when user skips selecting new skills', function (): void {
@@ -362,10 +362,10 @@ it('does not update skills skills config when user skips selecting new skills', 
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toBe(['existing-skill'])
-        ->and($config->getDismissedSkills())->toBe(['new-skill']);
+        ->and($config->getExcludedSkills())->toBe(['new-skill']);
 })->skipOnWindows();
 
-it('persists dismissed skills to config when user skips the prompt', function (): void {
+it('persists excluded skills to config when user skips the prompt', function (): void {
     $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
     $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
 
@@ -394,7 +394,7 @@ it('persists dismissed skills to config when user skips the prompt', function ()
 
     $command->handle($config);
 
-    // Dismissed, so the next call should not prompt
+    // Excluded, so the next call should not prompt
     $command2 = Mockery::mock(UpdateCommand::class)
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
@@ -414,17 +414,17 @@ it('persists dismissed skills to config when user skips the prompt', function ()
     $command2->setOutput($output2);
 
     expect($command2->handle($config))->toBe(0)
-        ->and($config->getDismissedSkills())->toContain('new-skill');
+        ->and($config->getExcludedSkills())->toContain('new-skill');
 })->skipOnWindows();
 
-it('does not prompt for dismissed skills on subsequent runs', function (): void {
+it('does not prompt for excluded skills on subsequent runs', function (): void {
     $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
     $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
 
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setSkills(['existing-skill']);
-    $config->setDismissedSkills(['new-skill']);
+    $config->setExcludedSkills(['new-skill']);
 
     $command = Mockery::mock(UpdateCommand::class)
         ->makePartial()
@@ -452,7 +452,7 @@ it('does not prompt for dismissed skills on subsequent runs', function (): void 
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toBe(['existing-skill'])
-        ->and($config->getDismissedSkills())->toBe(['new-skill']);
+        ->and($config->getExcludedSkills())->toBe(['new-skill']);
 });
 
 it('passes updated skills to install command after selection', function (): void {
@@ -491,14 +491,14 @@ it('passes updated skills to install command after selection', function (): void
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
-        ->and($config->getDismissedSkills())->not->toContain('new-skill');
+        ->and($config->getExcludedSkills())->not->toContain('new-skill');
 })->skipOnWindows();
 
-it('adds dismissed skills to boost.skills.exclude config before running install', function (): void {
+it('adds excluded skills to boost.skills.exclude config before running install', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setSkills(['existing-skill']);
-    $config->setDismissedSkills(['dismissed-skill']);
+    $config->setExcludedSkills(['Excluded-skill']);
 
     $command = Mockery::mock(UpdateCommand::class)
         ->makePartial()
@@ -520,5 +520,5 @@ it('adds dismissed skills to boost.skills.exclude config before running install'
 
     $command->handle($config);
 
-    expect(config('boost.skills.exclude'))->toContain('dismissed-skill');
+    expect(config('boost.skills.exclude'))->toContain('Excluded-skill');
 });
