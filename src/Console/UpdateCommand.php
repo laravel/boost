@@ -83,15 +83,15 @@ class UpdateCommand extends Command
             hint: 'Space to select, Enter to confirm. Unselected skills will not be prompted again.',
         );
 
-        $newSkillKeys = $newSkills->keys()->all();
+        $dismissed = array_values(array_diff($newSkills->keys()->all(), $selected));
 
-        $config->setDismissedSkills(array_merge($dismissedSkillKeys, $newSkillKeys));
-
-        if ($selected === []) {
-            return;
+        if ($dismissed !== []) {
+            $config->setDismissedSkills(array_merge($dismissedSkillKeys, $dismissed));
         }
 
-        $config->setSkills(array_merge($installedSkillKeys, $selected));
+        if ($selected !== []) {
+            $config->setSkills(array_merge($installedSkillKeys, $selected));
+        }
     }
 
     protected function resolveAvailableSkills(GuidelineConfig $config): Collection
