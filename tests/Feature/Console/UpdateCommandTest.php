@@ -323,7 +323,7 @@ it('updates config when user selects new skills from prompt', function (): void 
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
-        ->and($config->getDismissedSkills())->toContain('new-skill');
+        ->and($config->getDismissedSkills())->not->toContain('new-skill');
 })->skipOnWindows();
 
 it('does not update skills skills config when user skips selecting new skills', function (): void {
@@ -491,5 +491,5 @@ it('passes updated skills to install command after selection', function (): void
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
-        ->and($config->getDismissedSkills())->toContain('new-skill');
+        ->and($config->getDismissedSkills())->not->toContain('new-skill');
 })->skipOnWindows();
