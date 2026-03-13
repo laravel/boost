@@ -36,7 +36,7 @@ class UpdateCommand extends Command
             $this->checkForNewSkills($config);
         }
 
-        $this->excludeDismissedSkills($config);
+        $this->applyExcludedSkills($config);
 
         $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
@@ -62,12 +62,12 @@ class UpdateCommand extends Command
         $availableSkills = $this->resolveAvailableSkills($guidelineConfig);
 
         $installedSkillKeys = $config->getSkills();
-        $dismissedSkillKeys = $config->getDismissedSkills();
+        $excludedSkillKeys = $config->getExcludedSkills();
 
         $newSkills = $availableSkills->filter(
             fn (Skill $skill, string $key): bool =>
                 ! in_array($key, $installedSkillKeys, true) &&
-                ! in_array($key, $dismissedSkillKeys, true)
+                ! in_array($key, $excludedSkillKeys, true)
         );
 
         if ($newSkills->isEmpty()) {
@@ -85,10 +85,10 @@ class UpdateCommand extends Command
             hint: 'Space to select, Enter to confirm. Unselected skills will not be prompted again.',
         );
 
-        $dismissed = array_values(array_diff($newSkills->keys()->all(), $selected));
+        $excluded = array_values(array_diff($newSkills->keys()->all(), $selected));
 
-        if ($dismissed !== []) {
-            $config->setDismissedSkills(array_merge($dismissedSkillKeys, $dismissed));
+        if ($excluded !== []) {
+            $config->setExcludedSkills(array_merge($excludedSkillKeys, $excluded));
         }
 
         if ($selected !== []) {
@@ -96,17 +96,17 @@ class UpdateCommand extends Command
         }
     }
 
-    protected function excludeDismissedSkills(Config $config): void
+    protected function applyExcludedSkills(Config $config): void
     {
-        $dismissed = $config->getDismissedSkills();
+        $excluded = $config->getExcludedSkills();
 
-        if ($dismissed === []) {
+        if ($excluded === []) {
             return;
         }
 
         config(['boost.skills.exclude' => array_unique(array_merge(
             config('boost.skills.exclude', []),
-            $dismissed,
+            $excluded,
         ))]);
     }
 
