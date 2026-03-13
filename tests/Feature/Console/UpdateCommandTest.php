@@ -322,10 +322,11 @@ it('updates config when user selects new skills from prompt', function (): void 
     $command->setOutput($output);
 
     expect($command->handle($config))->toBe(0)
-        ->and($config->getSkills())->toContain('existing-skill', 'new-skill');
+        ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
+        ->and($config->getDismissedSkills())->toContain('new-skill');
 })->skipOnWindows();
 
-it('does not update config when user skips selecting new skills', function (): void {
+it('does not update skills skills config when user skips selecting new skills', function (): void {
     $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
     $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
 
@@ -360,8 +361,99 @@ it('does not update config when user skips selecting new skills', function (): v
     $command->setOutput($output);
 
     expect($command->handle($config))->toBe(0)
-        ->and($config->getSkills())->toBe(['existing-skill']);
+        ->and($config->getSkills())->toBe(['existing-skill'])
+        ->and($config->getDismissedSkills())->toBe(['new-skill']);
 })->skipOnWindows();
+
+it('persists dismissed skills to config when user skips the prompt', function (): void {
+    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
+    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
+
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['existing-skill']);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
+    $command->shouldReceive('resolveAvailableSkills')
+        ->once()
+        ->andReturn(collect([
+            'existing-skill' => $existingSkill,
+            'new-skill' => $newSkill,
+        ]));
+    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setOutput($output);
+
+    Prompt::fake([Key::ENTER]);
+
+    $command->handle($config);
+
+    // Dismissed, so the next call should not prompt
+    $command2 = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command2->shouldReceive('isInteractiveMode')->once()->andReturn(true);
+    $command2->shouldReceive('resolveAvailableSkills')
+        ->once()
+        ->andReturn(collect([
+            'existing-skill' => $existingSkill,
+            'new-skill' => $newSkill,
+        ]));
+    $command2->shouldNotReceive('multiselect');
+    $command2->shouldReceive('callSilently')->andReturn(0);
+    $command2->setLaravel($this->app);
+
+    $input2 = new ArrayInput([]);
+    $output2 = new OutputStyle($input2, new BufferedOutput);
+    $command2->setOutput($output2);
+
+    expect($command2->handle($config))->toBe(0)
+        ->and($config->getDismissedSkills())->toContain('new-skill');
+})->skipOnWindows();
+
+it('does not prompt for dismissed skills on subsequent runs', function (): void {
+    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
+    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
+
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['existing-skill']);
+    $config->setDismissedSkills(['new-skill']);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
+    $command->shouldReceive('resolveAvailableSkills')
+        ->once()
+        ->andReturn(collect([
+            'existing-skill' => $existingSkill,
+            'new-skill' => $newSkill,
+        ]));
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->with(InstallCommand::class, [
+            '--no-interaction' => true,
+            '--guidelines' => false,
+            '--skills' => true,
+        ])
+        ->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0)
+        ->and($config->getSkills())->toBe(['existing-skill'])
+        ->and($config->getDismissedSkills())->toBe(['new-skill']);
+});
 
 it('passes updated skills to install command after selection', function (): void {
     $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
@@ -398,5 +490,6 @@ it('passes updated skills to install command after selection', function (): void
     $command->setOutput($output);
 
     expect($command->handle($config))->toBe(0)
-        ->and($config->getSkills())->toContain('existing-skill', 'new-skill');
+        ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
+        ->and($config->getDismissedSkills())->toContain('new-skill');
 })->skipOnWindows();
