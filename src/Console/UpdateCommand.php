@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
+use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Symfony\Component\Console\Attribute\AsCommand;
 
@@ -17,12 +18,20 @@ use function Laravel\Prompts\multiselect;
 #[AsCommand('boost:update', 'Update the Laravel Boost guidelines & skills to the latest guidance')]
 class UpdateCommand extends Command
 {
+    /** @var string */
+    protected $signature = 'boost:update
+        {--discover : Discover and prompt for newly available guidelines and skills}';
+
     public function handle(Config $config): int
     {
         if (! $config->isValid() || empty($config->getAgents())) {
             $this->error('Please set up Boost with [php artisan boost:install] first.');
 
             return self::FAILURE;
+        }
+
+        if ($this->shouldDiscover()) {
+            $this->discoverNewContent($config);
         }
 
         $guidelines = $config->getGuidelines();
@@ -32,16 +41,10 @@ class UpdateCommand extends Command
             return self::SUCCESS;
         }
 
-        if ($hasSkills) {
-            $this->checkForNewSkills($config);
-        }
-
-        $this->applyExcludedSkills($config);
-
         $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
-            '--skills' => $config->hasSkills(),
+            '--skills' => $hasSkills,
         ]);
 
         $this->info('Boost guidelines and skills updated successfully.');
@@ -49,74 +52,85 @@ class UpdateCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function checkForNewSkills(Config $config): void
+    protected function discoverNewContent(Config $config): void
     {
-        if (! $this->isInteractiveMode()) {
-            return;
+        $newPackages = $this->resolveNewPackages($config);
+
+        if ($newPackages->isNotEmpty()) {
+            /** @var array<int, string> $selectedPackages */
+            $selectedPackages = multiselect(
+                label: 'New packages with guidelines/skills discovered! Which would you like to add?',
+                options: $newPackages
+                    ->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [$name => $pkg->displayLabel()])
+                    ->toArray(),
+                scroll: 10,
+                required: false,
+                hint: 'Select packages to include their guidelines and skills',
+            );
+
+            if ($selectedPackages !== []) {
+                $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
+            }
         }
 
+        $newSkills = $this->resolveNewSkills($config);
+
+        if ($newSkills->isNotEmpty()) {
+            /** @var array<int, string> $selectedSkills */
+            $selectedSkills = multiselect(
+                label: 'New skills discovered! Which would you like to add?',
+                options: $newSkills
+                    ->mapWithKeys(fn (Skill $skill, string $key): array => [$key => $skill->displayName()])
+                    ->toArray(),
+                scroll: 10,
+                required: false,
+                hint: 'Select skills to add them',
+            );
+
+            if ($selectedSkills !== []) {
+                $config->setSkills(array_merge($config->getSkills(), $selectedSkills));
+            }
+        }
+    }
+
+    /**
+     * @return Collection<string, ThirdPartyPackage>
+     */
+    protected function resolveNewPackages(Config $config): Collection
+    {
+        $configuredPackages = $config->getPackages();
+
+        return ThirdPartyPackage::discover()
+            ->filter(fn (ThirdPartyPackage $pkg, string $name): bool => ! in_array($name, $configuredPackages, true));
+    }
+
+    /**
+     * @return Collection<string, Skill>
+     */
+    protected function resolveNewSkills(Config $config): Collection
+    {
         $guidelineConfig = new GuidelineConfig;
         $guidelineConfig->aiGuidelines = $config->getPackages();
         $guidelineConfig->hasSkills = true;
 
-        $availableSkills = $this->resolveAvailableSkills($guidelineConfig);
-
         $installedSkillKeys = $config->getSkills();
-        $excludedSkillKeys = $config->getExcludedSkills();
 
-        $newSkills = $availableSkills->filter(
-            fn (Skill $skill, string $key): bool =>
-                ! in_array($key, $installedSkillKeys, true) &&
-                ! in_array($key, $excludedSkillKeys, true)
+        return $this->resolveAvailableSkills($guidelineConfig)->filter(
+            fn (Skill $skill, string $key): bool => ! in_array($key, $installedSkillKeys, true)
         );
-
-        if ($newSkills->isEmpty()) {
-            return;
-        }
-
-        /** @var array<int, string> $selected */
-        $selected = multiselect(
-            label: 'New skills discovered! Which would you like to add?',
-            options: $newSkills
-                ->mapWithKeys(fn (Skill $skill, string $key): array => [$key => $skill->displayName()])
-                ->toArray(),
-            scroll: 10,
-            required: false,
-            hint: 'Space to select, Enter to confirm. Unselected skills will not be prompted again.',
-        );
-
-        $excluded = array_values(array_diff($newSkills->keys()->all(), $selected));
-
-        if ($excluded !== []) {
-            $config->setExcludedSkills(array_merge($excludedSkillKeys, $excluded));
-        }
-
-        if ($selected !== []) {
-            $config->setSkills(array_merge($installedSkillKeys, $selected));
-        }
     }
 
-    protected function applyExcludedSkills(Config $config): void
-    {
-        $excluded = $config->getExcludedSkills();
-
-        if ($excluded === []) {
-            return;
-        }
-
-        config(['boost.skills.exclude' => array_unique(array_merge(
-            config('boost.skills.exclude', []),
-            $excluded,
-        ))]);
-    }
-
+    /**
+     * @return Collection<string, Skill>
+     */
     protected function resolveAvailableSkills(GuidelineConfig $config): Collection
     {
         return app(SkillComposer::class)->config($config)->skills();
     }
 
-    protected function isInteractiveMode(): bool
+    protected function shouldDiscover(): bool
     {
-        return $this->input?->isInteractive() ?? false; // @phpstan-ignore-line
+        return (bool) $this->option('discover');
     }
 }
+

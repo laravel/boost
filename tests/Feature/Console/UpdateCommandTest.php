@@ -6,6 +6,7 @@ use Illuminate\Console\OutputStyle;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
 use Laravel\Boost\Install\Skill;
+use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
@@ -68,7 +69,10 @@ it('calls install command with a guidelines flag when guidelines are enabled', f
     $config->setGuidelines(true);
     $config->setSkills([]);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -93,7 +97,10 @@ it('calls install command with skills flag when skills are configured', function
     $config->setGuidelines(false);
     $config->setSkills(['test-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -118,7 +125,10 @@ it('calls install command with both flags when guidelines and skills are enabled
     $config->setGuidelines(true);
     $config->setSkills(['test-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -143,7 +153,10 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $config->setGuidelines(true);
     $config->setSail(true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -169,7 +182,10 @@ it('preserves non-sail configuration when updating guidelines', function (): voi
     $config->setGuidelines(true);
     $config->setSail(false);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -195,7 +211,10 @@ it('preserves sail configuration when updating skills', function (): void {
     $config->setSkills(['commit']);
     $config->setSail(true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -227,7 +246,7 @@ it('defaults to non-sail when config is missing', function (): void {
     expect($config->getSail())->toBeFalse();
 });
 
-it('skips checking for new skills in non-interactive mode', function (): void {
+it('does not run discovery when --discover flag is not set', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setSkills(['existing-skill']);
@@ -235,8 +254,8 @@ it('skips checking for new skills in non-interactive mode', function (): void {
     $command = Mockery::mock(UpdateCommand::class)
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(false);
-    $command->shouldNotReceive('resolveAvailableSkills');
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
+    $command->shouldNotReceive('discoverNewContent');
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -255,105 +274,19 @@ it('skips checking for new skills in non-interactive mode', function (): void {
         ->and($config->getSkills())->toBe(['existing-skill']);
 });
 
-it('does not prompt when all available skills are already installed', function (): void {
-    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
-
+it('does not change config when no new packages or skills are found with --discover', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
     $config->setSkills(['existing-skill']);
 
     $command = Mockery::mock(UpdateCommand::class)
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
-    $command->shouldReceive('resolveAvailableSkills')
-        ->once()
-        ->andReturn(collect(['existing-skill' => $existingSkill]));
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
-    $command->setLaravel($this->app);
-
-    $input = new ArrayInput([]);
-    $output = new OutputStyle($input, new BufferedOutput);
-    $command->setOutput($output);
-
-    expect($command->handle($config))->toBe(0)
-        ->and($config->getSkills())->toBe(['existing-skill']);
-});
-
-it('updates config when user selects new skills from prompt', function (): void {
-    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
-    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
-
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-    $config->setSkills(['existing-skill']);
-
-    Prompt::fake([Key::SPACE, Key::ENTER]);
-
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
-    $command->shouldReceive('resolveAvailableSkills')
-        ->once()
-        ->andReturn(collect([
-            'existing-skill' => $existingSkill,
-            'new-skill' => $newSkill,
-        ]));
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
-    $command->setLaravel($this->app);
-
-    $input = new ArrayInput([]);
-    $output = new OutputStyle($input, new BufferedOutput);
-    $command->setOutput($output);
-
-    expect($command->handle($config))->toBe(0)
-        ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
-        ->and($config->getExcludedSkills())->not->toContain('new-skill');
-})->skipOnWindows();
-
-it('does not update skills skills config when user skips selecting new skills', function (): void {
-    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
-    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
-
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-    $config->setSkills(['existing-skill']);
-
-    Prompt::fake([Key::ENTER]);
-
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
-    $command->shouldReceive('resolveAvailableSkills')
-        ->once()
-        ->andReturn(collect([
-            'existing-skill' => $existingSkill,
-            'new-skill' => $newSkill,
-        ]));
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command->shouldReceive('shouldDiscover')->andReturn(true);
+    $command->shouldReceive('resolveNewPackages')->andReturn(collect());
+    $command->shouldReceive('resolveNewSkills')->andReturn(collect());
+    $command->shouldReceive('callSilently')->once()->andReturn(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -362,27 +295,26 @@ it('does not update skills skills config when user skips selecting new skills', 
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toBe(['existing-skill'])
-        ->and($config->getExcludedSkills())->toBe(['new-skill']);
-})->skipOnWindows();
+        ->and($config->getPackages())->toBe([]);
+});
 
-it('persists excluded skills to config when user skips the prompt', function (): void {
-    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
-    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
-
+it('adds selected new packages to config when using --discover', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
-    $config->setSkills(['existing-skill']);
+    $config->setGuidelines(true);
+    $config->setPackages([]);
+
+    $newPackage = new ThirdPartyPackage('vendor/awesome-pkg', true, false);
+
+    Prompt::fake([Key::SPACE, Key::ENTER]);
 
     $command = Mockery::mock(UpdateCommand::class)
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
-    $command->shouldReceive('resolveAvailableSkills')
-        ->once()
-        ->andReturn(collect([
-            'existing-skill' => $existingSkill,
-            'new-skill' => $newSkill,
-        ]));
+    $command->shouldReceive('shouldDiscover')->andReturn(true);
+    $command->shouldReceive('resolveNewPackages')
+        ->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->shouldReceive('resolveNewSkills')->andReturn(collect());
     $command->shouldReceive('callSilently')->andReturn(0);
     $command->setLaravel($this->app);
 
@@ -390,60 +322,27 @@ it('persists excluded skills to config when user skips the prompt', function ():
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setOutput($output);
 
-    Prompt::fake([Key::ENTER]);
-
-    $command->handle($config);
-
-    // Excluded, so the next call should not prompt
-    $command2 = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command2->shouldReceive('isInteractiveMode')->once()->andReturn(true);
-    $command2->shouldReceive('resolveAvailableSkills')
-        ->once()
-        ->andReturn(collect([
-            'existing-skill' => $existingSkill,
-            'new-skill' => $newSkill,
-        ]));
-    $command2->shouldNotReceive('multiselect');
-    $command2->shouldReceive('callSilently')->andReturn(0);
-    $command2->setLaravel($this->app);
-
-    $input2 = new ArrayInput([]);
-    $output2 = new OutputStyle($input2, new BufferedOutput);
-    $command2->setOutput($output2);
-
-    expect($command2->handle($config))->toBe(0)
-        ->and($config->getExcludedSkills())->toContain('new-skill');
+    expect($command->handle($config))->toBe(0)
+        ->and($config->getPackages())->toContain('vendor/awesome-pkg');
 })->skipOnWindows();
 
-it('does not prompt for excluded skills on subsequent runs', function (): void {
-    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
-    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
-
+it('adds selected new skills to config when using --discover', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
-    $config->setSkills(['existing-skill']);
-    $config->setExcludedSkills(['new-skill']);
+    $config->setSkills([]);
+
+    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
+
+    Prompt::fake([Key::SPACE, Key::ENTER]);
 
     $command = Mockery::mock(UpdateCommand::class)
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
-    $command->shouldReceive('resolveAvailableSkills')
-        ->once()
-        ->andReturn(collect([
-            'existing-skill' => $existingSkill,
-            'new-skill' => $newSkill,
-        ]));
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command->shouldReceive('shouldDiscover')->andReturn(true);
+    $command->shouldReceive('resolveNewPackages')->andReturn(collect());
+    $command->shouldReceive('resolveNewSkills')
+        ->andReturn(collect(['new-skill' => $newSkill]));
+    $command->shouldReceive('callSilently')->andReturn(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -451,38 +350,26 @@ it('does not prompt for excluded skills on subsequent runs', function (): void {
     $command->setOutput($output);
 
     expect($command->handle($config))->toBe(0)
-        ->and($config->getSkills())->toBe(['existing-skill'])
-        ->and($config->getExcludedSkills())->toBe(['new-skill']);
-});
+        ->and($config->getSkills())->toContain('new-skill');
+})->skipOnWindows();
 
-it('passes updated skills to install command after selection', function (): void {
-    $existingSkill = new Skill('existing-skill', 'boost', '/path', 'Existing');
-    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
-
+it('skips package prompt and only shows skills prompt when no new packages found with --discover', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setSkills(['existing-skill']);
+
+    $newSkill = new Skill('new-skill', 'boost', '/path', 'New Skill');
 
     Prompt::fake([Key::SPACE, Key::ENTER]);
 
     $command = Mockery::mock(UpdateCommand::class)
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(true);
-    $command->shouldReceive('resolveAvailableSkills')
-        ->once()
-        ->andReturn(collect([
-            'existing-skill' => $existingSkill,
-            'new-skill' => $newSkill,
-        ]));
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command->shouldReceive('shouldDiscover')->andReturn(true);
+    $command->shouldReceive('resolveNewPackages')->andReturn(collect());
+    $command->shouldReceive('resolveNewSkills')
+        ->andReturn(collect(['new-skill' => $newSkill]));
+    $command->shouldReceive('callSilently')->andReturn(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -491,34 +378,5 @@ it('passes updated skills to install command after selection', function (): void
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSkills())->toContain('existing-skill', 'new-skill')
-        ->and($config->getExcludedSkills())->not->toContain('new-skill');
+        ->and($config->getPackages())->toBe([]);
 })->skipOnWindows();
-
-it('adds excluded skills to boost.skills.exclude config before running install', function (): void {
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-    $config->setSkills(['existing-skill']);
-    $config->setExcludedSkills(['Excluded-skill']);
-
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('isInteractiveMode')->once()->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
-    $command->setLaravel($this->app);
-
-    $input = new ArrayInput([]);
-    $output = new OutputStyle($input, new BufferedOutput);
-    $command->setOutput($output);
-
-    $command->handle($config);
-
-    expect(config('boost.skills.exclude'))->toContain('Excluded-skill');
-});

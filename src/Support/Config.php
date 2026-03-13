@@ -41,22 +41,6 @@ class Config
         return $this->getSkills() !== [];
     }
 
-    /**
-     * @return array<int, string>
-     */
-    public function getExcludedSkills(): array
-    {
-        return $this->get('excluded_skills', []);
-    }
-
-    /**
-     * @param  array<int, string>  $skills
-     */
-    public function setExcludedSkills(array $skills): void
-    {
-        $this->set('excluded_skills', array_values(array_unique($skills)));
-    }
-
     public function getMcp(): bool
     {
         return $this->get('mcp', false);
