@@ -36,6 +36,8 @@ class UpdateCommand extends Command
             $this->checkForNewSkills($config);
         }
 
+        $this->excludeDismissedSkills($config);
+
         $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
@@ -92,6 +94,20 @@ class UpdateCommand extends Command
         if ($selected !== []) {
             $config->setSkills(array_merge($installedSkillKeys, $selected));
         }
+    }
+
+    protected function excludeDismissedSkills(Config $config): void
+    {
+        $dismissed = $config->getDismissedSkills();
+
+        if ($dismissed === []) {
+            return;
+        }
+
+        config(['boost.skills.exclude' => array_unique(array_merge(
+            config('boost.skills.exclude', []),
+            $dismissed,
+        ))]);
     }
 
     protected function resolveAvailableSkills(GuidelineConfig $config): Collection
