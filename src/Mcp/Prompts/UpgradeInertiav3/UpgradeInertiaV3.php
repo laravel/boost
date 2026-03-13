@@ -25,12 +25,15 @@ class UpgradeInertiaV3 extends Prompt
         if ($roster->uses(Packages::INERTIA_LARAVEL)) {
             return true;
         }
+
         if ($roster->uses(Packages::INERTIA_REACT)) {
             return true;
         }
+
         if ($roster->uses(Packages::INERTIA_VUE)) {
             return true;
         }
+
         return $roster->uses(Packages::INERTIA_SVELTE);
     }
 
