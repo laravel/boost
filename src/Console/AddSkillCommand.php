@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
-use Laravel\Boost\Support\Config;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Prompts\Terminal;
@@ -168,7 +167,6 @@ class AddSkillCommand extends Command
 
             grid($results['installedNames']);
 
-            $this->registerInstalledSkills($results['installedNames']);
             $this->runBoostUpdate();
             $this->showOutro();
         }
@@ -273,23 +271,6 @@ class AddSkillCommand extends Command
         }
 
         return $results;
-    }
-
-    /**
-     * Register newly installed skill names in boost.json so that
-     * boost:update knows skills are enabled and syncs them to
-     * agent-specific directories (.claude/skills/, .cursor/skills/, etc.).
-     *
-     * @param  array<int, string>  $installedNames
-     */
-    protected function registerInstalledSkills(array $installedNames): void
-    {
-        $config = app(Config::class);
-
-        $existing = $config->getSkills();
-        $merged = array_values(array_unique(array_merge($existing, $installedNames)));
-
-        $config->setSkills($merged);
     }
 
     protected function runBoostUpdate(): void
