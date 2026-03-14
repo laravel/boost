@@ -23,6 +23,10 @@ afterEach(function (): void {
     if (file_exists(base_path('CLAUDE.md'))) {
         unlink(base_path('CLAUDE.md'));
     }
+
+    if (is_dir(base_path('.ai/skills'))) {
+        rmdir(base_path('.ai/skills'));
+    }
 });
 
 it('it shows an error when boost.json does not exist', function (): void {
@@ -210,6 +214,32 @@ it('preserves sail configuration when updating skills', function (): void {
 
     expect($command->handle($config))->toBe(0)
         ->and($config->getSail())->toBeTrue();
+});
+
+it('calls install command with skills flag when .ai/skills directory exists but skills are not in config', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(false);
+
+    mkdir(base_path('.ai/skills'), 0755, true);
+
+    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->with(InstallCommand::class, [
+            '--no-interaction' => true,
+            '--guidelines' => false,
+            '--skills' => true,
+        ])
+        ->andReturn(0);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+
+    $command->setLaravel($this->app);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0);
 });
 
 it('defaults to non-sail when config is missing', function (): void {
