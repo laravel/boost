@@ -6,9 +6,6 @@ namespace Laravel\Boost\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
-use Laravel\Boost\Install\GuidelineConfig;
-use Laravel\Boost\Install\Skill;
-use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -41,8 +38,6 @@ class UpdateCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->applySkillFilter($config);
-
         $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
@@ -74,48 +69,6 @@ class UpdateCommand extends Command
                 $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
             }
         }
-
-        $newSkills = $this->resolveNewSkills($config);
-
-        if ($newSkills->isNotEmpty()) {
-            /** @var array<int, string> $selectedSkills */
-            $selectedSkills = multiselect(
-                label: 'New skills discovered! Which would you like to add?',
-                options: $newSkills
-                    ->mapWithKeys(fn (Skill $skill, string $key): array => [$key => $skill->displayName()])
-                    ->toArray(),
-                scroll: 10,
-                required: false,
-                hint: 'Select skills to add them',
-            );
-
-            if ($selectedSkills !== []) {
-                $config->setSkills(array_merge($config->getSkills(), $selectedSkills));
-            }
-        }
-    }
-
-    protected function applySkillFilter(Config $config): void
-    {
-        if (! $config->hasSkills()) {
-            return;
-        }
-
-        $guidelineConfig = new GuidelineConfig;
-        $guidelineConfig->aiGuidelines = $config->getPackages();
-        $guidelineConfig->hasSkills = true;
-
-        $allSkillKeys = $this->resolveAvailableSkills($guidelineConfig)->keys()->all();
-        $configuredSkillKeys = $config->getSkills();
-
-        $toExclude = array_values(array_diff($allSkillKeys, $configuredSkillKeys));
-
-        if ($toExclude !== []) {
-            config(['boost.skills.exclude' => array_unique(array_merge(
-                config('boost.skills.exclude', []),
-                $toExclude,
-            ))]);
-        }
     }
 
     /**
@@ -127,30 +80,6 @@ class UpdateCommand extends Command
 
         return ThirdPartyPackage::discover()
             ->filter(fn (ThirdPartyPackage $pkg, string $name): bool => ! in_array($name, $configuredPackages, true));
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    protected function resolveNewSkills(Config $config): Collection
-    {
-        $guidelineConfig = new GuidelineConfig;
-        $guidelineConfig->aiGuidelines = $config->getPackages();
-        $guidelineConfig->hasSkills = true;
-
-        $installedSkillKeys = $config->getSkills();
-
-        return $this->resolveAvailableSkills($guidelineConfig)->filter(
-            fn (Skill $skill, string $key): bool => ! in_array($key, $installedSkillKeys, true)
-        );
-    }
-
-    /**
-     * @return Collection<string, Skill>
-     */
-    protected function resolveAvailableSkills(GuidelineConfig $config): Collection
-    {
-        return app(SkillComposer::class)->config($config)->skills();
     }
 
     protected function shouldDiscover(): bool
