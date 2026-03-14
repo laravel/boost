@@ -32,7 +32,7 @@ class UpdateCommand extends Command
         }
 
         $guidelines = $config->getGuidelines();
-        $hasSkills = $config->hasSkills();
+        $hasSkills = $config->hasSkills() || is_dir(base_path('.ai/skills'));
 
         if (! $guidelines && ! $hasSkills) {
             return self::SUCCESS;
@@ -87,4 +87,3 @@ class UpdateCommand extends Command
         return (bool) $this->option('discover');
     }
 }
-

@@ -31,7 +31,7 @@ class ApplicationInfo extends Tool
     public function handle(Request $request): Response
     {
         return Response::json([
-            'php_version' => PHP_VERSION,
+            'php_version' => PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
             'laravel_version' => app()->version(),
             'database_engine' => config('database.default'),
             'packages' => $this->roster->packages()->map(fn (Package $package): array => ['roster_name' => $package->name(), 'version' => $package->version(), 'package_name' => $package->rawName()]),

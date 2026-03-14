@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
@@ -269,7 +270,12 @@ class GuidelineAssist
 
     public function sailBinaryPath(): string
     {
-        return Sail::BINARY_PATH;
+        return Sail::binaryPath();
+    }
+
+    public function appPath(string $path = ''): string
+    {
+        return ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
     }
 
     /**

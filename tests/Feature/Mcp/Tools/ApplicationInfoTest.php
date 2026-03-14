@@ -31,7 +31,7 @@ test('it returns application info with packages', function (): void {
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
-            'php_version' => PHP_VERSION,
+            'php_version' => PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
             'laravel_version' => app()->version(),
             'database_engine' => config('database.default'),
             'packages' => [
@@ -66,7 +66,7 @@ test('it returns application info with no packages', function (): void {
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContentToMatchArray([
-            'php_version' => PHP_VERSION,
+            'php_version' => PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
             'laravel_version' => app()->version(),
             'database_engine' => config('database.default'),
             'packages' => [],

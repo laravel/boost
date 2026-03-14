@@ -26,6 +26,10 @@ afterEach(function (): void {
     if (file_exists(base_path('CLAUDE.md'))) {
         unlink(base_path('CLAUDE.md'));
     }
+
+    if (is_dir(base_path('.ai/skills'))) {
+        rmdir(base_path('.ai/skills'));
+    }
 });
 
 it('it shows an error when boost.json does not exist', function (): void {
@@ -233,6 +237,37 @@ it('preserves sail configuration when updating skills', function (): void {
         ->and($config->getSail())->toBeTrue();
 });
 
+// Detects skills when .ai/skills directory exists even if no skills are explicitly in boost.json config.
+// This ensures users who manually created skill directories still get them updated.
+it('calls install command with skills flag when .ai/skills directory exists but skills are not in config', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(false);
+
+    mkdir(base_path('.ai/skills'), 0755, true);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->with(InstallCommand::class, [
+            '--no-interaction' => true,
+            '--guidelines' => false,
+            '--skills' => true,
+        ])
+        ->andReturn(0);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+
+    $command->setLaravel($this->app);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0);
+});
+
 it('defaults to non-sail when config is missing', function (): void {
     file_put_contents(base_path('boost.json'), json_encode([
         'agents' => ['claude_code'],
@@ -244,6 +279,9 @@ it('defaults to non-sail when config is missing', function (): void {
     // When sail config is missing, it defaults to false
     expect($config->getSail())->toBeFalse();
 });
+
+// --discover flag tests: the discover flag enables opt-in detection of new third-party
+// packages that provide guidelines/skills, prompting the user to select which to add.
 
 it('does not run discovery when --discover flag is not set', function (): void {
     $config = new Config;
@@ -273,7 +311,8 @@ it('does not run discovery when --discover flag is not set', function (): void {
         ->and($config->getSkills())->toBe(['existing-skill']);
 });
 
-it('does not change config when no new packages or skills are found with --discover', function (): void {
+// When --discover finds no new packages, config remains unchanged.
+it('does not change config when no new packages are found with --discover', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setGuidelines(true);
@@ -296,6 +335,7 @@ it('does not change config when no new packages or skills are found with --disco
         ->and($config->getPackages())->toBe([]);
 });
 
+// When --discover finds new packages and the user selects one, it gets added to config.
 it('adds selected new packages to config when using --discover', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
@@ -322,4 +362,3 @@ it('adds selected new packages to config when using --discover', function (): vo
     expect($command->handle($config))->toBe(0)
         ->and($config->getPackages())->toContain('vendor/awesome-pkg');
 })->skipOnWindows();
-
