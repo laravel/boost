@@ -16,13 +16,9 @@ class McpWriter
         //
     }
 
-    public function write(?Sail $sail = null, ?Herd $herd = null, ?Nightwatch $nightwatch = null): int
+    public function write(?Sail $sail = null, ?Nightwatch $nightwatch = null): int
     {
         $this->installBoostMcp($sail);
-
-        if ($herd instanceof Herd) {
-            $this->installHerdMcp($herd);
-        }
 
         if ($nightwatch instanceof Nightwatch) {
             $this->installNightwatchMcp($nightwatch);
@@ -73,20 +69,6 @@ class McpWriter
     {
         if (! $this->agent->installHttpMcp('nightwatch', $nightwatch->mcpUrl())) {
             throw new RuntimeException('Failed to install Nightwatch MCP: could not write configuration');
-        }
-    }
-
-    protected function installHerdMcp(Herd $herd): void
-    {
-        $installed = $this->agent->installMcp(
-            key: 'herd',
-            command: $this->agent->getPhpPath(),
-            args: [$herd->mcpPath()],
-            env: ['SITE_PATH' => base_path()]
-        );
-
-        if (! $installed) {
-            throw new RuntimeException('Failed to install Herd MCP: could not write configuration');
         }
     }
 }

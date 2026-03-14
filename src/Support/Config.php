@@ -83,16 +83,6 @@ class Config
         return $this->get('agents', []);
     }
 
-    public function setHerdMcp(bool $installed): void
-    {
-        $this->set('herd_mcp', $installed);
-    }
-
-    public function getHerdMcp(): bool
-    {
-        return $this->get('herd_mcp', false);
-    }
-
     public function setNightwatchMcp(bool $installed): void
     {
         $this->set('nightwatch_mcp', $installed);

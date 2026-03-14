@@ -35,20 +35,6 @@ it('may store and retrieve agents', function (): void {
     expect($config->getAgents())->toEqual($agents);
 });
 
-it('may store and retrieve herd mcp installation status', function (): void {
-    $config = new Config;
-
-    expect($config->getHerdMcp())->toBeFalse();
-
-    $config->setHerdMcp(true);
-
-    expect($config->getHerdMcp())->toBeTrue();
-
-    $config->setHerdMcp(false);
-
-    expect($config->getHerdMcp())->toBeFalse();
-});
-
 it('may store and retrieve skills as an array', function (): void {
     $config = new Config;
 

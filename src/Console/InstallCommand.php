@@ -17,7 +17,6 @@ use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
-use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\McpWriter;
 use Laravel\Boost\Install\Nightwatch;
 use Laravel\Boost\Install\Sail;
@@ -69,7 +68,6 @@ class InstallCommand extends Command
     public function __construct(
         private readonly AgentsDetector $agentsDetector,
         private readonly Config $config,
-        private readonly Herd $herd,
         private readonly Nightwatch $nightwatch,
         private readonly Sail $sail,
         private readonly Terminal $terminal
@@ -207,10 +205,6 @@ class InstallCommand extends Command
             $this->selectedBoostFeatures->push('sail');
         }
 
-        if ($this->herd->isMcpAvailable() && $this->shouldConfigureHerdMcp()) {
-            $this->selectedBoostFeatures->push('herd_mcp');
-        }
-
         if ($this->nightwatch->isInstalled() && $this->shouldConfigureNightwatchMcp()) {
             $this->selectedBoostFeatures->push('nightwatch_mcp');
         }
@@ -222,15 +216,6 @@ class InstallCommand extends Command
             label: 'Laravel Sail detected. Configure Boost MCP to use Sail?',
             default: $this->config->getSail(),
             hint: 'This will configure the MCP server to run through Sail. Note: Sail must be running to use Boost MCP',
-        );
-    }
-
-    protected function shouldConfigureHerdMcp(): bool
-    {
-        return confirm(
-            label: 'Would you like to install Herd MCP alongside Boost MCP?',
-            default: $this->config->getHerdMcp(),
-            hint: 'The Herd MCP provides additional tools like browser logs, which can help AI understand issues better',
         );
     }
 
@@ -419,14 +404,8 @@ class InstallCommand extends Command
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->config->setMcp(true);
             $this->config->setSail($this->shouldUseSail());
-            $this->config->setHerdMcp($this->shouldInstallHerdMcp());
             $this->config->setNightwatchMcp($this->shouldInstallNightwatchMcp());
         }
-    }
-
-    protected function shouldInstallHerdMcp(): bool
-    {
-        return $this->selectedBoostFeatures->contains('herd_mcp');
     }
 
     protected function shouldInstallNightwatchMcp(): bool
@@ -465,7 +444,6 @@ class InstallCommand extends Command
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
                 $this->shouldUseSail() ? $this->sail : null,
-                $this->shouldInstallHerdMcp() ? $this->herd : null,
                 $this->shouldInstallNightwatchMcp() ? $this->nightwatch : null
             ),
             featureName: 'MCP servers',
