@@ -27,7 +27,7 @@ class UpdateCommand extends Command
             return self::FAILURE;
         }
 
-        if ($this->shouldDiscover()) {
+        if ($this->option('discover')) {
             $this->discoverNewContent($config);
         }
 
@@ -80,10 +80,5 @@ class UpdateCommand extends Command
 
         return ThirdPartyPackage::discover()
             ->filter(fn (ThirdPartyPackage $pkg, string $name): bool => ! in_array($name, $configuredPackages, true));
-    }
-
-    protected function shouldDiscover(): bool
-    {
-        return (bool) $this->option('discover');
     }
 }
