@@ -248,7 +248,11 @@ it('calls install command with skills flag when .ai/skills directory exists but 
 
     mkdir(base_path('.ai/skills'), 0755, true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('shouldDiscover')->andReturn(false);
+    $command->shouldReceive('applySkillFilter');
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [

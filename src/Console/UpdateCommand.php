@@ -158,4 +158,3 @@ class UpdateCommand extends Command
         return (bool) $this->option('discover');
     }
 }
-
