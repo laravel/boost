@@ -997,3 +997,74 @@ it('removes extra files when updating skill directory', function (): void {
 
     cleanupSkillDirectory($absoluteTarget);
 });
+
+it('computes correct relative path when target is outside project directory', function (): void {
+    $agent = Mockery::mock(SupportsSkills::class);
+    $writer = new SkillWriter($agent);
+
+    $reflection = new ReflectionMethod($writer, 'relativePath');
+
+    $canonicalDir = base_path('.ai/skills/relative-test-'.uniqid());
+    $targetParent = base_path('.boost-test-relative-'.uniqid().'/relative-test');
+
+    mkdir($canonicalDir, 0755, true);
+    mkdir($targetParent, 0755, true);
+
+    $result = $reflection->invoke($writer, $canonicalDir, $targetParent);
+
+    // Must be relative, not absolute
+    expect($result)->not->toStartWith('/');
+
+    $resolved = realpath($targetParent.'/'.$result);
+    expect($resolved)->toBe(realpath($canonicalDir));
+
+    cleanupSkillDirectory($canonicalDir);
+    cleanupSkillDirectory($targetParent);
+    cleanupSkillDirectory(dirname($targetParent));
+});
+
+it('creates relative symlink when skills path is outside the project root', function (): void {
+    $outsideDirName = '.boost-test-outside-'.uniqid();
+    $outsideDir = dirname(base_path()).'/'.$outsideDirName;
+    $relativeOutsidePath = '../'.$outsideDirName;
+
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    mkdir($canonicalSkillPath, 0755, true);
+    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeOutsidePath);
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: $canonicalSkillPath,
+        description: 'Test skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    $linkedPath = $outsideDir.'/'.$skillName;
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($canonicalSkillPath)->toBeDirectory();
+
+    if (is_link($linkedPath)) {
+        $linkTarget = readlink($linkedPath);
+
+        // The symlink target must be relative, not absolute
+        expect($linkTarget)->not->toStartWith('/');
+
+        // And it must resolve to the canonical path
+        expect(realpath($linkedPath))->toBe(realpath($canonicalSkillPath));
+    } else {
+        expect($linkedPath)->toBeDirectory();
+    }
+
+    cleanupSkillDirectory($outsideDir);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
