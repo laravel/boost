@@ -290,9 +290,9 @@ class SkillWriter
 
     protected function relativePath(string $target, string $from): string
     {
-        $base = rtrim(str_replace('\\', '/', base_path()), '/');
         $resolvedTarget = str_replace('\\', '/', realpath($target) ?: $target);
         $resolvedFrom = str_replace('\\', '/', realpath($from) ?: $from);
+        $base = $this->resolveBaseFromPaths(rtrim(str_replace('\\', '/', base_path()), '/'), $resolvedTarget, $resolvedFrom);
 
         if (! str_starts_with($resolvedTarget, $base.'/') || ! str_starts_with($resolvedFrom, $base.'/')) {
             return $resolvedTarget;
@@ -303,6 +303,29 @@ class SkillWriter
         $depth = $fromRel === '' ? 0 : count(explode('/', $fromRel));
 
         return str_repeat('../', $depth).$targetRel;
+    }
+
+    protected function resolveBaseFromPaths(string $base, string $resolvedTarget, string $resolvedFrom): string
+    {
+        $targetParts = explode('/', $resolvedTarget);
+        $fromParts = explode('/', $resolvedFrom);
+
+        $commonParts = [];
+        for ($i = 0; $i < min(count($targetParts), count($fromParts)); $i++) {
+            if ($targetParts[$i] === $fromParts[$i]) {
+                $commonParts[] = $targetParts[$i];
+            } else {
+                break;
+            }
+        }
+
+        $commonPath = implode('/', $commonParts);
+
+        if ($commonPath !== '' && str_starts_with($base, $commonPath)) {
+            return $commonPath;
+        }
+
+        return $base;
     }
 
     protected function directoryContainsBladeFiles(string $path): bool
