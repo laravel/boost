@@ -7,15 +7,6 @@ metadata:
 ---
 # Tailwind CSS Development
 
-## When to Apply
-
-Activate this skill when:
-- Adding styles to components or pages
-- Working with responsive design
-- Implementing dark mode
-- Extracting repeated patterns into components
-- Debugging spacing or layout issues
-
 ## Documentation
 
 Use `search-docs` for detailed Tailwind CSS v3 patterns and documentation.

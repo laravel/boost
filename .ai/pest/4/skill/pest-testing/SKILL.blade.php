@@ -10,16 +10,6 @@ metadata:
 @endphp
 # Pest Testing 4
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating new tests (unit, feature, or browser)
-- Modifying existing tests
-- Debugging test failures
-- Working with browser testing or smoke testing
-- Writing architecture tests or visual regression tests
-
 ## Documentation
 
 Use `search-docs` for detailed Pest 4 patterns and documentation.

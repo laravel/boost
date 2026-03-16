@@ -7,14 +7,6 @@ metadata:
 ---
 # Pennant Features
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating or checking feature flags
-- Managing feature rollouts
-- Implementing A/B testing
-
 ## Documentation
 
 Use `search-docs` for detailed Pennant patterns and documentation.
