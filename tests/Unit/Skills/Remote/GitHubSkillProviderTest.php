@@ -421,3 +421,44 @@ it('uses services.github.token for authentication when boost.github.token is not
 
     Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'Bearer gh-token-456'));
 });
+
+it('discovers skills with SKILL.blade.php marker', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+            ['path' => 'skill-one/SKILL.blade.php', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ['path' => 'skill-two', 'type' => 'tree', 'sha' => 'jkl'],
+            ['path' => 'skill-two/SKILL.md', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $skills = $fetcher->discoverSkills();
+
+    expect($skills)->toHaveCount(2)
+        ->and($skills->has('skill-one'))->toBeTrue()
+        ->and($skills->has('skill-two'))->toBeTrue()
+        ->and($skills->get('skill-one')->name)->toBe('skill-one')
+        ->and($skills->get('skill-two')->name)->toBe('skill-two');
+});
+
+it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => '.ai', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => '.ai/claude', 'type' => 'tree', 'sha' => 'bbb'],
+            ['path' => '.ai/claude/skills', 'type' => 'tree', 'sha' => 'ccc'],
+            ['path' => '.ai/claude/skills/my-skill', 'type' => 'tree', 'sha' => 'ddd'],
+            ['path' => '.ai/claude/skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'eee', 'size' => 123],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $skills = $fetcher->discoverSkills();
+
+    expect($skills)->toHaveCount(1)
+        ->and($skills->has('my-skill'))->toBeTrue()
+        ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
+});

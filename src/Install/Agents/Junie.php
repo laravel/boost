@@ -59,7 +59,7 @@ class Junie extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
 
     public function mcpConfigPath(): string
     {
-        return '.junie/mcp/mcp.json';
+        return config('boost.agents.junie.mcp_path', '.junie/mcp/mcp.json');
     }
 
     /** {@inheritDoc} */
@@ -73,7 +73,7 @@ class Junie extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
 
     public function guidelinesPath(): string
     {
-        return config('boost.agents.junie.guidelines_path', '.junie/guidelines.md');
+        return config('boost.agents.junie.guidelines_path', 'AGENTS.md');
     }
 
     public function skillsPath(): string

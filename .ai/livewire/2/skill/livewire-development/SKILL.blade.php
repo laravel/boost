@@ -10,16 +10,6 @@ metadata:
 @endphp
 # Livewire Development
 
-## When to Apply
-
-Activate this skill when:
-- Creating new Livewire components
-- Modifying existing component state or behavior
-- Debugging reactivity or lifecycle issues
-- Writing Livewire component tests
-- Adding Alpine.js interactivity to components
-- Working with wire: directives
-
 ## Documentation
 
 Use `search-docs` for detailed Livewire 2 patterns and documentation.

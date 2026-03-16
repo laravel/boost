@@ -10,15 +10,6 @@ metadata:
 @endphp
 # Livewire Development
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating or modifying Livewire components
-- Using wire: directives (model, click, loading, sort, intersect)
-- Implementing islands or async actions
-- Writing Livewire component tests
-
 ## Documentation
 
 Use `search-docs` for detailed Livewire 4 patterns and documentation.
@@ -47,18 +38,18 @@ Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert b
 
 ### Choosing a Component Format
 
-Before creating a component, check `config/livewire.php` for directory overrides, which change where files are stored. Then, look at existing files in those directories (defaulting to `app/Livewire/` and `resources/views/livewire/`) to match the established convention.
+Before creating a component, check `config/livewire.php` for directory overrides, which change where files are stored. Then, look at existing files in those directories (defaulting to `{{ $assist->appPath('Livewire/') }}` and `resources/views/livewire/`) to match the established convention.
 
 ### Component Format Reference
 
 | Format | Flag | Class Path | View Path |
 |--------|------|------------|-----------|
 | Single-file (SFC) | default | — | `resources/views/livewire/create-post.blade.php` (PHP + Blade in one file) |
-| Multi-file (MFC) | `--mfc` | `app/Livewire/CreatePost.php` | `resources/views/livewire/create-post.blade.php` |
-| Class-based | `--class` | `app/Livewire/CreatePost.php` | `resources/views/livewire/create-post.blade.php` |
+| Multi-file (MFC) | `--mfc` | `{{ $assist->appPath('Livewire/CreatePost.php') }}` | `resources/views/livewire/create-post.blade.php` |
+| Class-based | `--class` | `{{ $assist->appPath('Livewire/CreatePost.php') }}` | `resources/views/livewire/create-post.blade.php` |
 | View-based | ⚡ prefix | — | `resources/views/livewire/create-post.blade.php` (Blade-only with functional state) |
 
-Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates files at `app/Livewire/Posts/CreatePost.php` and `resources/views/livewire/posts/create-post.blade.php`.
+Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates files at `{{ $assist->appPath('Livewire/Posts/CreatePost.php') }}` and `resources/views/livewire/posts/create-post.blade.php`.
 
 ### Single-File Component Example
 

@@ -144,6 +144,26 @@ test('hasSkills property can be set to true', function (): void {
     expect($config->hasSkills)->toBeTrue();
 });
 
+test('shouldEnforceStrictTypes returns false when app directory does not exist', function (): void {
+    $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn($sentinel);
+
+    expect($assist->shouldEnforceStrictTypes())->toBeFalse();
+});
+
+test('enumContents returns empty string when app directory does not exist', function (): void {
+    $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn($sentinel);
+
+    expect($assist->enumContents())->toBe('');
+});
+
 test('hasSkillsEnabled returns false when skills are disabled', function (): void {
     $this->config->hasSkills = false;
 
@@ -163,3 +183,23 @@ test('hasSkillsEnabled returns true when skills are enabled', function (): void 
 
     expect($assist->hasSkillsEnabled())->toBeTrue();
 });
+
+test('appPath returns default app path', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->appPath())->toBe('app');
+    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('app'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+});
+
+test('appPath returns customized path', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    app()->useAppPath('src');
+
+    expect($assist->appPath())->toBe('src');
+    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('src'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+})->after(fn () => app()->useAppPath('app'));

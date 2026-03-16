@@ -10,16 +10,6 @@ metadata:
 @endphp
 # Inertia React Development
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating or modifying React page components for Inertia
-- Working with forms in React (using `<Form>` or `useForm`)
-- Implementing client-side navigation with `<Link>` or `router`
-- Using v2 features: deferred props, prefetching, or polling
-- Building React-specific features with the Inertia protocol
-
 ## Documentation
 
 Use `search-docs` for detailed Inertia v2 React patterns and documentation.

@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
@@ -153,10 +154,15 @@ class GuidelineAssist
             return false;
         }
 
-        return str_contains(
-            file_get_contents(current($this->modelPaths)),
-            'strict_types=1'
-        );
+        $path = current($this->modelPaths);
+
+        if (! is_file($path)) {
+            return false;
+        }
+
+        $code = file_get_contents($path);
+
+        return $code !== false && str_contains($code, 'strict_types=1');
     }
 
     public function enumContents(): string
@@ -165,7 +171,13 @@ class GuidelineAssist
             return '';
         }
 
-        return file_get_contents(current($this->enumPaths));
+        $path = current($this->enumPaths);
+
+        if (! is_file($path)) {
+            return '';
+        }
+
+        return file_get_contents($path) ?: '';
     }
 
     public function inertia(): Inertia
@@ -260,7 +272,12 @@ class GuidelineAssist
 
     public function sailBinaryPath(): string
     {
-        return Sail::BINARY_PATH;
+        return Sail::binaryPath();
+    }
+
+    public function appPath(string $path = ''): string
+    {
+        return ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
     }
 
     /**

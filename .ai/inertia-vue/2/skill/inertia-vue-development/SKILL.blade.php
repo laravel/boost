@@ -10,16 +10,6 @@ metadata:
 @endphp
 # Inertia Vue Development
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating or modifying Vue page components for Inertia
-- Working with forms in Vue (using `<Form>` or `useForm`)
-- Implementing client-side navigation with `<Link>` or `router`
-- Using v2 features: deferred props, prefetching, or polling
-- Building Vue-specific features with the Inertia protocol
-
 ## Documentation
 
 Use `search-docs` for detailed Inertia v2 Vue patterns and documentation.

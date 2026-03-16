@@ -20,7 +20,7 @@ class ReadLogEntries extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Read the last N log entries from the application log, correctly handling multi-line PSR-3 formatted logs. Only works for log files.';
+    protected string $description = 'Read the last N log entries from the application log, correctly handling multi-line PSR-3 formatted logs and JSON-formatted logs. Only works for log files.';
 
     /**
      * Get the tool's input schema.

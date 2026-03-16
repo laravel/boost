@@ -1,6 +1,6 @@
 ---
 name: mcp-development
-description: "Develops MCP servers, tools, resources, and prompts. Activates when creating MCP tools, resources, or prompts; setting up AI integrations; debugging MCP connections; working with routes/ai.php; or when the user mentions MCP, Model Context Protocol, AI tools, AI server, or building tools for AI assistants."
+description: "Use this skill for Laravel MCP development only. Trigger when creating or editing MCP tools, resources, prompts, or servers in Laravel projects. Covers: artisan make:mcp-* generators, mcp:inspector, routes/ai.php, Tool/Resource/Prompt classes, schema validation, shouldRegister(), OAuth setup, URI templates, read-only attributes, and MCP debugging. Do not use for non-Laravel MCP projects or generic AI features without MCP."
 license: MIT
 metadata:
   author: laravel
@@ -23,12 +23,13 @@ search-docs(['mcp tools', 'mcp resources', 'mcp validation'])
 
 ### Artisan Commands
 
-@boostsnippet("Create MCP Primitives", "bash")
+Create MCP Primitives"
+```bash
 {{ $assist->artisanCommand('make:mcp-tool ToolName') }}
 {{ $assist->artisanCommand('make:mcp-resource ResourceName') }}
 {{ $assist->artisanCommand('make:mcp-prompt PromptName') }}
 {{ $assist->artisanCommand('make:mcp-server ServerName') }}
-@endboostsnippet
+```
 
 ### Basic Tool Implementation
 
@@ -108,10 +109,11 @@ $response->assertSentNotification('event/type', ['data' => 'value']);
 
 Test interactively using the inspector:
 
-@boostsnippet("Launch MCP Inspector", "bash")
+<!--Launch MCP Inspector-->
+```bash
 {{ $assist->artisanCommand('mcp:inspector mcp/my-server') }}  # Web server
 {{ $assist->artisanCommand('mcp:inspector my-server') }}      # Local server
-@endboostsnippet
+```
 
 ## Available Features
 

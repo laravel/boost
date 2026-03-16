@@ -5,7 +5,10 @@ declare(strict_types=1);
 use Illuminate\Console\OutputStyle;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
+use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
+use Laravel\Prompts\Key;
+use Laravel\Prompts\Prompt;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -22,6 +25,10 @@ afterEach(function (): void {
 
     if (file_exists(base_path('CLAUDE.md'))) {
         unlink(base_path('CLAUDE.md'));
+    }
+
+    if (is_dir(base_path('.ai/skills'))) {
+        rmdir(base_path('.ai/skills'));
     }
 });
 
@@ -66,6 +73,7 @@ it('calls install command with a guidelines flag when guidelines are enabled', f
     $config->setSkills([]);
 
     $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -91,6 +99,7 @@ it('calls install command with skills flag when skills are configured', function
     $config->setSkills(['test-skill']);
 
     $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -116,6 +125,7 @@ it('calls install command with both flags when guidelines and skills are enabled
     $config->setSkills(['test-skill']);
 
     $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -141,6 +151,7 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $config->setSail(true);
 
     $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -167,6 +178,7 @@ it('preserves non-sail configuration when updating guidelines', function (): voi
     $config->setSail(false);
 
     $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -193,6 +205,7 @@ it('preserves sail configuration when updating skills', function (): void {
     $config->setSail(true);
 
     $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
     $command->shouldReceive('callSilently')
         ->once()
         ->with(InstallCommand::class, [
@@ -212,6 +225,33 @@ it('preserves sail configuration when updating skills', function (): void {
         ->and($config->getSail())->toBeTrue();
 });
 
+it('calls install command with skills flag when .ai/skills directory exists but skills are not in config', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(false);
+
+    mkdir(base_path('.ai/skills'), 0755, true);
+
+    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->with(InstallCommand::class, [
+            '--no-interaction' => true,
+            '--guidelines' => false,
+            '--skills' => true,
+        ])
+        ->andReturn(0);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+
+    $command->setLaravel($this->app);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0);
+});
+
 it('defaults to non-sail when config is missing', function (): void {
     file_put_contents(base_path('boost.json'), json_encode([
         'agents' => ['claude_code'],
@@ -223,3 +263,81 @@ it('defaults to non-sail when config is missing', function (): void {
     // When sail config is missing, it defaults to false
     expect($config->getSail())->toBeFalse();
 });
+
+it('does not run discovery when --discover flag is not set', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['existing-skill']);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
+    $command->shouldNotReceive('discoverNewContent');
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->with(InstallCommand::class, [
+            '--no-interaction' => true,
+            '--guidelines' => false,
+            '--skills' => true,
+        ])
+        ->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0)
+        ->and($config->getSkills())->toBe(['existing-skill']);
+});
+
+it('does not change config when no new packages are found with --discover', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setSkills(['existing-skill']);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('option')->with('discover')->andReturn(true);
+    $command->shouldReceive('resolveNewPackages')->andReturn(collect());
+    $command->shouldReceive('callSilently')->once()->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0)
+        ->and($config->getSkills())->toBe(['existing-skill'])
+        ->and($config->getPackages())->toBe([]);
+});
+
+it('adds selected new packages to config when using --discover', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setPackages([]);
+
+    $newPackage = new ThirdPartyPackage('vendor/awesome-pkg', true, false);
+
+    Prompt::fake([Key::SPACE, Key::ENTER]);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('option')->with('discover')->andReturn(true);
+    $command->shouldReceive('resolveNewPackages')
+        ->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0)
+        ->and($config->getPackages())->toContain('vendor/awesome-pkg');
+})->skipOnWindows();
