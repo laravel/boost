@@ -10,15 +10,6 @@ metadata:
 @endphp
 # Livewire Development
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating or modifying Livewire components
-- Using wire: directives (model, click, loading, sort, intersect)
-- Implementing islands or async actions
-- Writing Livewire component tests
-
 ## Documentation
 
 Use `search-docs` for detailed Livewire 4 patterns and documentation.

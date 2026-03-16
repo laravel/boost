@@ -10,14 +10,6 @@ metadata:
 @endphp
 # Flux UI Development
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating UI components or pages
-- Working with forms, modals, or interactive elements
-- Checking available Flux components
-
 ## Documentation
 
 Use `search-docs` for detailed Flux UI patterns and documentation.

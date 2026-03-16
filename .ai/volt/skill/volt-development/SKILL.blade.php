@@ -10,14 +10,6 @@ metadata:
 @endphp
 # Volt Development
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating Volt single-file components
-- Converting traditional Livewire components to Volt
-- Testing Volt components
-
 ## Documentation
 
 Use `search-docs` for detailed Volt patterns and documentation.
