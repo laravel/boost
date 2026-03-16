@@ -56,10 +56,12 @@ class SkillAuditor
             $skillResults = [];
 
             foreach ($partners as $partner => $audit) {
-                if (! is_array($audit) || ! isset($audit['risk'])) {
+                if (! is_array($audit)) {
                     continue;
                 }
-
+                if (! isset($audit['risk'])) {
+                    continue;
+                }
                 $skillResults[] = new AuditResult(
                     partner: (string) $partner,
                     risk: (string) $audit['risk'],

@@ -349,7 +349,7 @@ class AddSkillCommand extends Command
     protected function displayAuditResults(array $auditResults, array $skillNames): void
     {
         $partnerKeys = collect($auditResults)
-            ->flatMap(fn (array $results): array => array_map(fn (AuditResult $r): string => $r->partner, $results))
+            ->flatMap(fn (array $results): array => array_map(fn (AuditResult $auditResult): string => $auditResult->partner, $results))
             ->unique()
             ->values()
             ->all();
@@ -360,7 +360,7 @@ class AddSkillCommand extends Command
 
         foreach ($skillNames as $skillName) {
             $partnerResults = $auditResults[$skillName] ?? [];
-            $partnerMap = collect($partnerResults)->keyBy(fn (AuditResult $r): string => $r->partner);
+            $partnerMap = collect($partnerResults)->keyBy(fn (AuditResult $auditResult): string => $auditResult->partner);
 
             $row = [$skillName];
 
