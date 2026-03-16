@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use Illuminate\Console\Command;
+use Laravel\Boost\BoostServiceProvider;
 
 arch('strict types')
     ->expect('Laravel\Boost')
@@ -12,14 +14,14 @@ arch('no debugging')
 
 arch('commands')
     ->expect('Laravel\Boost\Commands')
-    ->toExtend(\Illuminate\Console\Command::class)
+    ->toExtend(Command::class)
     ->toHaveSuffix('Command');
 
 arch('no direct env calls')
     ->expect('env')
     ->not->toBeUsedIn('Laravel\Boost')
     ->ignoring([
-        \Laravel\Boost\BoostServiceProvider::class,
+        BoostServiceProvider::class,
     ]);
 
 arch('tests')

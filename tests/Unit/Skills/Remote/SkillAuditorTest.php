@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Skills\Remote\AuditResult;
 use Laravel\Boost\Skills\Remote\SkillAuditor;
@@ -82,7 +83,7 @@ it('returns empty array on network failure', function (): void {
 
 it('returns empty array on connection timeout', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => fn () => throw new \Illuminate\Http\Client\ConnectionException('Connection timed out'),
+        'skill.laravel.cloud/api/v1/skills/audit*' => fn () => throw new ConnectionException('Connection timed out'),
     ]);
 
     $auditor = new SkillAuditor;
