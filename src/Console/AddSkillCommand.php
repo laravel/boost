@@ -332,19 +332,14 @@ class AddSkillCommand extends Command
 
         foreach ($skillNames as $skillName) {
             $partnerResults = $auditResults[$skillName] ?? [];
-            $partnerMap = [];
-
-            foreach ($partnerResults as $result) {
-                $partnerMap[$result->partner] = $result;
-            }
-
+            $partnerMap = collect($partnerResults)->keyBy(fn (AuditResult $r): string => $r->partner);
             $worstResult = $this->overallRisk($partnerResults);
 
             $row = [$skillName];
 
             foreach ($partnerKeys as $partnerKey) {
-                $row[] = isset($partnerMap[$partnerKey])
-                    ? $this->colorizeRisk($partnerMap[$partnerKey])
+                $row[] = $partnerMap->has($partnerKey)
+                    ? $this->colorizeRisk($partnerMap->get($partnerKey))
                     : '—';
             }
 
@@ -364,15 +359,9 @@ class AddSkillCommand extends Command
      */
     protected function hasRiskySkills(array $auditResults): bool
     {
-        foreach ($auditResults as $partnerResults) {
-            foreach ($partnerResults as $result) {
-                if ($result->riskWeight() >= 3) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return collect($auditResults)
+            ->flatten()
+            ->contains(fn (AuditResult $result): bool => $result->riskWeight() >= 3);
     }
 
     /**
@@ -380,15 +369,7 @@ class AddSkillCommand extends Command
      */
     protected function overallRisk(array $results): ?AuditResult
     {
-        $worst = null;
-
-        foreach ($results as $result) {
-            if (! $worst instanceof AuditResult || $result->riskWeight() > $worst->riskWeight()) {
-                $worst = $result;
-            }
-        }
-
-        return $worst;
+        return collect($results)->sortByDesc(fn (AuditResult $r): int => $r->riskWeight())->first();
     }
 
     protected function colorizeRisk(AuditResult $result): string
