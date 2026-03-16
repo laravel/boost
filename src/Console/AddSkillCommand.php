@@ -91,7 +91,7 @@ class AddSkillCommand extends Command
         try {
             $this->availableSkills = spin(
                 callback: fn (): Collection => $this->fetcher->discoverSkills(),
-                message: "Fetching skills from {$this->repository->fullName()}..."
+                message: "Fetching skills from {$this->repository->source()}..."
             );
         } catch (RuntimeException $runtimeException) {
             $this->error($runtimeException->getMessage());
@@ -164,11 +164,17 @@ class AddSkillCommand extends Command
             return self::SUCCESS;
         }
 
-        if (! $this->runAuditBeforeInstall($selectedSkills)) {
+        $skillsToInstall = $this->skillsToInstall($selectedSkills);
+
+        if ($skillsToInstall->isEmpty()) {
             return self::SUCCESS;
         }
 
-        $results = $this->downloadSkills($selectedSkills);
+        if (! $this->runAuditBeforeInstall($skillsToInstall)) {
+            return self::SUCCESS;
+        }
+
+        $results = $this->downloadSkills($skillsToInstall);
 
         if ($results['installedNames'] !== []) {
             $this->info('Skills installed:');
@@ -201,9 +207,7 @@ class AddSkillCommand extends Command
         $skillOptions = $this->option('skill');
 
         if ($skillOptions !== []) {
-            return $this->availableSkills->filter(
-                fn (RemoteSkill $skill): bool => in_array($skill->name, $skillOptions, true)
-            );
+            return $this->availableSkills->only($skillOptions);
         }
 
         /** @var array<int, string> $selected */
@@ -217,9 +221,51 @@ class AddSkillCommand extends Command
             hint: 'Use --all to install all skills at once',
         );
 
-        return $this->availableSkills->filter(
-            fn (RemoteSkill $skill): bool => in_array($skill->name, $selected, true)
+        return $this->availableSkills->only($selected);
+    }
+
+    /**
+     * @param  Collection<string, RemoteSkill>  $skills
+     */
+    protected function skillsToInstall(Collection $skills): Collection
+    {
+        [$existingSkills, $newSkills] = $skills->partition(
+            fn (RemoteSkill $skill): bool => $this->skillExists($skill)
         );
+
+        if ($existingSkills->isEmpty() || $this->shouldUpdateExisting($existingSkills)) {
+            return $skills;
+        }
+
+        return $newSkills;
+    }
+
+    /**
+     * @param  Collection<string, RemoteSkill>  $existingSkills
+     */
+    protected function shouldUpdateExisting(Collection $existingSkills): bool
+    {
+        if ($this->option('force')) {
+            return true;
+        }
+
+        if (! stream_isatty(STDIN)) {
+            return false;
+        }
+
+        return confirm(
+            label: "Update {$existingSkills->count()} existing skill(s)?",
+        );
+    }
+
+    protected function skillExists(RemoteSkill $skill): bool
+    {
+        return is_dir($this->skillTargetPath($skill));
+    }
+
+    protected function skillTargetPath(RemoteSkill $skill): string
+    {
+        return base_path($this->defaultSkillsPath.DIRECTORY_SEPARATOR.$skill->name);
     }
 
     /**
@@ -228,21 +274,8 @@ class AddSkillCommand extends Command
      */
     protected function downloadSkills(Collection $skills): array
     {
-        $force = $this->option('force');
-        $absoluteSkillsPath = base_path($this->defaultSkillsPath);
-
-        $existingSkills = $skills->filter(fn (RemoteSkill $skill): bool => is_dir($absoluteSkillsPath.DIRECTORY_SEPARATOR.$skill->name));
-        $shouldUpdateExisting = $force;
-
-        if ($existingSkills->isNotEmpty() && ! $force && stream_isatty(STDIN)) {
-            $count = $existingSkills->count();
-            $shouldUpdateExisting = confirm(
-                label: "Update {$count} existing skill(s) ?",
-            );
-        }
-
         return spin(
-            callback: fn (): array => $this->addSkills($skills, $absoluteSkillsPath, $shouldUpdateExisting),
+            callback: fn (): array => $this->addSkills($skills),
             message: 'Downloading skills...'
         );
     }
@@ -251,19 +284,14 @@ class AddSkillCommand extends Command
      * @param  Collection<string, RemoteSkill>  $skills
      * @return array{installedNames: array<int, string>, failedDetails: array<string, string>}
      */
-    protected function addSkills(Collection $skills, string $absoluteSkillsPath, bool $shouldUpdateExisting): array
+    protected function addSkills(Collection $skills): array
     {
         $results = ['installedNames' => [], 'failedDetails' => []];
 
         foreach ($skills as $skill) {
-            $targetPath = $absoluteSkillsPath.DIRECTORY_SEPARATOR.$skill->name;
-            $exists = is_dir($targetPath);
+            $targetPath = $this->skillTargetPath($skill);
 
-            if ($exists && ! $shouldUpdateExisting) {
-                continue;
-            }
-
-            if ($exists) {
+            if ($this->skillExists($skill)) {
                 File::deleteDirectory($targetPath);
             }
 
@@ -290,12 +318,12 @@ class AddSkillCommand extends Command
             return true;
         }
 
-        $skillNames = $selectedSkills->map(fn (RemoteSkill $skill): string => $skill->name)->values()->all();
+        $skillNames = $selectedSkills->keys()->values()->all();
 
         /** @var array<string, array<int, AuditResult>> $auditResults */
         $auditResults = spin(
             callback: fn (): array => (new SkillAuditor)->audit(
-                $this->repository->fullName(),
+                $this->repository->source(),
                 $skillNames,
             ),
             message: 'Running security audit...',
@@ -326,14 +354,13 @@ class AddSkillCommand extends Command
             ->values()
             ->all();
 
-        $headers = array_merge(['Skill'], array_map(ucfirst(...), $partnerKeys), ['Risk']);
+        $headers = array_merge(['Skill'], array_map(ucfirst(...), $partnerKeys));
 
         $rows = [];
 
         foreach ($skillNames as $skillName) {
             $partnerResults = $auditResults[$skillName] ?? [];
             $partnerMap = collect($partnerResults)->keyBy(fn (AuditResult $r): string => $r->partner);
-            $worstResult = $this->overallRisk($partnerResults);
 
             $row = [$skillName];
 
@@ -342,10 +369,6 @@ class AddSkillCommand extends Command
                     ? $this->colorizeRisk($partnerMap->get($partnerKey))
                     : '—';
             }
-
-            $row[] = $worstResult instanceof AuditResult
-                ? $this->colorizeRisk($worstResult)
-                : '—';
 
             $rows[] = $row;
         }
@@ -362,14 +385,6 @@ class AddSkillCommand extends Command
         return collect($auditResults)
             ->flatten()
             ->contains(fn (AuditResult $result): bool => $result->riskWeight() >= 3);
-    }
-
-    /**
-     * @param  array<int, AuditResult>  $results
-     */
-    protected function overallRisk(array $results): ?AuditResult
-    {
-        return collect($results)->sortByDesc(fn (AuditResult $r): int => $r->riskWeight())->first();
     }
 
     protected function colorizeRisk(AuditResult $result): string

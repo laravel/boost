@@ -29,6 +29,13 @@ class GitHubRepository
         return $this->owner.'/'.$this->repo;
     }
 
+    public function source(): string
+    {
+        return $this->path === ''
+            ? $this->fullName()
+            : $this->fullName().'/'.$this->path;
+    }
+
     /**
      * @throws InvalidArgumentException
      */

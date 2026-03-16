@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Skills\Remote;
 
 use Illuminate\Support\Facades\Http;
-use Throwable;
 
 class SkillAuditor
 {
-    protected string $auditUrl = 'https://skill.laravel.cloud/api/v1/skills/audit';
+    protected string $auditUrl = 'https://skills.laravel.cloud/api/v1/skills/audit';
 
     protected int $timeoutSeconds = 3;
 
@@ -19,7 +18,7 @@ class SkillAuditor
      */
     public function audit(string $source, array $skillSlugs): array
     {
-        try {
+        return rescue(function () use ($source, $skillSlugs): array {
             $response = Http::timeout($this->timeoutSeconds)
                 ->get($this->auditUrl, [
                     'source' => $source,
@@ -38,9 +37,7 @@ class SkillAuditor
 
             /** @var array<string, mixed> $data */
             return $this->parseResponse($data);
-        } catch (Throwable) {
-            return [];
-        }
+        }, [], report: false);
     }
 
     /**

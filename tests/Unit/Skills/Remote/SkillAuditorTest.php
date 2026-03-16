@@ -13,7 +13,7 @@ beforeEach(function (): void {
 
 it('returns audit results for skills', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([
             'skill-one' => [
                 'ath' => ['risk' => 'safe', 'analyzedAt' => '2025-01-01T00:00:00Z'],
                 'socket' => ['risk' => 'low', 'alerts' => 2, 'analyzedAt' => '2025-01-01T00:00:00Z'],
@@ -39,7 +39,7 @@ it('returns audit results for skills', function (): void {
 
 it('returns audit results for multiple skills', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([
             'skill-one' => [
                 'ath' => ['risk' => 'safe', 'analyzedAt' => '2025-01-01T00:00:00Z'],
             ],
@@ -60,7 +60,7 @@ it('returns audit results for multiple skills', function (): void {
 
 it('sends correct query parameters', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([]),
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([]),
     ]);
 
     $auditor = new SkillAuditor;
@@ -72,7 +72,7 @@ it('sends correct query parameters', function (): void {
 
 it('returns empty array on network failure', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response(null, 500),
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response(null, 500),
     ]);
 
     $auditor = new SkillAuditor;
@@ -83,7 +83,7 @@ it('returns empty array on network failure', function (): void {
 
 it('returns empty array on connection timeout', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => fn () => throw new ConnectionException('Connection timed out'),
+        'skills.laravel.cloud/api/v1/skills/audit*' => fn () => throw new ConnectionException('Connection timed out'),
     ]);
 
     $auditor = new SkillAuditor;
@@ -94,7 +94,7 @@ it('returns empty array on connection timeout', function (): void {
 
 it('returns empty array on malformed response', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response('not json', 200, ['Content-Type' => 'text/plain']),
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response('not json', 200, ['Content-Type' => 'text/plain']),
     ]);
 
     $auditor = new SkillAuditor;
@@ -105,7 +105,7 @@ it('returns empty array on malformed response', function (): void {
 
 it('skips partner entries without risk field', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([
             'skill-one' => [
                 'ath' => ['risk' => 'safe', 'analyzedAt' => '2025-01-01T00:00:00Z'],
                 'socket' => ['analyzedAt' => '2025-01-01T00:00:00Z'],
@@ -122,7 +122,7 @@ it('skips partner entries without risk field', function (): void {
 
 it('skips non-array partner data', function (): void {
     Http::fake([
-        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([
             'skill-one' => 'invalid',
         ]),
     ]);
