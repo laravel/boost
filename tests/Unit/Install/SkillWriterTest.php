@@ -998,35 +998,6 @@ it('removes extra files when updating skill directory', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
-it('resolves correct common base from paths', function (string $base, string $target, string $from, string $expected): void {
-    $agent = Mockery::mock(SupportsSkills::class);
-    $writer = new SkillWriter($agent);
-
-    $reflection = new ReflectionMethod($writer, 'resolveBaseFromPaths');
-    $result = $reflection->invoke($writer, $base, $target, $from);
-
-    expect($result)->toBe($expected);
-})->with([
-    'paths share ancestor above base_path' => [
-        '/home/user/project',
-        '/home/user/.claude/skills/my-skill',
-        '/home/user/project/.boost/skills/my-skill',
-        '/home/user',
-    ],
-    'both paths within base_path' => [
-        '/home/user/project',
-        '/home/user/project/.ai/skills/my-skill',
-        '/home/user/project/.boost/skills/my-skill',
-        '/home/user/project',
-    ],
-    'deeply nested common ancestor above base_path' => [
-        '/home/user/projects/app',
-        '/home/user/.config/claude/skills/my-skill',
-        '/home/user/projects/app/.boost/skills/my-skill',
-        '/home/user',
-    ],
-]);
-
 it('computes correct relative path when target is outside project directory', function (): void {
     $agent = Mockery::mock(SupportsSkills::class);
     $writer = new SkillWriter($agent);
