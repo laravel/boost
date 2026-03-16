@@ -160,7 +160,9 @@ class GuidelineAssist
             return false;
         }
 
-        return str_contains(file_get_contents($path), 'strict_types=1');
+        $code = file_get_contents($path);
+
+        return $code !== false && str_contains($code, 'strict_types=1');
     }
 
     public function enumContents(): string
@@ -175,7 +177,7 @@ class GuidelineAssist
             return '';
         }
 
-        return file_get_contents($path);
+        return file_get_contents($path) ?: '';
     }
 
     public function inertia(): Inertia
