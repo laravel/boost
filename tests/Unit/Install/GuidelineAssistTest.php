@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Sail;
+use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Roster;
 
 beforeEach(function (): void {
@@ -227,7 +228,7 @@ PHP);
 
     $this->roster
         ->shouldReceive('uses')
-        ->with(\Laravel\Roster\Enums\Approaches::MODULAR)
+        ->with(Approaches::MODULAR)
         ->andReturn(true);
 
     require_once $modelPath;
@@ -269,7 +270,7 @@ PHP);
 
     $this->roster
         ->shouldReceive('uses')
-        ->with(\Laravel\Roster\Enums\Approaches::MODULAR)
+        ->with(Approaches::MODULAR)
         ->andReturn(true);
 
     require_once $modelPath;
@@ -311,7 +312,7 @@ PHP);
 
     $this->roster
         ->shouldReceive('uses')
-        ->with(\Laravel\Roster\Enums\Approaches::MODULAR)
+        ->with(Approaches::MODULAR)
         ->andReturn(true);
 
     require_once $modelPath;
@@ -352,7 +353,7 @@ PHP);
 
     $this->roster
         ->shouldReceive('uses')
-        ->with(\Laravel\Roster\Enums\Approaches::MODULAR)
+        ->with(Approaches::MODULAR)
         ->andReturn(false);
 
     require_once $modelPath;
@@ -392,7 +393,7 @@ PHP);
 
     $this->roster
         ->shouldReceive('uses')
-        ->with(\Laravel\Roster\Enums\Approaches::MODULAR)
+        ->with(Approaches::MODULAR)
         ->andReturn(false);
 
     require_once $modelPath;
