@@ -240,6 +240,109 @@ it('returns error when log file does not exist', function (): void {
         ->toolTextContains('Log file not found');
 });
 
+it('handles JSON-formatted log entries', function (): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $logContent = implode("\n", [
+        '{"message":"First message","context":{},"level":200,"level_name":"INFO","channel":"local","datetime":"2024-01-15T10:00:00+00:00"}',
+        '{"message":"Second message","context":{},"level":400,"level_name":"ERROR","channel":"local","datetime":"2024-01-15T10:01:00+00:00"}',
+        '{"message":"Third message","context":{},"level":200,"level_name":"INFO","channel":"local","datetime":"2024-01-15T10:02:00+00:00"}',
+    ]);
+
+    createLogFile($logFile, $logContent);
+
+    $tool = new ReadLogEntries;
+    $response = $tool->handle(new Request(['entries' => 2]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Second message', 'Third message')
+        ->toolTextDoesNotContain('First message');
+});
+
+it('handles Logstash-formatted log entries', function (): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $logContent = implode("\n", [
+        '{"@timestamp":"2024-01-15T10:00:00.000Z","@version":1,"host":"server","message":"Logstash info","type":"app","channel":"local","level":"INFO","monolog_level":200}',
+        '{"@timestamp":"2024-01-15T10:01:00.000Z","@version":1,"host":"server","message":"Logstash error","type":"app","channel":"local","level":"ERROR","monolog_level":400}',
+        '{"@timestamp":"2024-01-15T10:02:00.000Z","@version":1,"host":"server","message":"Logstash warning","type":"app","channel":"local","level":"WARNING","monolog_level":300}',
+    ]);
+
+    createLogFile($logFile, $logContent);
+
+    $tool = new ReadLogEntries;
+    $response = $tool->handle(new Request(['entries' => 2]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Logstash error', 'Logstash warning')
+        ->toolTextDoesNotContain('Logstash info');
+});
+
+it('handles Loggly-formatted log entries', function (): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $logContent = implode("\n", [
+        '{"message":"Loggly first","context":{},"level":200,"level_name":"INFO","channel":"local","timestamp":"2024-01-15T10:00:00.000000+00:00"}',
+        '{"message":"Loggly second","context":{},"level":400,"level_name":"ERROR","channel":"local","timestamp":"2024-01-15T10:01:00.000000+00:00"}',
+    ]);
+
+    createLogFile($logFile, $logContent);
+
+    $tool = new ReadLogEntries;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Loggly second')
+        ->toolTextDoesNotContain('Loggly first');
+});
+
+it('returns correct count of JSON log entries', function (): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $entries = [];
+
+    for ($i = 1; $i <= 10; $i++) {
+        $entries[] = '{"message":"Log entry '.$i.'","context":{},"level":200,"level_name":"INFO","channel":"local","datetime":"2024-01-15T10:'.str_pad((string) $i, 2, '0', STR_PAD_LEFT).':00+00:00"}';
+    }
+
+    createLogFile($logFile, implode("\n", $entries));
+
+    $tool = new ReadLogEntries;
+    $response = $tool->handle(new Request(['entries' => 3]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('Log entry 8', 'Log entry 9', 'Log entry 10')
+        ->toolTextDoesNotContain('Log entry 7');
+});
+
 it('returns error when log file is empty', function (): void {
     $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
 

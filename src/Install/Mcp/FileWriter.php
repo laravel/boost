@@ -68,6 +68,10 @@ class FileWriter
             return $this->updatePlainJsonFile($content);
         }
 
+        if (! $this->hasJson5Features($content)) {
+            return false;
+        }
+
         return $this->updateJson5File($content);
     }
 
@@ -237,13 +241,13 @@ class FileWriter
     {
         $braceCount = 1;
         $length = strlen($content);
-        $inString = false;
+        $stringQuote = null;
         $escaped = false;
 
         for ($i = $openBracePos + 1; $i < $length; $i++) {
             $char = $content[$i];
 
-            if (! $inString) {
+            if ($stringQuote === null) {
                 if ($char === '{') {
                     $braceCount++;
                 } elseif ($char === '}') {
@@ -252,12 +256,11 @@ class FileWriter
                     if ($braceCount === 0) {
                         return $i;
                     }
+                } elseif (($char === '"' || $char === "'") && ! $escaped) {
+                    $stringQuote = $char;
                 }
-            }
-
-            // Handle string detection (similar to hasUnquotedComments logic)
-            if ($char === '"' && ! $escaped) {
-                $inString = ! $inString;
+            } elseif ($char === $stringQuote && ! $escaped) {
+                $stringQuote = null;
             }
 
             $escaped = ($char === '\\' && ! $escaped);
@@ -342,17 +345,7 @@ class FileWriter
      */
     protected function isPlainJson(string $content): bool
     {
-        if ($this->hasUnquotedComments($content)) {
-            return false;
-        }
-
-        // Trailing commas (,] or ,}) - supported in JSON 5
-        if (preg_match('/,\s*[\]}]/', $content)) {
-            return false;
-        }
-
-        // Unquoted keys - supported in JSON 5
-        if (preg_match('/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/m', $content)) {
+        if ($this->hasJson5Features($content)) {
             return false;
         }
 
@@ -361,17 +354,47 @@ class FileWriter
         return json_last_error() === JSON_ERROR_NONE;
     }
 
+    protected function hasJson5Features(string $content): bool
+    {
+        if ($this->hasUnquotedComments($content)) {
+            return true;
+        }
+
+        if (preg_match('/,\s*[\]}]/', $content)) {
+            return true;
+        }
+
+        if (preg_match('/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/m', $content)) {
+            return true;
+        }
+
+        return $this->hasSingleQuotedStrings($content);
+    }
+
     protected function hasUnquotedComments(string $content): bool
     {
-        // Regex that matches both quoted strings and comments
-        // Group 1: Double-quoted strings with escaped characters
-        // Group 2: Line comments starting with //
-        $pattern = '/"(\\\\.|[^"\\\\])*"|(\/\/.*)/';
+        // Match double-quoted strings (skip), line comments (//), or block comments (/* */)
+        $pattern = '/"(?:\\\\.|[^"\\\\])*"|(\/\/.*)|(\\/\\*[\\s\\S]*?\\*\\/)/';
 
         if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
-                // If group 2 is set, we found a // comment outside strings
-                if (! empty($match[2])) {
+                if (! empty($match[1]) || ! empty($match[2])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    protected function hasSingleQuotedStrings(string $content): bool
+    {
+        // Match double-quoted strings (skip) or single-quoted strings (detect)
+        $pattern = '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'/';
+
+        if (preg_match_all($pattern, $content, $matches)) {
+            foreach ($matches[0] as $match) {
+                if ($match[0] === "'") {
                     return true;
                 }
             }
@@ -391,7 +414,7 @@ class FileWriter
     protected function addServersToConfig(array &$config): void
     {
         foreach ($this->serversToAdd as $key => $serverConfig) {
-            data_set($config, $this->configKey.'.'.$key, $serverConfig);
+            $config[$this->configKey][$key] = $serverConfig;
         }
     }
 

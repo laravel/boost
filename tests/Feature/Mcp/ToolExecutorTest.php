@@ -1,9 +1,10 @@
 <?php
 
+use Illuminate\Container\Container;
 use Laravel\Boost\Mcp\ToolExecutor;
-use Laravel\Boost\Mcp\Tools\GetConfig;
-use Laravel\Boost\Mcp\Tools\Tinker;
+use Laravel\Boost\Mcp\Tools\DatabaseConnections;
 use Laravel\Mcp\Response;
+use Laravel\Tinker\TinkerServiceProvider;
 
 test('can execute tool in subprocess', function (): void {
     // Create a mock that overrides buildCommand to work with testbench
@@ -13,7 +14,7 @@ test('can execute tool in subprocess', function (): void {
         ->once()
         ->andReturnUsing(buildSubprocessCommand(...));
 
-    $response = $executor->execute(GetConfig::class, ['key' => 'app.name']);
+    $response = $executor->execute(DatabaseConnections::class, []);
 
     expect($response)->toBeInstanceOf(Response::class);
 
@@ -25,9 +26,8 @@ test('can execute tool in subprocess', function (): void {
 
     expect($response->isError())->toBeFalse();
 
-    // The content should contain the app name (which should be "Laravel" in testbench)
     $textContent = (string) $response->content();
-    expect($textContent)->toContain('Laravel');
+    expect($textContent)->toContain('connections');
 });
 
 test('rejects unregistered tools', function (): void {
@@ -42,19 +42,22 @@ test('subprocess proves fresh process isolation', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(buildSubprocessCommand(...));
+        ->andReturnUsing(fn (): array => [
+            PHP_BINARY, '-r',
+            'echo json_encode(["isError" => false, "content" => [["type" => "text", "text" => (string) getmypid()]]]);',
+        ]);
 
-    $response1 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
-    $response2 = $executor->execute(Tinker::class, ['code' => 'return getmypid();']);
+    $response1 = $executor->execute(DatabaseConnections::class, []);
+    $response2 = $executor->execute(DatabaseConnections::class, []);
 
     expect($response1->isError())->toBeFalse()
         ->and($response2->isError())->toBeFalse();
 
-    $pid1 = json_decode((string) $response1->content(), true)['result'];
-    $pid2 = json_decode((string) $response2->content(), true)['result'];
+    $pid1 = (int) trim((string) $response1->content());
+    $pid2 = (int) trim((string) $response2->content());
 
-    expect($pid1)->toBeInt()->not->toBe(getmypid())
-        ->and($pid2)->toBeInt()->not->toBe(getmypid())
+    expect($pid1)->toBeGreaterThan(0)->not->toBe(getmypid())
+        ->and($pid2)->toBeGreaterThan(0)->not->toBe(getmypid())
         ->and($pid1)->not()->toBe($pid2);
 });
 
@@ -64,9 +67,9 @@ test('subprocess sees modified autoloaded code changes', function (): void {
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(buildSubprocessCommand(...));
 
-    // Path to the GetConfig tool that we'll temporarily modify
+    // Path to the DatabaseConnections tool that we'll temporarily modify
     // TODO: Improve for parallelisation
-    $toolPath = dirname(__DIR__, 3).'/src/Mcp/Tools/GetConfig.php';
+    $toolPath = dirname(__DIR__, 3).'/src/Mcp/Tools/DatabaseConnections.php';
     $originalContent = file_get_contents($toolPath);
 
     $cleanup = function () use ($toolPath, $originalContent): void {
@@ -74,25 +77,25 @@ test('subprocess sees modified autoloaded code changes', function (): void {
     };
 
     try {
-        $response1 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
+        $response1 = $executor->execute(DatabaseConnections::class, []);
 
         expect($response1->isError())->toBeFalse();
         $responseData1 = json_decode((string) $response1->content(), true);
-        expect($responseData1['value'])->toBe('Laravel'); // Normal testbench app name
+        expect($responseData1)->toHaveKey('default_connection');
 
-        // Modify GetConfig.php to return a different hardcoded value
+        // Modify DatabaseConnections.php to return a different hardcoded value
         $modifiedContent = str_replace(
-            "'value' => Config::get(\$key),",
-            "'value' => 'MODIFIED_BY_TEST',",
+            "'default_connection' => config('database.default'),",
+            "'default_connection' => 'MODIFIED_BY_TEST',",
             $originalContent
         );
         file_put_contents($toolPath, $modifiedContent);
 
-        $response2 = $executor->execute(GetConfig::class, ['key' => 'app.name']);
+        $response2 = $executor->execute(DatabaseConnections::class, []);
         $responseData2 = json_decode((string) $response2->content(), true);
 
         expect($response2->isError())->toBeFalse()
-            ->and($responseData2['value'])->toBe('MODIFIED_BY_TEST'); // Using updated code, not cached
+            ->and($responseData2['default_connection'])->toBe('MODIFIED_BY_TEST');
     } finally {
         $cleanup();
     }
@@ -112,10 +115,10 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
         'use Symfony\Component\Console\Output\BufferedOutput; '.
         // Bootstrap testbench like all.php does
         '$app = Testbench::createFromConfig(new TestbenchConfig([]), options: ["enables_package_discoveries" => false]); '.
-        (\Illuminate\Container\Container::class.'::setInstance($app); ').
+        (Container::class.'::setInstance($app); ').
         '$kernel = $app->make("Illuminate\Contracts\Console\Kernel"); '.
         '$kernel->bootstrap(); '.
-        // Register the ExecuteToolCommand
+        ('app()->register('.TinkerServiceProvider::class.'::class); ').
         '$kernel->registerCommand(new \Laravel\Boost\Console\ExecuteToolCommand()); '.
         '$output = new BufferedOutput(); '.
         '$result = Artisan::call("boost:execute-tool", ['.
@@ -138,13 +141,37 @@ test('respects custom timeout parameter', function (): void {
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(buildSubprocessCommand(...));
 
-    // Test with custom timeout - should succeed with fast code
-    $response = $executor->execute(Tinker::class, [
-        'code' => 'return "timeout test";',
+    // Test with custom timeout - should succeed with a fast tool
+    $response = $executor->execute(DatabaseConnections::class, [
         'timeout' => 30,
     ]);
 
     expect($response->isError())->toBeFalse();
+});
+
+test('output buffering discards stray stdout during tool execution', function (): void {
+    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $executor->shouldReceive('buildCommand')
+        ->andReturnUsing(buildSubprocessCommand(...));
+
+    $toolPath = dirname(__DIR__, 3).'/src/Mcp/Tools/DatabaseConnections.php';
+    $originalContent = file_get_contents($toolPath);
+
+    try {
+        $modifiedContent = str_replace(
+            'public function handle(Request $request): Response',
+            "public function handle(Request \$request): Response\n    {\n        echo \"Deprecated: Implicitly marking parameter as nullable\\n\";\n        return \$this->handleOriginal(\$request);\n    }\n\n    public function handleOriginal(Request \$request): Response",
+            $originalContent
+        );
+        file_put_contents($toolPath, $modifiedContent);
+
+        $response = $executor->execute(DatabaseConnections::class, []);
+
+        expect($response->isError())->toBeFalse();
+    } finally {
+        file_put_contents($toolPath, $originalContent);
+    }
 });
 
 test('clamps timeout values correctly', function (): void {

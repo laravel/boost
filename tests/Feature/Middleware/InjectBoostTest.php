@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +30,7 @@ function createMiddlewareResponse($response): SymfonyResponse
 }
 
 it('preserves the original view response type', function (): void {
-    Route::get('injection-test', fn (): \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory => view('test::injection-test'))->middleware(InjectBoost::class);
+    Route::get('injection-test', fn (): View|\Illuminate\Contracts\View\Factory => view('test::injection-test'))->middleware(InjectBoost::class);
 
     $response = $this->get('injection-test');
 
@@ -44,10 +45,10 @@ it('does not inject for special response types', function ($responseType, $respo
 
     expect($result)->toBeInstanceOf($responseType);
 })->with([
-    'streamed' => [StreamedResponse::class, fn (): \Symfony\Component\HttpFoundation\StreamedResponse => new StreamedResponse],
-    'json' => [JsonResponse::class, fn (): \Symfony\Component\HttpFoundation\JsonResponse => new JsonResponse(['data' => 'test'])],
-    'redirect' => [RedirectResponse::class, fn (): \Symfony\Component\HttpFoundation\RedirectResponse => new RedirectResponse('http://example.com')],
-    'binary' => [BinaryFileResponse::class, function (): \Symfony\Component\HttpFoundation\BinaryFileResponse {
+    'streamed' => [StreamedResponse::class, fn (): StreamedResponse => new StreamedResponse],
+    'json' => [JsonResponse::class, fn (): JsonResponse => new JsonResponse(['data' => 'test'])],
+    'redirect' => [RedirectResponse::class, fn (): RedirectResponse => new RedirectResponse('http://example.com')],
+    'binary' => [BinaryFileResponse::class, function (): BinaryFileResponse {
         $tempFile = tempnam(sys_get_temp_dir(), 'test');
         file_put_contents($tempFile, 'test content');
 
@@ -96,7 +97,7 @@ it('handles CSP nonce attribute correctly', function ($nonce, $assertions): void
         Vite::useCspNonce($nonce);
     }
 
-    Route::get('injection-test', fn (): \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory => view('test::injection-test'))
+    Route::get('injection-test', fn (): View|\Illuminate\Contracts\View\Factory => view('test::injection-test'))
         ->middleware(InjectBoost::class);
 
     $response = $this->get('injection-test')->assertViewIs('test::injection-test');

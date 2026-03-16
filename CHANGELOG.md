@@ -1,6 +1,168 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.1.8...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.3.1...main)
+
+## [v2.3.1](https://github.com/laravel/boost/compare/v2.3.0...v2.3.1) - 2026-03-12
+
+### What's Changed
+
+* Decode HTML entities in Blade guideline output by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/654
+* Add configurable Codex MCP cwd by [@cyppe](https://github.com/cyppe) in https://github.com/laravel/boost/pull/642
+
+### New Contributors
+
+* [@cyppe](https://github.com/cyppe) made their first contribution in https://github.com/laravel/boost/pull/642
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.3.0...v2.3.1
+
+## [v2.3.0](https://github.com/laravel/boost/compare/v2.2.3...v2.3.0) - 2026-03-11
+
+### What's Changed
+
+* Fix table snippet in SKILL.blade.php by [@AndrasMa](https://github.com/AndrasMa) in https://github.com/laravel/boost/pull/640
+* Remove Artisan wrapper MCP tools and update guidelines to use CLI directly by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/629
+* Remove redundant MCP guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/644
+* Remove redundant Pennant guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/645
+* Makes imports consistent by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/646
+* Support JSON-formatted log entries in log reading tools by [@HeathNaylor](https://github.com/HeathNaylor) in https://github.com/laravel/boost/pull/650
+* Remove redundant Flux UI guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/647
+* Add UpgradeInertiaV3 prompt for Inertia v2 to v3 upgrades by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/636
+* Prevent non-JSON stdout output from corrupting MCP tool responses by [@OmarFaruk-0x01](https://github.com/OmarFaruk-0x01) in https://github.com/laravel/boost/pull/641
+
+### New Contributors
+
+* [@AndrasMa](https://github.com/AndrasMa) made their first contribution in https://github.com/laravel/boost/pull/640
+* [@HeathNaylor](https://github.com/HeathNaylor) made their first contribution in https://github.com/laravel/boost/pull/650
+* [@OmarFaruk-0x01](https://github.com/OmarFaruk-0x01) made their first contribution in https://github.com/laravel/boost/pull/641
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.3...v2.3.0
+
+## [v2.2.3](https://github.com/laravel/boost/compare/v2.2.2...v2.2.3) - 2026-03-06
+
+### What's Changed
+
+* Add two spaces by [@xiCO2k](https://github.com/xiCO2k) in https://github.com/laravel/boost/pull/632
+* Fix duplicate guidelines when using symlinked paths by [@damianlewis](https://github.com/damianlewis) in https://github.com/laravel/boost/pull/634
+* Laravel 13.x Compatibility by [@laravel-shift](https://github.com/laravel-shift) in https://github.com/laravel/boost/pull/633
+* Add First Party Packages by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/635
+* Use configured executable paths when rendering skill templates by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/638
+
+### New Contributors
+
+* [@damianlewis](https://github.com/damianlewis) made their first contribution in https://github.com/laravel/boost/pull/634
+* [@laravel-shift](https://github.com/laravel-shift) made their first contribution in https://github.com/laravel/boost/pull/633
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.2...v2.2.3
+
+## [v2.2.2](https://github.com/laravel/boost/compare/v2.2.1...v2.2.2) - 2026-03-03
+
+### What's Changed
+
+* Fix SearchDocs crashing when MCP client passes array params as JSON strings by [@digitall-it](https://github.com/digitall-it) in https://github.com/laravel/boost/pull/604
+* Fix skill discovery for repos with non-main default branches by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/610
+* Fix crash in GuidelineAssist when app/ directory does not exist by [@mforcer](https://github.com/mforcer) in https://github.com/laravel/boost/pull/617
+* Fix Sail is incorrectly detected as active inside devcontainers by [@Taimst](https://github.com/Taimst) in https://github.com/laravel/boost/pull/614
+* Compile custom Blade skills to markdown instead of symlinking raw templates by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/611
+* Widen laravel/mcp version constraint to support v0.6.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/623
+* Update Junie agent to use configurable mcp path by [@cswgr](https://github.com/cswgr) in https://github.com/laravel/boost/pull/626
+* Support SKILL.blade.php in GitHubSkillProvider discovery by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/627
+
+### New Contributors
+
+* [@mforcer](https://github.com/mforcer) made their first contribution in https://github.com/laravel/boost/pull/617
+* [@Taimst](https://github.com/Taimst) made their first contribution in https://github.com/laravel/boost/pull/614
+* [@cswgr](https://github.com/cswgr) made their first contribution in https://github.com/laravel/boost/pull/626
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.1...v2.2.2
+
+## [v2.2.1](https://github.com/laravel/boost/compare/v2.2.0...v2.2.1) - 2026-02-25
+
+### What's Changed
+
+* Fix third-party skills excluded when aiGuidelines is uninitialized by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/596
+* Add summary mode to DatabaseSchema tool by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/595
+* Add support for Ampcode by [@dringrayson](https://github.com/dringrayson) in https://github.com/laravel/boost/pull/598
+* Simplify Tinker tool to wrap artisan tinker --execute by [@soleinjast](https://github.com/soleinjast) in https://github.com/laravel/boost/pull/557
+* Consolidate Inertia versioned guidelines into single core file by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/603
+
+#### Minor Breaking Chnage
+
+If you have custom overrides in:
+
+```text
+.ai/guidelines/inertia-laravel/1/core.blade.php
+.ai/guidelines/inertia-laravel/2/core.blade.php
+
+
+
+
+
+
+```
+move them to:
+
+```text
+.ai/guidelines/inertia-laravel/core.blade.php
+
+
+
+
+
+
+```
+### New Contributors
+
+* [@dringrayson](https://github.com/dringrayson) made their first contribution in https://github.com/laravel/boost/pull/598
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.2.0...v2.2.1
+
+## [v2.2.0](https://github.com/laravel/boost/compare/v2.1.8...v2.2.0) - 2026-02-20
+
+### What’s Changed
+
+- Added support for loading guidelines and skills directly from vendor packages by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/566
+
+#### Minor Breaking Changes
+
+This release introduces a small structural update to how Inertia guidelines are organized.
+
+**Previously**
+
+```
+.ai/inertia-laravel/core.blade.php
+
+
+
+
+
+
+
+```
+**Now merged into individual version guideline**
+
+```
+.ai/inertia-laravel/2/core.blade.php
+.ai/inertia-laravel/1/core.blade.php
+
+
+
+
+
+
+
+```
+Guidelines are now resolved using the following priority order:
+
+| Priority | Source | Maintained By |
+|----------|--------|---------------|
+| 1st | `.ai/guidelines/` in the user project | Project developer |
+| 2nd | `vendor/{pkg}/resources/boost/guidelines/` | Composer package maintainer |
+| 2nd | `node_modules/{pkg}/resources/boost/guidelines/` | npm package maintainer |
+| 3rd | Built-in Boost `.ai/` directory | Boost team |
+
+Make sure you update to the latest version of all related packages to stay compatible.
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.1.8...v2.2.0
 
 ## [v2.1.8](https://github.com/laravel/boost/compare/v2.1.7...v2.1.8) - 2026-02-20
 

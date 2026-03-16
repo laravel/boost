@@ -410,6 +410,37 @@ test('preserves trailing commas when injecting into existing servers', function 
         );
 });
 
+test('updates JSON5 file with only single-quoted strings', function (): void {
+    $writtenContent = '';
+    $singleQuotedJson5 = <<<'JSON5'
+    {
+        'mcpServers': {
+            'existing': {
+                'command': 'node'
+            }
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $singleQuotedJson5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toContain('"boost"', "'existing'");
+});
+
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
 
@@ -546,6 +577,16 @@ function commentDetectionCases(): array
             '{"path": "/usr/bin/test"}',
             false,
             'Single slash should not be detected as comment',
+        ],
+        'block comment outside strings' => [
+            '{ /* server config */ "servers": {} }',
+            true,
+            'Block comments outside strings should be detected',
+        ],
+        'block comment in string' => [
+            '{"code": "/* not a real comment */", "other": "value"}',
+            false,
+            'Block comments inside strings should not be detected',
         ],
     ];
 }

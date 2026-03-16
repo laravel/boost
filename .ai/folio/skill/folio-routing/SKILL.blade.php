@@ -10,14 +10,6 @@ metadata:
 @endphp
 # Folio Routing
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating pages with file-based routing
-- Working with route parameters and model binding
-- Adding middleware to Folio pages
-
 ## Documentation
 
 Use `search-docs` for detailed Folio patterns and documentation.
@@ -34,7 +26,7 @@ Pages are usually in `resources/views/pages/` and the file structure determines 
 
 ### Listing Routes
 
-You may list available Folio routes using `{{ $assist->artisanCommand('folio:list') }}` or using the `list-routes` tool.
+You may list available Folio routes using `{{ $assist->artisanCommand('folio:list') }}`.
 
 ### Creating Pages
 

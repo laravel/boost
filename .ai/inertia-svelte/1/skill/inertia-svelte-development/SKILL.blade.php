@@ -10,15 +10,6 @@ metadata:
 @endphp
 # Inertia Svelte Development
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating or modifying Svelte page components for Inertia
-- Working with forms in Svelte (using `router.post`)
-- Implementing client-side navigation with `<Link>` or `router`
-- Building Svelte-specific features with the Inertia protocol
-
 ## Documentation
 
 Use `search-docs` for detailed Inertia v1 Svelte patterns and documentation.

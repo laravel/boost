@@ -1,16 +1,20 @@
 # Laravel Boost
 - Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
 
-## Artisan
-- Use the `list-artisan-commands` tool when you need to call an Artisan command to double-check the available parameters.
+## Artisan Commands
+- Run Artisan commands directly via the command line (e.g., `{{ $assist->artisanCommand('route:list') }}`, `{{ $assist->artisanCommand('tinker --execute "..."') }}`).
+- Use `{{ $assist->artisanCommand('list') }}` to discover available commands and `{{ $assist->artisanCommand('[command] --help') }}` to check parameters.
 
 ## URLs
 - Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
 
-## Tinker / Debugging
-- You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
+## Debugging
 - Use the `database-query` tool when you only need to read from the database.
 - Use the `database-schema` tool to inspect table structure before writing migrations or models.
+- To execute PHP code for debugging, run `{{ $assist->artisanCommand('tinker --execute "your code here"') }}` directly.
+- To read configuration values, read the config files directly or run `{{ $assist->artisanCommand('config:show [key]') }}`.
+- To inspect routes, run `{{ $assist->artisanCommand('route:list') }}` directly.
+- To check environment variables, read the `.env` file directly.
 
 @if (config('boost.browser_logs', false) !== false || config('boost.browser_logs_watcher', true) !== false)
 ## Reading Browser Logs With the `browser-logs` Tool

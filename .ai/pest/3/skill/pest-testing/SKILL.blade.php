@@ -10,15 +10,6 @@ metadata:
 @endphp
 # Pest Testing 3
 
-## When to Apply
-
-Activate this skill when:
-- Creating new tests (unit or feature)
-- Modifying existing tests
-- Debugging test failures
-- Working with datasets, mocking, or test organization
-- Writing architecture tests
-
 ## Documentation
 
 Use `search-docs` for detailed Pest 3 patterns and documentation.

@@ -6,6 +6,7 @@ namespace Laravel\Boost;
 
 use InvalidArgumentException;
 use Laravel\Boost\Install\Agents\Agent;
+use Laravel\Boost\Install\Agents\Amp;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
@@ -18,6 +19,7 @@ class BoostManager
 {
     /** @var array<string, class-string<Agent>> */
     private array $agents = [
+        'amp' => Amp::class,
         'junie' => Junie::class,
         'cursor' => Cursor::class,
         'claude_code' => ClaudeCode::class,
