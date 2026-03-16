@@ -10,14 +10,6 @@ metadata:
 @endphp
 # Folio Routing
 
-## When to Apply
-
-Activate this skill when:
-
-- Creating pages with file-based routing
-- Working with route parameters and model binding
-- Adding middleware to Folio pages
-
 ## Documentation
 
 Use `search-docs` for detailed Folio patterns and documentation.
