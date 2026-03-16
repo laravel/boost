@@ -9,7 +9,7 @@ use Throwable;
 
 class SkillAuditor
 {
-    protected string $auditUrl = 'https://add-skill.vercel.sh/audit';
+    protected string $auditUrl = 'https://skill.laravel.cloud/api/v1/skills/audit';
 
     protected int $timeoutSeconds = 3;
 

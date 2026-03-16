@@ -278,7 +278,7 @@ it('displays audit results before installing skills when risk is medium or highe
             ---
             # SKILL Content
             YAML),
-        'add-skill.vercel.sh/audit*' => Http::response([
+        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([
             'skill-one' => [
                 'ath' => ['risk' => 'medium', 'analyzedAt' => '2025-01-01T00:00:00Z'],
                 'socket' => ['risk' => 'low', 'alerts' => 2, 'analyzedAt' => '2025-01-01T00:00:00Z'],
@@ -294,7 +294,7 @@ it('displays audit results before installing skills when risk is medium or highe
         ->expectsOutputToContain('Skills installed')
         ->assertSuccessful();
 
-    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'add-skill.vercel.sh/audit'));
+    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'skill.laravel.cloud/api/v1/skills/audit'));
 });
 
 it('skips audit display when all skills are safe or low risk', function (): void {
@@ -314,7 +314,7 @@ it('skips audit display when all skills are safe or low risk', function (): void
             ---
             # SKILL Content
             YAML),
-        'add-skill.vercel.sh/audit*' => Http::response([
+        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([
             'skill-one' => [
                 'ath' => ['risk' => 'safe', 'analyzedAt' => '2025-01-01T00:00:00Z'],
                 'socket' => ['risk' => 'low', 'alerts' => 2, 'analyzedAt' => '2025-01-01T00:00:00Z'],
@@ -358,7 +358,7 @@ it('skips audit when --skip-audit flag is used', function (): void {
         ->expectsOutputToContain('Skills installed')
         ->assertSuccessful();
 
-    Http::assertNotSent(fn ($request): bool => str_contains((string) $request->url(), 'add-skill.vercel.sh'));
+    Http::assertNotSent(fn ($request): bool => str_contains((string) $request->url(), 'skill.laravel.cloud/api/v1/skills/audit'));
 });
 
 it('succeeds when audit api fails', function (): void {
@@ -378,7 +378,7 @@ it('succeeds when audit api fails', function (): void {
             ---
             # SKILL Content
             YAML),
-        'add-skill.vercel.sh/audit*' => Http::response(null, 500),
+        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response(null, 500),
     ]);
 
     $this->artisan('boost:add-skill', [
@@ -411,7 +411,7 @@ it('sends correct source and skills to audit api before download', function (): 
             ---
             # Content
             YAML),
-        'add-skill.vercel.sh/audit*' => Http::response([]),
+        'skill.laravel.cloud/api/v1/skills/audit*' => Http::response([]),
     ]);
 
     $this->artisan('boost:add-skill', [
@@ -420,7 +420,7 @@ it('sends correct source and skills to audit api before download', function (): 
     ])->assertSuccessful();
 
     Http::assertSent(function ($request): bool {
-        if (! str_contains((string) $request->url(), 'add-skill.vercel.sh/audit')) {
+        if (! str_contains((string) $request->url(), 'skill.laravel.cloud/api/v1/skills/audit')) {
             return false;
         }
 
