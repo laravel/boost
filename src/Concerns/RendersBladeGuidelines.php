@@ -61,6 +61,11 @@ trait RendersBladeGuidelines
         }
 
         $content = file_get_contents($bladePath);
+
+        if ($content === false) {
+            return '';
+        }
+
         $content = $this->processBoostSnippets($content);
 
         $rendered = $this->renderContent($content, $bladePath, $data);
