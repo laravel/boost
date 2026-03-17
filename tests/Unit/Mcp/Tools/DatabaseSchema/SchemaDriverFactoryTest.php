@@ -7,8 +7,11 @@ use Laravel\Boost\Mcp\Tools\DatabaseSchema\NullSchemaDriver;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema\PostgreSQLSchemaDriver;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema\SchemaDriverFactory;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema\SQLiteSchemaDriver;
+use Tests\Fixtures\Mcp\Tools\DatabaseSchema\ExampleSchemaDriver;
 
 beforeEach(function (): void {
+    SchemaDriverFactory::flush();
+
     config()->set('database.connections.mysql_test', [
         'driver' => 'mysql',
         'database' => 'test_db',
@@ -34,6 +37,15 @@ beforeEach(function (): void {
         'database' => 'test_db',
         'prefix' => '',
     ]);
+    config()->set('database.connections.example_test', [
+        'driver' => 'example',
+        'database' => 'test_db',
+        'prefix' => '',
+    ]);
+});
+
+afterEach(function (): void {
+    SchemaDriverFactory::flush();
 });
 
 test('creates MySQLSchemaDriver for mysql connection', function (): void {
@@ -64,4 +76,20 @@ test('creates NullSchemaDriver for sqlsrv driver', function (): void {
     $driver = SchemaDriverFactory::make('sqlsrv_test');
 
     expect($driver)->toBeInstanceOf(NullSchemaDriver::class);
+});
+
+test('creates a registered driver for an example connection driver', function (): void {
+    SchemaDriverFactory::register('example', ExampleSchemaDriver::class);
+
+    $driver = SchemaDriverFactory::make('example_test');
+
+    expect($driver)->toBeInstanceOf(ExampleSchemaDriver::class);
+});
+
+test('creates a registered driver from an example closure resolver', function (): void {
+    SchemaDriverFactory::register('example', fn (?string $connection): ExampleSchemaDriver => new ExampleSchemaDriver($connection));
+
+    $driver = SchemaDriverFactory::make('example_test');
+
+    expect($driver)->toBeInstanceOf(ExampleSchemaDriver::class);
 });
