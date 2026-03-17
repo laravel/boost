@@ -12,6 +12,8 @@
 
 ## Introduction
 
+[![AgentRank Score](https://agentrank-ai.com/api/badge/tool/laravel--boost)](https://agentrank-ai.com/tool/laravel--boost)
+
 Laravel Boost accelerates AI-assisted development by providing the essential context and structure that AI needs to generate high-quality, Laravel-specific code.
 
 ## Official Documentation
