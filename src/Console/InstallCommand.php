@@ -213,7 +213,29 @@ class InstallCommand extends Command
 
         if ($this->nightwatch->isInstalled() && $this->shouldConfigureNightwatchMcp()) {
             $this->selectedBoostFeatures->push('nightwatch_mcp');
+
+            if (! $this->hasNightwatchToken()) {
+                $this->newLine();
+                $this->warn('Nightwatch MCP requires authentication. Sign up at https://nightwatch.laravel.com and add NIGHTWATCH_TOKEN to your .env file.');
+            }
         }
+    }
+
+    protected function hasNightwatchToken(): bool
+    {
+        $envPath = base_path('.env');
+
+        if (! file_exists($envPath)) {
+            return false;
+        }
+
+        $envContent = file_get_contents($envPath);
+
+        if ($envContent === false) {
+            return false;
+        }
+
+        return (bool) preg_match('/^NIGHTWATCH_TOKEN=.+$/m', $envContent);
     }
 
     protected function shouldConfigureSail(): bool
