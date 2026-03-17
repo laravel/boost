@@ -239,7 +239,7 @@ class InstallCommand extends Command
         return confirm(
             label: 'Would you like to install Nightwatch MCP alongside Boost MCP?',
             default: $this->config->getNightwatchMcp(),
-            hint: 'The Nightwatch MCP provides tools for browsing issues, viewing stack traces, and managing application errors',
+            hint: 'The Nightwatch MCP provides tools for browsing issues, viewing stack traces, and managing application errors. Cursor users may also install laravel/nightwatch-cursor-plugin for enhanced IDE integration',
         );
     }
 

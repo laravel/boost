@@ -71,6 +71,11 @@ class McpWriter
 
     protected function installNightwatchMcp(Nightwatch $nightwatch): void
     {
+        if ($this->agent instanceof \Laravel\Boost\Install\Agents\Cursor
+            && $this->agent->hasNightwatchCursorPlugin()) {
+            return;
+        }
+
         if (! $this->agent->installHttpMcp('nightwatch', $nightwatch->mcpUrl())) {
             throw new RuntimeException('Failed to install Nightwatch MCP: could not write configuration');
         }

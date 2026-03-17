@@ -8,6 +8,7 @@ use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
+use Laravel\Boost\Support\Composer;
 
 class Cursor extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
@@ -72,5 +73,11 @@ class Cursor extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
     public function skillsPath(): string
     {
         return config('boost.agents.cursor.skills_path', '.cursor/skills');
+    }
+
+    public function hasNightwatchCursorPlugin(): bool
+    {
+        return class_exists(\Laravel\NightwatchCursor\NightwatchCursorServiceProvider::class)
+            || array_key_exists('laravel/nightwatch-cursor-plugin', Composer::packages());
     }
 }

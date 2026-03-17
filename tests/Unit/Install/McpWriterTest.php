@@ -336,6 +336,62 @@ it('installs with both herd and nightwatch', function (): void {
     expect($result)->toBe(McpWriter::SUCCESS);
 });
 
+it('skips nightwatch mcp when cursor agent has nightwatch cursor plugin', function (): void {
+    $agent = Mockery::mock(\Laravel\Boost\Install\Agents\Cursor::class);
+    $agent->shouldReceive('getPhpPath')
+        ->once()
+        ->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')
+        ->once()
+        ->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldReceive('hasNightwatchCursorPlugin')
+        ->once()
+        ->andReturn(true);
+    $agent->shouldNotReceive('installHttpMcp');
+
+    $nightwatch = Mockery::mock(Nightwatch::class);
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, null, $nightwatch);
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('installs nightwatch mcp when cursor agent does not have nightwatch cursor plugin', function (): void {
+    $agent = Mockery::mock(\Laravel\Boost\Install\Agents\Cursor::class);
+    $agent->shouldReceive('getPhpPath')
+        ->once()
+        ->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')
+        ->once()
+        ->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldReceive('hasNightwatchCursorPlugin')
+        ->once()
+        ->andReturn(false);
+    $agent->shouldReceive('installHttpMcp')
+        ->with('nightwatch', 'https://nightwatch.laravel.com/mcp')
+        ->once()
+        ->andReturn(true);
+
+    $nightwatch = Mockery::mock(Nightwatch::class);
+    $nightwatch->shouldReceive('mcpUrl')
+        ->once()
+        ->andReturn('https://nightwatch.laravel.com/mcp');
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, null, $nightwatch);
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
 it('installs with sail, herd, and nightwatch', function (): void {
     $agent = Mockery::mock(SupportsMcp::class);
     $agent->shouldReceive('installMcp')
