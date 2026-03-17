@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.3.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.3.4...main)
+
+## [v2.3.4](https://github.com/laravel/boost/compare/v2.3.3...v2.3.4) - 2026-03-17
+
+### What's Changed
+
+* Remove Roster object caching to fix Laravel 13 serialization issue by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/692
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.3.3...v2.3.4
 
 ## [v2.3.3](https://github.com/laravel/boost/compare/v2.3.2...v2.3.3) - 2026-03-17
 
@@ -130,11 +138,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -173,12 +183,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
