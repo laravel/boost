@@ -1,6 +1,32 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.3.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.3.2...main)
+
+## [v2.3.2](https://github.com/laravel/boost/compare/v2.3.1...v2.3.2) - 2026-03-16
+
+### What's Changed
+
+* Use major.minor PHP version in guidelines instead of full version by [@oddvalue](https://github.com/oddvalue) in https://github.com/laravel/boost/pull/657
+* Remove redundant Tailwind CSS guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/661
+* Add Upgrade Laravel v13 MCP prompt by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/658
+* Use `app_path()` helper to support customized app locations by [@iWader](https://github.com/iWader) in https://github.com/laravel/boost/pull/665
+* Configure sail binary path by [@iWader](https://github.com/iWader) in https://github.com/laravel/boost/pull/664
+* fix: register installed skills in boost.json during add-skill by [@meirdick](https://github.com/meirdick) in https://github.com/laravel/boost/pull/621
+* Add `--discover` flag to `boost:update` by [@MrPunyapal](https://github.com/MrPunyapal) in https://github.com/laravel/boost/pull/651
+* Remove redundant "When to Apply" sections from skill bodies by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/669
+* Guard against file_get_contents() returning false by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/671
+* fix: resolve relative symlinks when skills path is outside project root by [@tjmartin69](https://github.com/tjmartin69) in https://github.com/laravel/boost/pull/673
+* Update pest-testing skill descriptions and clean up core guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/670
+* Rewrite Livewire core guidelines and skill descriptions in imperative style by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/672
+
+### New Contributors
+
+* [@oddvalue](https://github.com/oddvalue) made their first contribution in https://github.com/laravel/boost/pull/657
+* [@iWader](https://github.com/iWader) made their first contribution in https://github.com/laravel/boost/pull/665
+* [@meirdick](https://github.com/meirdick) made their first contribution in https://github.com/laravel/boost/pull/621
+* [@tjmartin69](https://github.com/tjmartin69) made their first contribution in https://github.com/laravel/boost/pull/673
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.3.1...v2.3.2
 
 ## [v2.3.1](https://github.com/laravel/boost/compare/v2.3.0...v2.3.1) - 2026-03-12
 
@@ -98,11 +124,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -137,12 +165,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
