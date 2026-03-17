@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.3.2...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.3.3...main)
+
+## [v2.3.3](https://github.com/laravel/boost/compare/v2.3.2...v2.3.3) - 2026-03-17
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.3.2...v2.3.3
 
 ## [v2.3.2](https://github.com/laravel/boost/compare/v2.3.1...v2.3.2) - 2026-03-16
 
@@ -125,11 +129,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -166,12 +172,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
