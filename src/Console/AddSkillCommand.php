@@ -384,16 +384,16 @@ class AddSkillCommand extends Command
     {
         return collect($auditResults)
             ->flatten()
-            ->contains(fn (AuditResult $result): bool => $result->riskWeight() >= 3);
+            ->contains(fn (AuditResult $result): bool => $result->risk->weight() >= 3);
     }
 
     protected function colorizeRisk(AuditResult $result): string
     {
-        return match ($result->riskColor()) {
-            'red' => $this->red($result->riskLabel()),
-            'yellow' => $this->yellow($result->riskLabel()),
-            'green' => $this->green($result->riskLabel()),
-            default => $this->dim($result->riskLabel()),
+        return match ($result->risk->color()) {
+            'red' => $this->red($result->risk->label()),
+            'yellow' => $this->yellow($result->risk->label()),
+            'green' => $this->green($result->risk->label()),
+            default => $this->dim($result->risk->label()),
         };
     }
 

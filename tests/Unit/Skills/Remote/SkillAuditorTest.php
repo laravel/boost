@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Skills\Remote\AuditResult;
+use Laravel\Boost\Skills\Remote\Risk;
 use Laravel\Boost\Skills\Remote\SkillAuditor;
 
 beforeEach(function (): void {
@@ -29,12 +30,12 @@ it('returns audit results for skills', function (): void {
         ->and($results['skill-one'])->toHaveCount(3)
         ->and($results['skill-one'][0])->toBeInstanceOf(AuditResult::class)
         ->and($results['skill-one'][0]->partner)->toBe('ath')
-        ->and($results['skill-one'][0]->risk)->toBe('safe')
+        ->and($results['skill-one'][0]->risk)->toBe(Risk::Safe)
         ->and($results['skill-one'][1]->partner)->toBe('socket')
-        ->and($results['skill-one'][1]->risk)->toBe('low')
+        ->and($results['skill-one'][1]->risk)->toBe(Risk::Low)
         ->and($results['skill-one'][1]->alerts)->toBe(2)
         ->and($results['skill-one'][2]->partner)->toBe('snyk')
-        ->and($results['skill-one'][2]->risk)->toBe('safe');
+        ->and($results['skill-one'][2]->risk)->toBe(Risk::Safe);
 });
 
 it('returns audit results for multiple skills', function (): void {
@@ -55,7 +56,7 @@ it('returns audit results for multiple skills', function (): void {
     expect($results)->toHaveCount(2)
         ->and($results)->toHaveKey('skill-one')
         ->and($results)->toHaveKey('skill-two')
-        ->and($results['skill-two'][0]->risk)->toBe('high');
+        ->and($results['skill-two'][0]->risk)->toBe(Risk::High);
 });
 
 it('sends correct query parameters', function (): void {

@@ -60,12 +60,15 @@ class SkillAuditor
                     continue;
                 }
 
-                if (! isset($audit['risk'])) {
+                $risk = Risk::tryFrom((string) ($audit['risk'] ?? ''));
+
+                if ($risk === null) {
                     continue;
                 }
+
                 $skillResults[] = new AuditResult(
                     partner: (string) $partner,
-                    risk: (string) $audit['risk'],
+                    risk: $risk,
                     alerts: isset($audit['alerts']) ? (int) $audit['alerts'] : null,
                     analyzedAt: isset($audit['analyzedAt']) ? (string) $audit['analyzedAt'] : null,
                 );
