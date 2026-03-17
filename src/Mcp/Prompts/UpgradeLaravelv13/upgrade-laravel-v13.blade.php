@@ -105,6 +105,7 @@ Update the following dependencies in your application's `composer.json` file:
         "laravel/framework": "^13.0"
     },
     "require-dev": {
+        "laravel/tinker": "^3.0",
         "phpunit/phpunit": "^12.0",
         "pestphp/pest": "^4.0"
     }
