@@ -13,3 +13,15 @@ test('mcpUrl returns the nightwatch mcp url', function (): void {
 test('MCP_URL constant matches mcpUrl return value', function (): void {
     expect(Nightwatch::MCP_URL)->toBe('https://nightwatch.laravel.com/mcp');
 });
+
+test('version returns null when nightwatch is not installed', function (): void {
+    $nightwatch = new Nightwatch;
+
+    expect($nightwatch->version())->toBeNull();
+});
+
+test('meetsMinimumVersion returns false when not installed', function (): void {
+    $nightwatch = new Nightwatch;
+
+    expect($nightwatch->meetsMinimumVersion())->toBeFalse();
+});
