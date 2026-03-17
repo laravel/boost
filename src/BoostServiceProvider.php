@@ -35,34 +35,7 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
 
-        $this->app->singleton(Roster::class, function () {
-            $lockFiles = [
-                base_path('composer.lock'),
-                base_path('package-lock.json'),
-                base_path('bun.lock'),
-                base_path('bun.lockb'),
-                base_path('pnpm-lock.yaml'),
-                base_path('yarn.lock'),
-            ];
-
-            $cacheKey = 'boost.roster.scan';
-            $lastModified = max(array_map(fn (string $path): int|false => file_exists($path) ? filemtime($path) : 0, $lockFiles));
-
-            $cached = rescue(fn () => cache()->get($cacheKey), report: false);
-
-            if ($cached && isset($cached['timestamp']) && $cached['timestamp'] >= $lastModified) {
-                return $cached['roster'];
-            }
-
-            $roster = Roster::scan(base_path());
-
-            rescue(fn () => cache()->put($cacheKey, [
-                'roster' => $roster,
-                'timestamp' => time(),
-            ], now()->addHours(24)), report: false);
-
-            return $roster;
-        });
+        $this->app->singleton(Roster::class, fn (): Roster => Roster::scan(base_path()));
 
         $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
 
