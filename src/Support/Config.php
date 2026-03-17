@@ -93,6 +93,18 @@ class Config
         return $this->get('herd_mcp', false);
     }
 
+    public function getNightwatchMcpUrl(): ?string
+    {
+        $url = $this->get('nightwatch_mcp_url');
+
+        return is_string($url) && $url !== '' ? $url : null;
+    }
+
+    public function setNightwatchMcpUrl(?string $url): void
+    {
+        $this->set('nightwatch_mcp_url', $url);
+    }
+
     public function setNightwatchMcp(bool $installed): void
     {
         $this->set('nightwatch_mcp', $installed);

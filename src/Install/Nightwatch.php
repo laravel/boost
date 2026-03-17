@@ -17,6 +17,8 @@ class Nightwatch
 
     public function mcpUrl(): string
     {
-        return self::MCP_URL;
+        return config('boost.nightwatch.mcp_url')
+            ?? env('NIGHTWATCH_MCP_URL')
+            ?? self::MCP_URL;
     }
 }
