@@ -180,7 +180,20 @@ Link Nightwatch exceptions to Linear issues directly from the dashboard.
 
 ### MCP Server
 
-Nightwatch provides an MCP server at `https://nightwatch.laravel.com/mcp` for AI-assisted debugging and analysis.
+Nightwatch provides an MCP server at `https://nightwatch.laravel.com/mcp` for AI-assisted debugging and analysis. The MCP server uses OAuth authentication.
+
+If experiencing frequent re-authentication issues with direct HTTP MCP, use `npx mcp-remote` as a proxy for more reliable token refresh:
+
+@boostsnippet("Nightwatch MCP via mcp-remote", "json")
+{
+    "mcpServers": {
+        "nightwatch": {
+            "command": "npx",
+            "args": ["-y", "mcp-remote", "https://nightwatch.laravel.com/mcp"]
+        }
+    }
+}
+@endboostsnippet
 
 ### Cursor Plugin
 
