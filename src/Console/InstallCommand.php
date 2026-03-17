@@ -214,6 +214,12 @@ class InstallCommand extends Command
         if ($this->nightwatch->isInstalled() && $this->shouldConfigureNightwatchMcp()) {
             $this->selectedBoostFeatures->push('nightwatch_mcp');
         }
+
+        if (! $this->nightwatch->isInstalled() && $this->config->getNightwatchMcp()) {
+            $this->info('Laravel Nightwatch is no longer installed. Nightwatch MCP will be removed.');
+            $this->config->setNightwatchMcp(false);
+            $this->selectedBoostFeatures->push('nightwatch_mcp_cleanup');
+        }
     }
 
     protected function shouldConfigureSail(): bool
@@ -458,6 +464,10 @@ class InstallCommand extends Command
 
     protected function installMcpServerConfig(): void
     {
+        if ($this->selectedBoostFeatures->contains('nightwatch_mcp_cleanup')) {
+            $this->uninstallNightwatchMcp();
+        }
+
         $this->installFeature(
             agents: $this->agentsWithMcp(),
             emptyMessage: 'No agents are selected for MCP installation.',
@@ -471,6 +481,23 @@ class InstallCommand extends Command
             featureName: 'MCP servers',
             withDelay: true,
         );
+    }
+
+    protected function uninstallNightwatchMcp(): void
+    {
+        $mcpAgents = $this->agentsWithMcp();
+
+        if ($mcpAgents->isEmpty()) {
+            return;
+        }
+
+        foreach ($mcpAgents as $agent) {
+            try {
+                (new McpWriter($agent))->uninstallNightwatchMcp();
+            } catch (\Exception $e) {
+                $this->warn("Could not remove Nightwatch MCP from {$agent->displayName()}: {$e->getMessage()}");
+            }
+        }
     }
 
     /**

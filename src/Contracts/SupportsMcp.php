@@ -36,4 +36,9 @@ interface SupportsMcp
      * Install an HTTP MCP server configuration in this IDE.
      */
     public function installHttpMcp(string $key, string $url): bool;
+
+    /**
+     * Uninstall an HTTP MCP server configuration from this IDE.
+     */
+    public function uninstallHttpMcp(string $key): bool;
 }

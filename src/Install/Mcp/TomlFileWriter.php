@@ -13,6 +13,9 @@ class TomlFileWriter
     /** @var array<string, array<string, mixed>> */
     protected array $serversToAdd = [];
 
+    /** @var array<int, string> */
+    protected array $serversToRemove = [];
+
     /** @param array<string, mixed> $baseConfig */
     public function __construct(protected string $filePath, protected array $baseConfig = [])
     {
@@ -32,6 +35,13 @@ class TomlFileWriter
         $this->serversToAdd[$key] = collect($config)
             ->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
             ->toArray();
+
+        return $this;
+    }
+
+    public function removeServerConfig(string $key): self
+    {
+        $this->serversToRemove[] = $key;
 
         return $this;
     }
@@ -71,6 +81,12 @@ class TomlFileWriter
     protected function updateExistingFile(): bool
     {
         $content = File::get($this->filePath);
+
+        foreach ($this->serversToRemove as $key) {
+            if ($this->serverExists($content, $key)) {
+                $content = $this->removeExistingServer($content, $key);
+            }
+        }
 
         foreach ($this->serversToAdd as $key => $config) {
             if ($this->serverExists($content, $key)) {

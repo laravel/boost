@@ -42,6 +42,9 @@ class FileWriter
         ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))->toArray());
     }
 
+    /** @var array<int, string> */
+    protected array $serversToRemove = [];
+
     /**
      * @param  array<string, mixed>  $config
      */
@@ -50,6 +53,13 @@ class FileWriter
         $this->serversToAdd[$key] = collect($config)
             ->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
             ->toArray();
+
+        return $this;
+    }
+
+    public function removeServerConfig(string $key): self
+    {
+        $this->serversToRemove[] = $key;
 
         return $this;
     }
@@ -90,6 +100,8 @@ class FileWriter
 
     protected function updateJson5File(string $content): bool
     {
+        $content = $this->removeServersFromJson5($content);
+
         $configKeyPattern = '/["\']'.preg_quote($this->configKey, '/').'["\']\\s*:\\s*\\{/';
 
         if (preg_match($configKeyPattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
@@ -97,6 +109,61 @@ class FileWriter
         }
 
         return $this->injectNewConfigKey($content);
+    }
+
+    protected function removeServersFromJson5(string $content): string
+    {
+        foreach ($this->serversToRemove as $key) {
+            $configKeyPattern = '/["\']'.preg_quote($this->configKey, '/').'["\']\\s*:\\s*\\{/';
+
+            if (! preg_match($configKeyPattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
+                continue;
+            }
+
+            $openBracePos = strpos($content, '{', $matches[0][1]);
+
+            if ($openBracePos === false) {
+                continue;
+            }
+
+            $closeBracePos = $this->findMatchingClosingBrace($content, $openBracePos);
+
+            if ($closeBracePos === false) {
+                continue;
+            }
+
+            $configContent = substr($content, $openBracePos + 1, $closeBracePos - $openBracePos - 1);
+
+            if (! $this->serverExistsInContent($configContent, $key)) {
+                continue;
+            }
+
+            // Find and remove the server entry including its key and value object
+            $quotedPattern = '/,?\s*["\']'.preg_quote($key, '/').  '["\']\\s*:\\s*\\{/';
+            $unquotedPattern = '/,?\s*(?<=^|\\s|,|{)'.preg_quote($key, '/').'\\s*:\\s*\\{/m';
+
+            $pattern = preg_match($quotedPattern, $configContent, $m, PREG_OFFSET_CAPTURE)
+                ? $quotedPattern
+                : $unquotedPattern;
+
+            if (! preg_match($pattern, $configContent, $m, PREG_OFFSET_CAPTURE)) {
+                continue;
+            }
+
+            $serverStart = $openBracePos + 1 + $m[0][1];
+            $keyEnd = $serverStart + strlen($m[0][0]);
+            $valueBracePos = $keyEnd - 1; // position of the opening brace
+
+            $serverCloseBrace = $this->findMatchingClosingBrace($content, $valueBracePos);
+
+            if ($serverCloseBrace === false) {
+                continue;
+            }
+
+            $content = substr($content, 0, $serverStart).substr($content, $serverCloseBrace + 1);
+        }
+
+        return $content;
     }
 
     protected function injectIntoExistingConfigKey(string $content, array $matches): bool
@@ -413,8 +480,17 @@ class FileWriter
 
     protected function addServersToConfig(array &$config): void
     {
+        $this->removeServersFromConfig($config);
+
         foreach ($this->serversToAdd as $key => $serverConfig) {
             $config[$this->configKey][$key] = $serverConfig;
+        }
+    }
+
+    protected function removeServersFromConfig(array &$config): void
+    {
+        foreach ($this->serversToRemove as $key) {
+            unset($config[$this->configKey][$key]);
         }
     }
 

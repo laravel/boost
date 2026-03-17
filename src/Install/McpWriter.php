@@ -69,6 +69,13 @@ class McpWriter
         return ! empty(getenv('WSL_DISTRO_NAME')) || ! empty(getenv('IS_WSL'));
     }
 
+    public function uninstallNightwatchMcp(): void
+    {
+        if (! $this->agent->uninstallHttpMcp('nightwatch')) {
+            throw new RuntimeException('Failed to uninstall Nightwatch MCP: could not write configuration');
+        }
+    }
+
     protected function installNightwatchMcp(Nightwatch $nightwatch): void
     {
         if (! $this->agent->installHttpMcp('nightwatch', $nightwatch->mcpUrl())) {
