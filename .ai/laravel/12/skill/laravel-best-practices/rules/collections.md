@@ -13,7 +13,7 @@ Correct: `$users->each->markAsVip();`
 
 Works with `each`, `map`, `sum`, `filter`, `reject`, `contains`, etc.
 
-## Choose `cursor()` vs `lazy()` Correctly
+## Choose `cursor()` vs. `lazy()` Correctly
 
 - `cursor()` — one model in memory, but cannot eager-load relationships (N+1 risk).
 - `lazy()` — chunked pagination returning a flat LazyCollection, supports eager loading.

@@ -16,7 +16,7 @@ Correct:
 ```php
 public function show(Post $post)
 {
-    return view('posts.show', compact('post'));
+    return view('posts.show', ['post' => $post]);
 }
 ```
 
@@ -60,9 +60,9 @@ public function store(Request $request)
 
 Correct:
 ```php
-public function store(StorePostRequest $request)
+public function store(StorePostRequest $request, CreatePostAction $create)
 {
-    $post = app(CreatePostAction::class)->execute($request->validated());
+    $post = $create->execute($request->validated());
 
     return redirect()->route('posts.show', $post);
 }

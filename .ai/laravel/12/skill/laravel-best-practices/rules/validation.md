@@ -23,7 +23,7 @@ public function store(StorePostRequest $request)
 }
 ```
 
-## Array vs String Notation for Rules
+## Array vs. String Notation for Rules
 
 Array syntax is more readable and composes cleanly with `Rule::` objects. Prefer it in new code, but check existing Form Requests first and match whatever notation the project already uses.
 

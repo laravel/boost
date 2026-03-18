@@ -43,6 +43,7 @@ Correct:
 public function update(UpdatePostRequest $request, Post $post)
 {
     Gate::authorize('update', $post);
+
     $post->update($request->validated());
 }
 ```

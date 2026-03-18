@@ -163,7 +163,7 @@ Check sibling files, related controllers, models, or tests for established patte
 ### 17. Collections → `rules/collections.md`
 
 - Higher-order messages for simple collection operations
-- `cursor()` vs `lazy()` — choose based on relationship needs
+- `cursor()` vs. `lazy()` — choose based on relationship needs
 - `lazyById()` when updating records while iterating
 - `toQuery()` for bulk operations on collections
 
