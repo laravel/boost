@@ -103,6 +103,22 @@ class Config
         return $this->get('sail', false);
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function getMcpServers(): array
+    {
+        return $this->get('mcp_servers', []);
+    }
+
+    /**
+     * @param  array<int, string>  $servers
+     */
+    public function setMcpServers(array $servers): void
+    {
+        $this->set('mcp_servers', $servers);
+    }
+
     public function isValid(): bool
     {
         $path = base_path(self::FILE);

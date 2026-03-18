@@ -1,0 +1,19 @@
+{
+    "servers": [
+        {
+            "name": "acme-package-mcp",
+            "description": "Acme Package MCP Server",
+            "command": "node",
+            "args": ["vendor/acme/acme-package/mcp-server.js"],
+            "env": {
+                "APP_KEY": "your-app-key"
+            }
+        },
+        {
+            "name": "acme-package-remote-mcp",
+            "description": "Acme Package Remote MCP",
+            "type": "http",
+            "url": "https://mcp.acme-package.com/mcp"
+        }
+    ]
+}
