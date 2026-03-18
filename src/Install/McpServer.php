@@ -59,6 +59,6 @@ class McpServer
             'description' => $this->description,
         ];
 
-        return array_filter($data, fn (mixed $value): bool => $value !== null && $value !== '' && $value !== []);
+        return array_filter($data, fn (mixed $value): bool => $value !== null && $value !== '');
     }
 }
