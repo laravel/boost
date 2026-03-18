@@ -290,7 +290,8 @@ class InstallCommand extends Command
      */
     protected function selectThirdPartyPackages(): Collection
     {
-        $packages = ThirdPartyPackage::discover();
+        $packages = ThirdPartyPackage::discover()
+            ->filter(fn (ThirdPartyPackage $pkg): bool => $pkg->hasGuidelines || $pkg->hasSkills);
 
         if ($packages->isEmpty()) {
             return collect();
