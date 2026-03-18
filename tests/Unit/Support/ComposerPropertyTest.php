@@ -91,11 +91,13 @@ it('Property 2: package appears in results iff mcp.json exists as a regular file
         $result = Composer::packagesDirectoriesWithBoostMcp();
 
         foreach ($withMcp as $pkg) {
-            expect($result)->toHaveKey($pkg, "Iteration {$i}: {$pkg} with mcp.json should be in results");
+            expect($result, "Iteration {$i}: {$pkg} with mcp.json should be in results")
+                ->toHaveKey($pkg);
         }
 
         foreach ($withoutMcp as $pkg) {
-            expect($result)->not->toHaveKey($pkg, "Iteration {$i}: {$pkg} without mcp.json should not be in results");
+            expect($result, "Iteration {$i}: {$pkg} without mcp.json should not be in results")
+                ->not->toHaveKey($pkg);
         }
 
         // Cleanup for next iteration

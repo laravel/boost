@@ -63,9 +63,8 @@ it('Property 7: featureLabel() contains "mcp" when hasMcp is true', function ():
             hasMcp: true,
         );
 
-        expect($package->featureLabel())->toContain('mcp',
-            "Iteration {$i}: featureLabel() must contain 'mcp' when hasMcp=true"
-        );
+        expect($package->featureLabel(), "Iteration {$i}: featureLabel() must contain 'mcp' when hasMcp=true")
+            ->toContain('mcp');
     }
 });
 

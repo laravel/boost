@@ -127,11 +127,10 @@ it('Property 11: RuntimeException message contains server name on failed install
             $caught = $e;
         }
 
-        expect($caught)->not->toBeNull("Iteration {$i}: write() should throw RuntimeException")
-            ->and($caught)->toBeInstanceOf(RuntimeException::class)
-            ->and($caught->getMessage())->toContain($name,
-                "Iteration {$i}: exception message must contain server name '{$name}'"
-            );
+        expect($caught, "Iteration {$i}: write() should throw RuntimeException")->not->toBeNull();
+        expect($caught)->toBeInstanceOf(RuntimeException::class);
+        expect($caught?->getMessage(), "Iteration {$i}: exception message must contain server name '{$name}'")
+            ->toContain($name);
 
         Mockery::close();
     }
