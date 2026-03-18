@@ -67,62 +67,6 @@ function getHerdTestTempDir(): string
     return $herdTestCleanupData['tempDir'];
 }
 
-test('mcpPath builds correct Windows path from USERPROFILE when HOME missing', function (): void {
-    unset($_SERVER['HOME']);
-    $_SERVER['USERPROFILE'] = 'C:\\Users\\TestUser';
-
-    $herd = new Herd;
-    $expected = 'C:/Users/TestUser/.config/herd/bin/herd-mcp.phar';
-
-    expect($herd->mcpPath())->toBe($expected);
-})->onlyOnWindows();
-
-test('isMcpAvailable returns false when MCP file is missing from home', function (): void {
-    $testHome = getHerdTestTempDir().'/home';
-    mkdir($testHome, 0755, true);
-    $_SERVER['HOME'] = $testHome;
-
-    $herd = new Herd;
-
-    expect($herd->isMcpAvailable())->toBeFalse();
-})->onlyOnWindows();
-
-test('isMcpAvailable returns true when MCP file exists in home', function (): void {
-    $testHome = getHerdTestTempDir().'/home';
-    mkdir($testHome, 0755, true);
-    $_SERVER['HOME'] = $testHome;
-
-    $herd = new Herd;
-    $mcpPath = $herd->mcpPath();
-
-    $mcpDir = dirname($mcpPath);
-    mkdir($mcpDir, 0755, true);
-
-    file_put_contents($mcpPath, 'test phar content');
-
-    expect($herd->isMcpAvailable())->toBeTrue();
-})->onlyOnWindows();
-
-test('isMcpAvailable returns false after MCP file is removed', function (): void {
-    $testHome = getHerdTestTempDir().'/home';
-    mkdir($testHome, 0755, true);
-    $_SERVER['HOME'] = $testHome;
-
-    $herd = new Herd;
-    $mcpPath = $herd->mcpPath();
-
-    $mcpDir = dirname($mcpPath);
-    mkdir($mcpDir, 0755, true);
-    file_put_contents($mcpPath, 'test phar content');
-
-    expect($herd->isMcpAvailable())->toBeTrue();
-
-    // Remove file
-    unlink($mcpPath);
-
-    expect($herd->isMcpAvailable())->toBeFalse();
-})->onlyOnWindows();
-
 test('getHomePath returns HOME on non-Windows', function (): void {
     $testHome = getHerdTestTempDir().'/home';
     mkdir($testHome, 0755, true);

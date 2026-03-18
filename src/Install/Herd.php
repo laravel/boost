@@ -17,11 +17,6 @@ class Herd
         return is_dir($this->getHomePath().'/.config/herd');
     }
 
-    public function isMcpAvailable(): bool
-    {
-        return file_exists($this->mcpPath());
-    }
-
     public function getHomePath(): string
     {
         if ($this->isWindowsPlatform()) {
@@ -33,15 +28,6 @@ class Herd
         }
 
         return $_SERVER['HOME'];
-    }
-
-    public function mcpPath(): string
-    {
-        if ($this->isWindowsPlatform()) {
-            return $this->getHomePath().'/.config/herd/bin/herd-mcp.phar';
-        }
-
-        return '/Applications/Herd.app/Contents/Resources/herd-mcp.phar';
     }
 
     public function isWindowsPlatform(): bool
