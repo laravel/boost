@@ -11,9 +11,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Skills\Remote\AuditResult;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
+use Laravel\Boost\Skills\Remote\SkillAuditor;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 
@@ -22,6 +24,7 @@ use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\spin;
+use function Laravel\Prompts\table;
 use function Laravel\Prompts\text;
 
 class AddSkillCommand extends Command
@@ -34,7 +37,8 @@ class AddSkillCommand extends Command
         {--list : List available skills}
         {--all : Install all skills}
         {--skill=* : Specific skills to install}
-        {--force : Overwrite existing skills}';
+        {--force : Overwrite existing skills}
+        {--skip-audit : Skip security audit}';
 
     /** @var string */
     protected $description = 'Add skills from a remote GitHub repository';
@@ -87,7 +91,7 @@ class AddSkillCommand extends Command
         try {
             $this->availableSkills = spin(
                 callback: fn (): Collection => $this->fetcher->discoverSkills(),
-                message: "Fetching skills from {$this->repository->fullName()}..."
+                message: "Fetching skills from {$this->repository->source()}..."
             );
         } catch (RuntimeException $runtimeException) {
             $this->error($runtimeException->getMessage());
@@ -160,7 +164,17 @@ class AddSkillCommand extends Command
             return self::SUCCESS;
         }
 
-        $results = $this->downloadSkills($selectedSkills);
+        $skillsToInstall = $this->skillsToInstall($selectedSkills);
+
+        if ($skillsToInstall->isEmpty()) {
+            return self::SUCCESS;
+        }
+
+        if (! $this->runAuditBeforeInstall($skillsToInstall)) {
+            return self::SUCCESS;
+        }
+
+        $results = $this->downloadSkills($skillsToInstall);
 
         if ($results['installedNames'] !== []) {
             $this->info('Skills installed:');
@@ -193,9 +207,7 @@ class AddSkillCommand extends Command
         $skillOptions = $this->option('skill');
 
         if ($skillOptions !== []) {
-            return $this->availableSkills->filter(
-                fn (RemoteSkill $skill): bool => in_array($skill->name, $skillOptions, true)
-            );
+            return $this->availableSkills->only($skillOptions);
         }
 
         /** @var array<int, string> $selected */
@@ -209,9 +221,51 @@ class AddSkillCommand extends Command
             hint: 'Use --all to install all skills at once',
         );
 
-        return $this->availableSkills->filter(
-            fn (RemoteSkill $skill): bool => in_array($skill->name, $selected, true)
+        return $this->availableSkills->only($selected);
+    }
+
+    /**
+     * @param  Collection<string, RemoteSkill>  $skills
+     */
+    protected function skillsToInstall(Collection $skills): Collection
+    {
+        [$existingSkills, $newSkills] = $skills->partition(
+            fn (RemoteSkill $skill): bool => $this->skillExists($skill)
         );
+
+        if ($existingSkills->isEmpty() || $this->shouldUpdateExisting($existingSkills)) {
+            return $skills;
+        }
+
+        return $newSkills;
+    }
+
+    /**
+     * @param  Collection<string, RemoteSkill>  $existingSkills
+     */
+    protected function shouldUpdateExisting(Collection $existingSkills): bool
+    {
+        if ($this->option('force')) {
+            return true;
+        }
+
+        if (! stream_isatty(STDIN)) {
+            return false;
+        }
+
+        return confirm(
+            label: "Update {$existingSkills->count()} existing skill(s)?",
+        );
+    }
+
+    protected function skillExists(RemoteSkill $skill): bool
+    {
+        return is_dir($this->skillTargetPath($skill));
+    }
+
+    protected function skillTargetPath(RemoteSkill $skill): string
+    {
+        return base_path($this->defaultSkillsPath.DIRECTORY_SEPARATOR.$skill->name);
     }
 
     /**
@@ -220,21 +274,8 @@ class AddSkillCommand extends Command
      */
     protected function downloadSkills(Collection $skills): array
     {
-        $force = $this->option('force');
-        $absoluteSkillsPath = base_path($this->defaultSkillsPath);
-
-        $existingSkills = $skills->filter(fn (RemoteSkill $skill): bool => is_dir($absoluteSkillsPath.DIRECTORY_SEPARATOR.$skill->name));
-        $shouldUpdateExisting = $force;
-
-        if ($existingSkills->isNotEmpty() && ! $force && stream_isatty(STDIN)) {
-            $count = $existingSkills->count();
-            $shouldUpdateExisting = confirm(
-                label: "Update {$count} existing skill(s) ?",
-            );
-        }
-
         return spin(
-            callback: fn (): array => $this->addSkills($skills, $absoluteSkillsPath, $shouldUpdateExisting),
+            callback: fn (): array => $this->addSkills($skills),
             message: 'Downloading skills...'
         );
     }
@@ -243,19 +284,14 @@ class AddSkillCommand extends Command
      * @param  Collection<string, RemoteSkill>  $skills
      * @return array{installedNames: array<int, string>, failedDetails: array<string, string>}
      */
-    protected function addSkills(Collection $skills, string $absoluteSkillsPath, bool $shouldUpdateExisting): array
+    protected function addSkills(Collection $skills): array
     {
         $results = ['installedNames' => [], 'failedDetails' => []];
 
         foreach ($skills as $skill) {
-            $targetPath = $absoluteSkillsPath.DIRECTORY_SEPARATOR.$skill->name;
-            $exists = is_dir($targetPath);
+            $targetPath = $this->skillTargetPath($skill);
 
-            if ($exists && ! $shouldUpdateExisting) {
-                continue;
-            }
-
-            if ($exists) {
+            if ($this->skillExists($skill)) {
                 File::deleteDirectory($targetPath);
             }
 
@@ -271,6 +307,94 @@ class AddSkillCommand extends Command
         }
 
         return $results;
+    }
+
+    /**
+     * @param  Collection<string, RemoteSkill>  $selectedSkills
+     */
+    protected function runAuditBeforeInstall(Collection $selectedSkills): bool
+    {
+        if ($this->option('skip-audit')) {
+            return true;
+        }
+
+        $skillNames = $selectedSkills->keys()->values()->all();
+
+        /** @var array<string, array<int, AuditResult>> $auditResults */
+        $auditResults = spin(
+            callback: fn (): array => (new SkillAuditor)->audit(
+                $this->repository->source(),
+                $skillNames,
+            ),
+            message: 'Running security audit...',
+        );
+
+        if (! $this->hasRiskySkills($auditResults)) {
+            return true;
+        }
+
+        $this->displayAuditResults($auditResults, $skillNames);
+
+        if (! stream_isatty(STDIN)) {
+            return true;
+        }
+
+        return confirm('Do you want to install these skills?');
+    }
+
+    /**
+     * @param  array<string, array<int, AuditResult>>  $auditResults
+     * @param  array<int, string>  $skillNames
+     */
+    protected function displayAuditResults(array $auditResults, array $skillNames): void
+    {
+        $partnerKeys = collect($auditResults)
+            ->flatMap(fn (array $results): array => array_map(fn (AuditResult $auditResult): string => $auditResult->partner, $results))
+            ->unique()
+            ->values()
+            ->all();
+
+        $headers = array_merge(['Skill'], array_map(ucfirst(...), $partnerKeys));
+
+        $rows = [];
+
+        foreach ($skillNames as $skillName) {
+            $partnerResults = $auditResults[$skillName] ?? [];
+            $partnerMap = collect($partnerResults)->keyBy(fn (AuditResult $auditResult): string => $auditResult->partner);
+
+            $row = [$skillName];
+
+            foreach ($partnerKeys as $partnerKey) {
+                $row[] = $partnerMap->has($partnerKey)
+                    ? $this->colorizeRisk($partnerMap->get($partnerKey))
+                    : '—';
+            }
+
+            $rows[] = $row;
+        }
+
+        note('Security Audit');
+        table($headers, $rows);
+    }
+
+    /**
+     * @param  array<string, array<int, AuditResult>>  $auditResults
+     */
+    protected function hasRiskySkills(array $auditResults): bool
+    {
+        return collect($auditResults)
+            ->flatten()
+            ->contains(fn (AuditResult $result): bool => $result->risk->weight() >= 3);
+    }
+
+    protected function colorizeRisk(AuditResult $result): string
+    {
+        return match ($result->risk->color()) {
+            'red' => $this->red($result->risk->label()),
+            'yellow' => $this->yellow($result->risk->label()),
+            'green' => $this->green($result->risk->label()),
+            default => $this->dim($result->risk->label()),
+        };
     }
 
     protected function runBoostUpdate(): void

@@ -37,3 +37,9 @@ it('returns full name from fullName method', function (): void {
 
     expect($repo->fullName())->toBe('owner/repo');
 });
+
+it('returns source with path when present', function (): void {
+    $repo = new GitHubRepository('owner', 'repo', 'path/to/skills');
+
+    expect($repo->source())->toBe('owner/repo/path/to/skills');
+});
