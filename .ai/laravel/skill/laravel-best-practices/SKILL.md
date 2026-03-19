@@ -67,6 +67,7 @@ Check sibling files, related controllers, models, or tests for established patte
 - Attribute casts in the `casts()` method
 - Cast date columns, use Carbon instances in templates
 - `whereBelongsTo($model)` for cleaner queries
+- Never hardcode table names — use `(new Model)->getTable()` or Eloquent queries
 
 ### 6. Validation & Forms → `rules/validation.md`
 
