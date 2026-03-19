@@ -7,9 +7,7 @@ Extract discrete business operations into invokable Action classes.
 ```php
 class CreateOrderAction
 {
-    public function __construct(
-        private InventoryService $inventory,
-    ) {}
+    public function __construct(private InventoryService $inventory) {}
 
     public function execute(array $data): Order
     {
@@ -27,17 +25,28 @@ Always use constructor injection. Avoid `app()` or `resolve()` inside classes.
 
 Incorrect:
 ```php
-$user = new User;
-$user->create($data);
+class OrderController extends Controller
+{
+    public function store(StoreOrderRequest $request)
+    {
+        $service = app(OrderService::class);
+
+        return $service->create($request->validated());
+    }
+}
 ```
 
 Correct:
 ```php
-public function __construct(
-    private User $user,
-) {}
+class OrderController extends Controller
+{
+    public function __construct(private OrderService $service) {}
 
-$this->user->create($data);
+    public function store(StoreOrderRequest $request)
+    {
+        return $this->service->create($request->validated());
+    }
+}
 ```
 
 ## Code to Interfaces
@@ -116,26 +125,6 @@ mb_strtolower('MÜNCHEN');     // 'münchen'
 // Prefer Laravel's Str helpers when available
 Str::length('José');          // 4
 Str::lower('MÜNCHEN');        // 'münchen'
-```
-
-## Plan for Ephemeral Storage
-
-On Laravel Cloud/Vapor, local disk is ephemeral — files disappear between deployments. Use S3 for persistent storage.
-
-Incorrect:
-```php
-$request->file('avatar')->store('avatars', 'local');
-```
-
-Correct:
-```php
-$request->file('avatar')->store('avatars', 's3');
-
-// For large files, use signed upload URLs
-$url = Storage::disk('s3')->temporaryUploadUrl(
-    'uploads/'.Str::uuid().'.pdf',
-    now()->addMinutes(5),
-);
 ```
 
 ## Use `defer()` for Post-Response Work

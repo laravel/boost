@@ -8,7 +8,7 @@ metadata:
 
 # Laravel Best Practices
 
-Best practices for Laravel 12, prioritized by impact. Each rule teaches what to do and why. For exact API syntax, verify with `search-docs`.
+Best practices for Laravel, prioritized by impact. Each rule teaches what to do and why. For exact API syntax, verify with `search-docs`.
 
 ## Consistency First
 
@@ -147,7 +147,6 @@ Check sibling files, related controllers, models, or tests for established patte
 - Single-purpose Action classes; dependency injection over `app()` helper
 - Prefer official Laravel packages and follow conventions, don't override defaults
 - Default to `ORDER BY id DESC` or `created_at DESC`; `mb_*` for UTF-8 safety
-- S3 on Cloud/Vapor — local disk is ephemeral
 - `defer()` for post-response work; `Context` for request-scoped data; `Concurrency::run()` for parallel execution
 
 ### 16. Migrations → `rules/migrations.md`
@@ -183,7 +182,8 @@ Check sibling files, related controllers, models, or tests for established patte
 
 ## How to Apply
 
+Always use a sub-agent to read rule files and explore this skill's content.
+
 1. Identify the file type and select relevant sections (e.g., migration → §16, controller → §1, §3, §5, §6, §10)
 2. Check sibling files for existing patterns — follow those first per Consistency First
-3. Apply matching bullets; read rule files via sub-agent only when a bullet is ambiguous or the task involves a nuanced pattern
-4. Verify API syntax with `search-docs` for the installed Laravel version
+3. Verify API syntax with `search-docs` for the installed Laravel version
