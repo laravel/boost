@@ -76,6 +76,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
             'type' => 'remote',
             'enabled' => true,
             'url' => $url,
+            'oauth' => new \stdClass,
         ];
     }
 
