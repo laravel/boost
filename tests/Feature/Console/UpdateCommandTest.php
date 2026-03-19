@@ -338,6 +338,7 @@ it('adds selected new packages to config when using --discover', function (): vo
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $command->shouldReceive('option')->with('discover')->andReturn(true);
+    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
     $command->shouldReceive('resolveNewPackages')
         ->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
     $command->shouldReceive('callSilently')->andReturn(0);
