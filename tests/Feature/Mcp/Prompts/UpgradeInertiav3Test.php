@@ -14,6 +14,7 @@ beforeEach(function (): void {
 function mockRosterWithFrameworks(bool $react = false, bool $vue = false, bool $svelte = false): Roster
 {
     $roster = Mockery::mock(Roster::class);
+    $roster->shouldReceive('uses')->withAnyArgs()->andReturn(false)->byDefault();
     $roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn($react);
     $roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn($vue);
     $roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn($svelte);

@@ -16,6 +16,7 @@ beforeEach(function (): void {
     $this->roster = Mockery::mock(Roster::class);
     $this->roster->shouldReceive('nodePackageManager')->andReturn(NodePackageManager::NPM);
     $this->roster->shouldReceive('usesVersion')->andReturn(false);
+    $this->roster->shouldReceive('uses')->andReturn(false);
 
     $this->app->instance(Roster::class, $this->roster);
 });
