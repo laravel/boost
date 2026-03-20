@@ -9,10 +9,16 @@
 - Use `browser-logs` to read browser logs, errors, and exceptions. Only recent logs are useful, ignore old entries.
 @endif
 
-## Documentation (IMPORTANT)
-- Your knowledge of Laravel and its ecosystem packages may be outdated. Always use `search-docs` to get current documentation, examples, and correct API usage before writing or modifying code.
-- `search-docs` automatically includes installed package versions, so do not add package names to queries. Use multiple broad, topic-based queries: `['rate limiting', 'routing']`.
-- Syntax: words use AND logic, `"quoted phrases"` match exact position, multiple `queries=[]` use OR logic.
+## Searching Documentation (IMPORTANT)
+- Always use `search-docs` before making code changes. Do not skip this step. It returns version-specific docs based on installed packages automatically.
+- Pass a `packages` array to scope results when you know which packages are relevant.
+- Use multiple broad, topic-based queries: `['rate limiting', 'routing rate limiting', 'routing']`. Expect the most relevant results first.
+- Do not add package names to queries because package info is already shared. Use `test resource table`, not `filament 4 test resource table`.
+### Search Syntax
+1. Use words for auto-stemmed AND logic: `rate limit` matches both "rate" AND "limit".
+2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
+3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
+4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
 
 ## Artisan
 - Run Artisan commands directly via the command line (e.g., `{{ $assist->artisanCommand('route:list') }}`). Use `{{ $assist->artisanCommand('list') }}` to discover available commands and `{{ $assist->artisanCommand('[command] --help') }}` to check parameters.
