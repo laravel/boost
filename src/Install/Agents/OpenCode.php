@@ -9,6 +9,7 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
+use stdClass;
 
 class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
@@ -76,6 +77,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
             'type' => 'remote',
             'enabled' => true,
             'url' => $url,
+            'oauth' => new stdClass,
         ];
     }
 
