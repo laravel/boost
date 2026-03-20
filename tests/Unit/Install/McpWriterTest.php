@@ -190,3 +190,157 @@ it('installs with both sail and nightwatch', function (): void {
 
     expect($result)->toBe(McpWriter::SUCCESS);
 });
+
+// Third-party server tests
+
+it('installs a command-based third-party server via installMcp', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldReceive('installMcp')
+        ->with('acme-server', 'node', ['server.js'], ['KEY' => 'val'])
+        ->once()
+        ->andReturn(true);
+
+    $server = new \Laravel\Boost\Install\McpServer(
+        name: 'acme-server',
+        command: 'node',
+        args: ['server.js'],
+        env: ['KEY' => 'val'],
+    );
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, null, collect([$server]));
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('installs an http third-party server via installHttpMcp', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldReceive('installHttpMcp')
+        ->with('acme-remote', 'https://mcp.acme.com/mcp')
+        ->once()
+        ->andReturn(true);
+
+    $server = new \Laravel\Boost\Install\McpServer(
+        name: 'acme-remote',
+        url: 'https://mcp.acme.com/mcp',
+    );
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, null, collect([$server]));
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('skips third-party server that conflicts with laravel-boost key', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldNotReceive('installHttpMcp');
+    // The third-party 'laravel-boost' server should be skipped (conflict), so installMcp
+    // should only be called once (for the first-party boost install above).
+
+    $server = new \Laravel\Boost\Install\McpServer(
+        name: 'laravel-boost',
+        url: 'https://evil.com/mcp',
+    );
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, null, collect([$server]));
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('skips third-party server that conflicts with nightwatch key', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldNotReceive('installHttpMcp');
+
+    $server = new \Laravel\Boost\Install\McpServer(
+        name: 'nightwatch',
+        url: 'https://evil.com/mcp',
+    );
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, null, collect([$server]));
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
+
+it('throws RuntimeException when third-party command server install fails', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldReceive('installMcp')
+        ->with('failing-server', 'node', [], [])
+        ->once()
+        ->andReturn(false);
+
+    $server = new \Laravel\Boost\Install\McpServer(name: 'failing-server', command: 'node');
+
+    $writer = new McpWriter($agent);
+
+    expect(fn () => $writer->write(null, null, collect([$server])))
+        ->toThrow(RuntimeException::class, 'failing-server');
+});
+
+it('throws RuntimeException when third-party http server install fails', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldReceive('installHttpMcp')
+        ->with('failing-http', 'https://mcp.example.com')
+        ->once()
+        ->andReturn(false);
+
+    $server = new \Laravel\Boost\Install\McpServer(name: 'failing-http', url: 'https://mcp.example.com');
+
+    $writer = new McpWriter($agent);
+
+    expect(fn () => $writer->write(null, null, collect([$server])))
+        ->toThrow(RuntimeException::class, 'failing-http');
+});
+
+it('does not install third-party servers when collection is null', function (): void {
+    $agent = Mockery::mock(SupportsMcp::class);
+    $agent->shouldReceive('getPhpPath')->andReturn('php');
+    $agent->shouldReceive('getArtisanPath')->andReturn('artisan');
+    $agent->shouldReceive('installMcp')
+        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
+        ->once()
+        ->andReturn(true);
+    $agent->shouldNotReceive('installHttpMcp');
+
+    $writer = new McpWriter($agent);
+    $result = $writer->write(null, null, null);
+
+    expect($result)->toBe(McpWriter::SUCCESS);
+});
