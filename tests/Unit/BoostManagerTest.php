@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\BoostManager;
+use Laravel\Boost\Install\Agents\AmazonQ;
 use Laravel\Boost\Install\Agents\Amp;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
@@ -18,6 +19,7 @@ it('returns default agents', function (): void {
     $registered = $manager->getAgents();
 
     expect($registered)->toMatchArray([
+        'amazonq' => AmazonQ::class,
         'amp' => Amp::class,
         'junie' => Junie::class,
         'cursor' => Cursor::class,
