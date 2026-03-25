@@ -19,13 +19,16 @@ trait RendersBladeGuidelines
             return $content;
         }
 
-        // Temporarily replace backticks and PHP opening tags with placeholders before Blade processing
-        // This prevents Blade from trying to execute PHP code examples and supports inline code
+        // Temporarily replace backticks, PHP opening tags, component tags, and Volt directives
+        // with placeholders before Blade processing. This prevents Blade from trying to execute
+        // PHP code examples, compile component references, and supports inline code.
         $placeholders = [
             '`' => '___SINGLE_BACKTICK___',
             '<?php' => '___OPEN_PHP_TAG___',
             '@volt' => '___VOLT_DIRECTIVE___',
             '@endvolt' => '___ENDVOLT_DIRECTIVE___',
+            '</x-' => '___BLADE_COMPONENT_CLOSE___',
+            '<x-' => '___BLADE_COMPONENT_OPEN___',
         ];
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
