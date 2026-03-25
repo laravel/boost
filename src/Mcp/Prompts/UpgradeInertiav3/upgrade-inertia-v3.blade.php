@@ -48,6 +48,7 @@ Search the codebase for patterns affected by v3 changes:
 
 **Medium Priority Searches:**
 - `qs` imports - Install `qs` directly if the application uses it
+- `lodash-es` imports - Install `lodash-es` directly if the application uses it
 - `axios` imports or interceptors - Decide whether the app should keep Axios or rely on Inertia's built-in HTTP client
 - `Inertia\\Testing\\Concerns\\Has`, `Matching`, or `Debugging` - Deprecated traits removed in v3
 - `require(` in frontend code - Inertia packages are now ESM-only
@@ -77,17 +78,17 @@ For each category of changes:
 
 After code changes are complete:
 
-- `{{ $assist->composerCommand('require inertiajs/inertia-laravel:^3.0.0-beta') }}`
+- `{{ $assist->composerCommand('require inertiajs/inertia-laravel:^3.0') }}`
 @if($usesReact)
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/react@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/react@^3.0') }}`
 @endif
 @if($usesVue)
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vue3@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vue3@^3.0') }}`
 @endif
 @if($usesSvelte)
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/svelte@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/svelte@^3.0') }}`
 @endif
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vite@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vite@^3.0') }}`
 - `{{ $assist->artisanCommand('vendor:publish --provider="Inertia\\\\ServiceProvider" --force') }}`
 - `{{ $assist->artisanCommand('view:clear') }}`
 
@@ -116,7 +117,6 @@ When upgrading, maximize efficiency by:
 @if($usesSvelte)
 - Svelte users must upgrade to Svelte 5+ and update components to Svelte 5 runes syntax
 @endif
-- The linked v3 upgrade guide is currently in beta, so verify the version constraint shown in the docs before changing dependency versions
 - Axios removal usually does not require code changes
 - If the application imports `qs`, install it directly instead of rewriting query handling blindly
 - After upgrading, republish the config file and clear cached views because the `@inertia` Blade directive output changed
@@ -143,25 +143,23 @@ Before upgrading, ensure your environment meets these minimum requirements:
 
 ## Installation
 
-As of the current official v3 guide, the upgrade still uses beta package constraints. Confirm the exact version in the docs before changing anything.
-
-Update your server-side adapter by running `{{ $assist->composerCommand('require inertiajs/inertia-laravel:^3.0.0-beta') }}`.
+Update your server-side adapter by running `{{ $assist->composerCommand('require inertiajs/inertia-laravel:^3.0') }}`.
 
 Update your client-side adapter:
 
 @if($usesReact)
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/react@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/react@^3.0') }}`
 @endif
 @if($usesVue)
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vue3@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vue3@^3.0') }}`
 @endif
 @if($usesSvelte)
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/svelte@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/svelte@^3.0') }}`
 @endif
 
 You may also install the optional Vite plugin, which simplifies page resolution and SSR configuration:
 
-- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vite@^3.0.0-beta') }}`
+- `{{ $assist->nodePackageManagerCommand('install @inertiajs/vite@^3.0') }}`
 
 After updating, republish the config and clear caches:
 
@@ -183,6 +181,12 @@ Inertia v3 no longer ships with or requires Axios. For most applications, this r
 The `qs` package is no longer bundled with `@inertiajs/core`. Inertia still handles its own query strings internally, but you should install `qs` directly if your application imports it.
 
 - `{{ $assist->nodePackageManagerCommand('install qs') }}`
+
+### `lodash-es` dependency removed
+
+The `lodash-es` package has been replaced with `es-toolkit` and is no longer included as a dependency of `@inertiajs/core`. You should install `lodash-es` directly if your application imports it.
+
+- `{{ $assist->nodePackageManagerCommand('install lodash-es') }}`
 
 ### Event renames
 
@@ -336,6 +340,14 @@ The `useForm` helper now resets `processing` and `progress` inside `onFinish`, n
 The deprecated `Inertia\Testing\Concerns\Has`, `Matching`, and `Debugging` traits have been removed. They were replaced long ago by `AssertableInertia`, so no action is required unless your application still references those traits directly.
 
 ## Other changes
+
+### Blade components
+
+Inertia now provides `<x-inertia::head>` and `<x-inertia::app>` Blade components as an alternative to the `@inertiaHead` and `@inertia` directives. The head component accepts fallback content via its slot that only renders when SSR is not active, solving the long-standing issue of duplicate `<title>` tags in SSR applications. The existing directives continue to work and require no changes.
+
+### ES2022 build target
+
+Inertia packages now target ES2022, up from ES2020 in v2. You may use the `@vitejs/plugin-legacy` Vite plugin if your application needs to support older browsers.
 
 ### Optional Vite plugin
 
