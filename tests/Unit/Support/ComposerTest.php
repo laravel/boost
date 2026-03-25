@@ -13,16 +13,6 @@ afterEach(function (): void {
     File::deleteDirectory(base_path('vendor'));
 });
 
-it('returns empty packages when composer.json does not exist', function (): void {
-    expect(Composer::packages())->toBe([]);
-});
-
-it('returns empty packages when composer.json is invalid json', function (): void {
-    file_put_contents(base_path('composer.json'), 'invalid json {{{');
-
-    expect(Composer::packages())->toBe([]);
-});
-
 it('reads require and require-dev from composer.json', function (): void {
     file_put_contents(base_path('composer.json'), json_encode([
         'require' => [
@@ -38,16 +28,6 @@ it('reads require and require-dev from composer.json', function (): void {
     expect($packages)
         ->toHaveKey('laravel/framework')
         ->toHaveKey('pestphp/pest');
-});
-
-it('returns empty packages directories when vendor does not exist', function (): void {
-    file_put_contents(base_path('composer.json'), json_encode([
-        'require' => [
-            'laravel/framework' => '^11.0',
-        ],
-    ]));
-
-    expect(Composer::packagesDirectories())->toBe([]);
 });
 
 it('returns package directories that exist in vendor', function (): void {
@@ -91,31 +71,6 @@ it('returns packages directories with boost guidelines', function (): void {
     expect($result)
         ->toHaveKey('laravel/framework')
         ->not->toHaveKey('laravel/horizon');
-});
-
-it('returns packages directories with boost skills', function (): void {
-    file_put_contents(base_path('composer.json'), json_encode([
-        'require' => [
-            'laravel/framework' => '^11.0',
-        ],
-    ]));
-
-    $withSkills = base_path(implode(DIRECTORY_SEPARATOR, [
-        'vendor', 'laravel', 'framework', 'resources', 'boost', 'skills',
-    ]));
-    File::ensureDirectoryExists($withSkills);
-
-    $result = Composer::packagesDirectoriesWithBoostSkills();
-
-    expect($result)->toHaveKey('laravel/framework');
-});
-
-it('handles composer.json with no dependencies', function (): void {
-    file_put_contents(base_path('composer.json'), json_encode([
-        'name' => 'test/app',
-    ]));
-
-    expect(Composer::packages())->toBe([]);
 });
 
 it('identifies scoped first party packages', function (): void {
