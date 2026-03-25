@@ -358,3 +358,30 @@ test('blade skills with code before frontmatter are parsed correctly', function 
         @rmdir($skillDir);
     }
 });
+
+test('frontmatter parsing ignores HTML comments injected by third-party packages', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $composer = new SkillComposer($this->roster);
+    $method = new ReflectionMethod($composer, 'parseSkillFrontmatter');
+
+    $content = <<<'HTML'
+        <!-- Start blade view: 'storage/framework/views/bf9245cd.blade.php' -->
+        ---
+        name: pest-testing
+        description: "Write and run tests with Pest"
+        ---
+
+        # Content
+        HTML;
+
+    $result = $method->invoke($composer, $content);
+
+    expect($result)
+        ->toHaveKey('name', 'pest-testing')
+        ->toHaveKey('description', 'Write and run tests with Pest');
+});
