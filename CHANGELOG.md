@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.1...main)
+
+## [v2.4.1](https://github.com/laravel/boost/compare/v2.4.0...v2.4.1) - 2026-03-25
+
+### What's Changed
+
+* Update Inertia v3 upgrade prompt to stable and add missing sections by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/717
+* Strip HTML comments before parsing skill frontmatter by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/711
+* Escape Blade component tags in guideline rendering by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/718
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.0...v2.4.1
 
 ## [v2.4.0](https://github.com/laravel/boost/compare/v2.3.4...v2.4.0) - 2026-03-23
 
@@ -160,11 +170,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -207,12 +219,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
