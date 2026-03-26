@@ -184,6 +184,26 @@ test('hasSkillsEnabled returns true when skills are enabled', function (): void 
     expect($assist->hasSkillsEnabled())->toBeTrue();
 });
 
+test('hasMcpEnabled returns false when MCP is disabled', function (): void {
+    $this->config->hasMcp = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->hasMcpEnabled())->toBeFalse();
+});
+
+test('hasMcpEnabled returns true when MCP is enabled', function (): void {
+    $this->config->hasMcp = true;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->hasMcpEnabled())->toBeTrue();
+});
+
 test('appPath returns default app path', function (): void {
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();

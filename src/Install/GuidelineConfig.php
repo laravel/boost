@@ -18,6 +18,8 @@ class GuidelineConfig
 
     public bool $hasSkills = false;
 
+    public bool $hasMcp = false;
+
     /**
      * @var array<int, string>
      */

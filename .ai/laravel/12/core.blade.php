@@ -1,6 +1,7 @@
 # Laravel 12
-
+@if($assist->hasMcpEnabled())
 - CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
+@endif
 @if (file_exists(app_path('Http/Kernel.php')))
 - This project upgraded from Laravel 10 without migrating to the new streamlined Laravel file structure.
 - This is perfectly fine and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the new Laravel structure unless the user explicitly requests it.
