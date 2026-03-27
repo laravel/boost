@@ -494,7 +494,6 @@ test('splits herd php into command and arguments', function (): void {
     ]);
 });
 
-
 test('splits docker exec commands into parts', function (): void {
     $environment = new TestCodeEnvironment($this->strategyFactory);
 
