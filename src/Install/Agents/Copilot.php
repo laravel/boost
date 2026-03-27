@@ -54,7 +54,7 @@ class Copilot extends Agent implements SupportsGuidelines, SupportsMcp, Supports
 
     public function mcpConfigPath(): string
     {
-        return '.vscode/mcp.json';
+        return config('boost.agents.copilot.mcp_config_path', '.vscode/mcp.json');
     }
 
     public function mcpConfigKey(): string

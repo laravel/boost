@@ -49,7 +49,19 @@ class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, Suppo
 
     public function mcpConfigPath(): string
     {
-        return '.mcp.json';
+        return config('boost.agents.claude_code.mcp_config_path', '.mcp.json');
+    }
+
+    /** {@inheritDoc} */
+    public function mcpServerConfig(string $command, array $args = [], array $env = []): array
+    {
+        return collect([
+            'command' => $command,
+            'args' => $args,
+            'cwd' => config('boost.executable_paths.current_directory', base_path()),
+            'env' => $env,
+        ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
+            ->toArray();
     }
 
     public function guidelinesPath(): string
