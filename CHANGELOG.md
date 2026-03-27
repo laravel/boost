@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v1.8.12...1.x)
+## [Unreleased](https://github.com/laravel/boost/compare/v1.8.13...1.x)
+
+## [v1.8.13](https://github.com/laravel/boost/compare/v1.8.12...v1.8.13) - 2026-03-27
+
+### What's Changed
+
+* Fix normalizeCommand() splitting absolute paths containing spaces (backporting PR #553 for v1.x) by [@debiprasad](https://github.com/debiprasad) in https://github.com/laravel/boost/pull/726
+
+### New Contributors
+
+* [@debiprasad](https://github.com/debiprasad) made their first contribution in https://github.com/laravel/boost/pull/726
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v1.8.12...v1.8.13
 
 ## [v1.8.12](https://github.com/laravel/boost/compare/v1.8.11...v1.8.12) - 2026-03-12
 
