@@ -483,6 +483,18 @@ test('splits valet php into command and arguments', function (): void {
     ]);
 });
 
+test('splits herd php into command and arguments', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand('herd php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe([
+        'command' => 'herd',
+        'args' => ['php', 'artisan', 'boost:mcp'],
+    ]);
+});
+
+
 test('splits docker exec commands into parts', function (): void {
     $environment = new TestCodeEnvironment($this->strategyFactory);
 
@@ -516,6 +528,90 @@ test('preserves single commands without arguments', function (): void {
     ]);
 });
 
+test('preserves absolute unix paths with spaces without splitting', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand(
+        '/Users/dev/Library/Application Support/Herd/bin/php83',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe([
+        'command' => '/Users/dev/Library/Application Support/Herd/bin/php83',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('preserves absolute unix paths without spaces without splitting', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand(
+        '/usr/local/bin/php',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe([
+        'command' => '/usr/local/bin/php',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('preserves absolute windows paths with spaces without splitting', function (): void {
+    $environment = new TestCodeEnvironment($this->strategyFactory);
+
+    $result = $environment->testNormalizeCommand(
+        'C:\\Program Files\\PHP\\php.exe',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe([
+        'command' => 'C:\\Program Files\\PHP\\php.exe',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
+});
+
+test('file installation handles absolute paths with spaces correctly', function (): void {
+    $environment = Mockery::mock(TestMcpClient::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp(
+        'test-key',
+        '/Users/dev/Library/Application Support/Herd/bin/php83',
+        ['artisan', 'boost:mcp']
+    );
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'test-key' => [
+                    'command' => '/Users/dev/Library/Application Support/Herd/bin/php83',
+                    'args' => ['artisan', 'boost:mcp'],
+                ],
+            ],
+        ]);
+});
+
 test('shell installation handles valet php commands', function (): void {
     $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
     $environment->shouldAllowMockingProtectedMethods();
@@ -538,6 +634,32 @@ test('shell installation handles valet php commands', function (): void {
         ->andReturn($mockResult);
 
     $result = $environment->installMcp('test-key', 'valet php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe(true);
+});
+
+test('shell installation handles herd php commands', function (): void {
+    $environment = Mockery::mock(TestCodeEnvironment::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('shellMcpCommand')
+        ->andReturn('install {key} {command} {args}');
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::SHELL);
+
+    $mockResult = Mockery::mock();
+    $mockResult->shouldReceive('successful')->andReturn(true);
+    $mockResult->shouldReceive('errorOutput')->andReturn('');
+
+    Process::shouldReceive('run')
+        ->once()
+        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key herd') &&
+            str_contains((string) $command, '"php"') &&
+            str_contains((string) $command, '"artisan"')))
+        ->andReturn($mockResult);
+
+    $result = $environment->installMcp('test-key', 'herd php', ['artisan', 'boost:mcp']);
 
     expect($result)->toBe(true);
 });
@@ -574,6 +696,44 @@ test('file installation handles valet php commands', function (): void {
             'mcpServers' => [
                 'test-key' => [
                     'command' => 'valet',
+                    'args' => ['php', 'artisan', 'boost:mcp'],
+                ],
+            ],
+        ]);
+});
+
+test('file installation handles herd php commands', function (): void {
+    $environment = Mockery::mock(TestMcpClient::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $capturedContent = '';
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::FILE);
+
+    File::shouldReceive('ensureDirectoryExists')
+        ->once()
+        ->with('.test');
+
+    File::shouldReceive('exists')
+        ->once()
+        ->with('.test/mcp.json')
+        ->andReturn(false);
+
+    File::shouldReceive('put')
+        ->once()
+        ->with(Mockery::any(), Mockery::capture($capturedContent))
+        ->andReturn(true);
+
+    $result = $environment->installMcp('test-key', 'herd php', ['artisan', 'boost:mcp']);
+
+    expect($result)->toBe(true)
+        ->and($capturedContent)
+        ->json()
+        ->toMatchArray([
+            'mcpServers' => [
+                'test-key' => [
+                    'command' => 'herd',
                     'args' => ['php', 'artisan', 'boost:mcp'],
                 ],
             ],
