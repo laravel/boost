@@ -26,35 +26,27 @@ test('returns configured mcp config path', function (): void {
     expect($agent->mcpConfigPath())->toBe('../.mcp.json');
 });
 
-test('mcpServerConfig includes cwd field', function (): void {
+test('uses absolute paths for MCP', function (): void {
     $agent = new ClaudeCode($this->strategyFactory);
 
-    $config = $agent->mcpServerConfig('php', ['artisan', 'boost:mcp']);
-
-    expect($config)->toHaveKey('command', 'php')
-        ->toHaveKey('args', ['artisan', 'boost:mcp'])
-        ->toHaveKey('cwd', base_path());
+    expect($agent->useAbsolutePathForMcp())->toBeTrue();
 });
 
-test('mcpServerConfig uses configured current_directory', function (): void {
-    config()->set('boost.executable_paths.current_directory', '/Users/developer/projects/app');
+test('returns absolute PHP path', function (): void {
+    config(['boost.executable_paths.php' => null]);
 
     $agent = new ClaudeCode($this->strategyFactory);
 
-    $config = $agent->mcpServerConfig('php', ['artisan', 'boost:mcp']);
-
-    expect($config)->toHaveKey('cwd', '/Users/developer/projects/app');
+    expect($agent->getPhpPath())->toBe(PHP_BINARY);
 });
 
-test('mcpServerConfig filters empty args and env', function (): void {
+test('returns absolute artisan path', function (): void {
     $agent = new ClaudeCode($this->strategyFactory);
 
-    $config = $agent->mcpServerConfig('php', [], []);
+    $artisanPath = $agent->getArtisanPath();
 
-    expect($config)->toHaveKey('command', 'php')
-        ->toHaveKey('cwd')
-        ->not->toHaveKey('args')
-        ->not->toHaveKey('env');
+    expect($artisanPath)->toEndWith('artisan')
+        ->not->toBe('artisan');
 });
 
 test('httpMcpServerConfig returns default http config', function (): void {
