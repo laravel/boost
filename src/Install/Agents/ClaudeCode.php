@@ -42,11 +42,6 @@ class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, Suppo
         ];
     }
 
-    public function useAbsolutePathForMcp(): bool
-    {
-        return true;
-    }
-
     public function mcpInstallationStrategy(): McpInstallationStrategy
     {
         return McpInstallationStrategy::FILE;
