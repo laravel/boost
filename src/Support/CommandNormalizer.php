@@ -7,11 +7,6 @@ namespace Laravel\Boost\Support;
 class CommandNormalizer
 {
     /**
-     * Normalize a command string into a command and args array.
-     *
-     * Absolute paths (starting with / on Unix or a drive letter on Windows)
-     * are never split, as they may contain spaces (e.g. macOS "Application Support").
-     *
      * @param  array<int, string>  $args
      * @return array{command: string, args: array<int, string>}
      */
