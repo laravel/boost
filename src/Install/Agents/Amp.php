@@ -44,7 +44,7 @@ class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkil
 
     public function mcpConfigPath(): string
     {
-        return base_path('.amp/settings.json');
+        return config('boost.agents.amp.mcp_config_path', base_path('.amp/settings.json'));
     }
 
     public function mcpConfigKey(): string

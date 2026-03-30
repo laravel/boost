@@ -4,36 +4,15 @@
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
 @if($assist->shouldEnforceStrictTypes())
-- Always use strict typing at the head of a `.php` file: `declare(strict_types=1);`.
+- Always declare `declare(strict_types=1);` at the top of every `.php` file.
 @endif
 - Always use curly braces for control structures, even for single-line bodies.
-
-## Constructors
-- Use PHP 8 constructor property promotion in `__construct()`.
-    - `public function __construct(public GitHub $github) { }`
-- Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
-
-## Type Declarations
-- Always use explicit return type declarations for methods and functions.
-- Use appropriate PHP type hints for method parameters.
-
-<!-- Explicit Return Types and Method Params -->
-```php
-protected function isAccessible(User $user, ?string $path = null): bool
-{
-    ...
-}
-```
-
-## Enums
+- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
+- Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
 @if(empty($assist->enums()) || preg_match('/[A-Z]{3,8}/', $assist->enumContents()))
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
+- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
 @else
-- That being said, keys in an Enum should follow existing application Enum conventions.
+- Follow existing application Enum naming conventions.
 @endif
-
-## Comments
-- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless the logic is exceptionally complex.
-
-## PHPDoc Blocks
-- Add useful array shape type definitions when appropriate.
+- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
+- Use array shape type definitions in PHPDoc blocks.

@@ -56,9 +56,9 @@ test('it properly compiles blade assist helpers', function (): void {
     $text = (string) $response->content();
 
     expect($text)
-        ->toContain('composer require inertiajs/inertia-laravel:^3.0.0-beta')
+        ->toContain('composer require inertiajs/inertia-laravel:^3.0')
         ->toContain('composer show inertiajs/inertia-laravel')
-        ->toContain('npm install @inertiajs/vite@^3.0.0-beta')
+        ->toContain('npm install @inertiajs/vite@^3.0')
         ->toContain('php artisan vendor:publish --provider=')
         ->toContain('php artisan view:clear')
         ->not->toContain('$assist->composerCommand')
@@ -94,12 +94,12 @@ test('it shows react-specific content when react adapter is installed', function
     $text = (string) $this->prompt->handle()->content();
 
     expect($text)
-        ->toContain('@inertiajs/react@^3.0.0-beta')
+        ->toContain('@inertiajs/react@^3.0')
         ->toContain('React 19+')
         ->toContain('Deferred` component behavior (React)')
         ->toContain("import { progress } from '@inertiajs/react'")
-        ->not->toContain('@inertiajs/vue3@^3.0.0-beta')
-        ->not->toContain('@inertiajs/svelte@^3.0.0-beta')
+        ->not->toContain('@inertiajs/vue3@^3.0')
+        ->not->toContain('@inertiajs/svelte@^3.0')
         ->not->toContain('Svelte 5 runes syntax');
 });
 
@@ -110,10 +110,10 @@ test('it shows vue-specific content when vue adapter is installed', function ():
     $text = (string) $this->prompt->handle()->content();
 
     expect($text)
-        ->toContain('@inertiajs/vue3@^3.0.0-beta')
+        ->toContain('@inertiajs/vue3@^3.0')
         ->toContain("import { progress } from '@inertiajs/vue3'")
-        ->not->toContain('@inertiajs/react@^3.0.0-beta')
-        ->not->toContain('@inertiajs/svelte@^3.0.0-beta')
+        ->not->toContain('@inertiajs/react@^3.0')
+        ->not->toContain('@inertiajs/svelte@^3.0')
         ->not->toContain('Deferred` component behavior (React)')
         ->not->toContain('Svelte 5 runes syntax');
 });
@@ -125,11 +125,11 @@ test('it shows svelte-specific content when svelte adapter is installed', functi
     $text = (string) $this->prompt->handle()->content();
 
     expect($text)
-        ->toContain('@inertiajs/svelte@^3.0.0-beta')
+        ->toContain('@inertiajs/svelte@^3.0')
         ->toContain('Svelte 5+')
         ->toContain('Svelte 5 runes syntax')
         ->toContain("import { progress } from '@inertiajs/svelte'")
-        ->not->toContain('@inertiajs/react@^3.0.0-beta')
-        ->not->toContain('@inertiajs/vue3@^3.0.0-beta')
+        ->not->toContain('@inertiajs/react@^3.0')
+        ->not->toContain('@inertiajs/vue3@^3.0')
         ->not->toContain('Deferred` component behavior (React)');
 });

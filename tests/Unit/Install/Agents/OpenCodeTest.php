@@ -15,9 +15,12 @@ beforeEach(function (): void {
 test('httpMcpServerConfig returns remote type config', function (): void {
     $agent = new OpenCode($this->strategyFactory);
 
-    expect($agent->httpMcpServerConfig('https://nightwatch.laravel.com/mcp'))->toBe([
+    $config = $agent->httpMcpServerConfig('https://nightwatch.laravel.com/mcp');
+
+    expect($config)->toMatchArray([
         'type' => 'remote',
         'enabled' => true,
         'url' => 'https://nightwatch.laravel.com/mcp',
     ]);
+    expect(json_encode($config['oauth']))->toBe('{}');
 });

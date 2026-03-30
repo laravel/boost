@@ -231,7 +231,9 @@ class SkillComposer
      */
     protected function parseSkillFrontmatter(string $content): array
     {
-        if (! preg_match('/^---\s*\n(.*?)\n---\s*\n/s', $content, $matches)) {
+        $content = preg_replace('/^(\s*<!--.*?-->\s*)+/s', '', $content);
+
+        if (! preg_match('/^\s*---\s*\n(.*?)\n---\s*\n/s', (string) $content, $matches)) {
             return [];
         }
 

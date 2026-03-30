@@ -1,6 +1,36 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.3.4...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.1...main)
+
+## [v2.4.1](https://github.com/laravel/boost/compare/v2.4.0...v2.4.1) - 2026-03-25
+
+### What's Changed
+
+* Update Inertia v3 upgrade prompt to stable and add missing sections by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/717
+* Strip HTML comments before parsing skill frontmatter by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/711
+* Escape Blade component tags in guideline rendering by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/718
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.0...v2.4.1
+
+## [v2.4.0](https://github.com/laravel/boost/compare/v2.3.4...v2.4.0) - 2026-03-23
+
+### What's Changed
+
+* Fix typo in Livewire skill description by [@bram-pkg](https://github.com/bram-pkg) in https://github.com/laravel/boost/pull/695
+* Remove Herd MCP integration in favor of Herd CLI by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/666
+* Add security audit to add-skill command by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/616
+* Add oauth field to OpenCode Nightwatch MCP config by [@DGarbs51](https://github.com/DGarbs51) in https://github.com/laravel/boost/pull/703
+* Add laravel-best-practices skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/628
+* Feat: ignore skills update command by [@MrPunyapal](https://github.com/MrPunyapal) in https://github.com/laravel/boost/pull/702
+* Improve folio-routing skill description and remove core guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/674
+* Optimize core guideline for token efficiency by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/668
+
+### New Contributors
+
+* [@bram-pkg](https://github.com/bram-pkg) made their first contribution in https://github.com/laravel/boost/pull/695
+* [@DGarbs51](https://github.com/DGarbs51) made their first contribution in https://github.com/laravel/boost/pull/703
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.3.4...v2.4.0
 
 ## [v2.3.4](https://github.com/laravel/boost/compare/v2.3.3...v2.3.4) - 2026-03-17
 
@@ -139,11 +169,15 @@ If you have custom overrides in:
 
 
 
+
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
+
 
 
 
@@ -184,12 +218,16 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
+
 
 
 

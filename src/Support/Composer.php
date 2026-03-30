@@ -7,23 +7,12 @@ namespace Laravel\Boost\Support;
 class Composer
 {
     /** @var array<int, string> */
+    public const FIRST_PARTY_SCOPES = [
+        'laravel',
+    ];
+
+    /** @var array<int, string> */
     public const FIRST_PARTY_PACKAGES = [
-        'laravel/cashier',
-        'laravel/cashier-paddle',
-        'laravel/folio',
-        'laravel/framework',
-        'laravel/horizon',
-        'laravel/mcp',
-        'laravel/octane',
-        'laravel/passport',
-        'laravel/pennant',
-        'laravel/pint',
-        'laravel/pulse',
-        'laravel/reverb',
-        'laravel/sail',
-        'laravel/scout',
-        'laravel/socialite',
-        'laravel/wayfinder',
         'livewire/livewire',
         'livewire/flux',
         'livewire/flux-pro',
@@ -35,6 +24,10 @@ class Composer
 
     public static function isFirstPartyPackage(string $composerName): bool
     {
+        if (collect(self::FIRST_PARTY_SCOPES)->contains(fn (string $scope): bool => str_starts_with($composerName, $scope.'/'))) {
+            return true;
+        }
+
         return in_array($composerName, self::FIRST_PARTY_PACKAGES, true);
     }
 

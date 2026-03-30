@@ -42,6 +42,11 @@ class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, Suppo
         ];
     }
 
+    public function useAbsolutePathForMcp(): bool
+    {
+        return true;
+    }
+
     public function mcpInstallationStrategy(): McpInstallationStrategy
     {
         return McpInstallationStrategy::FILE;
@@ -49,7 +54,7 @@ class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, Suppo
 
     public function mcpConfigPath(): string
     {
-        return '.mcp.json';
+        return config('boost.agents.claude_code.mcp_config_path', '.mcp.json');
     }
 
     public function guidelinesPath(): string
