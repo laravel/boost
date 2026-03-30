@@ -233,7 +233,7 @@ class SkillComposer
     {
         $content = preg_replace('/^(\s*<!--.*?-->\s*)+/s', '', $content);
 
-        if (! preg_match('/^\s*---\s*\n(.*?)\n---\s*\n/s', $content, $matches)) {
+        if (! preg_match('/^\s*---\s*\n(.*?)\n---\s*\n/s', (string) $content, $matches)) {
             return [];
         }
 

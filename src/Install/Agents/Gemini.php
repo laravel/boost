@@ -52,7 +52,7 @@ class Gemini extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
 
     public function mcpConfigPath(): string
     {
-        return '.gemini/settings.json';
+        return config('boost.agents.gemini.mcp_config_path', '.gemini/settings.json');
     }
 
     /** {@inheritDoc} */

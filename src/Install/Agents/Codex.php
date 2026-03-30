@@ -54,7 +54,7 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
 
     public function mcpConfigPath(): string
     {
-        return '.codex/config.toml';
+        return config('boost.agents.codex.mcp_config_path', '.codex/config.toml');
     }
 
     public function mcpConfigKey(): string
