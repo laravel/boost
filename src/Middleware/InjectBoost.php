@@ -21,7 +21,7 @@ class InjectBoost
         /** @var Response $response */
         $response = $next($request);
 
-        if ($this->shouldInject($response)) {
+        if ($this->shouldInject($request, $response)) {
             $originalView = $response->original ?? null;
             $injectedContent = $this->injectScript($response->getContent());
             $response->setContent($injectedContent);
@@ -34,8 +34,12 @@ class InjectBoost
         return $response;
     }
 
-    protected function shouldInject(Response $response): bool
+    protected function shouldInject(Request $request, Response $response): bool
     {
+        if ($request->headers->get('x-livewire-navigate') === '1') {
+            return false;
+        }
+
         $responseTypes = [
             StreamedResponse::class,
             BinaryFileResponse::class,
