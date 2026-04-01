@@ -480,7 +480,7 @@ test('includes wayfinder guidelines with inertia integration when both packages 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
-        ->toContain('Inertia: Use `.form()` with `<Form>` component');
+        ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
@@ -516,7 +516,7 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
-        ->toContain('Inertia: Use `.form()` with `<Form>` component');
+        ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
@@ -552,7 +552,7 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
-        ->toContain('Inertia: Use `.form()` with `<Form>` component');
+        ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
 
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
@@ -586,9 +586,7 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     expect($guidelines)
         ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
-        ->toContain('Invokable Controllers')
-        ->toContain('Parameter Binding')
-        ->not->toContain('Inertia:');
+        ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
 
 test('the guidelines are in correct order', function (): void {

@@ -49,7 +49,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
 
     public function mcpConfigPath(): string
     {
-        return 'opencode.json';
+        return config('boost.agents.opencode.mcp_config_path', 'opencode.json');
     }
 
     public function guidelinesPath(): string

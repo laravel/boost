@@ -23,7 +23,7 @@ search-docs(['mcp tools', 'mcp resources', 'mcp validation'])
 
 ### Artisan Commands
 
-Create MCP Primitives"
+Create MCP Primitives
 ```bash
 {{ $assist->artisanCommand('make:mcp-tool ToolName') }}
 {{ $assist->artisanCommand('make:mcp-resource ResourceName') }}
