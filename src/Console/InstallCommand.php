@@ -50,6 +50,9 @@ class InstallCommand extends Command
     /** @var Collection<int, string> */
     private Collection $selectedThirdPartyPackages;
 
+    /** @var Collection<int, string> */
+    private Collection $selectedThirdPartyMcpServers;
+
     private string $projectName;
 
     /** @var array<non-empty-string> */
@@ -109,6 +112,9 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->configureMcpOptions();
+            $this->selectedThirdPartyMcpServers = $this->selectThirdPartyMcpServers();
+        } else {
+            $this->selectedThirdPartyMcpServers = collect();
         }
 
         $this->selectedAgents = $this->selectAgents();
@@ -210,6 +216,57 @@ class InstallCommand extends Command
         }
     }
 
+    /**
+     * @return Collection<int, string>
+     */
+    protected function selectThirdPartyMcpServers(): Collection
+    {
+        $packagesWithMcp = $this->thirdPartyPackages()
+            ->filter(fn (ThirdPartyPackage $pkg): bool => $pkg->hasMcp);
+
+        if ($packagesWithMcp->isEmpty()) {
+            return collect();
+        }
+
+        $options = [];
+        foreach ($packagesWithMcp as $packageName => $pkg) {
+            foreach ($pkg->mcpServers() as $server) {
+                $key = "{$packageName}/{$server->name}";
+                $options[$key] = "{$packageName} - {$server->name}";
+            }
+        }
+
+        if (empty($options)) {
+            return collect();
+        }
+
+        $defaults = collect($this->config->getMcpServers())
+            ->filter(fn (string $key) => isset($options[$key]))
+            ->values();
+
+        return collect(multiselect(
+            label: 'Which third-party MCP servers would you like to install?',
+            options: $options,
+            default: $defaults->all(),
+            scroll: 10,
+            hint: 'You can add or remove them later by running this command again',
+        ));
+    }
+
+    /**
+     * @return Collection<string, ThirdPartyPackage>
+     */
+    protected function thirdPartyPackages(): Collection
+    {
+        static $packages = null;
+
+        if ($packages === null) {
+            $packages = ThirdPartyPackage::discover();
+        }
+
+        return $packages;
+    }
+
     protected function shouldConfigureSail(): bool
     {
         return confirm(
@@ -233,7 +290,8 @@ class InstallCommand extends Command
      */
     protected function selectThirdPartyPackages(): Collection
     {
-        $packages = ThirdPartyPackage::discover();
+        $packages = ThirdPartyPackage::discover()
+            ->filter(fn (ThirdPartyPackage $pkg): bool => $pkg->hasGuidelines || $pkg->hasSkills);
 
         if ($packages->isEmpty()) {
             return collect();
@@ -406,6 +464,7 @@ class InstallCommand extends Command
             $this->config->setMcp(true);
             $this->config->setSail($this->shouldUseSail());
             $this->config->setNightwatchMcp($this->shouldInstallNightwatchMcp());
+            $this->config->setMcpServers($this->selectedThirdPartyMcpServers->values()->toArray());
         }
     }
 
@@ -438,6 +497,27 @@ class InstallCommand extends Command
 
     protected function installMcpServerConfig(): void
     {
+        // Surface any package-level warnings before the install loop
+        foreach ($this->thirdPartyPackages() as $pkg) {
+            foreach ($pkg->warnings() as $warning) {
+                $this->warn($warning);
+            }
+        }
+
+        // Resolve selected McpServer objects from discovered packages
+        $selectedServers = $this->selectedThirdPartyMcpServers->map(function (string $key): ?\Laravel\Boost\Install\McpServer {
+            $lastSlash = strrpos($key, '/');
+            $packageName = $lastSlash !== false ? substr($key, 0, $lastSlash) : '';
+            $serverName = $lastSlash !== false ? substr($key, $lastSlash + 1) : $key;
+            $pkg = $this->thirdPartyPackages()->get($packageName);
+
+            if ($pkg === null) {
+                return null;
+            }
+
+            return $pkg->mcpServers()->first(fn (\Laravel\Boost\Install\McpServer $s): bool => $s->name === $serverName);
+        })->filter()->values();
+
         $this->installFeature(
             agents: $this->agentsWithMcp(),
             emptyMessage: 'No agents are selected for MCP installation.',
@@ -445,7 +525,8 @@ class InstallCommand extends Command
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
             processor: fn (Agent&SupportsMcp $agent): int => (new McpWriter($agent))->write(
                 $this->shouldUseSail() ? $this->sail : null,
-                $this->shouldInstallNightwatchMcp() ? $this->nightwatch : null
+                $this->shouldInstallNightwatchMcp() ? $this->nightwatch : null,
+                $selectedServers->isNotEmpty() ? $selectedServers : null,
             ),
             featureName: 'MCP servers',
             withDelay: true,
