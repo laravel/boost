@@ -901,6 +901,50 @@ test('includes Skills Activation section when skills are enabled and skills exis
         ->toContain('This project has domain-specific skills available');
 });
 
+test('excludes MCP Tools and Searching Documentation sections when hasMcp is false', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = false;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->not->toContain('## Tools')
+        ->not->toContain('database-query')
+        ->not->toContain('database-schema')
+        ->not->toContain('search-docs')
+        ->not->toContain('## Searching Documentation');
+});
+
+test('includes MCP Tools and Searching Documentation sections when hasMcp is true', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain('## Tools')
+        ->toContain('database-query')
+        ->toContain('database-schema')
+        ->toContain('search-docs')
+        ->toContain('## Searching Documentation');
+});
+
 test('loads vendor core guideline when available', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

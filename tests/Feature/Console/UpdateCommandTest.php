@@ -147,6 +147,33 @@ it('calls install command with both flags when guidelines and skills are enabled
     expect($command->handle($config))->toBe(0);
 });
 
+it('does not pass mcp flag to install command even when mcp is configured', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setMcp(true);
+
+    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('discover')->andReturn(false);
+    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->with(InstallCommand::class, [
+            '--no-interaction' => true,
+            '--guidelines' => true,
+            '--skills' => false,
+        ])
+        ->andReturn(0);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+
+    $command->setLaravel($this->app);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0);
+});
+
 it('preserves sail configuration when updating guidelines', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);

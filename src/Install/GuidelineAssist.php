@@ -292,4 +292,9 @@ class GuidelineAssist
     {
         return $this->config->hasSkills;
     }
+
+    public function hasMcpEnabled(): bool
+    {
+        return $this->config->hasMcp;
+    }
 }

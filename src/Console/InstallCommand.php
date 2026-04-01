@@ -377,6 +377,7 @@ class InstallCommand extends Command
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
         $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
+        $guidelineConfig->hasMcp = $this->selectedBoostFeatures->contains('mcp') || ($this->isExplicitFlagMode() && $this->config->getMcp());
 
         return $guidelineConfig;
     }
