@@ -19,13 +19,21 @@ Use `search-docs` for detailed Livewire 4 patterns and documentation.
 ### Creating Components
 
 ```bash
-# Single-file component (default in v4)
+# Single-file component (SFC - default in v4)
+# Creates: resources/views/components/⚡create-post.blade.php
 {{ $assist->artisanCommand('make:livewire create-post') }}
 
-# Multi-file component
+# Page component (SFC - Full Page in v4)
+# Creates: resources/views/pages/⚡create-post.blade.php
+{{ $assist->artisanCommand('make:livewire pages::create-post') }}
+
+# Multi-file component (MFC)
+# Creates: resources/views/components/⚡create-post/CreatePost.php
+# resources/views/components/⚡create-post/create-post.blade.php
 {{ $assist->artisanCommand('make:livewire create-post --mfc') }}
 
 # Class-based component (v3 style)
+# Creates: app/Livewire/CreatePost.php AND resources/views/livewire/create-post.blade.php
 {{ $assist->artisanCommand('make:livewire create-post --class') }}
 
 # With namespace
@@ -44,12 +52,19 @@ Before creating a component, check `config/livewire.php` for directory overrides
 
 | Format | Flag | Class Path | View Path |
 |--------|------|------------|-----------|
-| Single-file (SFC) | default | — | `resources/views/livewire/create-post.blade.php` (PHP + Blade in one file) |
-| Multi-file (MFC) | `--mfc` | `{{ $assist->appPath('Livewire/CreatePost.php') }}` | `resources/views/livewire/create-post.blade.php` |
-| Class-based | `--class` | `{{ $assist->appPath('Livewire/CreatePost.php') }}` | `resources/views/livewire/create-post.blade.php` |
-| View-based | ⚡ prefix | — | `resources/views/livewire/create-post.blade.php` (Blade-only with functional state) |
+| Single-file (SFC) | default | — | `resources/views/components/create-post.blade.php` (PHP + Blade in one file) |
+| Full Page SFC | `make:livewire pages::name`| — | `resources/views/pages/create-post.blade.php` |
+| Multi-file (MFC) | `--mfc` | `resources/views/components/create-post/create-post.php` |
+`resources/views/components/create-post/create-post.blade.php` |
+| Class-based | `--class` | `app\Livewire/CreatePost.php` | `resources/views/livewire/create-post.blade.php` |
+| View-based | ⚡ prefix(optional:"user can be off from config") | — | `resources/views/components/create-post.blade.php`
+(Blade-only with functional state) |
 
-Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates files at `{{ $assist->appPath('Livewire/Posts/CreatePost.php') }}` and `resources/views/livewire/posts/create-post.blade.php`.
+Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates
+`resources/views/components/posts/create-post.blade.php` (single-file by default).
+Use `make:livewire Posts/CreatePost --mfc` for multi-file output at
+`resources/views/components/posts/create-post/create-post.php` and
+`resources/views/components/posts/create-post/create-post.blade.php`.
 
 ### Single-File Component Example
 
