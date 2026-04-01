@@ -15,11 +15,13 @@ afterEach(function (): void {
     (new Config)->flush();
 });
 
-function buildGuidelineConfigWith(Collection $selectedBoostFeatures, Config $config): GuidelineConfig
+function buildGuidelineConfigWith(Collection $selectedBoostFeatures, Config $config, bool $explicitFlagMode = false): GuidelineConfig
 {
     $command = Mockery::mock(InstallCommand::class)
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
+
+    $command->shouldReceive('isExplicitFlagMode')->andReturn($explicitFlagMode);
 
     $reflect = new ReflectionClass(InstallCommand::class);
 
@@ -46,16 +48,30 @@ test('hasMcp is true when mcp is in selected boost features', function (): void 
     expect($guidelineConfig->hasMcp)->toBeTrue();
 });
 
-test('hasMcp is true when mcp is in stored config but not in selected features', function (): void {
+test('hasMcp is true when mcp is in stored config and running in explicit flag mode', function (): void {
     $config = new Config;
     $config->setMcp(true);
 
     $guidelineConfig = buildGuidelineConfigWith(
         collect(['guidelines']),
         $config,
+        explicitFlagMode: true,
     );
 
     expect($guidelineConfig->hasMcp)->toBeTrue();
+});
+
+test('hasMcp is false when mcp is in stored config but running interactively without mcp selected', function (): void {
+    $config = new Config;
+    $config->setMcp(true);
+
+    $guidelineConfig = buildGuidelineConfigWith(
+        collect(['guidelines']),
+        $config,
+        explicitFlagMode: false,
+    );
+
+    expect($guidelineConfig->hasMcp)->toBeFalse();
 });
 
 test('hasMcp is false when mcp is neither in selected features nor stored config', function (): void {
