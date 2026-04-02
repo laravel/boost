@@ -100,6 +100,13 @@ class GuidelineWriter
         return $replaced ? self::REPLACED : self::NEW;
     }
 
+    public function writeSkillActivation(string $skillName): int
+    {
+        $indexContent = "# Laravel Boost Guidelines\n\nYou MUST activate the `{$skillName}` skill before starting any task. This skill contains project-specific rules, conventions, and constraints curated by Laravel maintainers.";
+
+        return $this->write($indexContent);
+    }
+
     protected function acquireLockWithRetry(mixed $handle, string $filePath, int $maxRetries = 3): void
     {
         $attempts = 0;

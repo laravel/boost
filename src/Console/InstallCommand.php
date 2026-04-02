@@ -16,6 +16,7 @@ use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
+use Laravel\Boost\Install\GuidelineSkillAdapter;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\McpWriter;
 use Laravel\Boost\Install\Nightwatch;
@@ -340,11 +341,35 @@ class InstallCommand extends Command
             emptyMessage: 'No agents are selected for guideline installation.',
             headerMessage: sprintf('Adding %d guidelines to your selected agents', $guidelines->count()),
             nameResolver: fn (Agent $agent): string => $agent->displayName(),
-            processor: fn (Agent&SupportsGuidelines $agent): int => (new GuidelineWriter($agent))->write($composedAiGuidelines),
+            processor: function (Agent&SupportsGuidelines $agent) use ($guidelines, $composedAiGuidelines): int {
+                if ($agent instanceof SupportsSkills) {
+                    /** @var Agent&SupportsGuidelines&SupportsSkills $agent */
+                    return $this->installGuidelinesAsSkill($agent, $guidelines);
+                }
+
+                return (new GuidelineWriter($agent))->write($composedAiGuidelines);
+            },
             featureName: 'guidelines',
             beforeProcess: fn () => grid($guidelines->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))->sort()->values()->toArray()),
             withDelay: true,
         );
+    }
+
+    /**
+     * @param  Collection<string, array>  $guidelines
+     */
+    protected function installGuidelinesAsSkill(Agent&SupportsGuidelines&SupportsSkills $agent, Collection $guidelines): int
+    {
+        $adapter = new GuidelineSkillAdapter($agent);
+
+        if (! $adapter->sync($guidelines)) {
+            // Fallback: write full guidelines if skill writing failed
+            return (new GuidelineWriter($agent))->write(
+                GuidelineComposer::composeGuidelines($guidelines)
+            );
+        }
+
+        return (new GuidelineWriter($agent))->writeSkillActivation($adapter->skillName());
     }
 
     protected function installSkills(): void

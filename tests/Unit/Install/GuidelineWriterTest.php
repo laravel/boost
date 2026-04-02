@@ -351,3 +351,24 @@ test('it does not add frontmatter when agent does not support it', function (): 
 
     unlink($tempFile);
 });
+
+test('it writes skill activation instruction to new file', function (): void {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+
+    $agent = Mockery::mock(SupportsGuidelines::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+
+    $writer = new GuidelineWriter($agent);
+    $result = $writer->writeSkillActivation('laravel-boost-guidelines');
+
+    $content = file_get_contents($tempFile);
+
+    expect($result)->toBe(GuidelineWriter::NEW)
+        ->and($content)->toContain('<laravel-boost-guidelines>')
+        ->and($content)->toContain('</laravel-boost-guidelines>')
+        ->and($content)->toContain('`laravel-boost-guidelines`');
+
+    unlink($tempFile);
+});
