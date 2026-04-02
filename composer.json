@@ -28,7 +28,7 @@
         "mockery/mockery": "^1.6.12",
         "nunomaduro/pao": "dev-main",
         "orchestra/testbench": "^9.15.0|^10.6|^11.0",
-        "pestphp/pest": "^4.4.5",
+        "pestphp/pest": "^2.36.0|^3.8.4|^4.4.5",
         "phpstan/phpstan": "^2.1.27",
         "rector/rector": "^2.1"
     },
