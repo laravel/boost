@@ -11,6 +11,9 @@ class MarkdownFormatter
      */
     public static function format(string $content): string
     {
+        // Normalize line endings (CRLF → LF, CR → LF)
+        $content = str_replace(["\r\n", "\r"], "\n", $content);
+
         // Ensure blank line before and after markdown headings
         $content = preg_replace('/(?<!\n)\n(#{1,4} )/m', "\n\n$1", $content);
         $content = preg_replace('/(#{1,4} .+)\n(?!\n)/m', "$1\n\n", (string) $content);
