@@ -32,7 +32,7 @@ Use policies or gates in controllers. Never skip authorization.
 
 Incorrect:
 ```php
-public function update(Request $request, Post $post)
+public function update(UpdatePostRequest $request, Post $post)
 {
     $post->update($request->validated());
 }
