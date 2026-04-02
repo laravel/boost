@@ -177,10 +177,15 @@ class GuidelineComposer
 
     protected function getPackageGuidelines(): Collection
     {
+        $hubs = $this->config->hubs ?? [];
+
+        $hubExtensions = collect($hubs)->flatten()->unique()->toArray();
+
         return $this->roster->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
-            ->flatMap(function (Package $package): Collection {
+            ->flatMap(function (Package $package) use ($hubExtensions): Collection {
                 $guidelineDir = $this->normalizePackageName($package->name());
+                $guidelineKey = $guidelineDir.'/core';
 
                 $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
 
@@ -189,7 +194,7 @@ class GuidelineComposer
                     : null;
 
                 $guidelines = collect([
-                    $guidelineDir.'/core' => $this->resolveGuideline($vendorCorePath, $guidelineDir.'/core'),
+                    $guidelineKey => $this->resolveGuideline($vendorCorePath, $guidelineKey),
                 ]);
 
                 $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
@@ -203,7 +208,7 @@ class GuidelineComposer
                     );
                 }
 
-                return $guidelines;
+                return $guidelines->filter(fn ($_, $key) => ! in_array($key, $hubExtensions, true));
             });
     }
 
@@ -273,6 +278,83 @@ class GuidelineComposer
         return collect($finder)
             ->map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty))
             ->all();
+    }
+
+    /**
+     * @return Collection<string, Collection<string, array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}>>
+     */
+    public function getHubGuidelines(): Collection
+    {
+        $hubs = $this->config->hubs ?? [];
+
+        if (empty($hubs)) {
+            return collect();
+        }
+
+        $allPackageGuidelines = $this->getAllPackageGuidelinesIncludingHubMapped();
+
+        $hubGrouped = collect();
+
+        foreach ($hubs as $hubName => $extensionKeys) {
+            $hubGuidelines = collect();
+
+            foreach ($extensionKeys as $extensionKey) {
+                if ($allPackageGuidelines->has($extensionKey)) {
+                    $hubGuidelines->put($extensionKey, $allPackageGuidelines->get($extensionKey));
+                }
+            }
+
+            if ($hubGuidelines->isNotEmpty()) {
+                $hubGrouped->put($hubName, $hubGuidelines);
+            }
+        }
+
+        return $hubGrouped;
+    }
+
+    /**
+     * @return Collection<string, array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}>
+     */
+    protected function getAllPackageGuidelinesIncludingHubMapped(): Collection
+    {
+        return $this->roster->packages()
+            ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
+            ->flatMap(function (Package $package): Collection {
+                $guidelineDir = $this->normalizePackageName($package->name());
+
+                $vendorPath = $this->resolveFirstPartyBoostPath($package, 'guidelines');
+
+                $vendorCorePath = $vendorPath !== null
+                    ? implode(DIRECTORY_SEPARATOR, [$vendorPath, 'core'])
+                    : null;
+
+                $guidelines = collect([
+                    $guidelineDir.'/core' => $this->resolveGuideline($vendorCorePath, $guidelineDir.'/core'),
+                ]);
+
+                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
+
+                foreach ($packageGuidelines as $guideline) {
+                    $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
+
+                    $guidelines->put(
+                        $guidelineDir.'/v'.$package->majorVersion().$suffix,
+                        $guideline
+                    );
+                }
+
+                return $guidelines->filter(fn ($guideline) => ! empty($guideline['content']));
+            });
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getActiveHubNames(): array
+    {
+        $hubs = $this->config->hubs ?? [];
+
+        return array_keys($hubs);
     }
 
     /**

@@ -24,4 +24,6 @@ class GuidelineConfig
      * @var array<int, string>
      */
     public array $aiGuidelines;
+
+    public array $hubs = [];
 }

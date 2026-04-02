@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Collection;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
@@ -1180,4 +1181,59 @@ test('symlinked custom guideline file does not produce duplicates', function ():
         @rmdir($customDir.'/laravel');
         @rmdir($customDir);
     }
+});
+
+test('groups extensions into hubs', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PINT, 'laravel/pint', '1.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hubs = [
+        'laravel-best-practices' => [
+            'laravel/core',
+            'pint/core',
+        ],
+    ];
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->not->toContain('=== laravel/core rules ===')
+        ->not->toContain('=== pint/core rules ===');
+});
+
+test('returns hub guidelines grouped by hub name', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PINT, 'laravel/pint', '1.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hubs = [
+        'laravel-best-practices' => [
+            'laravel/core',
+            'pint/core',
+        ],
+    ];
+
+    $hubGuidelines = $this->composer
+        ->config($config)
+        ->getHubGuidelines();
+
+    expect($hubGuidelines)
+        ->toBeInstanceOf(Collection::class)
+        ->toHaveKey('laravel-best-practices');
+
+    expect($hubGuidelines['laravel-best-practices'])
+        ->toBeInstanceOf(Collection::class)
+        ->toHaveKey('laravel/core')
+        ->toHaveKey('pint/core');
 });

@@ -103,6 +103,16 @@ class Config
         return $this->get('sail', false);
     }
 
+    public function getHubs(): array
+    {
+        return $this->get('hubs', []);
+    }
+
+    public function setHubs(array $hubs): void
+    {
+        $this->set('hubs', $hubs);
+    }
+
     public function isValid(): bool
     {
         $path = base_path(self::FILE);

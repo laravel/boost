@@ -63,6 +63,9 @@ class InstallCommand extends Command
     /** @var array<int, string> */
     private array $installedSkillNames = [];
 
+    /** @var array<string, array<int, string>> */
+    private array $hubsConfig = [];
+
     const MIN_TEST_COUNT = 6;
 
     public function __construct(
@@ -113,6 +116,10 @@ class InstallCommand extends Command
 
         $this->selectedAgents = $this->selectAgents();
         $this->enforceTests = $this->selectedBoostFeatures->contains('guidelines') && $this->determineTestEnforcement();
+
+        if ($this->selectedBoostFeatures->contains('skills')) {
+            $this->hubsConfig = $this->collectHubConfiguration();
+        }
     }
 
     protected function performInstallation(): void
@@ -361,7 +368,21 @@ class InstallCommand extends Command
             emptyMessage: 'No agents are selected for skill installation.',
             headerMessage: sprintf('Syncing %d skills for skills-capable agents', $skills->count()),
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
-            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $this->config->getSkills()),
+            processor: function (SupportsSkills&Agent $agent) use ($skills): array {
+                $skillWriter = new SkillWriter($agent);
+                $result = $skillWriter->sync($skills, $this->config->getSkills());
+
+                if (! empty($this->hubsConfig)) {
+                    $guidelineComposer = app(GuidelineComposer::class)->config($this->buildGuidelineConfig());
+                    $hubGuidelines = $guidelineComposer->getHubGuidelines();
+
+                    foreach ($hubGuidelines as $hubName => $guidelines) {
+                        $skillWriter->writeHubRules($hubName, $guidelines);
+                    }
+                }
+
+                return $result;
+            },
             featureName: 'skills',
             beforeProcess: $skills->isNotEmpty()
                 ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())
@@ -378,6 +399,7 @@ class InstallCommand extends Command
         $guidelineConfig->usesSail = $this->shouldUseSail();
         $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
         $guidelineConfig->hasMcp = $this->selectedBoostFeatures->contains('mcp') || ($this->isExplicitFlagMode() && $this->config->getMcp());
+        $guidelineConfig->hubs = $this->hubsConfig;
 
         return $guidelineConfig;
     }
@@ -406,6 +428,10 @@ class InstallCommand extends Command
             $this->config->setMcp(true);
             $this->config->setSail($this->shouldUseSail());
             $this->config->setNightwatchMcp($this->shouldInstallNightwatchMcp());
+        }
+
+        if (! empty($this->hubsConfig)) {
+            $this->config->setHubs($this->hubsConfig);
         }
     }
 
@@ -450,6 +476,109 @@ class InstallCommand extends Command
             featureName: 'MCP servers',
             withDelay: true,
         );
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    protected function collectHubConfiguration(): array
+    {
+        $composer = app(SkillComposer::class)->config($this->buildGuidelineConfig());
+        $skills = $composer->skills();
+
+        $availableSkills = $skills->map(fn (Skill $skill): string => $skill->name)->sort()->values();
+
+        if ($availableSkills->isEmpty()) {
+            return [];
+        }
+
+        $this->newLine();
+        $this->info('Hub Configuration (Optional)');
+        $this->line('  Group related extensions into hub skills to reduce context bloat.');
+        $this->line('  Extensions mapped to hubs will not appear as separate sections in your agent files.');
+        $this->newLine();
+
+        if (! confirm(
+            label: 'Would you like to configure hubs to group related extensions?',
+            default: true,
+            hint: 'You can skip this and configure later by editing boost.json'
+        )) {
+            return [];
+        }
+
+        $hubs = [];
+        $guidelineComposer = app(GuidelineComposer::class)->config($this->buildGuidelineConfig());
+        $availableExtensions = $guidelineComposer->guidelines()
+            ->keys()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        if (empty($availableExtensions)) {
+            $this->line('  No extensions available for hub mapping.');
+
+            return [];
+        }
+
+        $defaultHubs = [];
+
+        if ($availableSkills->contains('laravel-best-practices')) {
+            $defaultHubs[] = 'laravel-best-practices';
+        }
+
+        $selectedHubs = multiselect(
+            label: 'Select skills to use as hubs (extensions will be grouped into these)',
+            options: $availableSkills->mapWithKeys(fn (string $skill): array => [$skill => $skill])->toArray(),
+            default: $defaultHubs,
+            scroll: 15,
+            hint: 'Hub skills will contain grouped extensions in their rules/ directory'
+        );
+
+        if (empty($selectedHubs)) {
+            return [];
+        }
+
+        foreach ($selectedHubs as $hubName) {
+            $this->newLine();
+            $this->line("  Configuring hub: {$this->cyan($hubName)}");
+
+            $defaultExtensions = $this->getDefaultExtensionsForHub($hubName, $availableExtensions);
+
+            $hubExtensions = multiselect(
+                label: "Which extensions should be grouped into '{$hubName}'?",
+                options: array_combine($availableExtensions, $availableExtensions),
+                default: $defaultExtensions,
+                scroll: 15,
+                hint: 'These extensions will be written to the hub skill\'s rules/ directory'
+            );
+
+            if (! empty($hubExtensions)) {
+                $hubs[$hubName] = array_values(array_unique($hubExtensions));
+            }
+        }
+
+        return $hubs;
+    }
+
+    /**
+     * @param  array<int, string>  $availableExtensions
+     */
+    protected function getDefaultExtensionsForHub(string $hubName, array $availableExtensions): array
+    {
+        $defaults = match ($hubName) {
+            'laravel-best-practices' => [
+                'laravel/core',
+                'pint/core',
+                'phpunit/core',
+            ],
+            'pest-testing' => [
+                'pest/3/core',
+                'phpunit/core',
+            ],
+            default => [],
+        };
+
+        return array_values(array_intersect($defaults, $availableExtensions));
     }
 
     /**

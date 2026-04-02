@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillWriter;
+use Mockery;
 
 function cleanupSkillDirectory(string $path): void
 {
@@ -1067,4 +1068,77 @@ it('creates relative symlink when skills path is outside the project root', func
 
     cleanupSkillDirectory($outsideDir);
     cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('writes hub rules to skill directory', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $hubSkillName = 'test-hub-skill';
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    mkdir($absoluteTarget.'/'.$hubSkillName, 0755, true);
+
+    $writer = new SkillWriter($agent);
+
+    $hubGuidelines = collect([
+        'laravel/core' => [
+            'content' => '# Laravel Core Rules',
+            'name' => 'laravel-core',
+            'description' => 'Laravel core guidelines',
+            'path' => null,
+            'custom' => false,
+            'third_party' => false,
+        ],
+        'pint/core' => [
+            'content' => '# Pint Rules',
+            'name' => 'pint-core',
+            'description' => 'Pint guidelines',
+            'path' => null,
+            'custom' => false,
+            'third_party' => false,
+        ],
+    ]);
+
+    $result = $writer->writeHubRules($hubSkillName, $hubGuidelines);
+
+    expect($result)->toBeTrue()
+        ->and($absoluteTarget.'/'.$hubSkillName.'/rules/laravel-core.md')->toBeFile()
+        ->and($absoluteTarget.'/'.$hubSkillName.'/rules/pint-core.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('does not overwrite existing files when writing hub rules', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $hubSkillName = 'test-hub-skill';
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    mkdir($absoluteTarget.'/'.$hubSkillName.'/rules', 0755, true);
+    $existingFile = $absoluteTarget.'/'.$hubSkillName.'/rules/laravel-core.md';
+    file_put_contents($existingFile, '# EXISTING CONTENT - DO NOT OVERWRITE');
+
+    $writer = new SkillWriter($agent);
+
+    $hubGuidelines = collect([
+        'laravel/core' => [
+            'content' => '# NEW CONTENT - SHOULD NOT OVERWRITE',
+            'name' => 'laravel-core',
+            'description' => 'Laravel core guidelines',
+            'path' => null,
+            'custom' => false,
+            'third_party' => false,
+        ],
+    ]);
+
+    $result = $writer->writeHubRules($hubSkillName, $hubGuidelines);
+
+    expect($result)->toBeTrue()
+        ->and(file_get_contents($existingFile))->toBe('# EXISTING CONTENT - DO NOT OVERWRITE');
+
+    cleanupSkillDirectory($absoluteTarget);
 });

@@ -338,4 +338,97 @@ class SkillWriter
 
         return ! $hasPathTraversal && trim($name) !== '';
     }
+
+    public function writeHubRules(string $hubSkillName, Collection $hubGuidelines): bool
+    {
+        if (! $this->isValidSkillName($hubSkillName) || $hubGuidelines->isEmpty()) {
+            return false;
+        }
+
+        $targetSkillPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$hubSkillName);
+
+        if (! $this->pathExists($targetSkillPath) && ! $this->ensureDirectoryExists($targetSkillPath)) {
+            return false;
+        }
+
+        $rulesPath = $targetSkillPath.DIRECTORY_SEPARATOR.'rules';
+
+        if (! $this->ensureDirectoryExists($rulesPath)) {
+            return false;
+        }
+
+        $filesWritten = [];
+
+        foreach ($hubGuidelines as $extensionKey => $guideline) {
+            if (empty($guideline['content'])) {
+                continue;
+            }
+
+            $filename = $this->extensionKeyToFilename($extensionKey);
+            $ruleFilePath = $rulesPath.DIRECTORY_SEPARATOR.$filename;
+
+            if (in_array($filename, $filesWritten, true)) {
+                continue;
+            }
+
+            if (file_exists($ruleFilePath)) {
+                continue;
+            }
+
+            $content = MarkdownFormatter::format(trim($guideline['content']));
+
+            if (file_put_contents($ruleFilePath, $content) === false) {
+                return false;
+            }
+
+            $filesWritten[] = $filename;
+        }
+
+        return true;
+    }
+
+    protected function extensionKeyToFilename(string $extensionKey): string
+    {
+        $filename = str_replace(['/', '\\'], '-', $extensionKey);
+
+        if (! str_ends_with($filename, '.md')) {
+            $filename .= '.md';
+        }
+
+        return $filename;
+    }
+
+    public function clearHubRules(string $hubSkillName): bool
+    {
+        if (! $this->isValidSkillName($hubSkillName)) {
+            return false;
+        }
+
+        $targetSkillPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$hubSkillName);
+        $rulesPath = $targetSkillPath.DIRECTORY_SEPARATOR.'rules';
+
+        if (! is_dir($rulesPath)) {
+            return true;
+        }
+
+        return $this->deleteDirectory($rulesPath);
+    }
+
+    public function skillHasRules(string $hubSkillName): bool
+    {
+        if (! $this->isValidSkillName($hubSkillName)) {
+            return false;
+        }
+
+        $targetSkillPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$hubSkillName);
+        $rulesPath = $targetSkillPath.DIRECTORY_SEPARATOR.'rules';
+
+        if (! is_dir($rulesPath)) {
+            return false;
+        }
+
+        $files = glob($rulesPath.DIRECTORY_SEPARATOR.'*.md');
+
+        return $files !== false && count($files) > 0;
+    }
 }

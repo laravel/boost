@@ -85,3 +85,23 @@ it('may store and retrieve packages', function (): void {
 
     expect($config->getPackages())->toEqual($packages);
 });
+
+it('may store and retrieve hubs configuration', function (): void {
+    $config = new Config;
+
+    expect($config->getHubs())->toBeEmpty();
+
+    $hubs = [
+        'laravel-best-practices' => [
+            'laravel/core',
+            'pint/core',
+        ],
+        'pest-testing' => [
+            'pest/3/core',
+        ],
+    ];
+
+    $config->setHubs($hubs);
+
+    expect($config->getHubs())->toEqual($hubs);
+});
