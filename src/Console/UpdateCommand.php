@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
+use Laravel\Boost\Support\ProjectPath;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\multiselect;
@@ -33,7 +34,7 @@ class UpdateCommand extends Command
         }
 
         $guidelines = $config->getGuidelines();
-        $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(base_path('.ai/skills')));
+        $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(ProjectPath::resolve('.ai/skills')));
 
         if (! $guidelines && ! $hasSkills) {
             return self::SUCCESS;

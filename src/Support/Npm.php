@@ -35,7 +35,7 @@ class Npm
     {
         return collect(static::packages())
             ->mapWithKeys(fn (string $key, string $package): array => [$package => implode(DIRECTORY_SEPARATOR, [
-                base_path('node_modules'),
+                ProjectPath::resolve('node_modules'),
                 str_replace('/', DIRECTORY_SEPARATOR, $package),
             ])])
             ->filter(fn (string $path): bool => is_dir($path))
@@ -47,7 +47,7 @@ class Npm
      */
     public static function packages(): array
     {
-        $packageJsonPath = base_path('package.json');
+        $packageJsonPath = ProjectPath::resolve('package.json');
 
         if (! file_exists($packageJsonPath)) {
             return [];

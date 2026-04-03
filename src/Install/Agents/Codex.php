@@ -9,6 +9,7 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
+use Laravel\Boost\Support\ProjectPath;
 
 class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
@@ -77,7 +78,7 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
         return collect([
             'command' => $command,
             'args' => $args,
-            'cwd' => config('boost.executable_paths.current_directory', base_path()),
+            'cwd' => config('boost.executable_paths.current_directory', ProjectPath::resolve()),
             'env' => $env,
         ])->filter(fn ($value): bool => ! in_array($value, [[], null, ''], true))
             ->toArray();

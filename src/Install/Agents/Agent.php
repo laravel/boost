@@ -12,6 +12,7 @@ use Laravel\Boost\Install\Enums\Platform;
 use Laravel\Boost\Install\Mcp\FileWriter;
 use Laravel\Boost\Install\Mcp\TomlFileWriter;
 use Laravel\Boost\Support\CommandNormalizer;
+use Laravel\Boost\Support\ProjectPath;
 
 abstract class Agent
 {
@@ -42,6 +43,12 @@ abstract class Agent
 
     public function getArtisanPath(bool $forceAbsolutePath = false): string
     {
+        if (ProjectPath::isRunningTestbench()) {
+            return ($this->useAbsolutePathForMcp() || $forceAbsolutePath)
+                ? ProjectPath::resolve('vendor/bin/testbench')
+                : 'vendor/bin/testbench';
+        }
+
         return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? base_path('artisan') : 'artisan';
     }
 

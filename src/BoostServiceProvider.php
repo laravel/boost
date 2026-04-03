@@ -17,6 +17,7 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Services\BrowserLogger;
+use Laravel\Boost\Support\ProjectPath;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\Roster;
 
@@ -35,7 +36,7 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
 
-        $this->app->singleton(Roster::class, fn (): Roster => Roster::scan(base_path()));
+        $this->app->singleton(Roster::class, fn (): Roster => Roster::scan(ProjectPath::resolve()));
 
         $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
 

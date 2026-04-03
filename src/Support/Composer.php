@@ -35,7 +35,7 @@ class Composer
     {
         return collect(static::packages())
             ->mapWithKeys(fn (string $key, string $package): array => [$package => implode(DIRECTORY_SEPARATOR, [
-                base_path('vendor'),
+                ProjectPath::resolve('vendor'),
                 str_replace('/', DIRECTORY_SEPARATOR, $package),
             ])])
             ->filter(fn (string $path): bool => is_dir($path))
@@ -44,7 +44,7 @@ class Composer
 
     public static function packages(): array
     {
-        $composerJsonPath = base_path('composer.json');
+        $composerJsonPath = ProjectPath::resolve('composer.json');
 
         if (! file_exists($composerJsonPath)) {
             return [];

@@ -8,6 +8,7 @@ use FilesystemIterator;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Contracts\SupportsSkills;
+use Laravel\Boost\Support\ProjectPath;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
@@ -35,8 +36,8 @@ class SkillWriter
             throw new RuntimeException("Invalid skill name: {$skill->name}");
         }
 
-        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
-        $canonicalPath = base_path('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
+        $targetPath = ProjectPath::resolve($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
+        $canonicalPath = ProjectPath::resolve('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
         $existed = $this->pathExists($targetPath);
 
         if (! $skill->custom) {
@@ -127,7 +128,7 @@ class SkillWriter
             return false;
         }
 
-        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skillName);
+        $targetPath = ProjectPath::resolve($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skillName);
 
         if (! $this->pathExists($targetPath)) {
             return true;
