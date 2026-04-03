@@ -19,6 +19,7 @@ class Composer
         'livewire/volt',
         'inertiajs/inertia-laravel',
         'pestphp/pest',
+        'pestphp/pest-plugin-ai',
         'phpunit/phpunit',
     ];
 
