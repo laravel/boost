@@ -105,7 +105,7 @@ class Config
 
     public function isValid(): bool
     {
-        $path = base_path(self::FILE);
+        $path = ProjectPath::resolve(self::FILE);
 
         if (! file_exists($path)) {
             return false;
@@ -118,7 +118,7 @@ class Config
 
     public function flush(): void
     {
-        $path = base_path(self::FILE);
+        $path = ProjectPath::resolve(self::FILE);
 
         if (file_exists($path)) {
             unlink($path);
@@ -140,14 +140,14 @@ class Config
 
         ksort($config);
 
-        $path = base_path(self::FILE);
+        $path = ProjectPath::resolve(self::FILE);
 
         file_put_contents($path, Str::of(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))->append(PHP_EOL));
     }
 
     protected function all(): array
     {
-        $path = base_path(self::FILE);
+        $path = ProjectPath::resolve(self::FILE);
 
         if (! file_exists($path)) {
             return [];

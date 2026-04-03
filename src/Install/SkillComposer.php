@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\ProjectPath;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Yaml\Yaml;
@@ -120,7 +121,7 @@ class SkillComposer
      */
     protected function discoverExplicitUserSkills(): Collection
     {
-        $path = base_path('.ai/skills');
+        $path = ProjectPath::resolve('.ai/skills');
 
         if (! is_dir($path)) {
             return collect();
@@ -137,7 +138,7 @@ class SkillComposer
      */
     protected function discoverPackageSpecificUserSkills(): Collection
     {
-        $userAiPath = base_path('.ai');
+        $userAiPath = ProjectPath::resolve('.ai');
 
         if (! is_dir($userAiPath)) {
             return collect();

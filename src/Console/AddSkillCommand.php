@@ -16,6 +16,7 @@ use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Skills\Remote\SkillAuditor;
+use Laravel\Boost\Support\ProjectPath;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 
@@ -265,7 +266,7 @@ class AddSkillCommand extends Command
 
     protected function skillTargetPath(RemoteSkill $skill): string
     {
-        return base_path($this->defaultSkillsPath.DIRECTORY_SEPARATOR.$skill->name);
+        return ProjectPath::resolve($this->defaultSkillsPath.DIRECTORY_SEPARATOR.$skill->name);
     }
 
     /**

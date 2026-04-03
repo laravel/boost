@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\ProjectPath;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
@@ -56,7 +57,7 @@ class GuidelineComposer
 
     public function customGuidelinePath(string $path = ''): string
     {
-        return base_path($this->userGuidelineDir.'/'.ltrim($path, '/'));
+        return ProjectPath::resolve($this->userGuidelineDir.'/'.ltrim($path, '/'));
     }
 
     protected function isCustomGuideline(string $path): bool

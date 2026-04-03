@@ -25,6 +25,7 @@ use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
+use Laravel\Boost\Support\ProjectPath;
 use Laravel\Prompts\Terminal;
 use Symfony\Component\Process\Process;
 
@@ -96,7 +97,7 @@ class InstallCommand extends Command
         }
 
         $this->systemInstalledAgents = $this->agentsDetector->discoverSystemInstalledAgents();
-        $this->projectInstalledAgents = $this->agentsDetector->discoverProjectInstalledAgents(base_path());
+        $this->projectInstalledAgents = $this->agentsDetector->discoverProjectInstalledAgents(ProjectPath::resolve());
     }
 
     protected function collectInstallationPreferences(): void
@@ -151,11 +152,15 @@ class InstallCommand extends Command
      */
     protected function determineTestEnforcement(): bool
     {
-        if (! file_exists(base_path('vendor/bin/phpunit'))) {
+        if (! file_exists(ProjectPath::resolve('vendor/bin/phpunit'))) {
             return false;
         }
 
-        $process = new Process([PHP_BINARY, 'artisan', 'test', '--list-tests'], base_path());
+        $entrypoint = ProjectPath::isRunningTestbench()
+            ? [ProjectPath::resolve('vendor/bin/testbench'), 'package:test', '--list-tests']
+            : [PHP_BINARY, 'artisan', 'test', '--list-tests'];
+
+        $process = new Process($entrypoint, ProjectPath::resolve());
         $process->run();
 
         return Str::of($process->getOutput())
