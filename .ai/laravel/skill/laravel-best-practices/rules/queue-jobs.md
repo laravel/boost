@@ -106,7 +106,7 @@ When using time-based retry limits, set `$tries = 0` to avoid premature failure.
 ```php
 public $tries = 0;
 
-public function retryUntil(): DateTime
+public function retryUntil(): \DateTimeInterface
 {
     return now()->addHours(4);
 }
