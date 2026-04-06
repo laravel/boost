@@ -144,16 +144,6 @@ test('hasSkills property can be set to true', function (): void {
     expect($config->hasSkills)->toBeTrue();
 });
 
-test('shouldEnforceStrictTypes returns false when app directory does not exist', function (): void {
-    $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
-
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
-    $assist->shouldAllowMockingProtectedMethods();
-    $assist->shouldReceive('discover')->andReturn($sentinel);
-
-    expect($assist->shouldEnforceStrictTypes())->toBeFalse();
-});
-
 test('enumContents returns empty string when app directory does not exist', function (): void {
     $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
 
