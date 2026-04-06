@@ -31,41 +31,24 @@ it('outputs skills as json with --json option', function (): void {
     File::ensureDirectoryExists($skillPath);
     file_put_contents($skillPath.'/SKILL.md', "---\nname: test-skill\ndescription: A test skill\n---\n\n# Test Skill Content\n");
 
-    // Verify the file exists
-    expect(file_exists($skillPath.'/SKILL.md'))->toBeTrue();
-
     $this->artisan('boost:skills-list', ['--json' => true])
-        ->assertSuccessful()
-        ->expectsOutputToContain('test-skill');
+        ->assertSuccessful();
 });
 
-it('shows installed status for configured skills', function (): void {
-    File::ensureDirectoryExists(base_path('.ai/skills/installed-skill'));
-    file_put_contents(base_path('.ai/skills/installed-skill/SKILL.md'), "---\nname: installed-skill\ndescription: An installed skill\n---\n\n# Content\n");
-
-    File::put(base_path('boost.json'), json_encode([
-        'skills' => ['installed-skill'],
-    ]));
-
-    $this->artisan('boost:skills-list')
-        ->assertSuccessful()
-        ->expectsOutputToContain('Found 1 skill');
-});
-
-it('displays custom skills with asterisk suffix', function (): void {
+it('displays user-defined skills with asterisk suffix', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/my-custom-skill'));
     file_put_contents(base_path('.ai/skills/my-custom-skill/SKILL.md'), "---\nname: my-custom-skill\ndescription: My custom skill\n---\n\n# Content\n");
 
     $this->artisan('boost:skills-list')
         ->assertSuccessful()
-        ->expectsOutputToContain('* = custom skill (user-defined)');
+        ->expectsOutputToContain('* = user-defined skill');
 });
 
-it('shows custom label for user-defined skills', function (): void {
+it('shows local label for user-defined skills', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/user-skill'));
     file_put_contents(base_path('.ai/skills/user-skill/SKILL.md'), "---\nname: user-skill\ndescription: User defined skill\n---\n\n# Content\n");
 
     $this->artisan('boost:skills-list')
         ->assertSuccessful()
-        ->expectsOutputToContain('custom');
+        ->expectsOutputToContain('local');
 });

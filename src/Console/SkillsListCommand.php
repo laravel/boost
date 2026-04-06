@@ -7,7 +7,6 @@ namespace Laravel\Boost\Console;
 use Illuminate\Console\Command;
 use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Install\SkillComposer;
-use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
 
 use function Laravel\Prompts\note;
@@ -27,7 +26,6 @@ class SkillsListCommand extends Command
     public function __construct(
         private readonly Terminal $terminal,
         private readonly SkillComposer $skillComposer,
-        private readonly Config $config,
     ) {
         parent::__construct();
     }
@@ -37,7 +35,6 @@ class SkillsListCommand extends Command
         $this->terminal->initDimensions();
 
         $skills = $this->skillComposer->skills();
-        $installedSkills = $this->config->getSkills();
 
         if ($skills->isEmpty()) {
             $this->info('No skills available in this project.');
@@ -53,7 +50,6 @@ class SkillsListCommand extends Command
                         'description' => $skill->description,
                         'package' => $skill->package,
                         'custom' => $skill->custom,
-                        'installed' => in_array($skill->name, $installedSkills, true),
                     ])->values()->toArray(),
                     JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
                 )
@@ -67,30 +63,28 @@ class SkillsListCommand extends Command
         $count = $skills->count();
         note("Found {$count} skill".($count === 1 ? '' : 's'));
 
-        $this->displaySkillsTable($skills, $installedSkills);
+        $this->displaySkillsTable($skills);
 
         return self::SUCCESS;
     }
 
-    protected function displaySkillsTable($skills, array $installedSkills): void
+    protected function displaySkillsTable($skills): void
     {
         $rows = $skills
             ->sortBy(fn ($skill) => $skill->name)
             ->map(fn ($skill) => [
-                $skill->custom ? $this->dim($skill->displayName()) : $skill->displayName(),
-                $skill->description,
-                $skill->custom ? $this->yellow('custom') : $this->dim($skill->package),
-                in_array($skill->name, $installedSkills, true) ? $this->green('✓') : $this->dim('—'),
+                $skill->custom ? $this->dim($skill->name.'*') : $skill->name,
+                $skill->custom ? $this->yellow('local') : $this->dim($skill->package),
             ])
             ->values()
             ->toArray();
 
         table(
-            headers: ['Skill', 'Description', 'Package', 'Installed'],
+            headers: ['Skill', 'Source'],
             rows: $rows
         );
 
         $this->newLine();
-        $this->line('  '.$this->dim('* = custom skill (user-defined)'));
+        $this->line('  '.$this->dim('* = user-defined skill'));
     }
 }
