@@ -12,12 +12,12 @@ use Laravel\Prompts\Terminal;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\table;
 
-class SkillsListCommand extends Command
+class SkillListCommand extends Command
 {
     use DisplayHelper;
 
     /** @var string */
-    protected $signature = 'boost:skills-list
+    protected $signature = 'boost:skill-list
         {--json : Output as JSON}';
 
     /** @var string */
