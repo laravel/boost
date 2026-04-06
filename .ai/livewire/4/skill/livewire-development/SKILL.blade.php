@@ -58,6 +58,8 @@ Before creating a component, check `config/livewire.php` for directory overrides
 | Class-based | `--class` | `{{ $assist->appPath('Livewire/CreatePost.php') }}` | `resources/views/livewire/create-post.blade.php` |
 | View-based | ⚡ prefix (optional, configurable) | — | `resources/views/components/create-post.blade.php` (Blade-only with functional state) |
 
+**⚡ Prefix:** Livewire v4 prepends `⚡` to component filenames by default (e.g., `⚡create-post.blade.php`). Check `config/livewire.php` for the `emoji` setting — when enabled, always include the ⚡ prefix in filenames you create. When disabled, omit it.
+
 Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates `resources/views/components/posts/create-post.blade.php` (single-file by default). Use `make:livewire Posts/CreatePost --mfc` for multi-file output at `resources/views/components/posts/create-post/create-post.php` and `resources/views/components/posts/create-post/create-post.blade.php`.
 
 ### Single-File Component Example
