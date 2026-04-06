@@ -223,3 +223,47 @@ test('appPath returns customized path', function (): void {
     expect($assist->appPath())->toBe('src');
     expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('src'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
 })->after(fn () => app()->useAppPath('app'));
+
+test('discover() finds models that were not previously autoloaded', function (): void {
+    $fixtureAppPath = realpath(__DIR__.'/../../Fixtures/app');
+
+    // register a custom autoloader so class_exists() can load App\Models\ExtraModel from our fixture directory.
+    $autoloader = static function (string $class) use ($fixtureAppPath): void {
+        if (str_starts_with($class, 'App\\')) {
+            $relative = str_replace(['App\\', '\\'], ['', DIRECTORY_SEPARATOR], $class);
+            $file = $fixtureAppPath.DIRECTORY_SEPARATOR.$relative.'.php';
+
+            if (is_file($file)) {
+                require_once $file;
+            }
+        }
+    };
+
+    spl_autoload_register($autoloader, prepend: true);
+
+    // pointing app_path() at our fixture directory and pin the app namespace so that
+    // GuidelineAssist builds the correct FQCN: App\ + Models/ExtraModel.php -> App\Models\ExtraModel. 
+    // here setting the namespace directly to avoid the RuntimeException thrown when no psr-4 App\ entry exists in composer.json.
+    app()->useAppPath($fixtureAppPath);
+    $appRef = new \ReflectionClass(app());
+    $nsProp = $appRef->getProperty('namespace');
+    $nsProp->setAccessible(true);
+    $savedNamespace = $nsProp->getValue(app());
+    $nsProp->setValue(app(), 'App\\');
+
+    // reset the static class cache
+    $classesProp = (new \ReflectionClass(GuidelineAssist::class))->getProperty('classes');
+    $classesProp->setAccessible(true);
+    $classesProp->setValue(null, []);
+
+    try {
+        $assist = new GuidelineAssist($this->roster, $this->config);
+
+        expect($assist->models())->toHaveKey('App\\Models\\ExtraModel');
+    } finally {
+        spl_autoload_unregister($autoloader);
+        app()->useAppPath('app');
+        $nsProp->setValue(app(), $savedNamespace);
+        $classesProp->setValue(null, []);
+    }
+});
