@@ -1,0 +1,96 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Laravel\Boost\Console;
+
+use Illuminate\Console\Command;
+use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Install\SkillComposer;
+use Laravel\Boost\Support\Config;
+use Laravel\Prompts\Terminal;
+
+use function Laravel\Prompts\note;
+use function Laravel\Prompts\table;
+
+class SkillsListCommand extends Command
+{
+    use DisplayHelper;
+
+    /** @var string */
+    protected $signature = 'boost:skills-list
+        {--json : Output as JSON}';
+
+    /** @var string */
+    protected $description = 'List all available skills in the current project';
+
+    public function __construct(
+        private readonly Terminal $terminal,
+        private readonly SkillComposer $skillComposer,
+        private readonly Config $config,
+    ) {
+        parent::__construct();
+    }
+
+    public function handle(): int
+    {
+        $this->terminal->initDimensions();
+
+        $skills = $this->skillComposer->skills();
+        $installedSkills = $this->config->getSkills();
+
+        if ($skills->isEmpty()) {
+            $this->info('No skills available in this project.');
+
+            return self::SUCCESS;
+        }
+
+        if ($this->option('json')) {
+            $this->output->writeln(
+                json_encode(
+                    $skills->map(fn ($skill) => [
+                        'name' => $skill->name,
+                        'description' => $skill->description,
+                        'package' => $skill->package,
+                        'custom' => $skill->custom,
+                        'installed' => in_array($skill->name, $installedSkills, true),
+                    ])->values()->toArray(),
+                    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+                )
+            );
+
+            return self::SUCCESS;
+        }
+
+        $this->displayBoostHeader('Skills', config('app.name'));
+
+        $count = $skills->count();
+        note("Found {$count} skill".($count === 1 ? '' : 's'));
+
+        $this->displaySkillsTable($skills, $installedSkills);
+
+        return self::SUCCESS;
+    }
+
+    protected function displaySkillsTable($skills, array $installedSkills): void
+    {
+        $rows = $skills
+            ->sortBy(fn ($skill) => $skill->name)
+            ->map(fn ($skill) => [
+                $skill->custom ? $this->dim($skill->displayName()) : $skill->displayName(),
+                $skill->description,
+                $skill->custom ? $this->yellow('custom') : $this->dim($skill->package),
+                in_array($skill->name, $installedSkills, true) ? $this->green('✓') : $this->dim('—'),
+            ])
+            ->values()
+            ->toArray();
+
+        table(
+            headers: ['Skill', 'Description', 'Package', 'Installed'],
+            rows: $rows
+        );
+
+        $this->newLine();
+        $this->line('  '.$this->dim('* = custom skill (user-defined)'));
+    }
+}
