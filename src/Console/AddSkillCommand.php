@@ -14,8 +14,10 @@ use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Skills\Remote\AuditResult;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
+use Laravel\Boost\Skills\Remote\InstalledSkill;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Skills\Remote\SkillAuditor;
+use Laravel\Boost\Support\SkillsLock;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 
@@ -181,6 +183,7 @@ class AddSkillCommand extends Command
 
             grid($results['installedNames']);
 
+            $this->writeSkillsLock($skillsToInstall);
             $this->runBoostUpdate();
             $this->showOutro();
         }
@@ -400,6 +403,24 @@ class AddSkillCommand extends Command
     protected function runBoostUpdate(): void
     {
         $this->callSilently(UpdateCommand::class);
+    }
+
+    protected function writeSkillsLock(Collection $skills): void
+    {
+        $lock = new SkillsLock;
+
+        foreach ($skills as $skill) {
+            $hash = $this->fetcher->getSkillHash($skill);
+
+            if ($hash !== null) {
+                $lock->addSkill(new InstalledSkill(
+                    name: $skill->name,
+                    source: $skill->repo,
+                    sourceType: 'github',
+                    hash: $hash,
+                ));
+            }
+        }
     }
 
     protected function showOutro(): void

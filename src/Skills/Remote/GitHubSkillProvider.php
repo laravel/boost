@@ -7,6 +7,7 @@ namespace Laravel\Boost\Skills\Remote;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -273,5 +274,72 @@ class GitHubSkillProvider
     protected function getGitHubToken(): ?string
     {
         return config('boost.github.token') ?? config('services.github.token');
+    }
+
+    public function getSkillHash(RemoteSkill $skill): ?string
+    {
+        $tree = $this->fetchRepositoryTree();
+
+        if ($tree === null) {
+            return null;
+        }
+
+        $skillItem = collect($tree['tree'])
+            ->first(fn (array $item): bool => $item['path'] === $skill->path && $item['type'] === 'tree');
+
+        return is_array($skillItem) ? ($skillItem['sha'] ?? null) : null;
+    }
+
+    public function hasLocalChanges(RemoteSkill $skill, string $targetPath): bool
+    {
+        if (! is_dir($targetPath)) {
+            return true;
+        }
+
+        $tree = $this->fetchRepositoryTree();
+
+        if ($tree === null) {
+            return true;
+        }
+
+        $remoteFiles = $this->extractSkillFilesFromTree($tree['tree'], $skill->path)
+            ->filter(fn (array $item): bool => $item['type'] === 'blob')
+            ->mapWithKeys(fn (array $item): array => [
+                $this->getRelativePath((string) $item['path'], $skill->path) => (string) ($item['sha'] ?? ''),
+            ]);
+
+        $localFiles = collect(File::allFiles($targetPath))
+            ->mapWithKeys(function ($file) use ($targetPath): array {
+                $path = (string) $file->getPathname();
+                $hash = $this->computeGitBlobHash($path);
+
+                if ($hash === null) {
+                    return [];
+                }
+
+                $relativePath = str_replace(
+                    DIRECTORY_SEPARATOR,
+                    '/',
+                    ltrim(str_replace($targetPath.DIRECTORY_SEPARATOR, '', $path), DIRECTORY_SEPARATOR)
+                );
+
+                return [$relativePath => $hash];
+            });
+
+        return $remoteFiles->count() !== $localFiles->count()
+            || $remoteFiles->contains(
+                fn (string $remoteHash, string $relativePath): bool => $remoteHash === '' || $localFiles->get($relativePath) !== $remoteHash
+            );
+    }
+
+    protected function computeGitBlobHash(string $path): ?string
+    {
+        $contents = @file_get_contents($path);
+
+        if ($contents === false) {
+            return null;
+        }
+
+        return sha1('blob '.strlen($contents)."\0".$contents);
     }
 }
