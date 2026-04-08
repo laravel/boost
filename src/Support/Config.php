@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Support;
 
 use Illuminate\Support\Str;
+use stdClass;
 
 class Config
 {
@@ -39,6 +40,36 @@ class Config
     public function hasSkills(): bool
     {
         return $this->getSkills() !== [];
+    }
+
+    /**
+     * @return array<string, array{sourceType: string, skills: array<string, array{computedHash: string}>}>
+     */
+    public function getTrackedSkills(): array
+    {
+        return $this->get('repositories', []);
+    }
+
+    public function trackSkill(string $repository, string $skillName, string $sourceType = 'github', ?string $computedHash = null): void
+    {
+        $repositories = $this->get('repositories', []);
+
+        if (! isset($repositories[$repository])) {
+            $repositories[$repository] = [
+                'sourceType' => $sourceType,
+                'skills' => [],
+            ];
+        }
+
+        $skillData = [];
+
+        if ($computedHash !== null) {
+            $skillData['computedHash'] = $computedHash;
+        }
+
+        $repositories[$repository]['skills'][$skillName] = $skillData;
+
+        $this->set('repositories', $repositories);
     }
 
     public function getMcp(): bool
@@ -137,6 +168,19 @@ class Config
         $config = array_filter($this->all(), fn ($value): bool => $value !== null && $value !== []);
 
         data_set($config, $key, $value);
+
+        if (isset($config['repositories'])) {
+            foreach ($config['repositories'] as $repo => $data) {
+                if (isset($data['skills']) && is_array($data['skills'])) {
+                    $skillObj = new stdClass;
+
+                    foreach ($data['skills'] as $skillName => $skillData) {
+                        $skillObj->$skillName = is_array($skillData) ? (object) $skillData : (object) [];
+                    }
+                    $config['repositories'][$repo]['skills'] = $skillObj;
+                }
+            }
+        }
 
         ksort($config);
 

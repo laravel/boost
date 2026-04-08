@@ -462,3 +462,20 @@ it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
         ->and($skills->has('my-skill'))->toBeTrue()
         ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
 });
+
+it('returns skill hash for the requested skill directory', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'skill-one-tree-sha'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'skill-one-file-sha', 'size' => 123],
+            ['path' => 'skill-two', 'type' => 'tree', 'sha' => 'skill-two-tree-sha'],
+            ['path' => 'skill-two/SKILL.md', 'type' => 'blob', 'sha' => 'skill-two-file-sha', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $hash = $fetcher->getSkillHash(new RemoteSkill('skill-two', 'owner/repo', 'skill-two'));
+
+    expect($hash)->toBe('skill-two-tree-sha');
+});
