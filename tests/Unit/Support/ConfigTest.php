@@ -85,3 +85,43 @@ it('may store and retrieve packages', function (): void {
 
     expect($config->getPackages())->toEqual($packages);
 });
+
+it('may store and retrieve mcp servers', function (): void {
+    $config = new Config;
+
+    expect($config->getMcpServers())->toBeEmpty();
+
+    $servers = [
+        'acme/my-package/my-server',
+        'acme/my-package/my-remote-server',
+    ];
+
+    $config->setMcpServers($servers);
+
+    expect($config->getMcpServers())->toEqual($servers);
+
+    $config->setMcpServers([]);
+
+    expect($config->getMcpServers())->toBeEmpty();
+});
+
+it('setMcpServers does not affect other config keys', function (): void {
+    $config = new Config;
+
+    $config->setMcp(true);
+    $config->setSail(true);
+    $config->setNightwatchMcp(true);
+    $config->setGuidelines(true);
+    $config->setPackages(['vendor/pkg']);
+    $config->setAgents(['cursor']);
+
+    $config->setMcpServers(['acme/pkg/server']);
+
+    expect($config->getMcp())->toBeTrue()
+        ->and($config->getSail())->toBeTrue()
+        ->and($config->getNightwatchMcp())->toBeTrue()
+        ->and($config->getGuidelines())->toBeTrue()
+        ->and($config->getPackages())->toEqual(['vendor/pkg'])
+        ->and($config->getAgents())->toEqual(['cursor'])
+        ->and($config->getMcpServers())->toEqual(['acme/pkg/server']);
+});
