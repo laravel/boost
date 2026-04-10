@@ -88,8 +88,6 @@ Correct:
 {{ $user->bio }}
 ```
 
-**Caveat:** Objects implementing `Htmlable` bypass `{{ }}` escaping — `e()` calls `toHtml()` directly. Escape dynamic content inside `toHtml()` with `e()`.
-
 ## CSRF Protection
 
 Include `@csrf` in all POST/PUT/DELETE Blade forms. In Inertia apps, the `@csrf` directive is automatically applied.
