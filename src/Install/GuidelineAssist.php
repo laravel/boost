@@ -4,52 +4,23 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Roster;
-use ReflectionClass;
 use Symfony\Component\Finder\Finder;
-use Throwable;
 
 class GuidelineAssist
 {
     /** @var array<string, string> */
-    protected array $modelPaths = [];
-
-    /** @var array<string, string> */
-    protected array $controllerPaths = [];
-
-    /** @var array<string, string> */
     protected array $enumPaths = [];
-
-    protected static array $classes = [];
 
     public function __construct(public Roster $roster, public GuidelineConfig $config, public ?Collection $skills = null)
     {
         $this->skills ??= collect();
-        $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
-        $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
-        $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
-    }
-
-    /**
-     * @return array<string, string> - className, absolutePath
-     */
-    public function models(): array
-    {
-        return $this->modelPaths;
-    }
-
-    /**
-     * @return array<string, string> - className, absolutePath
-     */
-    public function controllers(): array
-    {
-        return $this->controllerPaths;
+        $this->enumPaths = $this->discover();
     }
 
     /**
@@ -61,108 +32,50 @@ class GuidelineAssist
     }
 
     /**
-     * Discover all Eloquent models in the application.
+     * Discover all enum files in the application directory.
      *
      * @return array<string, string>
      */
-    protected function discover(callable $cb): array
+    protected function discover(): array
     {
-        $classes = [];
         $appPath = app_path();
 
         if (! is_dir($appPath)) {
-            return ['app-path-isnt-a-directory' => $appPath];
+            return [];
         }
 
-        if (self::$classes === []) {
-            $finder = Finder::create()
-                ->in($appPath)
-                ->files()
-                ->name('/[A-Z].*\.php$/');
+        $enums = [];
 
-            foreach ($finder as $file) {
-                $relativePath = $file->getRelativePathname();
-                $namespace = app()->getNamespace();
-                $className = $namespace.str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    $relativePath
-                );
+        $finder = Finder::create()
+            ->in($appPath)
+            ->files()
+            ->name('/[A-Z].*\.php$/');
 
-                try {
-                    $path = $appPath.DIRECTORY_SEPARATOR.$relativePath;
+        foreach ($finder as $file) {
+            $path = $appPath.DIRECTORY_SEPARATOR.$file->getRelativePathname();
+            $code = file_get_contents($path);
 
-                    if (! $this->fileHasClassLike($path)) {
-                        continue;
-                    }
+            if ($code === false) {
+                continue;
+            }
 
-                    if (class_exists($className, false)) {
-                        self::$classes[$className] = $path;
-                    }
-                } catch (Throwable) {
-                    // Ignore exceptions and errors from class loading/reflection
+            $tokens = token_get_all($code);
+
+            foreach ($tokens as $token) {
+                if (is_array($token) && $token[0] === T_ENUM) {
+                    $className = app()->getNamespace().str_replace(
+                        ['/', '.php'],
+                        ['\\', ''],
+                        $file->getRelativePathname()
+                    );
+                    $enums[$className] = $path;
+
+                    break;
                 }
             }
         }
 
-        foreach (self::$classes as $className => $path) {
-            if ($cb(new ReflectionClass($className))) {
-                $classes[$className] = $path;
-            }
-        }
-
-        return $classes;
-    }
-
-    public function fileHasClassLike(string $path): bool
-    {
-        static $cache = [];
-
-        if (isset($cache[$path])) {
-            return $cache[$path];
-        }
-
-        $code = file_get_contents($path);
-
-        if ($code === false) {
-            return $cache[$path] = false;
-        }
-
-        $containsClassKeyword = stripos($code, 'class') !== false
-            || stripos($code, 'interface') !== false
-            || stripos($code, 'trait') !== false
-            || stripos($code, 'enum') !== false;
-
-        if (! $containsClassKeyword) {
-            return $cache[$path] = false;
-        }
-
-        $tokens = token_get_all($code);
-
-        foreach ($tokens as $token) {
-            if (is_array($token) && in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
-                return $cache[$path] = true;
-            }
-        }
-
-        return $cache[$path] = false;
-    }
-
-    public function shouldEnforceStrictTypes(): bool
-    {
-        if ($this->modelPaths === []) {
-            return false;
-        }
-
-        $path = current($this->modelPaths);
-
-        if (! is_file($path)) {
-            return false;
-        }
-
-        $code = file_get_contents($path);
-
-        return $code !== false && str_contains($code, 'strict_types=1');
+        return $enums;
     }
 
     public function enumContents(): string
