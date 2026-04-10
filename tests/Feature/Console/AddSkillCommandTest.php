@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Laravel\Boost\Support\Config;
 use Orchestra\Testbench\Concerns\InteractsWithPublishedFiles;
 
 uses(InteractsWithPublishedFiles::class);
 
 beforeEach(function (): void {
     File::deleteDirectory(base_path('.ai/skills'));
+    (new Config)->flush();
 
     $this->files = [
         '.ai/skills/skill-one/SKILL.md',
@@ -93,6 +95,38 @@ it('installs all skills with --all option', function (): void {
 
     $this->assertFilenameExists('.ai/skills/skill-one/SKILL.md');
     $this->assertFileContains(['# SKILL Content'], '.ai/skills/skill-one/SKILL.md');
+});
+
+it('tracks installed skills in boost json with full source and skill hash', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'repo-tree-sha',
+            'tree' => [
+                ['path' => 'path/to/skills/skill-one', 'type' => 'tree', 'sha' => 'skill-one-tree-sha'],
+                ['path' => 'path/to/skills/skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'skill-file-sha', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
+            ---
+            name: skill-one
+            description: First skill
+            ---
+            # SKILL Content
+            YAML),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo/path/to/skills',
+        '--all' => true,
+    ])->assertSuccessful();
+
+    $tracked = (new Config)->getTrackedSkills();
+
+    expect($tracked)->toHaveKey('owner/repo/path/to/skills')
+        ->and($tracked['owner/repo/path/to/skills']['sourceType'])->toBe('github')
+        ->and($tracked['owner/repo/path/to/skills']['skills'])->toHaveKey('skill-one')
+        ->and($tracked['owner/repo/path/to/skills']['skills']['skill-one']['computedHash'])->toBe('skill-one-tree-sha');
 });
 
 it('installs specific skills with --skill option', function (): void {

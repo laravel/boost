@@ -2,6 +2,10 @@
 
 use Laravel\Boost\Support\Config;
 
+beforeEach(function (): void {
+    (new Config)->flush();
+});
+
 afterEach(function (): void {
     (new Config)->flush();
 });
@@ -84,4 +88,26 @@ it('may store and retrieve packages', function (): void {
     $config->setPackages($packages);
 
     expect($config->getPackages())->toEqual($packages);
+});
+
+it('may track and query skills across repositories', function (): void {
+    $config = new Config;
+
+    expect($config->getTrackedSkills())->toBeEmpty();
+
+    $config->trackSkill('vercel-labs/agent-skills', 'composition-patterns', 'github');
+    $config->trackSkill(
+        repository: 'vercel-labs/agent-skills',
+        skillName: 'deploy-to-vercel',
+        sourceType: 'github',
+        computedHash: 'bf90d0a4',
+    );
+    $config->trackSkill('anthropics/skills', 'algorithmic-art', 'github');
+
+    $tracked = $config->getTrackedSkills();
+
+    expect($tracked)->toHaveKeys(['vercel-labs/agent-skills', 'anthropics/skills'])
+        ->and($tracked['vercel-labs/agent-skills']['sourceType'])->toBe('github')
+        ->and($tracked['vercel-labs/agent-skills']['skills'])->toHaveKeys(['composition-patterns', 'deploy-to-vercel'])
+        ->and($tracked['vercel-labs/agent-skills']['skills']['deploy-to-vercel']['computedHash'])->toBe('bf90d0a4');
 });

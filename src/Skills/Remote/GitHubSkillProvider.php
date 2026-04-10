@@ -58,6 +58,20 @@ class GitHubSkillProvider
             ->keyBy(fn (RemoteSkill $skill): string => $skill->name);
     }
 
+    public function getSkillHash(RemoteSkill $skill): ?string
+    {
+        $tree = $this->fetchRepositoryTree();
+
+        if ($tree === null) {
+            return null;
+        }
+
+        $skillItem = collect($tree['tree'])
+            ->first(fn (array $item): bool => $item['path'] === $skill->path && $item['type'] === 'tree');
+
+        return is_array($skillItem) ? ($skillItem['sha'] ?? null) : null;
+    }
+
     public function downloadSkill(RemoteSkill $skill, string $targetPath): bool
     {
         $tree = $this->fetchRepositoryTree();
