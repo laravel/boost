@@ -88,9 +88,11 @@ Correct:
 {{ $user->bio }}
 ```
 
+**Caveat:** Objects implementing `Htmlable` bypass `{{ }}` escaping — `e()` calls `toHtml()` directly. Escape dynamic content inside `toHtml()` with `e()`.
+
 ## CSRF Protection
 
-Include `@csrf` in all POST/PUT/DELETE Blade forms. Not needed in Inertia.
+Include `@csrf` in all POST/PUT/DELETE Blade forms. In Inertia apps, the `@csrf` directive is automatically applied.
 
 Incorrect:
 ```blade
@@ -121,7 +123,7 @@ Route::post('/login', LoginController::class)->middleware('throttle:login');
 
 ## Validate File Uploads
 
-Validate MIME type, extension, and size. Never trust client-provided filenames.
+Validate extension, MIME type, and size. The `mimes` rule checks extensions; use `mimetypes` for actual MIME type validation. Never trust client-provided filenames.
 
 ```php
 public function rules(): array
