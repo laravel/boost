@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
@@ -27,6 +28,11 @@ function fakeTreeResponse(array $tree, string $branch = 'main'): array
             'truncated' => false,
         ]),
     ];
+}
+
+function fakeBlobHash(string $contents): string
+{
+    return sha1('blob '.strlen($contents)."\0".$contents);
 }
 
 it('discovers skills from repository directories', function (): void {
@@ -461,4 +467,65 @@ it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
     expect($skills)->toHaveCount(1)
         ->and($skills->has('my-skill'))->toBeTrue()
         ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
+});
+
+it('returns false for hasLocalChanges when local skill files match remote blobs', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+    $skillContent = "# SKILL Content\n";
+    $exampleContent = "# Example Content\n";
+
+    File::ensureDirectoryExists($targetDir.'/examples');
+    file_put_contents($targetDir.'/SKILL.md', $skillContent);
+    file_put_contents($targetDir.'/examples/example.md', $exampleContent);
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'tree-sha'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => fakeBlobHash($skillContent), 'size' => strlen($skillContent)],
+            ['path' => 'skill-one/examples', 'type' => 'tree', 'sha' => 'examples-sha'],
+            ['path' => 'skill-one/examples/example.md', 'type' => 'blob', 'sha' => fakeBlobHash($exampleContent), 'size' => strlen($exampleContent)],
+        ]),
+    ]);
+
+    $skill = new RemoteSkill(
+        name: 'skill-one',
+        repo: 'owner/repo',
+        path: 'skill-one'
+    );
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+    expect($fetcher->hasLocalChanges($skill, $targetDir))->toBeFalse();
+
+    File::deleteDirectory($targetDir);
+});
+
+it('returns true for hasLocalChanges when local skill files differ from remote blobs', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+    $remoteSkillContent = "# SKILL Content\n";
+    $localSkillContent = "# Modified SKILL Content\n";
+
+    File::ensureDirectoryExists($targetDir);
+    file_put_contents($targetDir.'/SKILL.md', $localSkillContent);
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'tree-sha'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => fakeBlobHash($remoteSkillContent), 'size' => strlen($remoteSkillContent)],
+        ]),
+    ]);
+
+    $skill = new RemoteSkill(
+        name: 'skill-one',
+        repo: 'owner/repo',
+        path: 'skill-one'
+    );
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+    expect($fetcher->hasLocalChanges($skill, $targetDir))->toBeTrue();
+
+    File::deleteDirectory($targetDir);
 });

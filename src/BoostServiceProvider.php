@@ -80,8 +80,10 @@ class BoostServiceProvider extends ServiceProvider
                 Console\StartCommand::class,
                 Console\InstallCommand::class,
                 Console\UpdateCommand::class,
+                Console\UpdateSkillsCommand::class,
                 Console\ExecuteToolCommand::class,
                 Console\AddSkillCommand::class,
+                Console\RemoveSkillCommand::class,
             ]);
         }
     }

@@ -18,7 +18,8 @@ class UpdateCommand extends Command
     /** @var string */
     protected $signature = 'boost:update
         {--discover : Discover and prompt for newly available guidelines and skills}
-        {--ignore-skills : Skip updating the skills directory}';
+        {--ignore-skills : Skip updating the skills directory}
+        {--update-skills : Update installed skills to latest versions}';
 
     public function handle(Config $config): int
     {
@@ -26,6 +27,10 @@ class UpdateCommand extends Command
             $this->error('Please set up Boost with [php artisan boost:install] first.');
 
             return self::FAILURE;
+        }
+
+        if ($this->option('update-skills')) {
+            return $this->updateInstalledSkills();
         }
 
         if ($this->option('discover')) {
@@ -50,12 +55,16 @@ class UpdateCommand extends Command
         return self::SUCCESS;
     }
 
+    protected function updateInstalledSkills(): int
+    {
+        return $this->call(UpdateSkillsCommand::class);
+    }
+
     protected function discoverNewContent(Config $config): void
     {
         $newPackages = $this->resolveNewPackages($config);
 
         if ($newPackages->isNotEmpty()) {
-            /** @var array<int, string> $selectedPackages */
             $selectedPackages = multiselect(
                 label: 'New packages with guidelines/skills discovered! Which would you like to add?',
                 options: $newPackages
