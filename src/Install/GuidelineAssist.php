@@ -96,7 +96,7 @@ class GuidelineAssist
                         continue;
                     }
 
-                    if (class_exists($className, false)) {
+                    if (class_exists($className, true)) {
                         self::$classes[$className] = $path;
                     }
                 } catch (Throwable) {
