@@ -50,6 +50,11 @@ class Kiro extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSki
         ];
     }
 
+    public function frontmatter(): bool
+    {
+        return true;
+    }
+
     public function mcpConfigPath(): string
     {
         return config('boost.agents.kiro.mcp_config_path', '.kiro/settings/mcp.json');

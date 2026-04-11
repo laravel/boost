@@ -37,3 +37,9 @@ test('projectDetectionConfig detects via .kiro directory', function (): void {
         'paths' => ['.kiro'],
     ]);
 });
+
+test('frontmatter returns true so steering file is always applied', function (): void {
+    $agent = new Kiro($this->strategyFactory);
+
+    expect($agent->frontmatter())->toBeTrue();
+});
