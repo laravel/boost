@@ -85,3 +85,31 @@ it('may store and retrieve packages', function (): void {
 
     expect($config->getPackages())->toEqual($packages);
 });
+
+it('returns null for enforce tests when it has never been set', function (): void {
+    $config = new Config;
+
+    expect($config->getEnforceTests())->toBeNull();
+});
+
+it('may store and retrieve enforce tests status', function (): void {
+    $config = new Config;
+
+    $config->setEnforceTests(true);
+    expect($config->getEnforceTests())->toBeTrue();
+
+    $config->setEnforceTests(false);
+    expect($config->getEnforceTests())->toBeFalse();
+});
+
+it('distinguishes an unset enforce tests value from a stored false', function (): void {
+    $config = new Config;
+
+    expect($config->getEnforceTests())->toBeNull();
+
+    $config->setEnforceTests(false);
+
+    expect($config->getEnforceTests())
+        ->not->toBeNull()
+        ->toBeFalse();
+});
