@@ -113,37 +113,36 @@ Optimize test execution speed with these techniques:
 
 ### Database & Factories
 
-- **Use `$factory->recycle($model)`** for nested model creations to avoid creating unnecessary top-level models
-- **Use `LazilyRefreshDatabase`** trait for tests that do not hit the database
-- **Use `WithCachedConfig` and `WithCachedRoutes`** traits to reduce configuration loading overhead
+- Use `$factory->recycle($model)` for nested model creations to avoid creating unnecessary top-level models
+- Use `LazilyRefreshDatabase` trait for tests that do not hit the database
+- Use `WithCachedConfig` and `WithCachedRoutes` traits to reduce configuration loading overhead
 
 ### Environment Configuration
 
-- **Disable Debug mode** in testing environment
-- **Disable pcov** code coverage driver at scale
-- **Set `BCRYPT_ROUNDS=4`** to reduce hashing overhead
+- Disable Debug mode in testing environment
+- Set `BCRYPT_ROUNDS=4` to reduce hashing overhead
 
 ### HTTP Client
 
-- **Call `Http::preventingStrleRequests()`** in test suite to prevent stray HTTP requests from slowing down tests. This applies only to Laravel's HTTP client—review other request mechanisms (e.g., direct Guzzle use)
+- Call `Http::preventingStrleRequests()` in test suite to prevent stray HTTP requests from slowing down tests. This applies only to Laravel's HTTP client—review other request mechanisms (e.g., direct Guzzle use)
 
 ### Background Services
 
-- **Disable packages** such as Pulse, Telescope, Nightwatch, and similar third-party packages that perform background work
-- **Fake the queue** when testing HTTP endpoints that dispatch jobs not relevant to test assertions
-- **Fake other services** as needed: `Notification::fake()`, `Mail::fake()`, `Bus::fake()`
-- **Fake exceptions** to prevent attempting to report exceptions to third-party services: `Exceptions::fake()`
+- Disable packages such as Pulse, Telescope, Nightwatch, and similar third-party packages that perform background work
+- Fake the queue when testing HTTP endpoints that dispatch jobs not relevant to test assertions
+- Fake other services as needed: `Notification::fake()`, `Mail::fake()`, `Bus::fake()`
+- Fake exceptions to prevent attempting to report exceptions to third-party services: `Exceptions::fake()`
 
 ### Time & Events
 
-- **Use `Sleep::fake(syncWithCarbon: true)`** to prevent actual sleeps during tests. Ensure your code uses the `sleep` helper instead of PHP's `sleep` functions
-- **Fake events** to prevent unrelated event listeners from executing work during tests
-- **Review event listeners** — simple test actions may trigger listeners performing unrelated work
+- Use `Sleep::fake(syncWithCarbon: true)` to prevent actual sleeps during tests. Ensure your code uses the `sleep` helper instead of PHP's `sleep` functions
+- Fake events to prevent unrelated event listeners from executing work during tests
+- Review event listeners — simple test actions may trigger listeners performing unrelated work
 
 ### Build Tools
 
-- **Call `withoutVite()` or `withoutMix()`** in test setup to skip asset compilation
+- Call `withoutVite()` or `withoutMix()` in test setup to skip asset compilation
 
 ### Profiling
 
-- **Use Pest's `--profile` option** to identify slowest tests. Investigate these tests and apply optimizations broadly. Laravel's event system is useful for debugging unexpected work within tests
+- Use Pest's `--profile` option to identify slowest tests. Investigate these tests and apply optimizations broadly. Laravel's event system is useful for debugging unexpected work within tests
