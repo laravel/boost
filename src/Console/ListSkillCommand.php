@@ -16,7 +16,7 @@ class ListSkillCommand extends Command
 {
     use DisplayHelper;
 
-    protected $signature = 'boost:list-skill';
+    protected $signature = 'boost:list-skills';
 
     protected $description = 'List all available skills in the current project';
 
