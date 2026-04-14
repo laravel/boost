@@ -46,7 +46,9 @@ Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert b
 
 ### Choosing a Component Format
 
-Before creating a component, check `config/livewire.php` for directory overrides, which change where files are stored. Then, look at existing files in those directories (defaulting to `{{ $assist->appPath('Livewire/') }}` and `resources/views/components/`) to match the established convention.
+> **Always follow the project's existing conventions first.** Before creating any component, inspect the project's existing Livewire components to determine the established format (SFC, MFC, or class-based) and directory structure. Check `{{ $assist->appPath('Livewire/') }}`, `resources/views/components/`, and `resources/views/livewire/` for existing components. If the project already uses a consistent format, **use that same format** — even if it differs from the Livewire v4 defaults below. Only fall back to the v4 defaults (SFC in `resources/views/components/`) when no existing convention is established.
+
+Also check `config/livewire.php` for `make_command.type`, `make_command.emoji`, `component_locations`, and `component_namespaces` overrides, which change the default format and where files are stored.
 
 ### Component Format Reference
 
