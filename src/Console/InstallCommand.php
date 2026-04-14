@@ -151,6 +151,10 @@ class InstallCommand extends Command
      */
     protected function determineTestEnforcement(): bool
     {
+        if (config('boost.enforce_tests') !== null) {
+            return (bool) config('boost.enforce_tests');
+        }
+
         if (! file_exists(base_path('vendor/bin/phpunit'))) {
             return false;
         }
