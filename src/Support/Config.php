@@ -103,18 +103,6 @@ class Config
         return $this->get('sail', false);
     }
 
-    public function setEnforceTests(bool $enforce): void
-    {
-        $this->set('enforce_tests', $enforce);
-    }
-
-    public function getEnforceTests(): ?bool
-    {
-        $value = $this->get('enforce_tests');
-
-        return is_bool($value) ? $value : null;
-    }
-
     public function isValid(): bool
     {
         $path = base_path(self::FILE);

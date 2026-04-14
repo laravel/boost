@@ -112,26 +112,7 @@ class InstallCommand extends Command
         }
 
         $this->selectedAgents = $this->selectAgents();
-        $this->enforceTests = $this->selectedBoostFeatures->contains('guidelines') && $this->resolveTestEnforcement();
-    }
-
-    /**
-     * Resolve whether test enforcement guidelines should be rendered.
-     *
-     * A previously persisted value in boost.json takes precedence over auto-detection so that
-     * subsequent `boost:update` runs do not silently flip the setting when the user's test
-     * environment temporarily cannot be probed (e.g. a broken phpunit.xml test suite causing
-     * `php artisan test --list-tests` to error).
-     */
-    protected function resolveTestEnforcement(): bool
-    {
-        $persisted = $this->config->getEnforceTests();
-
-        if (! is_null($persisted)) {
-            return $persisted;
-        }
-
-        return $this->determineTestEnforcement();
+        $this->enforceTests = $this->selectedBoostFeatures->contains('guidelines') && $this->determineTestEnforcement();
     }
 
     protected function performInstallation(): void
@@ -170,6 +151,10 @@ class InstallCommand extends Command
      */
     protected function determineTestEnforcement(): bool
     {
+        if (config('boost.enforce_tests') !== null) {
+            return (bool) config('boost.enforce_tests');
+        }
+
         if (! file_exists(base_path('vendor/bin/phpunit'))) {
             return false;
         }
@@ -415,7 +400,6 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->config->setGuidelines(true);
-            $this->config->setEnforceTests($this->enforceTests);
         }
 
         if ($this->selectedBoostFeatures->contains('skills')) {
