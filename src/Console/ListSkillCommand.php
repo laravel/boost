@@ -16,7 +16,7 @@ class ListSkillCommand extends Command
 {
     use DisplayHelper;
 
-    protected $signature = 'boost:list-skill';
+    protected $signature = 'boost:list-skill    ';
 
     protected $description = 'List all available skills in the current project';
 
@@ -44,7 +44,7 @@ class ListSkillCommand extends Command
     {
         $rows = $skills
             ->sortBy(fn ($skill) => $skill->name)
-            ->map(fn ($skill) => $skill->custom
+            ->map(fn ($skill): array => $skill->custom
                 ? [$this->dim($skill->name.'*'), $this->yellow('local')]
                 : [$skill->name, $this->dim($skill->package)]
             )
