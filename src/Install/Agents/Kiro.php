@@ -50,9 +50,11 @@ class Kiro extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSki
         ];
     }
 
-    public function frontmatter(): bool
+    public function httpMcpServerConfig(string $url): array
     {
-        return true;
+        return [
+            'url' => $url,
+        ];
     }
 
     public function mcpConfigPath(): string
@@ -62,7 +64,7 @@ class Kiro extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSki
 
     public function guidelinesPath(): string
     {
-        return config('boost.agents.kiro.guidelines_path', '.kiro/steering/boost.md');
+        return config('boost.agents.kiro.guidelines_path', 'AGENTS.md');
     }
 
     public function skillsPath(): string

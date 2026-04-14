@@ -12,10 +12,10 @@ beforeEach(function (): void {
     $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
 });
 
-test('guidelinesPath returns .kiro/steering/boost.md by default', function (): void {
+test('guidelinesPath returns AGENTS.md by default', function (): void {
     $agent = new Kiro($this->strategyFactory);
 
-    expect($agent->guidelinesPath())->toBe('.kiro/steering/boost.md');
+    expect($agent->guidelinesPath())->toBe('AGENTS.md');
 });
 
 test('skillsPath returns .kiro/skills by default', function (): void {
@@ -38,8 +38,10 @@ test('projectDetectionConfig detects via .kiro directory', function (): void {
     ]);
 });
 
-test('frontmatter returns true so steering file is always applied', function (): void {
+test('httpMcpServerConfig returns url without type field', function (): void {
     $agent = new Kiro($this->strategyFactory);
 
-    expect($agent->frontmatter())->toBeTrue();
+    expect($agent->httpMcpServerConfig('https://example.com/mcp'))->toBe([
+        'url' => 'https://example.com/mcp',
+    ]);
 });
