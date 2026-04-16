@@ -10,6 +10,8 @@ class Config
 {
     protected const FILE = 'boost.json';
 
+    protected const DEFAULT_SKILLS_SOURCE = 'laravel/boost';
+
     public function getGuidelines(): bool
     {
         return (bool) $this->get('guidelines', false);
@@ -25,7 +27,7 @@ class Config
      */
     public function getSkills(): array
     {
-        return $this->get('skills', []);
+        return array_keys($this->extractSourceMap($this->getRawSkills()));
     }
 
     /**
@@ -33,12 +35,120 @@ class Config
      */
     public function setSkills(array $skills): void
     {
-        $this->set('skills', $skills);
+        $sourceMap = $this->extractSourceMap($this->getRawSkills());
+        $selectedSkills = [];
+
+        foreach ($skills as $skillName) {
+            if ($skillName === '') {
+                continue;
+            }
+
+            $selectedSkills[$skillName] = $sourceMap[$skillName] ?? self::DEFAULT_SKILLS_SOURCE;
+        }
+
+        $this->set('skills', $this->groupSkillsBySource($selectedSkills));
     }
 
     public function hasSkills(): bool
     {
         return $this->getSkills() !== [];
+    }
+
+    public function getTrackedSkills(): array
+    {
+        $tracked = [];
+
+        foreach ($this->extractSourceMap($this->getRawSkills()) as $skillName => $source) {
+            if ($source !== self::DEFAULT_SKILLS_SOURCE) {
+                $tracked[$skillName] = ['source' => $source];
+            }
+        }
+
+        return $tracked;
+    }
+
+    public function trackSkills(array $skillsWithSource): void
+    {
+        $sourceMap = $this->extractSourceMap($this->getRawSkills());
+
+        foreach ($skillsWithSource as $skillName => $source) {
+            if (is_string($skillName) && $skillName !== '' && is_string($source) && $source !== '') {
+                $sourceMap[$skillName] = $source;
+            }
+        }
+
+        $this->set('skills', $this->groupSkillsBySource($sourceMap));
+    }
+
+    public function trackSkill(string $skillName, string $source): void
+    {
+        $this->trackSkills([$skillName => $source]);
+    }
+
+    protected function extractSourceMap(array $currentConfig): array
+    {
+        $sourceMap = [];
+        $isList = array_is_list($currentConfig);
+
+        foreach ($currentConfig as $key => $value) {
+            if ($isList) {
+                if (is_string($value) && $value !== '') {
+                    $sourceMap[$value] = self::DEFAULT_SKILLS_SOURCE;
+                }
+
+                continue;
+            }
+
+            if (is_array($value) && array_is_list($value)) {
+                $source = is_string($key) && $key !== '' ? $key : self::DEFAULT_SKILLS_SOURCE;
+
+                foreach ($value as $skillName) {
+                    if (is_string($skillName) && $skillName !== '') {
+                        $sourceMap[$skillName] = $source;
+                    }
+                }
+
+                continue;
+            }
+
+            if (! is_string($key) || ! is_array($value)) {
+                continue;
+            }
+
+            $source = $value['source'] ?? self::DEFAULT_SKILLS_SOURCE;
+
+            if (is_string($source)) {
+                $sourceMap[$key] = $source !== '' ? $source : self::DEFAULT_SKILLS_SOURCE;
+            }
+        }
+
+        return $sourceMap;
+    }
+
+    protected function groupSkillsBySource(array $sourceMap): array
+    {
+        $grouped = [];
+
+        foreach ($sourceMap as $skillName => $source) {
+            if (! is_string($skillName) || $skillName === '' || ! is_string($source) || $source === '') {
+                continue;
+            }
+
+            if (! isset($grouped[$source])) {
+                $grouped[$source] = [];
+            }
+
+            $grouped[$source][$skillName] = $skillName;
+        }
+
+        foreach ($grouped as &$skillList) {
+            $skillList = array_values($skillList);
+            sort($skillList);
+        }
+
+        ksort($grouped);
+
+        return $grouped;
     }
 
     public function getMcp(): bool
@@ -123,6 +233,13 @@ class Config
         if (file_exists($path)) {
             unlink($path);
         }
+    }
+
+    protected function getRawSkills(): array
+    {
+        $skills = $this->get('skills', []);
+
+        return is_array($skills) ? $skills : [];
     }
 
     protected function get(string $key, mixed $default = null): mixed
