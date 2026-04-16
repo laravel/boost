@@ -175,6 +175,7 @@ test('composes guidelines with proper formatting', function (): void {
         ->toContain('=== boost rules ===')
         ->toContain('=== php rules ===')
         ->toContain('=== laravel/core rules ===')
+        ->toContain('=== deployments rules ===')
         ->toContain('=== laravel/v11 rules ===')
         ->toMatch('/=== \w+.*? rules ===/');
 });
@@ -256,6 +257,7 @@ test('returns list of used guidelines', function (): void {
         ->toContain('boost')
         ->toContain('php')
         ->toContain('laravel/core')
+        ->toContain('deployments')
         ->toContain('laravel/v11')
         ->toContain('pest/core');
 });
@@ -809,6 +811,23 @@ test('excludes package guidelines when listed in exclude config', function (): v
 
     expect($guidelines)
         ->not->toContain('=== pest/core rules ===')
+        ->toContain('=== foundation rules ===');
+});
+
+test('excludes deployment guidelines when listed in exclude config', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.guidelines.exclude' => ['deployments']]);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->not->toContain('=== deployments rules ===')
+        ->toContain('=== laravel/core rules ===')
         ->toContain('=== foundation rules ===');
 });
 
