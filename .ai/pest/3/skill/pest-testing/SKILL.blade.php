@@ -100,9 +100,28 @@ arch('no debugging')
 
 Pest 3 provides improved type coverage analysis. Run with `--type-coverage` flag.
 
+## Performance
+
+### Database
+
+- **Prefer `LazilyRefreshDatabase` over `RefreshDatabase`.** Tests that never touch the DB skip the migration/truncation cost entirely. Only use `RefreshDatabase` when the test specifically needs fresh migrations.
+- **Use `$factory->recycle($model)`** to create a shared parent once and thread it through nested factory calls, instead of each nested factory creating its own parent.
+- **Create only the models the test needs.** Audit factory usage — avoid nested `create()` calls that spawn extra rows the test never inspects.
+
+### Faking
+
+Fake any external interaction that is not the subject of the test:
+
+- `Notification::fake()`, `Mail::fake()`, `Bus::fake()`, `Event::fake()`, `Queue::fake()`.
+- If the test hits an HTTP endpoint that dispatches jobs, fake the queue unless the test is asserting job behavior — otherwise jobs execute inline and pull in everything they touch.
+
+For project-level environment and CI optimizations, see [reference/performance.md](reference/performance.md).
+
 ## Common Pitfalls
 
 - Not importing `use function Pest\Laravel\mock;` before using mock
 - Using `assertStatus(200)` instead of `assertSuccessful()`
 - Forgetting datasets for repetitive validation tests
 - Deleting tests without approval
+- Enabling `RefreshDatabase` on every test even when the test does not hit the DB
+- Adding `Queue::fake()` but still asserting side effects of the job (those will never happen)
