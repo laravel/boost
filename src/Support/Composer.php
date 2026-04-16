@@ -75,6 +75,24 @@ class Composer
     /**
      * @return array<string, string>
      */
+    public static function packagesDirectoriesWithBoostMcp(): array
+    {
+        return collect(self::packagesDirectories())
+            ->reject(fn (string $path, string $package): bool => self::isFirstPartyPackage($package))
+            ->map(fn (string $path): string => implode(DIRECTORY_SEPARATOR, [
+                $path,
+                'resources',
+                'boost',
+                'mcp',
+                'mcp.json',
+            ]))
+            ->filter(fn (string $path): bool => is_file($path))
+            ->toArray();
+    }
+
+    /**
+     * @return array<string, string>
+     */
     private static function packagesDirectoriesWithBoostSubpath(string $subpath): array
     {
         return collect(self::packagesDirectories())
