@@ -289,6 +289,7 @@ class AddSkillCommand extends Command
     {
         $results = ['installedNames' => [], 'failedDetails' => []];
         $config = new Config;
+        $skillsToTrack = [];
 
         foreach ($skills as $skill) {
             $targetPath = $this->skillTargetPath($skill);
@@ -300,19 +301,17 @@ class AddSkillCommand extends Command
             try {
                 if ($this->fetcher->downloadSkill($skill, $targetPath)) {
                     $results['installedNames'][] = $skill->name;
-
-                    $config->trackSkill(
-                        repository: $this->repository->source(),
-                        skillName: $skill->name,
-                        sourceType: 'github',
-                        computedHash: $this->fetcher->getSkillHash($skill),
-                    );
+                    $skillsToTrack[$skill->name] = $this->repository->source();
                 } else {
                     $results['failedDetails'][$skill->name] = 'Download failed';
                 }
             } catch (RuntimeException $e) {
                 $results['failedDetails'][$skill->name] = $e->getMessage();
             }
+        }
+
+        if ($skillsToTrack !== []) {
+            $config->trackSkills($skillsToTrack);
         }
 
         return $results;

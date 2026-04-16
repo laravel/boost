@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Laravel\Boost\Support;
 
 use Illuminate\Support\Str;
-use stdClass;
 
 class Config
 {
     protected const FILE = 'boost.json';
+
+    protected const DEFAULT_SKILLS_SOURCE = 'laravel/boost';
 
     public function getGuidelines(): bool
     {
@@ -26,7 +27,7 @@ class Config
      */
     public function getSkills(): array
     {
-        return $this->get('skills', []);
+        return array_keys($this->extractSourceMap($this->getRawSkills()));
     }
 
     /**
@@ -34,7 +35,18 @@ class Config
      */
     public function setSkills(array $skills): void
     {
-        $this->set('skills', $skills);
+        $sourceMap = $this->extractSourceMap($this->getRawSkills());
+        $selectedSkills = [];
+
+        foreach ($skills as $skillName) {
+            if ($skillName === '') {
+                continue;
+            }
+
+            $selectedSkills[$skillName] = $sourceMap[$skillName] ?? self::DEFAULT_SKILLS_SOURCE;
+        }
+
+        $this->set('skills', $this->groupSkillsBySource($selectedSkills));
     }
 
     public function hasSkills(): bool
@@ -42,34 +54,101 @@ class Config
         return $this->getSkills() !== [];
     }
 
-    /**
-     * @return array<string, array{sourceType: string, skills: array<string, array{computedHash: string}>}>
-     */
     public function getTrackedSkills(): array
     {
-        return $this->get('repositories', []);
+        $tracked = [];
+
+        foreach ($this->extractSourceMap($this->getRawSkills()) as $skillName => $source) {
+            if ($source !== self::DEFAULT_SKILLS_SOURCE) {
+                $tracked[$skillName] = ['source' => $source];
+            }
+        }
+
+        return $tracked;
     }
 
-    public function trackSkill(string $repository, string $skillName, string $sourceType = 'github', ?string $computedHash = null): void
+    public function trackSkills(array $skillsWithSource): void
     {
-        $repositories = $this->get('repositories', []);
+        $sourceMap = $this->extractSourceMap($this->getRawSkills());
 
-        if (! isset($repositories[$repository])) {
-            $repositories[$repository] = [
-                'sourceType' => $sourceType,
-                'skills' => [],
-            ];
+        foreach ($skillsWithSource as $skillName => $source) {
+            if (is_string($skillName) && $skillName !== '' && is_string($source) && $source !== '') {
+                $sourceMap[$skillName] = $source;
+            }
         }
 
-        $skillData = [];
+        $this->set('skills', $this->groupSkillsBySource($sourceMap));
+    }
 
-        if ($computedHash !== null) {
-            $skillData['computedHash'] = $computedHash;
+    public function trackSkill(string $skillName, string $source): void
+    {
+        $this->trackSkills([$skillName => $source]);
+    }
+
+    protected function extractSourceMap(array $currentConfig): array
+    {
+        $sourceMap = [];
+        $isList = array_is_list($currentConfig);
+
+        foreach ($currentConfig as $key => $value) {
+            if ($isList) {
+                if (is_string($value) && $value !== '') {
+                    $sourceMap[$value] = self::DEFAULT_SKILLS_SOURCE;
+                }
+
+                continue;
+            }
+
+            if (is_array($value) && array_is_list($value)) {
+                $source = is_string($key) && $key !== '' ? $key : self::DEFAULT_SKILLS_SOURCE;
+
+                foreach ($value as $skillName) {
+                    if (is_string($skillName) && $skillName !== '') {
+                        $sourceMap[$skillName] = $source;
+                    }
+                }
+
+                continue;
+            }
+
+            if (! is_string($key) || ! is_array($value)) {
+                continue;
+            }
+
+            $source = $value['source'] ?? self::DEFAULT_SKILLS_SOURCE;
+
+            if (is_string($source)) {
+                $sourceMap[$key] = $source !== '' ? $source : self::DEFAULT_SKILLS_SOURCE;
+            }
         }
 
-        $repositories[$repository]['skills'][$skillName] = $skillData;
+        return $sourceMap;
+    }
 
-        $this->set('repositories', $repositories);
+    protected function groupSkillsBySource(array $sourceMap): array
+    {
+        $grouped = [];
+
+        foreach ($sourceMap as $skillName => $source) {
+            if (! is_string($skillName) || $skillName === '' || ! is_string($source) || $source === '') {
+                continue;
+            }
+
+            if (! isset($grouped[$source])) {
+                $grouped[$source] = [];
+            }
+
+            $grouped[$source][$skillName] = $skillName;
+        }
+
+        foreach ($grouped as &$skillList) {
+            $skillList = array_values($skillList);
+            sort($skillList);
+        }
+
+        ksort($grouped);
+
+        return $grouped;
     }
 
     public function getMcp(): bool
@@ -156,6 +235,13 @@ class Config
         }
     }
 
+    protected function getRawSkills(): array
+    {
+        $skills = $this->get('skills', []);
+
+        return is_array($skills) ? $skills : [];
+    }
+
     protected function get(string $key, mixed $default = null): mixed
     {
         $config = $this->all();
@@ -168,19 +254,6 @@ class Config
         $config = array_filter($this->all(), fn ($value): bool => $value !== null && $value !== []);
 
         data_set($config, $key, $value);
-
-        if (isset($config['repositories'])) {
-            foreach ($config['repositories'] as $repo => $data) {
-                if (isset($data['skills']) && is_array($data['skills'])) {
-                    $skillObj = new stdClass;
-
-                    foreach ($data['skills'] as $skillName => $skillData) {
-                        $skillObj->$skillName = is_array($skillData) ? (object) $skillData : (object) [];
-                    }
-                    $config['repositories'][$repo]['skills'] = $skillObj;
-                }
-            }
-        }
 
         ksort($config);
 

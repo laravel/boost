@@ -97,7 +97,7 @@ it('installs all skills with --all option', function (): void {
     $this->assertFileContains(['# SKILL Content'], '.ai/skills/skill-one/SKILL.md');
 });
 
-it('tracks installed skills in boost json with full source and skill hash', function (): void {
+it('tracks installed skills in boost json using source metadata', function (): void {
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'repo-tree-sha',
@@ -123,10 +123,8 @@ it('tracks installed skills in boost json with full source and skill hash', func
 
     $tracked = (new Config)->getTrackedSkills();
 
-    expect($tracked)->toHaveKey('owner/repo/path/to/skills')
-        ->and($tracked['owner/repo/path/to/skills']['sourceType'])->toBe('github')
-        ->and($tracked['owner/repo/path/to/skills']['skills'])->toHaveKey('skill-one')
-        ->and($tracked['owner/repo/path/to/skills']['skills']['skill-one']['computedHash'])->toBe('skill-one-tree-sha');
+    expect($tracked)->toHaveKey('skill-one')
+        ->and($tracked['skill-one']['source'])->toBe('owner/repo/path/to/skills');
 });
 
 it('installs specific skills with --skill option', function (): void {
