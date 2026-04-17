@@ -247,7 +247,7 @@ class InstallCommand extends Command
                 'default' => $this->config->getCloud(),
             ],
             'sail' => [
-                'label' => 'Laravel Sail (route Boost MCP through Sail)',
+                'label' => 'Laravel Sail',
                 'available' => $this->sail->isInstalled(),
                 'default' => $this->sail->isActive() || $this->config->getSail(),
             ],
