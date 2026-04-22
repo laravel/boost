@@ -20,6 +20,12 @@ Use `search-docs` for detailed Pest 3 patterns and documentation.
 
 All tests must be written using Pest. Use `{{ $assist->artisanCommand('make:test --pest {name}') }}`.
 
+The `{name}` argument should include only the path and test name, but should not include the test suite.
+- Incorrect: `{{ $assist->artisanCommand('make:test --pest Feature/SomeFeatureTest') }}` will generate `tests/Feature/Feature/SomeFeatureTest.php`
+- Correct: `{{ $assist->artisanCommand('make:test --pest SomeControllerTest') }}` will generate `tests/Feature/SomeControllerTest.php`
+- Incorrect: `{{ $assist->artisanCommand('make:test --pest --unit Unit/SomeServiceTest') }}` will generate `tests/Unit/Unit/SomeServiceTest.php`
+- Correct: `{{ $assist->artisanCommand('make:test --pest --unit SomeServiceTest') }}` will generate `tests/Unit/SomeServiceTest.php`
+
 ### Test Organization
 
 - Tests live in the `tests/Feature` and `tests/Unit` directories.
@@ -106,3 +112,4 @@ Pest 3 provides improved type coverage analysis. Run with `--type-coverage` flag
 - Using `assertStatus(200)` instead of `assertSuccessful()`
 - Forgetting datasets for repetitive validation tests
 - Deleting tests without approval
+- Prefixing `Feature/` or `Unit/` in `{name}` when using `make:test`
