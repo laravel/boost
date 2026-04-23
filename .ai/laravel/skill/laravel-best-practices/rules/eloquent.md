@@ -67,6 +67,37 @@ Post::published()->paginate(); // Explicit
 Post::paginate(); // Admin sees all
 ```
 
+## Use `when()` for Conditional Query Chaining
+
+Use the `when()` method to conditionally apply query constraints without breaking the fluent chain. This eliminates nested conditionals and keeps queries readable.
+
+Incorrect:
+```php
+$query = User::query();
+
+if ($request->filled('status')) {
+    $query->where('status', $request->status);
+}
+
+if ($request->filled('role')) {
+    $query->where('role', $request->role);
+}
+
+if ($request->boolean('verified')) {
+    $query->whereNotNull('email_verified_at');
+}
+
+$users = $query->get();
+```
+
+Correct:
+```php
+$users = User::query()
+    ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+    ->when($request->filled('role'), fn ($q) => $q->where('role', $request->role))
+    ->when($request->boolean('verified'), fn ($q) => $q->whereNotNull('email_verified_at'))
+    ->get();
+
 ## Define Attribute Casts
 
 Use the `casts()` method (or `$casts` property following project convention) for automatic type conversion.
