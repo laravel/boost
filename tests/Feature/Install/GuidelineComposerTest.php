@@ -175,6 +175,7 @@ test('composes guidelines with proper formatting', function (): void {
         ->toContain('=== boost rules ===')
         ->toContain('=== php rules ===')
         ->toContain('=== laravel/core rules ===')
+        ->toContain('=== deployments rules ===')
         ->toContain('=== laravel/v11 rules ===')
         ->toMatch('/=== \w+.*? rules ===/');
 });
@@ -256,6 +257,7 @@ test('returns list of used guidelines', function (): void {
         ->toContain('boost')
         ->toContain('php')
         ->toContain('laravel/core')
+        ->toContain('deployments')
         ->toContain('laravel/v11')
         ->toContain('pest/core');
 });
@@ -812,6 +814,23 @@ test('excludes package guidelines when listed in exclude config', function (): v
         ->toContain('=== foundation rules ===');
 });
 
+test('excludes deployment guidelines when listed in exclude config', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    config(['boost.guidelines.exclude' => ['deployments']]);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->not->toContain('=== deployments rules ===')
+        ->toContain('=== laravel/core rules ===')
+        ->toContain('=== foundation rules ===');
+});
+
 test('excludes versioned package guidelines when listed in exclude config', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '12.0.0'),
@@ -899,6 +918,50 @@ test('includes Skills Activation section when skills are enabled and skills exis
     expect($guidelines)
         ->toContain('## Skills Activation')
         ->toContain('This project has domain-specific skills available');
+});
+
+test('excludes MCP Tools and Searching Documentation sections when hasMcp is false', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = false;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->not->toContain('## Tools')
+        ->not->toContain('database-query')
+        ->not->toContain('database-schema')
+        ->not->toContain('search-docs')
+        ->not->toContain('## Searching Documentation');
+});
+
+test('includes MCP Tools and Searching Documentation sections when hasMcp is true', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain('## Tools')
+        ->toContain('database-query')
+        ->toContain('database-schema')
+        ->toContain('search-docs')
+        ->toContain('## Searching Documentation');
 });
 
 test('loads vendor core guideline when available', function (): void {

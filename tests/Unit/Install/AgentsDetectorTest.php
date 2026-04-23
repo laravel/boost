@@ -13,6 +13,7 @@ use Laravel\Boost\Install\Agents\Copilot;
 use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Agents\Junie;
+use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Enums\Platform;
@@ -31,9 +32,9 @@ it('returns collection of all registered agents', function (): void {
     $agents = $this->detector->getAgents();
 
     expect($agents)->toBeInstanceOf(Collection::class)
-        ->and($agents->count())->toBe(8)
+        ->and($agents->count())->toBe(9)
         ->and($agents->keys()->toArray())->toBe([
-            'amp', 'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'opencode', 'gemini',
+            'amp', 'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'kiro', 'opencode', 'gemini',
         ]);
 
     $agents->each(function ($agent): void {
@@ -60,6 +61,7 @@ it('returns an array of detected agents names for system discovery', function ()
     $this->container->bind(ClaudeCode::class, fn () => $mockOther);
     $this->container->bind(Codex::class, fn () => $mockOther);
     $this->container->bind(Copilot::class, fn () => $mockOther);
+    $this->container->bind(Kiro::class, fn () => $mockOther);
     $this->container->bind(OpenCode::class, fn () => $mockOther);
     $this->container->bind(Gemini::class, fn () => $mockOther);
 
@@ -80,6 +82,7 @@ it('returns an empty array when no agents are detected for system discovery', fu
     $this->container->bind(ClaudeCode::class, fn () => $mockAgent);
     $this->container->bind(Codex::class, fn () => $mockAgent);
     $this->container->bind(Copilot::class, fn () => $mockAgent);
+    $this->container->bind(Kiro::class, fn () => $mockAgent);
     $this->container->bind(OpenCode::class, fn () => $mockAgent);
     $this->container->bind(Gemini::class, fn () => $mockAgent);
 
@@ -110,6 +113,7 @@ it('returns an array of detected agent names for project discovery', function ()
     $this->container->bind(ClaudeCode::class, fn () => $mockClaudeCode);
     $this->container->bind(Codex::class, fn () => $mockOther);
     $this->container->bind(Copilot::class, fn () => $mockOther);
+    $this->container->bind(Kiro::class, fn () => $mockOther);
     $this->container->bind(OpenCode::class, fn () => $mockOther);
     $this->container->bind(Gemini::class, fn () => $mockOther);
 
@@ -132,6 +136,7 @@ it('returns an empty array when no agents are detected for project discovery', f
     $this->container->bind(ClaudeCode::class, fn () => $mockAgent);
     $this->container->bind(Codex::class, fn () => $mockAgent);
     $this->container->bind(Copilot::class, fn () => $mockAgent);
+    $this->container->bind(Kiro::class, fn () => $mockAgent);
     $this->container->bind(OpenCode::class, fn () => $mockAgent);
     $this->container->bind(Gemini::class, fn () => $mockAgent);
 

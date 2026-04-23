@@ -157,6 +157,10 @@ class InstallCommand extends Command
      */
     protected function determineTestEnforcement(): bool
     {
+        if (config('boost.enforce_tests') !== null) {
+            return (bool) config('boost.enforce_tests');
+        }
+
         if (! file_exists(base_path('vendor/bin/phpunit'))) {
             return false;
         }
@@ -435,6 +439,7 @@ class InstallCommand extends Command
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
         $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
+        $guidelineConfig->hasMcp = $this->selectedBoostFeatures->contains('mcp') || ($this->isExplicitFlagMode() && $this->config->getMcp());
 
         return $guidelineConfig;
     }
