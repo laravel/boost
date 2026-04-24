@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.4...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.5...main)
+
+## [v2.4.5](https://github.com/laravel/boost/compare/v2.4.4...v2.4.5) - 2026-04-22
+
+### What's Changed
+
+* Support laravel/mcp 0.7.0 by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/boost/pull/782
+
+### New Contributors
+
+* [@gdebrauwer](https://github.com/gdebrauwer) made their first contribution in https://github.com/laravel/boost/pull/782
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.4...v2.4.5
 
 ## [v2.4.4](https://github.com/laravel/boost/compare/v2.4.3...v2.4.4) - 2026-04-16
 
@@ -234,11 +246,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -289,12 +303,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
