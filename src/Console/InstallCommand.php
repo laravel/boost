@@ -433,7 +433,8 @@ class InstallCommand extends Command
         }
 
         if ($this->selectedBoostFeatures->contains('skills')) {
-            $this->config->setSkills($this->installedSkillNames);
+            $skillsToPersist = $explicitMode ? $this->config->getSkills() : $this->installedSkillNames;
+            $this->config->setSkills($skillsToPersist);
         }
 
         $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));

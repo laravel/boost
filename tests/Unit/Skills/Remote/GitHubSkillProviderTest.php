@@ -462,3 +462,4 @@ it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
         ->and($skills->has('my-skill'))->toBeTrue()
         ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
 });
+

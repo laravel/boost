@@ -16,6 +16,7 @@ use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Skills\Remote\SkillAuditor;
+use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 
@@ -287,6 +288,8 @@ class AddSkillCommand extends Command
     protected function addSkills(Collection $skills): array
     {
         $results = ['installedNames' => [], 'failedDetails' => []];
+        $config = new Config;
+        $skillsToTrack = [];
 
         foreach ($skills as $skill) {
             $targetPath = $this->skillTargetPath($skill);
@@ -298,12 +301,17 @@ class AddSkillCommand extends Command
             try {
                 if ($this->fetcher->downloadSkill($skill, $targetPath)) {
                     $results['installedNames'][] = $skill->name;
+                    $skillsToTrack[$skill->name] = $this->repository->source();
                 } else {
                     $results['failedDetails'][$skill->name] = 'Download failed';
                 }
             } catch (RuntimeException $e) {
                 $results['failedDetails'][$skill->name] = $e->getMessage();
             }
+        }
+
+        if ($skillsToTrack !== []) {
+            $config->trackSkills($skillsToTrack);
         }
 
         return $results;
