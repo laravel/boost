@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Throwable;
 
 class GitHubSkillProvider
 {
@@ -177,17 +178,20 @@ class GitHubSkillProvider
             $item['path'] => $this->buildRawFileUrl($item['path']),
         ]);
 
-        $responses = Http::pool(fn (Pool $pool) => $fileUrls->map(
-            fn (string $url, string $path) => $pool->as($path)
-                ->withHeaders(['User-Agent' => 'Laravel-Boost'])
-                ->timeout(30)
-                ->get($url)
-        )->all());
+        try {
+            $responses = Http::pool(fn (Pool $pool) => $fileUrls->map(
+                fn (string $url, string $path) => $pool->as($path)
+                    ->timeout(60)
+                    ->get($url)
+            )->all(), concurrency: 25);
+        } catch (Throwable) {
+            return false;
+        }
 
         foreach ($files as $item) {
             $response = $responses[$item['path']] ?? null;
 
-            if ($response === null || $response->failed()) {
+            if ($response instanceof Throwable || $response === null || $response->failed()) {
                 return false;
             }
 
