@@ -178,32 +178,34 @@ class GitHubSkillProvider
             $item['path'] => $this->buildRawFileUrl($item['path']),
         ]);
 
-        try {
-            $responses = Http::pool(fn (Pool $pool) => $fileUrls->map(
-                fn (string $url, string $path) => $pool->as($path)
-                    ->timeout(60)
-                    ->get($url)
-            )->all(), concurrency: 25);
-        } catch (Throwable) {
-            return false;
-        }
-
-        foreach ($files as $item) {
-            $response = $responses[$item['path']] ?? null;
-
-            if ($response instanceof Throwable || $response === null || $response->failed()) {
+        foreach ($fileUrls->chunk(25) as $chunk) {
+            try {
+                $responses = Http::pool(fn (Pool $pool) => $chunk->map(
+                    fn (string $url, string $path) => $pool->as($path)
+                        ->timeout(60)
+                        ->get($url)
+                )->all());
+            } catch (Throwable) {
                 return false;
             }
 
-            $relativePath = $this->getRelativePath($item['path'], $basePath);
-            $localPath = $targetPath.'/'.$relativePath;
+            foreach ($chunk->keys() as $path) {
+                $response = $responses[$path] ?? null;
 
-            if (! $this->ensureDirectoryExists(dirname($localPath))) {
-                return false;
-            }
+                if ($response instanceof Throwable || $response === null || $response->failed()) {
+                    return false;
+                }
 
-            if (file_put_contents($localPath, $response->body()) === false) {
-                return false;
+                $relativePath = $this->getRelativePath($path, $basePath);
+                $localPath = $targetPath.'/'.$relativePath;
+
+                if (! $this->ensureDirectoryExists(dirname($localPath))) {
+                    return false;
+                }
+
+                if (file_put_contents($localPath, $response->body()) === false) {
+                    return false;
+                }
             }
         }
 
