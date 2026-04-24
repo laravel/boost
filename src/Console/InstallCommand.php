@@ -165,8 +165,17 @@ class InstallCommand extends Command
             return false;
         }
 
-        $process = new Process([PHP_BINARY, 'artisan', 'test', '--list-tests'], base_path());
+        $binary = file_exists(base_path('vendor/bin/pest'))
+            ? base_path('vendor/bin/pest')
+            : base_path('vendor/bin/phpunit');
+
+        $process = new Process([PHP_BINARY, $binary, '--list-tests'], base_path());
+        $process->setTimeout(30);
         $process->run();
+
+        if (! $process->isSuccessful()) {
+            return false;
+        }
 
         return Str::of($process->getOutput())
             ->trim()
