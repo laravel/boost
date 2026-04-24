@@ -236,15 +236,15 @@ class InstallCommand extends Command
     protected function selectIntegrations(): void
     {
         $integrations = collect([
-            'nightwatch' => [
-                'label' => 'Laravel Nightwatch',
-                'available' => $this->nightwatch->isInstalled(),
-                'default' => $this->config->getNightwatch(),
-            ],
             'cloud' => [
                 'label' => 'Laravel Cloud',
                 'available' => true,
                 'default' => $this->config->getCloud(),
+            ],
+            'nightwatch' => [
+                'label' => 'Laravel Nightwatch',
+                'available' => $this->nightwatch->isInstalled(),
+                'default' => $this->config->getNightwatch(),
             ],
             'sail' => [
                 'label' => 'Laravel Sail',
