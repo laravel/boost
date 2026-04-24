@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Skills\Remote;
 
+use GuzzleHttp\Promise\EachPromise;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -178,34 +178,40 @@ class GitHubSkillProvider
             $item['path'] => $this->buildRawFileUrl($item['path']),
         ]);
 
-        foreach ($fileUrls->chunk(25) as $chunk) {
-            try {
-                $responses = Http::pool(fn (Pool $pool) => $chunk->map(
-                    fn (string $url, string $path) => $pool->as($path)
-                        ->timeout(60)
-                        ->get($url)
-                )->all());
-            } catch (Throwable) {
+        $responses = [];
+
+        $generator = (function () use ($fileUrls) {
+            foreach ($fileUrls as $path => $url) {
+                yield $path => $this->client(60)->async()->get($url);
+            }
+        })();
+
+        (new EachPromise($generator, [
+            'concurrency' => 25,
+            'fulfilled' => static function ($response, $path) use (&$responses): void {
+                $responses[$path] = $response;
+            },
+            'rejected' => static function ($reason, $path) use (&$responses): void {
+                $responses[$path] = $reason;
+            },
+        ]))->promise()->wait();
+
+        foreach ($files as $item) {
+            $response = $responses[$item['path']] ?? null;
+
+            if ($response instanceof Throwable || $response === null || $response->failed()) {
                 return false;
             }
 
-            foreach ($chunk->keys() as $path) {
-                $response = $responses[$path] ?? null;
+            $relativePath = $this->getRelativePath($item['path'], $basePath);
+            $localPath = $targetPath.'/'.$relativePath;
 
-                if ($response instanceof Throwable || $response === null || $response->failed()) {
-                    return false;
-                }
+            if (! $this->ensureDirectoryExists(dirname($localPath))) {
+                return false;
+            }
 
-                $relativePath = $this->getRelativePath($path, $basePath);
-                $localPath = $targetPath.'/'.$relativePath;
-
-                if (! $this->ensureDirectoryExists(dirname($localPath))) {
-                    return false;
-                }
-
-                if (file_put_contents($localPath, $response->body()) === false) {
-                    return false;
-                }
+            if (file_put_contents($localPath, $response->body()) === false) {
+                return false;
             }
         }
 
