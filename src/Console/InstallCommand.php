@@ -14,6 +14,7 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
+use Laravel\Boost\Install\Cloud;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -24,11 +25,13 @@ use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\ThirdPartyPackage;
+use Laravel\Boost\Skills\Remote\GitHubRepository;
+use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
+use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
 use Symfony\Component\Process\Process;
 
-use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
 
@@ -67,6 +70,7 @@ class InstallCommand extends Command
 
     public function __construct(
         private readonly AgentsDetector $agentsDetector,
+        private readonly Cloud $cloud,
         private readonly Config $config,
         private readonly Nightwatch $nightwatch,
         private readonly Sail $sail,
@@ -107,9 +111,7 @@ class InstallCommand extends Command
             ? $this->selectThirdPartyPackages()
             : collect();
 
-        if ($this->selectedBoostFeatures->contains('mcp')) {
-            $this->configureMcpOptions();
-        }
+        $this->selectIntegrations();
 
         $this->selectedAgents = $this->selectAgents();
         $this->enforceTests = $this->selectedBoostFeatures->contains('guidelines') && $this->determineTestEnforcement();
@@ -121,6 +123,10 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->installGuidelines();
+        }
+
+        if ($this->shouldInstallCloudSkill()) {
+            $this->downloadCloudSkill();
         }
 
         if ($this->selectedBoostFeatures->contains('skills')) {
@@ -203,35 +209,6 @@ class InstallCommand extends Command
         ));
     }
 
-    protected function configureMcpOptions(): void
-    {
-        if ($this->sail->isInstalled() && ($this->sail->isActive() || $this->shouldConfigureSail())) {
-            $this->selectedBoostFeatures->push('sail');
-        }
-
-        if ($this->nightwatch->isInstalled() && $this->shouldConfigureNightwatchMcp()) {
-            $this->selectedBoostFeatures->push('nightwatch_mcp');
-        }
-    }
-
-    protected function shouldConfigureSail(): bool
-    {
-        return confirm(
-            label: 'Laravel Sail detected. Configure Boost MCP to use Sail?',
-            default: $this->config->getSail(),
-            hint: 'This will configure the MCP server to run through Sail. Note: Sail must be running to use Boost MCP',
-        );
-    }
-
-    protected function shouldConfigureNightwatchMcp(): bool
-    {
-        return confirm(
-            label: 'Would you like to install Nightwatch MCP alongside Boost MCP?',
-            default: $this->config->getNightwatchMcp(),
-            hint: 'The Nightwatch MCP provides tools for browsing issues, viewing stack traces, and managing application errors',
-        );
-    }
-
     /**
      * @return Collection<int, string>
      */
@@ -254,6 +231,36 @@ class InstallCommand extends Command
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
+    }
+
+    protected function selectIntegrations(): void
+    {
+        $integrations = collect([
+            'cloud' => [
+                'label' => 'Laravel Cloud',
+                'available' => true,
+                'default' => $this->config->getCloud(),
+            ],
+            'nightwatch' => [
+                'label' => 'Laravel Nightwatch',
+                'available' => $this->nightwatch->isInstalled(),
+                'default' => $this->config->getNightwatch(),
+            ],
+            'sail' => [
+                'label' => 'Laravel Sail',
+                'available' => $this->sail->isInstalled(),
+                'default' => $this->sail->isActive() || $this->config->getSail(),
+            ],
+        ])->filter(fn (array $integration): bool => $integration['available']);
+
+        $selected = multiselect(
+            label: 'Which integrations would you like to configure for Boost?',
+            options: $integrations->map(fn (array $integration): string => $integration['label'])->all(),
+            default: $integrations->filter(fn (array $integration): bool => $integration['default'])->keys()->all(),
+            hint: 'Selected integrations will have their MCP servers or skills automatically configured',
+        );
+
+        $this->selectedBoostFeatures->push(...$selected);
     }
 
     /**
@@ -386,6 +393,29 @@ class InstallCommand extends Command
         return $guidelineConfig;
     }
 
+    protected function shouldInstallCloudSkill(): bool
+    {
+        return $this->selectedBoostFeatures->contains('cloud');
+    }
+
+    protected function downloadCloudSkill(): void
+    {
+        try {
+            $repository = GitHubRepository::fromInput($this->cloud->skillRepo().'/'.$this->cloud->skillPath());
+            $provider = new GitHubSkillProvider($repository);
+            $skill = $provider->discoverSkills()->get($this->cloud->skillName());
+
+            if (! $skill instanceof RemoteSkill) {
+                return;
+            }
+
+            $provider->downloadSkill($skill, base_path('.ai/skills/'.$this->cloud->skillName()));
+        } catch (Exception $exception) {
+            $this->warn('Failed to download Cloud skill: '.$exception->getMessage());
+            $this->line('You can install it later with: php artisan boost:add-skill '.$this->cloud->skillRepo());
+        }
+    }
+
     protected function storeConfig(): void
     {
         $explicitMode = $this->isExplicitFlagMode();
@@ -406,16 +436,18 @@ class InstallCommand extends Command
             $this->config->setSkills($this->installedSkillNames);
         }
 
+        $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));
+
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->config->setMcp(true);
             $this->config->setSail($this->shouldUseSail());
-            $this->config->setNightwatchMcp($this->shouldInstallNightwatchMcp());
+            $this->config->setNightwatch($this->shouldInstallNightwatchMcp());
         }
     }
 
     protected function shouldInstallNightwatchMcp(): bool
     {
-        return $this->selectedBoostFeatures->contains('nightwatch_mcp');
+        return $this->selectedBoostFeatures->contains('nightwatch');
     }
 
     protected function shouldUseSail(): bool
