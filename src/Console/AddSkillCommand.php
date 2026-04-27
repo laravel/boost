@@ -53,8 +53,10 @@ class AddSkillCommand extends Command
 
     protected string $defaultSkillsPath = '.ai/skills';
 
-    public function __construct(private readonly Terminal $terminal)
-    {
+    public function __construct(
+        private readonly Terminal $terminal,
+        private readonly Config $config,
+    ) {
         parent::__construct();
     }
 
@@ -288,7 +290,6 @@ class AddSkillCommand extends Command
     protected function addSkills(Collection $skills): array
     {
         $results = ['installedNames' => [], 'failedDetails' => []];
-        $config = new Config;
         $skillsToTrack = [];
 
         foreach ($skills as $skill) {
@@ -301,7 +302,14 @@ class AddSkillCommand extends Command
             try {
                 if ($this->fetcher->downloadSkill($skill, $targetPath)) {
                     $results['installedNames'][] = $skill->name;
-                    $skillsToTrack[$skill->name] = $this->repository->source();
+                    $skillsToTrack[$skill->name] = [
+                        'source' => Config::SKILL_SOURCE_GITHUB,
+                        'repo' => $skill->repo,
+                    ];
+
+                    if ($skill->path !== $skill->name) {
+                        $skillsToTrack[$skill->name]['path'] = $skill->path;
+                    }
                 } else {
                     $results['failedDetails'][$skill->name] = 'Download failed';
                 }
@@ -311,7 +319,7 @@ class AddSkillCommand extends Command
         }
 
         if ($skillsToTrack !== []) {
-            $config->trackSkills($skillsToTrack);
+            $this->config->trackSkills($skillsToTrack);
         }
 
         return $results;

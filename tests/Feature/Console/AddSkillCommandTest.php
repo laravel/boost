@@ -95,6 +95,13 @@ it('installs all skills with --all option', function (): void {
 
     $this->assertFilenameExists('.ai/skills/skill-one/SKILL.md');
     $this->assertFileContains(['# SKILL Content'], '.ai/skills/skill-one/SKILL.md');
+
+    $config = json_decode((string) file_get_contents(base_path('boost.json')), true);
+
+    expect($config['skills']['skill-one'])->toBe([
+        'source' => 'github',
+        'repo' => 'owner/repo',
+    ]);
 });
 
 it('tracks installed skills in boost json using source metadata', function (): void {
@@ -121,10 +128,15 @@ it('tracks installed skills in boost json using source metadata', function (): v
         '--all' => true,
     ])->assertSuccessful();
 
-    $tracked = (new Config)->getTrackedSkills();
+    $config = json_decode((string) file_get_contents(base_path('boost.json')), true);
 
-    expect($tracked)->toHaveKey('skill-one')
-        ->and($tracked['skill-one']['source'])->toBe('owner/repo/path/to/skills');
+    expect($config['skills'])->toBe([
+        'skill-one' => [
+            'source' => 'github',
+            'repo' => 'owner/repo',
+            'path' => 'path/to/skills/skill-one',
+        ],
+    ]);
 });
 
 it('installs specific skills with --skill option', function (): void {

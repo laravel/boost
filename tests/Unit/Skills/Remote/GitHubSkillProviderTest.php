@@ -11,7 +11,6 @@ use Laravel\Boost\Skills\Remote\RemoteSkill;
 beforeEach(function (): void {
     Http::preventStrayRequests();
 });
-
 function fakeGitHubRepo(string $branch = 'main'): array
 {
     return ['api.github.com/repos/owner/repo' => Http::response(['default_branch' => $branch])];
@@ -462,4 +461,3 @@ it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
         ->and($skills->has('my-skill'))->toBeTrue()
         ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
 });
-

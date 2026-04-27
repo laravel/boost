@@ -53,7 +53,11 @@ it('may store and retrieve skills as an array', function (): void {
     $config->setSkills($skills);
 
     expect($config->getSkills())->toEqual($skills)
-        ->and($config->hasSkills())->toBeTrue();
+        ->and($config->hasSkills())->toBeTrue()
+        ->and($config->getSkillMetadata())->toBe([
+            'skill-one' => ['source' => 'official'],
+            'skill-two' => ['source' => 'official'],
+        ]);
 
     $config->setSkills([]);
 
@@ -111,33 +115,56 @@ it('may track and query skills with source metadata', function (): void {
 
     expect($config->getTrackedSkills())->toBeEmpty();
 
-    $config->trackSkill('composition-patterns', 'vercel-labs/agent-skills');
-    $config->trackSkill('algorithmic-art', 'anthropics/skills');
+    $config->trackSkills([
+        'composition-patterns' => [
+            'source' => 'github',
+            'repo' => 'vercel-labs/agent-skills',
+        ],
+        'algorithmic-art' => [
+            'source' => 'github',
+            'repo' => 'anthropics/skills',
+        ],
+    ]);
 
     $tracked = $config->getTrackedSkills();
 
     expect($tracked)->toHaveKeys(['composition-patterns', 'algorithmic-art'])
-        ->and($tracked['composition-patterns']['source'])->toBe('vercel-labs/agent-skills')
-        ->and($tracked['algorithmic-art']['source'])->toBe('anthropics/skills');
+        ->and($tracked['composition-patterns'])->toBe([
+            'source' => 'github',
+            'repo' => 'vercel-labs/agent-skills',
+        ])
+        ->and($tracked['algorithmic-art'])->toBe([
+            'source' => 'github',
+            'repo' => 'anthropics/skills',
+        ]);
 });
 
 it('keeps tracked source metadata when syncing skills list', function (): void {
     $config = new Config;
 
     $config->setSkills(['algorithmic-art']);
-    $config->trackSkill('algorithmic-art', 'anthropics/skills');
-    $config->setSkills(['algorithmic-art', 'pest-testing']);
+    $config->trackSkills([
+        'algorithmic-art' => [
+            'source' => 'github',
+            'repo' => 'anthropics/skills',
+        ],
+    ]);
+    $config->setSkills(['algorithmic-art', 'pest-testing'], [
+        'algorithmic-art' => ['source' => 'custom'],
+        'pest-testing' => ['source' => 'official'],
+    ]);
 
     expect($config->getSkills())->toBe(['algorithmic-art', 'pest-testing']);
 
     $tracked = $config->getTrackedSkills();
 
-    expect($tracked)->toHaveKey('algorithmic-art')
-        ->and($tracked['algorithmic-art']['source'])->toBe('anthropics/skills')
-        ->and($tracked)->not->toHaveKey('pest-testing');
+    expect($tracked['algorithmic-art'])->toBe([
+        'source' => 'github',
+        'repo' => 'anthropics/skills',
+    ])->and($tracked['pest-testing'])->toBe(['source' => 'official']);
 });
 
-it('normalizes legacy list-format skills into grouped format', function (): void {
+it('normalizes legacy list-format skills into skill metadata format', function (): void {
     file_put_contents(base_path('boost.json'), json_encode([
         'agents' => ['claude_code'],
         'skills' => ['pest-testing', 'fortify-development'],
@@ -152,7 +179,8 @@ it('normalizes legacy list-format skills into grouped format', function (): void
     $normalized = json_decode((string) file_get_contents(base_path('boost.json')), true);
 
     expect($normalized['skills'])->toBe([
-        'laravel/boost' => ['fortify-development', 'pest-testing'],
+        'fortify-development' => ['source' => 'custom'],
+        'pest-testing' => ['source' => 'custom'],
     ]);
 });
 
@@ -169,7 +197,30 @@ it('reads legacy flat-format skill source metadata', function (): void {
     $tracked = $config->getTrackedSkills();
 
     expect($config->getSkills())->toBe(['copilot-docs', 'pest-testing'])
-        ->and($tracked)->toHaveKey('copilot-docs')
-        ->and($tracked['copilot-docs']['source'])->toBe('anthropics/skills')
-        ->and($tracked)->not->toHaveKey('pest-testing');
+        ->and($tracked['copilot-docs'])->toBe([
+            'source' => 'github',
+            'repo' => 'anthropics/skills',
+        ])
+        ->and($tracked['pest-testing'])->toBe(['source' => 'custom']);
+});
+
+it('reads legacy grouped source metadata', function (): void {
+    file_put_contents(base_path('boost.json'), json_encode([
+        'agents' => ['claude_code'],
+        'skills' => [
+            'laravel/boost' => ['pest-testing'],
+            'owner/repo/path/to/skills' => ['skill-one'],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $config = new Config;
+
+    expect($config->getSkillMetadata())->toBe([
+        'pest-testing' => ['source' => 'official'],
+        'skill-one' => [
+            'source' => 'github',
+            'repo' => 'owner/repo',
+            'path' => 'path/to/skills/skill-one',
+        ],
+    ]);
 });
