@@ -756,6 +756,25 @@ test('excludes Skills Activation section when skills are disabled', function ():
         ->not->toContain('This project has domain-specific skills available');
 });
 
+test('includes Skills Activation section when skills are enabled', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $config = new GuidelineConfig;
+    $config->hasSkills = true;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain('## Skills Activation')
+        ->toContain('This project has domain-specific skills available');
+});
+
 test('excludes guidelines listed in config exclude list', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -898,26 +917,6 @@ test('excludes guidelines from used() list', function (): void {
     expect($used)
         ->not->toContain('pest/core')
         ->toContain('foundation');
-});
-
-test('includes Skills Activation section when skills are enabled and skills exist', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $config = new GuidelineConfig;
-    $config->hasSkills = true;
-
-    $guidelines = $this->composer
-        ->config($config)
-        ->compose();
-
-    expect($guidelines)
-        ->toContain('## Skills Activation')
-        ->toContain('This project has domain-specific skills available');
 });
 
 test('excludes MCP Tools and Searching Documentation sections when hasMcp is false', function (): void {
