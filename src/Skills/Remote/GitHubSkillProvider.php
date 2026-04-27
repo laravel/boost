@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Skills\Remote;
 
+use GuzzleHttp\Promise\EachPromise;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Throwable;
 
 class GitHubSkillProvider
 {
@@ -177,17 +178,28 @@ class GitHubSkillProvider
             $item['path'] => $this->buildRawFileUrl($item['path']),
         ]);
 
-        $responses = Http::pool(fn (Pool $pool) => $fileUrls->map(
-            fn (string $url, string $path) => $pool->as($path)
-                ->withHeaders(['User-Agent' => 'Laravel-Boost'])
-                ->timeout(30)
-                ->get($url)
-        )->all());
+        $responses = [];
+
+        $generator = (function () use ($fileUrls) {
+            foreach ($fileUrls as $path => $url) {
+                yield $path => $this->client(60)->async()->get($url);
+            }
+        })();
+
+        (new EachPromise($generator, [
+            'concurrency' => 25,
+            'fulfilled' => static function ($response, $path) use (&$responses): void {
+                $responses[$path] = $response;
+            },
+            'rejected' => static function ($reason, $path) use (&$responses): void {
+                $responses[$path] = $reason;
+            },
+        ]))->promise()->wait();
 
         foreach ($files as $item) {
             $response = $responses[$item['path']] ?? null;
 
-            if ($response === null || $response->failed()) {
+            if ($response instanceof Throwable || $response === null || $response->failed()) {
                 return false;
             }
 
