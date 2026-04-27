@@ -106,18 +106,21 @@ class Config
 
     protected function extractSkillMetadata(array $currentConfig): array
     {
-        $metadata = [];
-        $isList = array_is_list($currentConfig);
+        if (array_is_list($currentConfig)) {
+            $metadata = [];
 
-        foreach ($currentConfig as $key => $value) {
-            if ($isList) {
+            foreach ($currentConfig as $value) {
                 if (is_string($value) && $value !== '') {
                     $metadata[$value] = ['source' => self::SKILL_SOURCE_CUSTOM];
                 }
-
-                continue;
             }
 
+            return $metadata;
+        }
+
+        $metadata = [];
+
+        foreach ($currentConfig as $key => $value) {
             if (is_array($value) && array_is_list($value)) {
                 $source = is_string($key) && $key !== '' ? $key : self::SKILL_SOURCE_CUSTOM;
 
@@ -176,10 +179,6 @@ class Config
                 repo: $metadata['repo'] ?? null,
                 path: $metadata['path'] ?? null,
             );
-        }
-
-        if ($source === self::SKILL_SOURCE_OFFICIAL || $source === self::SKILL_SOURCE_CUSTOM) {
-            return ['source' => $source];
         }
 
         return $this->metadataFromLegacySource($skillName, $source);
@@ -244,7 +243,11 @@ class Config
         $currentMetadata = $this->normalizeSkillMetadata($skillName, $currentMetadata);
         $incomingMetadata = $this->normalizeSkillMetadata($skillName, $incomingMetadata);
 
-        if (($currentMetadata['source'] ?? null) === self::SKILL_SOURCE_GITHUB && ($incomingMetadata['source'] ?? null) === self::SKILL_SOURCE_CUSTOM) {
+        $currentSource = $currentMetadata['source'] ?? null;
+        $incomingSource = $incomingMetadata['source'] ?? null;
+
+        // Preserve existing GitHub metadata when the incoming entry only carries the default custom source.
+        if ($currentSource === self::SKILL_SOURCE_GITHUB && $incomingSource === self::SKILL_SOURCE_CUSTOM) {
             return $currentMetadata;
         }
 
