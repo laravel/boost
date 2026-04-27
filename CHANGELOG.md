@@ -1,6 +1,78 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.5...main)
+
+## [v2.4.5](https://github.com/laravel/boost/compare/v2.4.4...v2.4.5) - 2026-04-22
+
+### What's Changed
+
+* Support laravel/mcp 0.7.0 by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/boost/pull/782
+
+### New Contributors
+
+* [@gdebrauwer](https://github.com/gdebrauwer) made their first contribution in https://github.com/laravel/boost/pull/782
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.4...v2.4.5
+
+## [v2.4.4](https://github.com/laravel/boost/compare/v2.4.3...v2.4.4) - 2026-04-16
+
+### What's Changed
+
+* Feature: skills list command by [@me-shaon](https://github.com/me-shaon) in https://github.com/laravel/boost/pull/750
+* feat(agents): add Kiro IDE agent support by [@oniice](https://github.com/oniice) in https://github.com/laravel/boost/pull/765
+* Add undocumented config override for enforce_tests by [@yousefkadah](https://github.com/yousefkadah) in https://github.com/laravel/boost/pull/767
+* Fix: Update outdated Livewire paths to v4 standards in SKILL.blade.php by [@Naimul007A](https://github.com/Naimul007A) in https://github.com/laravel/boost/pull/736
+* Move deployment guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/774
+
+### New Contributors
+
+* [@me-shaon](https://github.com/me-shaon) made their first contribution in https://github.com/laravel/boost/pull/750
+* [@oniice](https://github.com/oniice) made their first contribution in https://github.com/laravel/boost/pull/765
+* [@yousefkadah](https://github.com/yousefkadah) made their first contribution in https://github.com/laravel/boost/pull/767
+* [@Naimul007A](https://github.com/Naimul007A) made their first contribution in https://github.com/laravel/boost/pull/736
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.3...v2.4.4
+
+## [v2.4.3](https://github.com/laravel/boost/compare/v2.4.2...v2.4.3) - 2026-04-10
+
+### What's Changed
+
+* Add missing upsert breaking change and emphasize cache prefix config in v13 upgrade guide by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/761
+* Replace Request with UpdatePostRequest by [@MrPunyapal](https://github.com/MrPunyapal) in https://github.com/laravel/boost/pull/741
+* Improve accuracy of Laravel best practices guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/764
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.2...v2.4.3
+
+## [v2.4.2](https://github.com/laravel/boost/compare/v2.4.1...v2.4.2) - 2026-04-07
+
+### What's Changed
+
+* Add scope-based first-party detection to Composer by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/712
+* Fix leftover quotes in MCP development skill description by [@thiagogabrielgaia](https://github.com/thiagogabrielgaia) in https://github.com/laravel/boost/pull/720
+* Improve wayfinder skill description and simplify core guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/708
+* Fix null bytes in style.md skill rule by [@reed1](https://github.com/reed1) in https://github.com/laravel/boost/pull/727
+* Add mcp_config_path configuration for monorepo support by [@johnbacon](https://github.com/johnbacon) in https://github.com/laravel/boost/pull/729
+* Use configured PHP executable path in ToolExecutor subprocess by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/730
+* Fix inverted enum naming convention condition in PHP guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/732
+* Prevents re-injecting in Livewire navigate responses by [@alihamze](https://github.com/alihamze) in https://github.com/laravel/boost/pull/734
+* Conditionally render MCP guideline sections by [@Xiol](https://github.com/Xiol) in https://github.com/laravel/boost/pull/722
+* Fix: Normalize line endings in MarkdownFormatter by [@GoneTone](https://github.com/GoneTone) in https://github.com/laravel/boost/pull/739
+* Fix retryUntil return type from DateTime to DateTimeInterface by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/753
+* Guide pest skill to match project's test()/it() convention by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/752
+* fix the incorrect return type for retryUntil() method in queue job guidelines by [@iz-ahmad](https://github.com/iz-ahmad) in https://github.com/laravel/boost/pull/748
+* Use relative MCP paths for Claude Code agent by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/757
+* Add deployment section to Laravel core guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/758
+
+### New Contributors
+
+* [@thiagogabrielgaia](https://github.com/thiagogabrielgaia) made their first contribution in https://github.com/laravel/boost/pull/720
+* [@reed1](https://github.com/reed1) made their first contribution in https://github.com/laravel/boost/pull/727
+* [@johnbacon](https://github.com/johnbacon) made their first contribution in https://github.com/laravel/boost/pull/729
+* [@alihamze](https://github.com/alihamze) made their first contribution in https://github.com/laravel/boost/pull/734
+* [@Xiol](https://github.com/Xiol) made their first contribution in https://github.com/laravel/boost/pull/722
+* [@iz-ahmad](https://github.com/iz-ahmad) made their first contribution in https://github.com/laravel/boost/pull/748
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.1...v2.4.2
 
 ## [v2.4.1](https://github.com/laravel/boost/compare/v2.4.0...v2.4.1) - 2026-03-25
 
@@ -171,11 +243,19 @@ If you have custom overrides in:
 
 
 
+
+
+
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
+
+
+
 
 
 
@@ -220,12 +300,20 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
+
+
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
+
+
+
 
 
 

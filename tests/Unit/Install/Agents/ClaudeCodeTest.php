@@ -26,27 +26,26 @@ test('returns configured mcp config path', function (): void {
     expect($agent->mcpConfigPath())->toBe('../.mcp.json');
 });
 
-test('uses absolute paths for MCP', function (): void {
+test('uses relative paths for MCP', function (): void {
     $agent = new ClaudeCode($this->strategyFactory);
 
-    expect($agent->useAbsolutePathForMcp())->toBeTrue();
+    expect($agent->useAbsolutePathForMcp())->toBeFalse();
 });
 
-test('returns absolute PHP path', function (): void {
+test('returns relative PHP path', function (): void {
     config(['boost.executable_paths.php' => null]);
 
     $agent = new ClaudeCode($this->strategyFactory);
 
-    expect($agent->getPhpPath())->toBe(PHP_BINARY);
+    expect($agent->getPhpPath())->toBe('php');
 });
 
-test('returns absolute artisan path', function (): void {
+test('returns relative artisan path', function (): void {
     $agent = new ClaudeCode($this->strategyFactory);
 
     $artisanPath = $agent->getArtisanPath();
 
-    expect($artisanPath)->toEndWith('artisan')
-        ->not->toBe('artisan');
+    expect($artisanPath)->toBe('artisan');
 });
 
 test('httpMcpServerConfig returns default http config', function (): void {
