@@ -44,6 +44,7 @@ Search the codebase for patterns affected by v13 changes:
 **Medium Priority Searches:**
 - `config/cache.php` — Check for `serializable_classes` configuration
 - Code that stores PHP objects in cache — May need explicit class allow-lists
+- `upsert` calls with empty `uniqueBy` — Now throws `InvalidArgumentException`
 
 **Low Priority Searches:**
 - `$event->exceptionOccurred` — Renamed to `$event->exception` in `JobAttempted`
@@ -156,7 +157,8 @@ Str::slug((string) env('APP_NAME', 'laravel')).'-database-';
 Str::snake((string) env('APP_NAME', 'laravel')).'_session';
 @endboostsnippet
 
-To retain previous behavior, explicitly configure `CACHE_PREFIX`, `REDIS_PREFIX`, and `SESSION_COOKIE` in your environment.
+> [!IMPORTANT]
+> To retain previous behavior, explicitly configure `CACHE_PREFIX`, `REDIS_PREFIX`, and `SESSION_COOKIE` in your environment.
 
 ### `Store` and `Repository` Contracts: `touch`
 
@@ -230,6 +232,14 @@ The `Illuminate\Contracts\Auth\MustVerifyEmail` contract now includes `markEmail
 If you provide a custom implementation of this contract, add this method to remain compatible.
 
 ## Database
+
+### Database `upsert` With MySQL or MariaDB
+
+**Likelihood Of Impact: Medium**
+
+Laravel now validates that the caller provides a non-empty value for `uniqueBy`, and will throw an `InvalidArgumentException` instead of generating invalid SQL.
+
+Although the MariaDB and MySQL database drivers ignore the `uniqueBy` value and always use the table's primary and unique indexes to detect existing records, the validation still applies. An `InvalidArgumentException` will be thrown if `uniqueBy` is empty.
 
 ### MySQL `DELETE` Queries With `JOIN`, `ORDER BY`, and `LIMIT`
 

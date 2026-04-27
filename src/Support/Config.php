@@ -193,14 +193,24 @@ class Config
         return $this->get('agents', []);
     }
 
-    public function setNightwatchMcp(bool $installed): void
+    public function setNightwatch(bool $installed): void
     {
-        $this->set('nightwatch_mcp', $installed);
+        $this->set('nightwatch', $installed);
     }
 
-    public function getNightwatchMcp(): bool
+    public function getNightwatch(): bool
     {
-        return $this->get('nightwatch_mcp', false);
+        return (bool) $this->get('nightwatch', $this->get('nightwatch_mcp', false));
+    }
+
+    public function setCloud(bool $installed): void
+    {
+        $this->set('cloud', $installed);
+    }
+
+    public function getCloud(): bool
+    {
+        return $this->get('cloud', false);
     }
 
     public function setSail(bool $useSail): void

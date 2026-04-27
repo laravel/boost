@@ -137,6 +137,7 @@ class GuidelineComposer
             'foundation' => $this->guideline('foundation'),
             'boost' => $this->guideline('boost/core'),
             'php' => $this->guideline('php/core'),
+            'deployments' => $this->guideline('deployments/core'),
         ]);
     }
 

@@ -75,6 +75,22 @@ it('may store and retrieve mcp status', function (): void {
     expect($config->getMcp())->toBeFalse();
 });
 
+it('may store and retrieve nightwatch status', function (): void {
+    $config = new Config;
+
+    expect($config->getNightwatch())->toBeFalse();
+
+    $config->setNightwatch(true);
+
+    expect($config->getNightwatch())->toBeTrue();
+});
+
+it('reads the legacy nightwatch_mcp key when the new nightwatch key is absent', function (): void {
+    file_put_contents(base_path('boost.json'), json_encode(['nightwatch_mcp' => true]));
+
+    expect((new Config)->getNightwatch())->toBeTrue();
+});
+
 it('may store and retrieve packages', function (): void {
     $config = new Config;
 
