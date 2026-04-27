@@ -52,10 +52,10 @@ class GuidelineAssist
             ->name('/[A-Z].*\.php$/');
 
         foreach ($finder as $file) {
-            $path = $appPath.DIRECTORY_SEPARATOR.$file->getRelativePathname();
+            $path = $file->getRealPath();
             $code = file_get_contents($path);
 
-            if ($code === false) {
+            if ($code === false || stripos($code, 'enum') === false) {
                 continue;
             }
 
