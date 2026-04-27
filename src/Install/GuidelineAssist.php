@@ -54,9 +54,11 @@ class GuidelineAssist
         foreach ($finder as $file) {
             $path = $file->getRealPath();
             $code = file_get_contents($path);
+
             if ($code === false) {
                 continue;
             }
+
             if (stripos($code, 'enum') === false) {
                 continue;
             }
