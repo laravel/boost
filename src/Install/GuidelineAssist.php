@@ -194,7 +194,13 @@ class GuidelineAssist
 
     public function appPath(string $path = ''): string
     {
-        return ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
+        $relativePath = ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
+
+        // Normalize to forward slashes for guideline output. On Windows, the separator
+        // injected by app_path()/base_path() concatenation leaks in as '\', producing
+        // mixed-separator paths like "app\Http/Kernel.php" when the caller passed a
+        // forward-slash sub-path.
+        return str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
     }
 
     public function hasSkillsEnabled(): bool
