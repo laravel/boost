@@ -19,7 +19,7 @@ class ApplicationInfo extends Resource
     /**
      * The resource's description.
      */
-    protected string $description = 'Comprehensive application information including PHP version, Laravel version, database engine, all installed packages with their versions, and all Eloquent models in the application.';
+    protected string $description = 'Comprehensive application information including PHP version, Laravel version, database engine, all installed packages with their versions in the application.';
 
     /**
      * The resource's URI.
