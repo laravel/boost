@@ -197,14 +197,6 @@ class GuidelineAssist
         return ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
     }
 
-    /**
-     * @return Collection<string, Skill>
-     */
-    public function skills(): Collection
-    {
-        return $this->skills;
-    }
-
     public function hasSkillsEnabled(): bool
     {
         return $this->config->hasSkills;
