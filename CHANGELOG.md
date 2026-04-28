@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.6...main)
+
+## [v2.4.6](https://github.com/laravel/boost/compare/v2.4.5...v2.4.6) - 2026-04-28
+
+### What's Changed
+
+* Add Laravel Cloud integration to install command by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/776
+* Added better instructions for generating tests. by [@samlev](https://github.com/samlev) in https://github.com/laravel/boost/pull/781
+* Handle Http::pool errors when downloading remote skills by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/785
+* Remove model discovery and use token-based class parsing by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/754
+* Remove skills listing from foundation guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/787
+
+### New Contributors
+
+* [@samlev](https://github.com/samlev) made their first contribution in https://github.com/laravel/boost/pull/781
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.5...v2.4.6
 
 ## [v2.4.5](https://github.com/laravel/boost/compare/v2.4.4...v2.4.5) - 2026-04-22
 
@@ -247,11 +263,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -304,12 +322,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
