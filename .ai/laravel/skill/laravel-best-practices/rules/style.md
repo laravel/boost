@@ -29,7 +29,6 @@
 | `$request->input('name')` | `$request->name` |
 | `return Redirect::back()` | `return back()` |
 | `Carbon::now()` | `now()` |
-| `App::make('Class')` | `app('Class')` |
 | `->where('column', '=', 1)` | `->where('column', 1)` |
 | `->orderBy('created_at', 'desc')` | `->latest()` |
 | `->orderBy('created_at', 'asc')` | `->oldest()` |
