@@ -38,7 +38,7 @@ class Boost extends Server
     /**
      * The MCP server's instructions for the LLM.
      */
-    protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, error logs, semantic documentation search and more. Boost helps with code generation.';
+    protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, error logs, semantic documentation search, and more. Boost helps with code generation.';
 
     /**
      * The default pagination length for resources that support pagination.
