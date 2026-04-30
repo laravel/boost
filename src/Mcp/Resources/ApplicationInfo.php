@@ -39,7 +39,7 @@ class ApplicationInfo extends Resource
         $response = $this->toolExecutor->execute(ApplicationInfoTool::class);
 
         if ($response->isError()) {
-            return $response; // Return the error response directly
+            return $response;
         }
 
         $data = json_decode((string) $response->content(), true);
