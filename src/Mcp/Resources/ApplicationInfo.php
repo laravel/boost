@@ -19,7 +19,7 @@ class ApplicationInfo extends Resource
     /**
      * The resource's description.
      */
-    protected string $description = 'Comprehensive application information including PHP version, Laravel version, database engine, all installed packages with their versions in the application.';
+    protected string $description = 'Comprehensive application information including PHP version, Laravel version, database engine, and all installed packages with their versions in the application.';
 
     /**
      * The resource's URI.
@@ -39,7 +39,7 @@ class ApplicationInfo extends Resource
         $response = $this->toolExecutor->execute(ApplicationInfoTool::class);
 
         if ($response->isError()) {
-            return $response; // Return the error response directly
+            return $response;
         }
 
         $data = json_decode((string) $response->content(), true);
