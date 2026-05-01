@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install\Mcp;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use stdClass;
 
 class FileWriter
 {
@@ -77,7 +78,7 @@ class FileWriter
 
     protected function updatePlainJsonFile(string $content): bool
     {
-        $config = json_decode($content, true);
+        $config = json_decode($content);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return false;
@@ -411,14 +412,26 @@ class FileWriter
         return $this->writeJsonConfig($config);
     }
 
-    protected function addServersToConfig(array &$config): void
+    protected function addServersToConfig(array|object &$config): void
     {
+        if (is_array($config)) {
+            foreach ($this->serversToAdd as $key => $serverConfig) {
+                $config[$this->configKey][$key] = $serverConfig;
+            }
+
+            return;
+        }
+
+        if (! isset($config->{$this->configKey}) || ! is_object($config->{$this->configKey})) {
+            $config->{$this->configKey} = new stdClass;
+        }
+
         foreach ($this->serversToAdd as $key => $serverConfig) {
-            $config[$this->configKey][$key] = $serverConfig;
+            $config->{$this->configKey}->{$key} = $serverConfig;
         }
     }
 
-    protected function writeJsonConfig(array $config): bool
+    protected function writeJsonConfig(array|object $config): bool
     {
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
