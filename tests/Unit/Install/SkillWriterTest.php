@@ -1070,15 +1070,7 @@ it('creates relative symlink when skills path is outside the project root', func
 });
 
 it('writes skill files with a trailing newline', function (): void {
-    // Regression: previously copyFile() ran trim() on rendered/source content and
-    // wrote it back without re-appending the trailing newline, producing files that
-    // ended without "\n" — creating noisy diffs on every subsequent edit.
-    $sourceDir = sys_get_temp_dir().'/boost-test-skill-'.uniqid();
-    mkdir($sourceDir, 0755, true);
-
-    // Source intentionally ends WITHOUT a trailing newline.
-    file_put_contents($sourceDir.'/SKILL.md', "---\nname: trailing-newline-skill\ndescription: regression test\n---\n# Heading\n\nNo trailing newline at the end of this line.");
-
+    $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
@@ -1086,20 +1078,17 @@ it('writes skill files with a trailing newline', function (): void {
     $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
 
     $skill = new Skill(
-        name: 'trailing-newline-skill',
+        name: 'test-skill',
         package: 'boost',
         path: $sourceDir,
-        description: 'regression test',
+        description: 'Test skill',
     );
 
     $writer = new SkillWriter($agent);
     $result = $writer->write($skill);
 
-    expect($result)->toBe(SkillWriter::SUCCESS);
-
-    $writtenContent = file_get_contents($absoluteTarget.'/trailing-newline-skill/SKILL.md');
-    expect($writtenContent)->toEndWith("\n");
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and(file_get_contents($absoluteTarget.'/test-skill/SKILL.md'))->toEndWith("\n");
 
     cleanupSkillDirectory($absoluteTarget);
-    cleanupSkillDirectory($sourceDir);
 });

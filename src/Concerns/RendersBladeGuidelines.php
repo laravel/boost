@@ -51,11 +51,7 @@ trait RendersBladeGuidelines
 
             $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
 
-            // Render the caption as a Markdown sub-heading so it integrates with the
-            // document's heading structure. Previously this used "<!-- name -->" which
-            // (a) renders as visible text in some Markdown processors, (b) doesn't
-            // contribute to TOC/navigation, and (c) is unconventional for skill files.
-            $this->storedSnippets[$placeholder] = '#### '.$name."\n\n".'```'.$lang."\n".$snippetContent."\n".'```'."\n\n";
+            $this->storedSnippets[$placeholder] = '<!-- '.$name.' -->'."\n".'```'.$lang."\n".$snippetContent."\n".'```'."\n\n";
 
             return $placeholder;
         }, $content);

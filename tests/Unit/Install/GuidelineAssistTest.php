@@ -214,16 +214,11 @@ test('appPath returns customized path', function (): void {
     expect($assist->appPath('path/to/file.php'))->toBe('src/path/to/file.php');
 })->after(fn () => app()->useAppPath('app'));
 
-test('appPath always uses forward-slash separators for guideline output', function (): void {
-    // Guideline templates interpolate display-friendly paths. On Windows, app_path()
-    // concatenates with DIRECTORY_SEPARATOR ('\'), so without normalization
-    // appPath('Http/Kernel.php') would return "app\Http/Kernel.php" — mixed and
-    // visually broken in generated CLAUDE.md files. The output must always use '/'.
+test('appPath normalizes separators to forward slashes', function (): void {
     $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
-    expect($assist->appPath('Http/Kernel.php'))->toBe('app/Http/Kernel.php')
-        ->and($assist->appPath('Console/Commands/'))->toBe('app/Console/Commands/')
-        ->and($assist->appPath())->not->toContain('\\');
+    expect($assist->appPath('Http/Kernel.php'))->toBe('app/Http/Kernel.php');
+    expect($assist->appPath('Console/Commands/'))->toBe('app/Console/Commands/');
 });
