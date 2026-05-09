@@ -194,7 +194,9 @@ class GuidelineAssist
 
     public function appPath(string $path = ''): string
     {
-        return ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
+        $relativePath = ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
+
+        return str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
     }
 
     public function hasSkillsEnabled(): bool
