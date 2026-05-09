@@ -37,7 +37,7 @@ trait RendersBladeGuidelines
             ...$data,
         ]);
 
-        $rendered = html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5);
+        $rendered = html_entity_decode((string) $rendered, ENT_QUOTES | ENT_HTML5);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
