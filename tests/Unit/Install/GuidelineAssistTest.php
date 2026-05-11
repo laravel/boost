@@ -200,7 +200,7 @@ test('appPath returns default app path', function (): void {
     $assist->shouldReceive('discover')->andReturn([]);
 
     expect($assist->appPath())->toBe('app');
-    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('app'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+    expect($assist->appPath('path/to/file.php'))->toBe('app/path/to/file.php');
 });
 
 test('appPath returns customized path', function (): void {
@@ -211,5 +211,14 @@ test('appPath returns customized path', function (): void {
     app()->useAppPath('src');
 
     expect($assist->appPath())->toBe('src');
-    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('src'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+    expect($assist->appPath('path/to/file.php'))->toBe('src/path/to/file.php');
 })->after(fn () => app()->useAppPath('app'));
+
+test('appPath normalizes separators to forward slashes', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->appPath('Http/Kernel.php'))->toBe('app/Http/Kernel.php');
+    expect($assist->appPath('Console/Commands/'))->toBe('app/Console/Commands/');
+});

@@ -1068,3 +1068,27 @@ it('creates relative symlink when skills path is outside the project root', func
     cleanupSkillDirectory($outsideDir);
     cleanupSkillDirectory($canonicalSkillPath);
 });
+
+it('writes skill files with a trailing newline', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'test-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and(file_get_contents($absoluteTarget.'/test-skill/SKILL.md'))->toEndWith("\n");
+
+    cleanupSkillDirectory($absoluteTarget);
+});
