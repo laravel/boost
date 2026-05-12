@@ -415,11 +415,7 @@ class FileWriter
     protected function addServersToConfig(array|object &$config): void
     {
         if (is_array($config)) {
-            foreach ($this->serversToAdd as $key => $serverConfig) {
-                $config[$this->configKey][$key] = $serverConfig;
-            }
-
-            return;
+            $config = (object) $config;
         }
 
         if (! isset($config->{$this->configKey}) || ! is_object($config->{$this->configKey})) {
@@ -431,7 +427,7 @@ class FileWriter
         }
     }
 
-    protected function writeJsonConfig(array|object $config): bool
+    protected function writeJsonConfig(object $config): bool
     {
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
