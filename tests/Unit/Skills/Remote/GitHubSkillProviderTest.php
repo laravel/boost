@@ -11,7 +11,6 @@ use Laravel\Boost\Skills\Remote\RemoteSkill;
 beforeEach(function (): void {
     Http::preventStrayRequests();
 });
-
 function fakeGitHubRepo(string $branch = 'main'): array
 {
     return ['api.github.com/repos/owner/repo' => Http::response(['default_branch' => $branch])];

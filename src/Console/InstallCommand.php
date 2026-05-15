@@ -66,6 +66,9 @@ class InstallCommand extends Command
     /** @var array<int, string> */
     private array $installedSkillNames = [];
 
+    /** @var array<string, array<string, string>> */
+    private array $installedSkillMetadata = [];
+
     const MIN_TEST_COUNT = 6;
 
     public function __construct(
@@ -365,6 +368,13 @@ class InstallCommand extends Command
         $skills = $skillsComposer->skills();
 
         $this->installedSkillNames = $skills->keys()->toArray();
+        $this->installedSkillMetadata = $skills
+            ->mapWithKeys(fn (Skill $skill): array => [
+                $skill->name => [
+                    'source' => $skill->custom ? Config::SKILL_SOURCE_CUSTOM : Config::SKILL_SOURCE_OFFICIAL,
+                ],
+            ])
+            ->all();
 
         /** @var Collection<int, SupportsSkills&Agent> $skillsAgents */
         $this->installFeature(
@@ -433,7 +443,7 @@ class InstallCommand extends Command
         }
 
         if ($this->selectedBoostFeatures->contains('skills')) {
-            $this->config->setSkills($this->installedSkillNames);
+            $this->config->setSkills($this->installedSkillNames, $this->installedSkillMetadata);
         }
 
         $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));

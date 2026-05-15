@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Laravel\Boost\Support\Config;
 use Orchestra\Testbench\Concerns\InteractsWithPublishedFiles;
 
 uses(InteractsWithPublishedFiles::class);
 
 beforeEach(function (): void {
     File::deleteDirectory(base_path('.ai/skills'));
+    (new Config)->flush();
 
     $this->files = [
         '.ai/skills/skill-one/SKILL.md',
@@ -93,6 +95,48 @@ it('installs all skills with --all option', function (): void {
 
     $this->assertFilenameExists('.ai/skills/skill-one/SKILL.md');
     $this->assertFileContains(['# SKILL Content'], '.ai/skills/skill-one/SKILL.md');
+
+    $config = json_decode((string) file_get_contents(base_path('boost.json')), true);
+
+    expect($config['skills']['skill-one'])->toBe([
+        'source' => 'github',
+        'repo' => 'owner/repo',
+    ]);
+});
+
+it('tracks installed skills in boost json using source metadata', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'repo-tree-sha',
+            'tree' => [
+                ['path' => 'path/to/skills/skill-one', 'type' => 'tree', 'sha' => 'skill-one-tree-sha'],
+                ['path' => 'path/to/skills/skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'skill-file-sha', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
+            ---
+            name: skill-one
+            description: First skill
+            ---
+            # SKILL Content
+            YAML),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo/path/to/skills',
+        '--all' => true,
+    ])->assertSuccessful();
+
+    $config = json_decode((string) file_get_contents(base_path('boost.json')), true);
+
+    expect($config['skills'])->toBe([
+        'skill-one' => [
+            'source' => 'github',
+            'repo' => 'owner/repo',
+            'path' => 'path/to/skills/skill-one',
+        ],
+    ]);
 });
 
 it('installs specific skills with --skill option', function (): void {
