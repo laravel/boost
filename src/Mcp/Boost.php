@@ -18,6 +18,7 @@ use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
 use Laravel\Boost\Mcp\Tools\LastError;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
+use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Resource;
@@ -91,6 +92,7 @@ class Boost extends Server
             LastError::class,
             ReadLogEntries::class,
             SearchDocs::class,
+            Tinker::class,
         ], 'tools');
     }
 
