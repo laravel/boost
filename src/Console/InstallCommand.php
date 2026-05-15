@@ -88,6 +88,7 @@ class InstallCommand extends Command
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
         $this->performInstallation();
+        $this->updateGitignore();
         $this->outro();
 
         return self::SUCCESS;
@@ -138,6 +139,103 @@ class InstallCommand extends Command
         }
 
         $this->storeConfig();
+    }
+
+    protected function updateGitignore(): void
+    {
+        if (! $this->input->isInteractive()) {
+            $this->info('Skipped .gitignore updates.');
+
+            return;
+        }
+
+        if (! $this->confirm('Would you like to add recommended AI artifacts to .gitignore?')) {
+            $this->info('Skipped .gitignore updates.');
+
+            return;
+        }
+
+        $path = base_path('.gitignore');
+        $content = file_exists($path) ? file_get_contents($path) : '';
+        $updatedContent = $this->mergeBoostGitignoreRules($content ?: '');
+
+        if ($updatedContent === $content) {
+            $this->info('Laravel Boost ignore rules are already present in .gitignore.');
+
+            return;
+        }
+
+        file_put_contents($path, $updatedContent);
+
+        $this->info('Added Laravel Boost ignore rules to .gitignore.');
+    }
+
+    protected function mergeBoostGitignoreRules(string $content): string
+    {
+        $lineEnding = $this->detectLineEnding($content);
+        $lines = $this->gitignoreLines($content);
+        $normalizedLines = collect($lines)->map(fn (string $line): string => trim($line));
+        $entries = collect([
+            '.ai/generated',
+            '.ai/cache',
+            '.claude/',
+            '.cursor/rules/generated',
+        ]);
+
+        $missingEntries = $entries
+            ->reject(fn (string $entry): bool => $normalizedLines->contains($entry))
+            ->values();
+
+        if ($missingEntries->isEmpty()) {
+            return $content;
+        }
+
+        if ($normalizedLines->contains('# Laravel Boost')) {
+            $sectionStart = $normalizedLines->search('# Laravel Boost');
+            $sectionEnd = $sectionStart + 1;
+
+            while (isset($lines[$sectionEnd]) && $entries->contains(trim($lines[$sectionEnd]))) {
+                $sectionEnd++;
+            }
+
+            array_splice($lines, $sectionEnd, 0, $missingEntries->all());
+        } else {
+            $lines = [
+                ...$lines,
+                ...($lines === [] ? [] : ['']),
+                '# Laravel Boost',
+                ...$missingEntries->all(),
+            ];
+        }
+
+        return implode($lineEnding, $lines).$lineEnding;
+    }
+
+    protected function detectLineEnding(string $content): string
+    {
+        if (str_contains($content, "\r\n")) {
+            return "\r\n";
+        }
+
+        if (str_contains($content, "\r")) {
+            return "\r";
+        }
+
+        return "\n";
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function gitignoreLines(string $content): array
+    {
+        $trimmedContent = rtrim($content, "\r\n");
+
+        if ($trimmedContent === '') {
+            return [];
+        }
+
+        return preg_split('/\r\n|\n|\r/', $trimmedContent) ?: [];
     }
 
     protected function outro(): void
