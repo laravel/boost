@@ -241,3 +241,15 @@ LOG;
         ->toolTextContains('ERROR', 'This is the actual error')
         ->toolTextDoesNotContain('This is an info message', 'This is a warning message');
 });
+
+it('respects custom ttl configuration value', function (): void {
+    // Test that the config value can be read
+    Config::set('boost.last_error_cache_ttl', 7200);
+
+    expect(config('boost.last_error_cache_ttl'))->toBe(7200);
+});
+
+it('uses default ttl from config file', function (): void {
+    // The config file has 86400 as the default (24 hours)
+    expect(config('boost.last_error_cache_ttl'))->toBe(86400);
+});

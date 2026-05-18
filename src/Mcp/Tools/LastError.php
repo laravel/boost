@@ -30,12 +30,21 @@ class LastError extends Tool
         if (! self::$listenerRegistered) {
             Log::listen(function (MessageLogged $event): void {
                 if ($event->level === 'error') {
-                    rescue(fn () => Cache::forever('boost:last_error', [
-                        'timestamp' => now()->toDateTimeString(),
-                        'level' => $event->level,
-                        'message' => $event->message,
-                        'context' => [], // $event->context,
-                    ]), report: false);
+                    rescue(function () use ($event): void {
+                        $ttl = config('boost.last_error_cache_ttl', 86400);
+                        $data = [
+                            'timestamp' => now()->toDateTimeString(),
+                            'level' => $event->level,
+                            'message' => $event->message,
+                            'context' => [], // $event->context,
+                        ];
+
+                        if ($ttl === null) {
+                            Cache::forever('boost:last_error', $data);
+                        } else {
+                            Cache::put('boost:last_error', $data, $ttl);
+                        }
+                    }, report: false);
                 }
             });
 

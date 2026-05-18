@@ -49,4 +49,17 @@ return [
         'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boost Last Error Cache TTL
+    |--------------------------------------------------------------------------
+    |
+    | This option controls how long (in seconds) the last error is cached.
+    | The cache is used to quickly retrieve the most recent error without
+    | reading from the log file. Set to null to cache forever (default behavior).
+    |
+    */
+
+    'last_error_cache_ttl' => env('BOOST_LAST_ERROR_CACHE_TTL', 86400), // 24 hours in seconds
+
 ];
