@@ -29,5 +29,9 @@
 
 ## Tinker
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
+@if($assist->hasMcpEnabled() && config('boost.tinker_tool_enabled', false))
+- Use the `tinker` MCP tool to execute PHP code instead of the CLI. It avoids shell escaping issues and runs the snippet in the Laravel application context.
+@else
 - Always use single quotes to prevent shell expansion: `{{ $assist->artisanCommand("tinker --execute 'Your::code();'") }}`
   - Double quotes for PHP strings inside: `{{ $assist->artisanCommand("tinker --execute 'User::where(\"active\", true)->count();'") }}`
+@endif
