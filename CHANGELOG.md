@@ -1,6 +1,31 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.6...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.7...main)
+
+## [v2.4.7](https://github.com/laravel/boost/compare/v2.4.6...v2.4.7) - 2026-05-18
+
+### What's Changed
+
+* fix: minor typo and comment improvements in ApplicationInfo and Boost by [@iz-ahmad](https://github.com/iz-ahmad) in https://github.com/laravel/boost/pull/792
+* Fix TypeError in RendersBladeGuidelines when Blade::render returns an HtmlString by [@dipaksarkar](https://github.com/dipaksarkar) in https://github.com/laravel/boost/pull/796
+* Fix path separators and trailing newlines in install output by [@barrytarter](https://github.com/barrytarter) in https://github.com/laravel/boost/pull/790
+* Remove redundant guidance to read .env directly by [@loadinglucian](https://github.com/loadinglucian) in https://github.com/laravel/boost/pull/801
+* Preserve empty objects in MCP JSON config files by [@mwikala](https://github.com/mwikala) in https://github.com/laravel/boost/pull/793
+* Pin GitHub Actions to commit SHAs and add Dependabot config by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/boost/pull/804
+* Bump shivammathur/setup-php from 2.37.0 to 2.37.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/806
+* Sync Flux UI free/pro component lists with fluxui.dev by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/808
+* Omit cwd from Codex MCP config to fix Sail and worktree issues by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/809
+* Add Tinker MCP tool (opt-in via config) by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/807
+
+### New Contributors
+
+* [@dipaksarkar](https://github.com/dipaksarkar) made their first contribution in https://github.com/laravel/boost/pull/796
+* [@barrytarter](https://github.com/barrytarter) made their first contribution in https://github.com/laravel/boost/pull/790
+* [@loadinglucian](https://github.com/loadinglucian) made their first contribution in https://github.com/laravel/boost/pull/801
+* [@mwikala](https://github.com/mwikala) made their first contribution in https://github.com/laravel/boost/pull/793
+* [@joetannenbaum](https://github.com/joetannenbaum) made their first contribution in https://github.com/laravel/boost/pull/804
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.6...v2.4.7
 
 ## [v2.4.6](https://github.com/laravel/boost/compare/v2.4.5...v2.4.6) - 2026-04-28
 
@@ -264,11 +289,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -323,12 +350,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
