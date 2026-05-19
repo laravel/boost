@@ -7,10 +7,13 @@ namespace Laravel\Boost\Mcp;
 use Dotenv\Dotenv;
 use Illuminate\Support\Env;
 use Laravel\Boost\Support\CommandNormalizer;
+use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\Server\Tool;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
+use Throwable;
 
 class ToolExecutor
 {
@@ -20,7 +23,43 @@ class ToolExecutor
             return Response::error("Tool not registered or not allowed: {$toolClass}");
         }
 
+        // When Boost is being served over HTTP (PHP-FPM, CGI, php artisan serve),
+        // PHP_BINARY does not point at a CLI php that can run artisan, and each
+        // HTTP request is already its own isolated PHP process. Execute the
+        // tool inline rather than spawning a subprocess.
+        if (! $this->shouldRunInSubprocess()) {
+            return $this->executeInline($toolClass, $arguments);
+        }
+
         return $this->executeInSubprocess($toolClass, $arguments);
+    }
+
+    protected function shouldRunInSubprocess(): bool
+    {
+        return PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
+    }
+
+    protected function executeInline(string $toolClass, array $arguments): Response
+    {
+        /** @var Tool $tool */
+        $tool = app($toolClass);
+
+        $request = new Request($arguments);
+
+        ob_start();
+
+        try {
+            /** @var Response $response */
+            $response = $tool->handle($request); // @phpstan-ignore-line
+        } catch (Throwable $throwable) {
+            ob_end_clean();
+
+            return Response::error("Tool execution failed (E_THROWABLE): {$throwable->getMessage()}");
+        }
+
+        ob_end_clean();
+
+        return $response;
     }
 
     protected function executeInSubprocess(string $toolClass, array $arguments): Response
