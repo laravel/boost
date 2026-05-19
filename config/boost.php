@@ -32,6 +32,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Boost Tinker Tool (MCP)
+    |--------------------------------------------------------------------------
+    |
+    | The following option may be used to enable or disable the tinker tool MCP
+    | feature within Laravel Boost. The tinker tool can helps when there is
+    | need to execute PHP to debug code or query Eloquent models directly.
+    |
+    */
+
+    'tinker_tool_enabled' => env('BOOST_TINKER_TOOL_ENABLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
