@@ -49,4 +49,44 @@ return [
         'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boost MCP Transports
+    |--------------------------------------------------------------------------
+    |
+    | Boost registers a stdio (local) MCP server by default, exposed through
+    | the `php artisan boost:mcp` command. Some MCP clients do not keep
+    | stdio servers alive reliably, so Boost may also expose its MCP server
+    | over HTTP (Streamable HTTP) using laravel/mcp's web transport.
+    |
+    | The HTTP transport is disabled by default. Enabling it exposes Boost's
+    | development tooling (database access, log access, route inspection,
+    | tinker, etc.) over an HTTP endpoint, so it should only be enabled in
+    | trusted local development environments and ideally protected with
+    | application middleware (for example `auth:sanctum`) when reachable
+    | over a network.
+    |
+    */
+
+    'mcp' => [
+
+        'web' => [
+
+            'enabled' => env('BOOST_MCP_WEB_ENABLED', false),
+
+            'path' => env('BOOST_MCP_WEB_PATH', '/_boost/mcp'),
+
+            /*
+            | Middleware applied to the HTTP MCP route. Leave empty to inherit
+            | only the middleware that laravel/mcp applies internally. Add
+            | application-appropriate middleware (e.g. `auth:sanctum`) when
+            | exposing the endpoint outside of a trusted local environment.
+            */
+
+            'middleware' => [],
+
+        ],
+
+    ],
+
 ];

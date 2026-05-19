@@ -53,6 +53,8 @@ class BoostServiceProvider extends ServiceProvider
 
         Mcp::local('laravel-boost', Boost::class);
 
+        $this->registerWebMcp();
+
         $this->registerPublishing();
         $this->registerCommands();
         $this->registerRoutes();
@@ -70,6 +72,27 @@ class BoostServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/boost.php' => config_path('boost.php'),
             ], 'boost-config');
+        }
+    }
+
+    protected function registerWebMcp(): void
+    {
+        if (! config('boost.mcp.web.enabled', false)) {
+            return;
+        }
+
+        $path = config('boost.mcp.web.path', '/_boost/mcp');
+
+        if (! is_string($path) || $path === '') {
+            return;
+        }
+
+        $route = Mcp::web($path, Boost::class);
+
+        $middleware = config('boost.mcp.web.middleware', []);
+
+        if (is_array($middleware) && $middleware !== []) {
+            $route->middleware($middleware);
         }
     }
 

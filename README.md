@@ -18,6 +18,57 @@ Laravel Boost accelerates AI-assisted development by providing the essential con
 
 Documentation for Laravel Boost can be found on the [Laravel website](https://laravel.com/docs/boost).
 
+## Optional Streamable HTTP MCP Transport
+
+By default, Laravel Boost exposes its MCP server over **stdio** via the `php artisan boost:mcp` command. This is the recommended transport for most local setups and remains unchanged.
+
+Some MCP clients do not keep stdio servers alive reliably and may appear to "disconnect" Boost after periods of inactivity. For those clients, Boost can also expose the same MCP server over HTTP (Streamable HTTP) using `laravel/mcp`'s web transport.
+
+The HTTP transport is **disabled by default**.
+
+### Enabling
+
+Publish the Boost config (if you have not already) and set the env vars:
+
+```env
+BOOST_MCP_WEB_ENABLED=true
+BOOST_MCP_WEB_PATH=/_boost/mcp
+```
+
+Then serve the application normally with your usual local web stack (Herd, Valet, Sail, `nginx`/`php-fpm`, or `php artisan serve`). The MCP client should be pointed at the application URL plus the configured path, for example:
+
+```
+http://my-app.test/_boost/mcp
+```
+
+### Configuration
+
+The full config block (in `config/boost.php`) looks like:
+
+```php
+'mcp' => [
+    'web' => [
+        'enabled'    => env('BOOST_MCP_WEB_ENABLED', false),
+        'path'       => env('BOOST_MCP_WEB_PATH', '/_boost/mcp'),
+        'middleware' => [],
+    ],
+],
+```
+
+You may attach project-appropriate middleware to the HTTP MCP route, for example:
+
+```php
+'middleware' => ['auth:sanctum'],
+```
+
+The stdio transport is unaffected by this setting and continues to work as before.
+
+### Security
+
+> **Warning** Laravel Boost exposes development tooling that can inspect your application, database, logs, routes, configuration, and other sensitive local development information. Do **not** expose the HTTP MCP endpoint on a public network without authentication and network-level protections.
+
+The HTTP transport is intended for trusted local development environments. If you must expose it beyond your local machine, protect it with appropriate middleware (such as `auth:sanctum`) and network-level controls. Do not enable it in production.
+
 ## Contributing
 
 Thank you for considering contributing to Boost! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
