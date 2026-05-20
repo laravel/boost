@@ -32,9 +32,9 @@ it('returns collection of all registered agents', function (): void {
     $agents = $this->detector->getAgents();
 
     expect($agents)->toBeInstanceOf(Collection::class)
-        ->and($agents->count())->toBe(9)
+        ->and($agents->count())->toBe(10)
         ->and($agents->keys()->toArray())->toBe([
-            'amp', 'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'kiro', 'opencode', 'gemini',
+            'amp', 'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'kiro', 'opencode', 'gemini', 'antigravity',
         ]);
 
     $agents->each(function ($agent): void {

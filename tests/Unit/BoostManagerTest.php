@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\BoostManager;
 use Laravel\Boost\Install\Agents\Amp;
+use Laravel\Boost\Install\Agents\Antigravity;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
@@ -26,6 +27,7 @@ it('returns default agents', function (): void {
         'copilot' => Copilot::class,
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
+        'antigravity' => Antigravity::class,
     ]);
 });
 
