@@ -6,7 +6,6 @@ namespace Tests\Unit\Install\Agents;
 
 use Laravel\Boost\Install\Agents\Antigravity;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
-use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
 
@@ -20,42 +19,16 @@ it('returns antigravity name', function (): void {
     expect($agent->name())->toBe('antigravity');
 });
 
-it('returns Google Antigravity display name', function (): void {
+it('returns Antigravity display name', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
-    expect($agent->displayName())->toBe('Google Antigravity');
-});
-
-it('uses FILE-based mcp installation strategy', function (): void {
-    $agent = new Antigravity($this->strategyFactory);
-
-    expect($agent->mcpInstallationStrategy())->toBe(McpInstallationStrategy::FILE);
-});
-
-it('returns default mcp config path', function (): void {
-    $agent = new Antigravity($this->strategyFactory);
-
-    expect($agent->mcpConfigPath())->toBe('.agents/plugins/laravel-boost/mcp_config.json');
-});
-
-it('returns configured mcp config path', function (): void {
-    config()->set('boost.agents.antigravity.mcp_config_path', '.custom/antigravity.json');
-
-    $agent = new Antigravity($this->strategyFactory);
-
-    expect($agent->mcpConfigPath())->toBe('.custom/antigravity.json');
-});
-
-it('returns default mcp config key', function (): void {
-    $agent = new Antigravity($this->strategyFactory);
-
-    expect($agent->mcpConfigKey())->toBe('mcpServers');
+    expect($agent->displayName())->toBe('Antigravity');
 });
 
 it('returns default guidelines path', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
-    expect($agent->guidelinesPath())->toBe('.agents/rules/boost.md');
+    expect($agent->guidelinesPath())->toBe('AGENTS.md');
 });
 
 it('returns configured guidelines path', function (): void {
@@ -80,12 +53,12 @@ it('returns configured skills path', function (): void {
     expect($agent->skillsPath())->toBe('.custom/skills');
 });
 
-it('projectDetectionConfig detects .agents and plugin file', function (): void {
+it('projectDetectionConfig detects .agents path and GEMINI.md file', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
     expect($agent->projectDetectionConfig())->toBe([
         'paths' => ['.agents'],
-        'files' => ['.agents/plugins/laravel-boost/plugin.json'],
+        'files' => ['GEMINI.md'],
     ]);
 });
 
@@ -112,4 +85,3 @@ it('system detection uses where on Windows', function (): void {
 
     expect($config['command'])->toBe('cmd /c where antigravity 2>nul');
 });
-

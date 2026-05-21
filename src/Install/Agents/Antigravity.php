@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Agents;
 
 use Laravel\Boost\Contracts\SupportsGuidelines;
-use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
-use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Antigravity extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
+class Antigravity extends Agent implements SupportsGuidelines, SupportsSkills
 {
     public function name(): string
     {
@@ -19,7 +17,7 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsMcp, Supp
 
     public function displayName(): string
     {
-        return 'Google Antigravity';
+        return 'Antigravity';
     }
 
     public function systemDetectionConfig(Platform $platform): array
@@ -38,28 +36,13 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsMcp, Supp
     {
         return [
             'paths' => ['.agents'],
-            'files' => ['.agents/plugins/laravel-boost/plugin.json'],
+            'files' => ['GEMINI.md'],
         ];
-    }
-
-    public function mcpInstallationStrategy(): McpInstallationStrategy
-    {
-        return McpInstallationStrategy::FILE;
-    }
-
-    public function mcpConfigPath(): string
-    {
-        return config('boost.agents.antigravity.mcp_config_path', '.agents/plugins/laravel-boost/mcp_config.json');
-    }
-
-    public function mcpConfigKey(): string
-    {
-        return 'mcpServers';
     }
 
     public function guidelinesPath(): string
     {
-        return config('boost.agents.antigravity.guidelines_path', '.agents/rules/boost.md');
+        return config('boost.agents.antigravity.guidelines_path', 'AGENTS.md');
     }
 
     public function skillsPath(): string
