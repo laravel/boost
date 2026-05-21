@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\BoostManager;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\Agents\Amp;
+use Laravel\Boost\Install\Agents\Antigravity;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
@@ -64,6 +65,7 @@ it('returns an array of detected agents names for system discovery', function ()
     $this->container->bind(Kiro::class, fn () => $mockOther);
     $this->container->bind(OpenCode::class, fn () => $mockOther);
     $this->container->bind(Gemini::class, fn () => $mockOther);
+    $this->container->bind(Antigravity::class, fn () => $mockOther);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledAgents();
@@ -85,6 +87,7 @@ it('returns an empty array when no agents are detected for system discovery', fu
     $this->container->bind(Kiro::class, fn () => $mockAgent);
     $this->container->bind(OpenCode::class, fn () => $mockAgent);
     $this->container->bind(Gemini::class, fn () => $mockAgent);
+    $this->container->bind(Antigravity::class, fn () => $mockAgent);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledAgents();
@@ -116,6 +119,7 @@ it('returns an array of detected agent names for project discovery', function ()
     $this->container->bind(Kiro::class, fn () => $mockOther);
     $this->container->bind(OpenCode::class, fn () => $mockOther);
     $this->container->bind(Gemini::class, fn () => $mockOther);
+    $this->container->bind(Antigravity::class, fn () => $mockOther);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledAgents($basePath);
@@ -139,6 +143,7 @@ it('returns an empty array when no agents are detected for project discovery', f
     $this->container->bind(Kiro::class, fn () => $mockAgent);
     $this->container->bind(OpenCode::class, fn () => $mockAgent);
     $this->container->bind(Gemini::class, fn () => $mockAgent);
+    $this->container->bind(Antigravity::class, fn () => $mockAgent);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledAgents($basePath);
