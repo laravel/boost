@@ -390,7 +390,7 @@ After completing the upgrade, the following new features are available. Do **not
 - **Standalone HTTP requests (`useHttp`)** - Make HTTP requests without triggering page visits. Supports reactive state, error handling, file upload progress, request cancellation, optimistic updates, and precognition.
 - **Optimistic updates** - Chain `router.optimistic()` before a visit to apply changes instantly on the client. Props revert automatically on failure. Works with router visits, `<Form>`, `useForm`, and `useHttp`.
 - **Instant visits** - Swap to the target page component immediately via `<Link href="/dashboard" component="Dashboard">` while the server request fires in the background.
-- **Layout props (`useLayoutProps`)** - Persistent layouts can declare defaults that pages override via `setLayoutProps()`. Supports named layouts, nested layouts, and static props.
+- **Layout props (`setLayoutProps`)** - Persistent layouts can declare defaults that pages override via `setLayoutProps()`. Supports named layouts, nested layouts, and static props.
 - **Exception handling (`handleExceptionsUsing`)** - Full control over error page rendering with access to shared data via `withSharedData()`.
 - **Default layout** - Set a default layout in `createInertiaApp()` instead of on every page.
 - **Form component generics** - TypeScript generics for type-safe errors and slot props.
