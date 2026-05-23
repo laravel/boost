@@ -7,13 +7,18 @@ namespace Laravel\Boost\Install;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Roster;
 use Symfony\Component\Finder\Finder;
 
 class GuidelineAssist
 {
+    use DiscoverPackagePaths;
+
     /** @var array<string, string> */
     protected array $enumPaths = [];
 
@@ -21,6 +26,17 @@ class GuidelineAssist
     {
         $this->skills ??= collect();
         $this->enumPaths = $this->discover();
+    }
+
+    protected function getRoster(): Roster
+    {
+        return $this->roster;
+    }
+
+    public function getGuidelinePackages(): PackageCollection
+    {
+        return $this->getRoster()->packages()
+            ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package));
     }
 
     /**

@@ -9,7 +9,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - php - {{ PHP_MAJOR_VERSION }}.{{ PHP_MINOR_VERSION }}
-@foreach (app(\Laravel\Roster\Roster::class)->packages()->unique(fn ($package) => $package->rawName()) as $package)
+@foreach ($assist->getGuidelinePackages()->unique(fn ($package) => $package->rawName()) as $package)
 - {{ $package->rawName() }} ({{ $package->name() }}) - v{{ $package->majorVersion() }}
 @endforeach
 
