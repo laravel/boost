@@ -22,6 +22,8 @@ trait DiscoverPackagePaths
     protected array $mustBeDirect = [
         Packages::MCP,
         Packages::LIVEWIRE,
+        Packages::PINT,
+        Packages::PROMPTS,
     ];
 
     /**
