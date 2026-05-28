@@ -16,6 +16,7 @@ use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
+use Laravel\Boost\Install\Agents\Zed;
 
 class BoostManager
 {
@@ -31,6 +32,7 @@ class BoostManager
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
         'antigravity' => Antigravity::class,
+        'zed' => Zed::class,
     ];
 
     /**

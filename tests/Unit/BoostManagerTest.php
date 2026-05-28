@@ -12,6 +12,7 @@ use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\OpenCode;
+use Laravel\Boost\Install\Agents\Zed;
 use Tests\Unit\Install\ExampleAgent;
 
 it('returns default agents', function (): void {
@@ -28,6 +29,7 @@ it('returns default agents', function (): void {
         'opencode' => OpenCode::class,
         'gemini' => Gemini::class,
         'antigravity' => Antigravity::class,
+        'zed' => Zed::class,
     ]);
 });
 
