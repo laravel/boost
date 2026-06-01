@@ -9,7 +9,9 @@ use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
 use Laravel\Boost\Install\Agents\Cursor;
+use Laravel\Boost\Install\Agents\Factory;
 use Laravel\Boost\Install\Agents\Junie;
+use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
 use Tests\Unit\Install\ExampleAgent;
 
@@ -24,6 +26,8 @@ it('returns default agents', function (): void {
         'claude_code' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
+        'factory' => Factory::class,
+        'kiro' => Kiro::class,
         'opencode' => OpenCode::class,
         'antigravity' => Antigravity::class,
     ]);
