@@ -45,8 +45,12 @@ class Sail
         $binaryPath = self::binaryPath();
         $resolvedPath = str_starts_with($binaryPath, DIRECTORY_SEPARATOR) ? $binaryPath : base_path($binaryPath);
 
-        return file_exists($resolvedPath) &&
-            (file_exists(base_path('docker-compose.yml')) || file_exists(base_path('compose.yaml')));
+        return file_exists($resolvedPath) && (
+            file_exists(base_path('compose.yml'))
+            || file_exists(base_path('compose.yaml'))
+            || file_exists(base_path('docker-compose.yml'))
+            || file_exists(base_path('docker-compose.yaml'))
+        );
     }
 
     public function isActive(): bool
