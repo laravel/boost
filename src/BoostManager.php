@@ -13,7 +13,6 @@ use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
 use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Factory;
-use Laravel\Boost\Install\Agents\Gemini;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
@@ -31,7 +30,6 @@ class BoostManager
         'factory' => Factory::class,
         'kiro' => Kiro::class,
         'opencode' => OpenCode::class,
-        'gemini' => Gemini::class,
         'antigravity' => Antigravity::class,
     ];
 
