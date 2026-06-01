@@ -4,6 +4,42 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\Sail;
 
+$sailTempDir = null;
+
+beforeEach(function (): void {
+    global $sailTempDir;
+
+    $sailTempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_sail_'.uniqid();
+    mkdir($sailTempDir);
+    app()->setBasePath($sailTempDir);
+
+    $binary = $sailTempDir.DIRECTORY_SEPARATOR.'sail';
+    config(['boost.executable_paths.sail' => $binary]);
+    touch($binary);
+});
+
+afterEach(function (): void {
+    global $sailTempDir;
+
+    if (is_dir($sailTempDir)) {
+        removeSailTestDirectory($sailTempDir);
+    }
+
+    $sailTempDir = null;
+});
+
+function removeSailTestDirectory(string $dir): void
+{
+    $files = array_diff(scandir($dir), ['.', '..']);
+
+    foreach ($files as $file) {
+        $path = $dir.DIRECTORY_SEPARATOR.$file;
+        is_dir($path) ? removeSailTestDirectory($path) : unlink($path);
+    }
+
+    rmdir($dir);
+}
+
 test('isActive returns true when LARAVEL_SAIL env var is set', function (): void {
     putenv('LARAVEL_SAIL=1');
 
@@ -71,48 +107,29 @@ test('sail binary path defaults to vendor/bin/sail', function (): void {
     expect(Sail::binaryPath())->toBe('vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail');
 });
 
-describe('isInstalled', function (): void {
-    beforeEach(function (): void {
-        $this->tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_sail_'.uniqid();
-        mkdir($this->tempDir);
-        app()->setBasePath($this->tempDir);
+test('isInstalled detects every Docker Compose filename supported by default', function (string $composeFile): void {
+    global $sailTempDir;
 
-        $this->binary = $this->tempDir.DIRECTORY_SEPARATOR.'sail';
-        config(['boost.executable_paths.sail' => $this->binary]);
-        touch($this->binary);
-    });
+    touch($sailTempDir.DIRECTORY_SEPARATOR.$composeFile);
 
-    afterEach(function (): void {
-        foreach (new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($this->tempDir, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST
-        ) as $path) {
-            $path->isDir() ? rmdir($path->getPathname()) : unlink($path->getPathname());
-        }
+    expect((new Sail)->isInstalled())->toBeTrue();
+})->with([
+    'compose.yml',
+    'compose.yaml',
+    'docker-compose.yml',
+    'docker-compose.yaml',
+]);
 
-        rmdir($this->tempDir);
-    });
+test('isInstalled returns false when no Docker Compose file is present', function (): void {
+    expect((new Sail)->isInstalled())->toBeFalse();
+});
 
-    test('detects every Docker Compose filename supported by default', function (string $composeFile): void {
-        touch($this->tempDir.DIRECTORY_SEPARATOR.$composeFile);
+test('isInstalled returns false when the sail binary is missing', function (): void {
+    global $sailTempDir;
 
-        expect((new Sail)->isInstalled())->toBeTrue();
-    })->with([
-        'compose.yml',
-        'compose.yaml',
-        'docker-compose.yml',
-        'docker-compose.yaml',
-    ]);
+    unlink($sailTempDir.DIRECTORY_SEPARATOR.'sail');
 
-    test('returns false when no Docker Compose file is present', function (): void {
-        expect((new Sail)->isInstalled())->toBeFalse();
-    });
+    touch($sailTempDir.DIRECTORY_SEPARATOR.'docker-compose.yml');
 
-    test('returns false when the sail binary is missing', function (): void {
-        unlink($this->binary);
-
-        touch($this->tempDir.DIRECTORY_SEPARATOR.'docker-compose.yml');
-
-        expect((new Sail)->isInstalled())->toBeFalse();
-    });
+    expect((new Sail)->isInstalled())->toBeFalse();
 });
