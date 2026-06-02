@@ -53,7 +53,7 @@ class Junie extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
     public function projectDetectionConfig(): array
     {
         return [
-            'paths' => ['.idea', '.junie'],
+            'paths' => ['.junie'],
         ];
     }
 

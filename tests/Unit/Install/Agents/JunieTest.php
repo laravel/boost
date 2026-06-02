@@ -20,3 +20,25 @@ test('httpMcpServerConfig returns npx mcp-remote config', function (): void {
         'args' => ['-y', 'mcp-remote', 'https://nightwatch.laravel.com/mcp'],
     ]);
 });
+
+test('projectDetectionConfig only uses .junie dir', function (): void {
+    $agent = new Junie($this->strategyFactory);
+
+    expect($agent->projectDetectionConfig())->toBe([
+        'paths' => ['.junie'],
+    ]);
+});
+
+test('detectInProject returns false when only .idea dir exists', function (): void {
+    $agent = new Junie(new DetectionStrategyFactory(app()));
+    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_junie_'.uniqid();
+    mkdir($tempDir);
+    mkdir($tempDir.DIRECTORY_SEPARATOR.'.idea');
+
+    try {
+        expect($agent->detectInProject($tempDir))->toBeFalse();
+    } finally {
+        rmdir($tempDir.DIRECTORY_SEPARATOR.'.idea');
+        rmdir($tempDir);
+    }
+});
