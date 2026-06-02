@@ -38,7 +38,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
     public function projectDetectionConfig(): array
     {
         return [
-            'files' => ['AGENTS.md', 'opencode.json'],
+            'files' => ['opencode.json'],
         ];
     }
 
