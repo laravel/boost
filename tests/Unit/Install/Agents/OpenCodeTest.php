@@ -12,6 +12,28 @@ beforeEach(function (): void {
     $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
 });
 
+test('projectDetectionConfig only uses opencode.json', function (): void {
+    $agent = new OpenCode($this->strategyFactory);
+
+    expect($agent->projectDetectionConfig())->toBe([
+        'files' => ['opencode.json'],
+    ]);
+});
+
+test('detectInProject returns false when only AGENTS.md exists', function (): void {
+    $agent = new OpenCode(new DetectionStrategyFactory(app()));
+    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_opencode_'.uniqid();
+    mkdir($tempDir);
+    touch($tempDir.DIRECTORY_SEPARATOR.'AGENTS.md');
+
+    try {
+        expect($agent->detectInProject($tempDir))->toBeFalse();
+    } finally {
+        unlink($tempDir.DIRECTORY_SEPARATOR.'AGENTS.md');
+        rmdir($tempDir);
+    }
+});
+
 test('httpMcpServerConfig returns remote type config', function (): void {
     $agent = new OpenCode($this->strategyFactory);
 
