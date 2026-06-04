@@ -29,6 +29,21 @@ Check sibling files, related controllers, models, or tests for established patte
 - `cursor()` for memory-efficient read-only iteration
 - Never query in Blade templates
 
+<!-- N+1 Prevention -->
+```php
+// BAD: N+1 — runs 1 query for posts + 1 per post for user
+$posts = Post::all();
+foreach ($posts as $post) {
+    echo $post->user->name;
+}
+
+// GOOD: eager load — runs exactly 2 queries
+$posts = Post::with('user')->get();
+foreach ($posts as $post) {
+    echo $post->user->name;
+}
+```
+
 ### 2. Advanced Query Patterns → `rules/advanced-queries.md`
 
 - `addSelect()` subqueries over eager-loading entire has-many for a single value
@@ -47,6 +62,18 @@ Check sibling files, related controllers, models, or tests for established patte
 - `{{ }}` for output escaping, `@csrf` on all POST/PUT/DELETE forms, `throttle` on auth and API routes
 - Validate MIME type, extension, and size for file uploads
 - Never commit `.env`, use `config()` for secrets, `encrypted` cast for sensitive DB fields
+
+<!-- Mass Assignment Protection -->
+```php
+// BAD: no $fillable — all columns writable via mass assignment
+class User extends Model {}
+
+// GOOD: explicit $fillable whitelist
+class User extends Model
+{
+    protected $fillable = ['name', 'email'];
+}
+```
 
 ### 4. Caching → `rules/caching.md`
 
@@ -76,6 +103,22 @@ Check sibling files, related controllers, models, or tests for established patte
 - `$request->validated()` only — never `$request->all()`
 - `Rule::when()` for conditional validation
 - `after()` instead of `withValidator()`
+
+<!-- Form Request -->
+```php
+// BAD: inline validation in controller
+public function store(Request $request)
+{
+    $request->validate(['title' => 'required|string|max:255']);
+    Post::create($request->all()); // dangerous — accepts unvalidated fields
+}
+
+// GOOD: Form Request + validated() only
+public function store(StorePostRequest $request)
+{
+    Post::create($request->validated());
+}
+```
 
 ### 7. Configuration → `rules/config.md`
 
