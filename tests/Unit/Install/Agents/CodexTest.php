@@ -97,8 +97,31 @@ test('includes config.toml in project detection', function (): void {
     $detection = $codex->projectDetectionConfig();
 
     expect($detection['files'])->toContain('.codex/config.toml')
-        ->toContain('AGENTS.md');
+        ->not->toContain('AGENTS.md');
     expect($detection['paths'])->toContain('.codex');
+});
+
+test('projectDetectionConfig only uses .codex dir and config.toml', function (): void {
+    $codex = new Codex($this->strategyFactory);
+
+    expect($codex->projectDetectionConfig())->toBe([
+        'paths' => ['.codex'],
+        'files' => ['.codex/config.toml'],
+    ]);
+});
+
+test('detectInProject returns false when only AGENTS.md exists', function (): void {
+    $codex = new Codex(new DetectionStrategyFactory(app()));
+    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_codex_'.uniqid();
+    mkdir($tempDir);
+    touch($tempDir.DIRECTORY_SEPARATOR.'AGENTS.md');
+
+    try {
+        expect($codex->detectInProject($tempDir))->toBeFalse();
+    } finally {
+        unlink($tempDir.DIRECTORY_SEPARATOR.'AGENTS.md');
+        rmdir($tempDir);
+    }
 });
 
 test('returns correct guidelines path', function (): void {
