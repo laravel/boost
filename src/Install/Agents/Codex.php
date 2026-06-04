@@ -38,7 +38,7 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
     {
         return [
             'paths' => ['.codex'],
-            'files' => ['AGENTS.md', '.codex/config.toml'],
+            'files' => ['.codex/config.toml'],
         ];
     }
 
