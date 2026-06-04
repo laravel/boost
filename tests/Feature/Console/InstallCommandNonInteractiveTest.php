@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Console\OutputStyle;
+use Illuminate\Support\Collection;
 use Laravel\Boost\Console\InstallCommand;
+use Laravel\Boost\Console\UpdateCommand;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Cloud;
@@ -12,7 +15,9 @@ use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
 use Mockery;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\NullOutput;
 
 beforeEach(function (): void {
@@ -71,11 +76,11 @@ test('selectAgents returns saved config agents without prompting in non-interact
 
     $command->setLaravel(app());
     $command->setInput($input);
-    $command->setOutput(new \Illuminate\Console\OutputStyle($input, $output));
+    $command->setOutput(new OutputStyle($input, $output));
 
     $result = $command->selectAgents();
 
-    expect($result)->toBeInstanceOf(\Illuminate\Support\Collection::class)
+    expect($result)->toBeInstanceOf(Collection::class)
         ->and($result->map(fn (Agent $a) => $a->name())->toArray())->toContain('claude_code');
 })->skip('Requires refactor to expose selectAgents() for direct testing — covered via integration');
 
@@ -93,7 +98,7 @@ test('selectThirdPartyPackages returns saved packages without prompting in non-i
     $command->shouldReceive('option')->andReturn(false);
 
     // In non-interactive mode, should return only saved packages without calling multiselect
-    $input = Mockery::mock(\Symfony\Component\Console\Input\InputInterface::class);
+    $input = Mockery::mock(InputInterface::class);
     $input->shouldReceive('isInteractive')->andReturn(false);
     $input->shouldReceive('hasOption')->andReturn(false);
     $input->shouldReceive('getOption')->andReturn(null);
@@ -121,11 +126,11 @@ test('boost install with no-interaction flag does not hang when agents are detec
 
     $input = new ArrayInput(
         ['--guidelines' => true],
-        (new \Symfony\Component\Console\Command\Command)->getDefinition()
+        (new Command)->getDefinition()
     );
     $input->setInteractive(false);
 
-    $output = new \Illuminate\Console\OutputStyle($input, new NullOutput);
+    $output = new OutputStyle($input, new NullOutput);
     $command->setOutput($output);
 
     // Command should complete without blocking on multiselect
@@ -138,7 +143,7 @@ test('update command triggers install with non-interactive flag and completes', 
     $config->setGuidelines(true);
     $config->setSkills([]);
 
-    $command = Mockery::mock(\Laravel\Boost\Console\UpdateCommand::class)->makePartial();
+    $command = Mockery::mock(UpdateCommand::class)->makePartial();
     $command->shouldReceive('option')->with('discover')->andReturn(false);
     $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
     $command->shouldReceive('callSilently')
@@ -151,7 +156,7 @@ test('update command triggers install with non-interactive flag and completes', 
         ->andReturn(0);
 
     $input = new ArrayInput([]);
-    $output = new \Illuminate\Console\OutputStyle($input, new NullOutput);
+    $output = new OutputStyle($input, new NullOutput);
 
     $command->setLaravel(app());
     $command->setOutput($output);
