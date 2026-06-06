@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
+use Laravel\Boost\Contracts\SupportsCommands;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Antigravity extends Agent implements SupportsGuidelines, SupportsSkills
+class Antigravity extends Agent implements SupportsCommands, SupportsGuidelines, SupportsSkills
 {
     public function name(): string
     {
@@ -48,5 +49,10 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsSkills
     public function skillsPath(): string
     {
         return config('boost.agents.antigravity.skills_path', '.agents/skills');
+    }
+
+    public function commandsPath(): string
+    {
+        return config('boost.agents.antigravity.commands_path', '.agents/commands');
     }
 }

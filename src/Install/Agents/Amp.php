@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
+use Laravel\Boost\Contracts\SupportsCommands;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
+class Amp extends Agent implements SupportsCommands, SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -66,5 +67,10 @@ class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkil
     public function skillsPath(): string
     {
         return config('boost.agents.amp.skills_path', '.agents/skills');
+    }
+
+    public function commandsPath(): string
+    {
+        return config('boost.agents.amp.commands_path', '.agents/commands');
     }
 }

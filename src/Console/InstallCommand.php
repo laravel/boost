@@ -9,12 +9,16 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Contracts\SupportsCommands;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Cloud;
+use Laravel\Boost\Install\Command as BoostCommand;
+use Laravel\Boost\Install\CommandComposer;
+use Laravel\Boost\Install\CommandWriter;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -42,6 +46,7 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
+        {--commands : Install agent slash commands}
         {--mcp : Install MCP server configuration}';
 
     /** @var Collection<int, Agent> */
@@ -65,6 +70,9 @@ class InstallCommand extends Command
 
     /** @var array<int, string> */
     private array $installedSkillNames = [];
+
+    /** @var array<int, string> */
+    private array $installedCommandNames = [];
 
     const MIN_TEST_COUNT = 6;
 
@@ -133,6 +141,10 @@ class InstallCommand extends Command
             $this->installSkills();
         }
 
+        if ($this->selectedBoostFeatures->contains('commands')) {
+            $this->installCommands();
+        }
+
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->installMcpServerConfig();
         }
@@ -183,6 +195,7 @@ class InstallCommand extends Command
         $featureLabels = collect([
             'guidelines' => 'AI Guidelines',
             'skills' => 'Agent Skills',
+            'commands' => 'Agent Slash Commands',
             'mcp' => 'Boost MCP Server Configuration',
         ]);
 
@@ -195,6 +208,7 @@ class InstallCommand extends Command
         $configValues = collect([
             'guidelines' => $this->config->getGuidelines(),
             'skills' => $this->config->hasSkills(),
+            'commands' => $this->config->hasCommands() || is_dir(base_path('.ai/commands')),
             'mcp' => $this->config->getMcp(),
         ]);
 
@@ -277,6 +291,7 @@ class InstallCommand extends Command
         $featureInterfaces = [
             'guidelines' => SupportsGuidelines::class,
             'skills' => SupportsSkills::class,
+            'commands' => SupportsCommands::class,
             'mcp' => SupportsMcp::class,
         ];
 
@@ -339,6 +354,14 @@ class InstallCommand extends Command
         return $this->selectedAgents->filter(fn (Agent $a): bool => $a instanceof SupportsSkills);
     }
 
+    /**
+     * @return Collection<int, Agent&SupportsCommands>
+     */
+    protected function agentsWithCommands(): Collection
+    {
+        return $this->selectedAgents->filter(fn (Agent $a): bool => $a instanceof SupportsCommands);
+    }
+
     protected function installGuidelines(): void
     {
         $guidelinesAgents = $this->agentsWithGuidelines();
@@ -376,6 +399,27 @@ class InstallCommand extends Command
             featureName: 'skills',
             beforeProcess: $skills->isNotEmpty()
                 ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())
+                : null,
+        );
+    }
+
+    protected function installCommands(): void
+    {
+        $commandsAgents = $this->agentsWithCommands();
+        $commands = app(CommandComposer::class)->commands();
+
+        $this->installedCommandNames = $commands->keys()->toArray();
+
+        /** @var Collection<int, SupportsCommands&Agent> $commandsAgents */
+        $this->installFeature(
+            agents: $commandsAgents,
+            emptyMessage: 'No agents are selected for command installation.',
+            headerMessage: sprintf('Syncing %d commands for commands-capable agents', $commands->count()),
+            nameResolver: fn (SupportsCommands&Agent $agent): string => $agent->displayName(),
+            processor: fn (SupportsCommands&Agent $agent): array => (new CommandWriter($agent))->sync($commands, $this->config->getCommands()),
+            featureName: 'commands',
+            beforeProcess: $commands->isNotEmpty()
+                ? fn () => grid($commands->map(fn (BoostCommand $command): string => $command->name)->sort()->values()->toArray())
                 : null,
         );
     }
@@ -436,6 +480,10 @@ class InstallCommand extends Command
             $this->config->setSkills($this->installedSkillNames);
         }
 
+        if ($this->selectedBoostFeatures->contains('commands')) {
+            $this->config->setCommands($this->installedCommandNames);
+        }
+
         $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));
 
         if ($this->selectedBoostFeatures->contains('mcp')) {
@@ -466,6 +514,10 @@ class InstallCommand extends Command
         }
 
         if ($this->option('skills')) {
+            return true;
+        }
+
+        if ($this->option('commands')) {
             return true;
         }
 

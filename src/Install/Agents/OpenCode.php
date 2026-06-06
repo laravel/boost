@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
+use Laravel\Boost\Contracts\SupportsCommands;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
@@ -11,7 +12,7 @@ use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use stdClass;
 
-class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
+class OpenCode extends Agent implements SupportsCommands, SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -95,5 +96,10 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
     public function skillsPath(): string
     {
         return config('boost.agents.opencode.skills_path', '.agents/skills');
+    }
+
+    public function commandsPath(): string
+    {
+        return config('boost.agents.opencode.commands_path', '.opencode/commands');
     }
 }

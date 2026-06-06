@@ -41,6 +41,27 @@ class Config
         return $this->getSkills() !== [];
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function getCommands(): array
+    {
+        return $this->get('commands', []);
+    }
+
+    /**
+     * @param  array<int, string>  $commands
+     */
+    public function setCommands(array $commands): void
+    {
+        $this->set('commands', $commands);
+    }
+
+    public function hasCommands(): bool
+    {
+        return $this->getCommands() !== [];
+    }
+
     public function getMcp(): bool
     {
         return $this->get('mcp', false);

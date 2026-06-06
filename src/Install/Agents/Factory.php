@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
+use Laravel\Boost\Contracts\SupportsCommands;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Factory extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
+class Factory extends Agent implements SupportsCommands, SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -67,5 +68,10 @@ class Factory extends Agent implements SupportsGuidelines, SupportsMcp, Supports
     public function skillsPath(): string
     {
         return config('boost.agents.factory.skills_path', '.factory/skills');
+    }
+
+    public function commandsPath(): string
+    {
+        return config('boost.agents.factory.commands_path', '.factory/commands');
     }
 }

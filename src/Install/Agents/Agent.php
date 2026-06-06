@@ -281,4 +281,13 @@ abstract class Agent
     {
         return $markdown;
     }
+
+    /**
+     * Default command filename transform. Agents that need a per-file
+     * suffix (e.g. Copilot's ".prompt.md") override this.
+     */
+    public function commandFilename(string $baseName): string
+    {
+        return $baseName;
+    }
 }

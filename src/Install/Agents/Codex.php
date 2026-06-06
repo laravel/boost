@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
+use Laravel\Boost\Contracts\SupportsCommands;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
+class Codex extends Agent implements SupportsCommands, SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -86,5 +87,10 @@ class Codex extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSk
     public function skillsPath(): string
     {
         return config('boost.agents.codex.skills_path', '.agents/skills');
+    }
+
+    public function commandsPath(): string
+    {
+        return config('boost.agents.codex.commands_path', '.codex/prompts');
     }
 }

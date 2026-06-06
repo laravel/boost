@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Agents;
 
+use Laravel\Boost\Contracts\SupportsCommands;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Cursor extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
+class Cursor extends Agent implements SupportsCommands, SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -72,5 +73,10 @@ class Cursor extends Agent implements SupportsGuidelines, SupportsMcp, SupportsS
     public function skillsPath(): string
     {
         return config('boost.agents.cursor.skills_path', '.cursor/skills');
+    }
+
+    public function commandsPath(): string
+    {
+        return config('boost.agents.cursor.commands_path', '.cursor/commands');
     }
 }

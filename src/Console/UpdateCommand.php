@@ -18,7 +18,8 @@ class UpdateCommand extends Command
     /** @var string */
     protected $signature = 'boost:update
         {--discover : Discover and prompt for newly available guidelines and skills}
-        {--ignore-skills : Skip updating the skills directory}';
+        {--ignore-skills : Skip updating the skills directory}
+        {--ignore-commands : Skip updating the commands directory}';
 
     public function handle(Config $config): int
     {
@@ -34,8 +35,9 @@ class UpdateCommand extends Command
 
         $guidelines = $config->getGuidelines();
         $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(base_path('.ai/skills')));
+        $hasCommands = ! $this->option('ignore-commands') && ($config->hasCommands() || is_dir(base_path('.ai/commands')));
 
-        if (! $guidelines && ! $hasSkills) {
+        if (! $guidelines && ! $hasSkills && ! $hasCommands) {
             return self::SUCCESS;
         }
 
@@ -43,9 +45,10 @@ class UpdateCommand extends Command
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
             '--skills' => $hasSkills,
+            '--commands' => $hasCommands,
         ]);
 
-        $this->info('Boost guidelines and skills updated successfully.');
+        $this->info('Boost guidelines, skills, and commands updated successfully.');
 
         return self::SUCCESS;
     }
