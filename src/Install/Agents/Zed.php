@@ -29,7 +29,7 @@ class Zed extends Agent implements SupportsCommands, SupportsGuidelines, Support
                 'paths' => ['/Applications/Zed.app'],
             ],
             Platform::Linux => [
-                'command' => 'command -v zed',
+                'command' => 'command -v zed || command -v zeditor',
             ],
             Platform::Windows => [
                 'command' => 'cmd /c where zed 2>nul',
