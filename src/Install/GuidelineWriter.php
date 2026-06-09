@@ -61,7 +61,7 @@ class GuidelineWriter
                 // Replace ALL existing boost guidelines blocks in-place
                 // If the user added guidelines after ours then let's
                 // make sure we keep the flow.
-                $newContent = preg_replace($pattern, $replacement, $content, 1);
+                $newContent = preg_replace_callback($pattern, fn (array $m): string => $replacement, $content, 1);
                 $replaced = true;
             } else {
                 // No existing Boost guidelines found, append to end of existing file

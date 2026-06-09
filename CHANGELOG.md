@@ -1,6 +1,34 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.8...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.9...main)
+
+## [v2.4.9](https://github.com/laravel/boost/compare/v2.4.8...v2.4.9) - 2026-06-04
+
+### What's Changed
+
+* Adopt laravel/mcp 0.7.1 namespace renames by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/816
+* feat: adds Google Antigravity agent by [@achyutkneupane](https://github.com/achyutkneupane) in https://github.com/laravel/boost/pull/818
+* Add Antigravity agent to AgentsDetectorTest by [@imKenjo18](https://github.com/imKenjo18) in https://github.com/laravel/boost/pull/820
+* Fix Inertia v3 layout props API name in upgrade prompt by [@TTezcan](https://github.com/TTezcan) in https://github.com/laravel/boost/pull/823
+* Add Factory Droid agent by [@travisobregon](https://github.com/travisobregon) in https://github.com/laravel/boost/pull/828
+* fix: detect all common Docker Compose filenames in Sail check by [@MreeP](https://github.com/MreeP) in https://github.com/laravel/boost/pull/827
+* Remove Gemini CLI agent in favor of Antigravity by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/819
+* Add Dependabot cooldown of 5 days by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/834
+* Enable Dependabot auto-merge by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/836
+* fix: remove AGENTS.md from Codex project detection by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/832
+* fix: remove AGENTS.md from OpenCode project detection by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/831
+* Add Zed editor agent by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/830
+
+### New Contributors
+
+* [@achyutkneupane](https://github.com/achyutkneupane) made their first contribution in https://github.com/laravel/boost/pull/818
+* [@imKenjo18](https://github.com/imKenjo18) made their first contribution in https://github.com/laravel/boost/pull/820
+* [@TTezcan](https://github.com/TTezcan) made their first contribution in https://github.com/laravel/boost/pull/823
+* [@travisobregon](https://github.com/travisobregon) made their first contribution in https://github.com/laravel/boost/pull/828
+* [@MreeP](https://github.com/MreeP) made their first contribution in https://github.com/laravel/boost/pull/827
+* [@impruthvi](https://github.com/impruthvi) made their first contribution in https://github.com/laravel/boost/pull/832
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.8...v2.4.9
 
 ## [v2.4.8](https://github.com/laravel/boost/compare/v2.4.7...v2.4.8) - 2026-05-19
 
@@ -299,11 +327,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -362,12 +392,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
