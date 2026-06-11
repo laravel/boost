@@ -19,6 +19,7 @@ use Laravel\Boost\Mcp\Tools\LastError;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Boost\Mcp\Tools\Tinker;
+use Laravel\Mcp\Schema\Icon;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Resource;
@@ -40,6 +41,51 @@ class Boost extends Server
      * The MCP server's instructions for the LLM.
      */
     protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, error logs, semantic documentation search, and more. Boost helps with code generation.';
+
+    /**
+     * The icons exposed to MCP clients.
+     *
+     * @return list<Icon>
+     */
+    protected function icons(): array
+    {
+        $svg = <<<'SVG'
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="12" fill="url(#bg)"/>
+  <g filter="url(#glowA)">
+    <ellipse cx="5" cy="5" rx="32" ry="31" fill="#EFB0F9"/>
+  </g>
+  <g filter="url(#glowB)">
+    <ellipse cx="50" cy="51" rx="38" ry="37" fill="#B29FF4"/>
+  </g>
+  <g filter="url(#glowC)">
+    <ellipse cx="17" cy="45" rx="32" ry="31" fill="#D8F8EF"/>
+  </g>
+  <rect x="15" y="15" width="25" height="25" stroke="#161615" stroke-width="6"/>
+  <rect x="22" y="22" width="29" height="29" stroke="#161615" stroke-width="2"/>
+  <rect x="27" y="27" width="20" height="20" stroke="#161615" stroke-width="2"/>
+  <defs>
+    <filter id="glowA" x="-57" y="-56" width="124" height="122" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+    <filter id="glowB" x="-18" y="-16" width="136" height="134" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+    <filter id="glowC" x="-45" y="-16" width="124" height="122" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+    <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(32 32) scale(32)">
+      <stop stop-color="#EEE6F4"/>
+      <stop offset="1" stop-color="#DBE0F6"/>
+    </radialGradient>
+  </defs>
+</svg>
+SVG;
+
+        return [
+            Icon::from('data:image/svg+xml;base64,'.base64_encode($svg), 'image/svg+xml', ['64x64']),
+        ];
+    }
 
     /**
      * The default pagination length for resources that support pagination.
