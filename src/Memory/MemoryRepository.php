@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Memory;
 
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
@@ -48,7 +49,7 @@ class MemoryRepository
         $note = trim($note);
 
         if (! in_array($type, self::TYPES, true)) {
-            throw new \InvalidArgumentException('Memory type must be one of: '.implode(', ', self::TYPES).'.');
+            throw new InvalidArgumentException('Memory type must be one of: '.implode(', ', self::TYPES).'.');
         }
 
         $target = $this->resolveTargetFile($glob);
