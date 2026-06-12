@@ -235,6 +235,42 @@ test('filters out empty guidelines', function (): void {
         ->not->toMatch('/=== \w+.*? rules ===\s*===/');
 });
 
+test('includes the project memory pointer when memory is enabled and MCP is on', function (): void {
+    config()->set('boost.memory.enabled', true);
+
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]));
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = true;
+
+    $guidelines = $this->composer->config($config)->compose();
+
+    expect($guidelines)
+        ->toContain('## Project Memory')
+        ->toContain('memory-search')
+        ->toContain('memory-write')
+        ->toContain('.ai/memory');
+});
+
+test('omits the project memory pointer when memory is disabled', function (): void {
+    config()->set('boost.memory.enabled', false);
+
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]));
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = true;
+
+    $guidelines = $this->composer->config($config)->compose();
+
+    expect($guidelines)
+        ->not->toContain('## Project Memory')
+        ->not->toContain('memory-search');
+});
+
 test('returns list of used guidelines', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

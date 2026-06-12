@@ -32,6 +32,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Boost Project Memory
+    |--------------------------------------------------------------------------
+    |
+    | Project memory lets agents read and write small, committed notes about
+    | this codebase (decisions and gotchas) stored as markdown in .ai/memory.
+    | It is enabled by default. Set this to false to opt out entirely, which
+    | unregisters the memory-read and memory-write MCP tools.
+    |
+    */
+
+    'memory' => [
+        'enabled' => env('BOOST_MEMORY_ENABLED', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
