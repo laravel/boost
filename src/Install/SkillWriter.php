@@ -108,8 +108,15 @@ class SkillWriter
      * @param  array<int, string>  $previouslyTrackedSkills
      * @return array<string, int>
      */
-    public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
+    public function sync(Collection $skills, array $previouslyTrackedSkills = [], bool $fresh = false): array
     {
+        $targetRoot = base_path($this->agent->skillsPath());
+        $canonicalRoot = base_path('.ai'.DIRECTORY_SEPARATOR.'skills');
+
+        if ($fresh && ! $this->pathsMatch($targetRoot, $canonicalRoot)) {
+            $this->deleteDirectory($targetRoot);
+        }
+
         $written = $this->writeAll($skills);
 
         $newSkillNames = $skills->keys()->all();
