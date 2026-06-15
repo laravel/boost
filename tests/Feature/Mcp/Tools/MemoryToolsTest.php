@@ -90,6 +90,7 @@ it('merges a new glob into an existing area file without losing entries', functi
 
     $files = glob($this->memoryDir.'/*.md');
     $files = array_filter($files, fn (string $f): bool => basename($f) !== 'index.md');
+
     expect($files)->toHaveCount(1);
 
     $contents = File::get($this->memoryDir.'/models.md');

@@ -158,7 +158,7 @@ class MemoryRepository
 
         // Strip any existing (possibly malformed) frontmatter from the body before prepending
         // the new valid frontmatter, so a broken file is repaired rather than doubled.
-        $body = (string) preg_replace('/^---\r?\n.*?\r?\n---\r?\n?/s', '', $parsed['body']);
+        $body = (string) preg_replace('/^---\r?\n.*?\r?\n---\r?\n?/s', '', (string) $parsed['body']);
 
         file_put_contents($path, $frontmatter.ltrim($body, "\n"));
     }

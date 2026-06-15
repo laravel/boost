@@ -21,7 +21,7 @@ class MemorySearch extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = "Find the memory file(s) that cover the path you are about to edit. Pass the file path you are working on and Boost returns the .ai/memory/ file(s) whose glob covers it. Then read or grep the returned file for specific decisions, gotchas, and rules. Always check memory before changing code so you do not repeat a settled decision or hit a known trap.";
+    protected string $description = 'Find the memory file(s) that cover the path you are about to edit. Pass the file path you are working on and Boost returns the .ai/memory/ file(s) whose glob covers it. Then read or grep the returned file for specific decisions, gotchas, and rules. Always check memory before changing code so you do not repeat a settled decision or hit a known trap.';
 
     /**
      * Determine whether the tool should be registered with the MCP server.
