@@ -9,7 +9,7 @@ use Laravel\Boost\Install\SkillWriter;
 function cleanupSkillDirectory(string $path): void
 {
     if (is_link($path)) {
-        @unlink($path);
+        @unlink($path) || @rmdir($path);
 
         return;
     }
@@ -25,7 +25,7 @@ function cleanupSkillDirectory(string $path): void
 
     foreach ($files as $file) {
         if ($file->isLink()) {
-            @unlink($file->getPathname());
+            @unlink($file->getPathname()) || @rmdir($file->getPathname());
 
             continue;
         }
@@ -616,6 +616,46 @@ it('removes directory containing nested symlinks', function (): void {
 
     cleanupSkillDirectory($absoluteTarget);
     cleanupSkillDirectory($linkTargetDir);
+});
+
+it('removes directory containing nested dangling symlinks', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillDir = $absoluteTarget.'/symlink-skill';
+    $nestedDir = $skillDir.'/references';
+    $linkTargetDir = base_path('.boost-link-target-'.uniqid());
+
+    mkdir($nestedDir, 0755, true);
+    mkdir($linkTargetDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', 'test');
+
+    $symlinkPath = $nestedDir.'/linked-dir';
+
+    if (! @symlink($linkTargetDir, $symlinkPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        cleanupSkillDirectory($linkTargetDir);
+        $this->markTestSkipped('Symlinks not supported in this environment');
+    }
+
+    cleanupSkillDirectory($linkTargetDir);
+
+    if (! is_link($symlinkPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        $this->markTestSkipped('Dangling symlink not detectable in this environment');
+    }
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->remove('symlink-skill');
+
+    expect($result)->toBeTrue()
+        ->and($skillDir)->not->toBeDirectory()
+        ->and(is_link($symlinkPath))->toBeFalse()
+        ->and($linkTargetDir)->not->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
 });
 
 it('creates canonical directory and symlinks custom skill when canonical does not exist', function (): void {
