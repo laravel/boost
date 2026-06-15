@@ -55,16 +55,7 @@ class MemorySearch extends Tool
         $query = trim((string) $request->get('query'));
 
         if ($path !== '') {
-            // Normalize separators then strip the project root so agents passing absolute
-            // paths (the natural default) still match relative globs like app/Http/**.
-            $path = str_replace('\\', '/', $path);
-            $base = rtrim(str_replace('\\', '/', base_path()), '/').'/';
-
-            if (str_starts_with($path, $base)) {
-                $path = substr($path, strlen($base));
-            }
-
-            $path = ltrim($path, '/');
+            $path = $this->relativePath($path);
         }
 
         if ($path === '' && $query === '') {
@@ -72,7 +63,7 @@ class MemorySearch extends Tool
         }
 
         try {
-            $matches = $this->memory->search($path === '' ? null : $path, $query === '' ? null : $query);
+            $matches = $this->memory->search($path ?: null, $query ?: null);
         } catch (Throwable $throwable) {
             return Response::error('Failed to search memory: '.$throwable->getMessage());
         }
@@ -81,14 +72,24 @@ class MemorySearch extends Tool
             return Response::text('No matching project memory. Nothing has been recorded for this yet.');
         }
 
-        $blocks = array_map(static function (array $match): string {
-            $applies = implode(', ', $match['applies_to']);
+        return Response::text(
+            collect($matches)
+                ->map(fn (array $match): string => '## ['.$match['type'].'] '.$match['title']."\n"
+                    .'File: '.$match['file'].' (applies to: '.implode(', ', $match['applies_to']).")\n"
+                    .$match['body'])
+                ->join("\n\n")
+        );
+    }
 
-            return '## ['.$match['type'].'] '.$match['title']."\n"
-                .'File: '.$match['file'].' (applies to: '.$applies.")\n"
-                .$match['body'];
-        }, $matches);
+    private function relativePath(string $path): string
+    {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
+        $base = rtrim(str_replace(DIRECTORY_SEPARATOR, '/', base_path()), '/').'/';
 
-        return Response::text(implode("\n\n", $blocks));
+        if (str_starts_with($path, $base)) {
+            $path = substr($path, strlen($base));
+        }
+
+        return ltrim($path, '/');
     }
 }

@@ -35,10 +35,9 @@ return [
     | Boost Project Memory
     |--------------------------------------------------------------------------
     |
-    | Project memory lets agents read and write small, committed notes about
-    | this codebase (decisions and gotchas) stored as markdown in .ai/memory.
-    | It is enabled by default. Set this to false to opt out entirely, which
-    | unregisters the memory-read and memory-write MCP tools.
+    | Project memory lets agents store and retrieve notes about this codebase as
+    | committed markdown files in .ai/memory/, grouped by file area. Setting
+    | this to false removes the memory-search and memory-write MCP tools.
     |
     */
 

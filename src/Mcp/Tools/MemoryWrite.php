@@ -64,16 +64,7 @@ class MemoryWrite extends Tool
         $note = trim((string) $request->get('note'));
 
         if ($glob !== '') {
-            // Normalize separators and strip the project root so stored globs are always
-            // relative (e.g. app/Http/**), matching how MemorySearch normalizes paths.
-            $glob = str_replace('\\', '/', $glob);
-            $base = rtrim(str_replace('\\', '/', base_path()), '/').'/';
-
-            if (str_starts_with($glob, $base)) {
-                $glob = substr($glob, strlen($base));
-            }
-
-            $glob = ltrim($glob, '/');
+            $glob = $this->relativePath($glob);
         }
 
         if ($glob === '' || $title === '' || $note === '') {
@@ -81,7 +72,7 @@ class MemoryWrite extends Tool
         }
 
         if (! in_array($type, MemoryRepository::TYPES, true)) {
-            return Response::error('The "type" must be one of: '.implode(', ', MemoryRepository::TYPES).'.');
+            return Response::error('The "type" must be one of: '.collect(MemoryRepository::TYPES)->join(', ').'.');
         }
 
         try {
@@ -92,15 +83,23 @@ class MemoryWrite extends Tool
 
         $verb = $result['created'] ? 'Created' : 'Updated';
 
-        $relPath = ltrim(str_replace(
-            rtrim(str_replace('\\', '/', base_path()), '/'),
-            '',
-            str_replace('\\', '/', $result['file'])
-        ), '/');
+        $relPath = $this->relativePath($result['file']);
 
         return Response::text(
             $verb.' memory in '.$relPath.' as ['.$result['type'].'] '.$result['title'].'. '
             .'Commit this file so the whole team and every agent shares it.'
         );
+    }
+
+    private function relativePath(string $path): string
+    {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
+        $base = rtrim(str_replace(DIRECTORY_SEPARATOR, '/', base_path()), '/').'/';
+
+        if (str_starts_with($path, $base)) {
+            $path = substr($path, strlen($base));
+        }
+
+        return ltrim($path, '/');
     }
 }
