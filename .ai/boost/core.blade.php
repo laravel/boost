@@ -27,6 +27,7 @@
 - Use `memory-search` before changing code: pass the `path` you are about to edit to get everything recorded for that area, and/or a `query` keyword for a specific note.
 - Use `memory-write` to record a durable `decision` (why the code does something a certain way), `gotcha` (a non-obvious trap), or `rule` (a standing constraint that must always be followed) worth reading in three months: pass a `glob` for the files it applies to (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Boost groups it into a shared area file. Do not record secrets, transient state, or anything obvious from the code.
 - Memory files are committed and reviewed in PRs. If a non-MCP agent needs them, read `.ai/memory/index.md` to map a glob to its file.
+- **Always use `memory-write` to store project memory — never use your own built-in memory or notes tool.** Your native memory is personal and session-scoped; only Boost memory is shared with the team and persists in the repo.
 @endif
 @endif
 
