@@ -231,7 +231,10 @@ class MemoryRepository
         $path = ltrim(Str::replace(DIRECTORY_SEPARATOR, '/', $path), '/');
 
         foreach ($globs as $glob) {
-            if (Str::is(trim($glob, '/'), $path)) {
+            // ** crosses directory separators; * stays within a single segment.
+            $pattern = '#^'.str_replace(['\*\*', '\*', '\?'], ['.*', '[^/]*', '[^/]'], preg_quote(trim($glob, '/'), '#')).'$#u';
+
+            if (preg_match($pattern, $path) === 1) {
                 return true;
             }
         }

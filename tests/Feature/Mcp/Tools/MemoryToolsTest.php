@@ -144,6 +144,21 @@ it('returns the memory filename for a matching path', function (): void {
         ->toolTextContains('Read or grep');
 });
 
+it('does not match a single-star glob against a nested path', function (): void {
+    (new MemoryWrite($this->repository))->handle(new Request([
+        'glob' => 'app/Models/*.php',
+        'type' => 'rule',
+        'title' => 'Model rule',
+        'note' => 'Keep models thin.',
+    ]));
+
+    $hit = (new MemorySearch($this->repository))->handle(new Request(['path' => 'app/Models/User.php']));
+    expect($hit)->isToolResult()->toolHasNoError()->toolTextContains('models.md');
+
+    $miss = (new MemorySearch($this->repository))->handle(new Request(['path' => 'app/Models/Concerns/HasTenant.php']));
+    expect($miss)->isToolResult()->toolHasNoError()->toolTextContains('No memory recorded for this path yet');
+});
+
 it('does not return memory files for an unrelated path', function (): void {
     (new MemoryWrite($this->repository))->handle(new Request([
         'glob' => 'app/Http/Controllers/**',
