@@ -126,7 +126,7 @@ it('rejects an invalid type', function (): void {
         ->toolTextContains('decision, gotcha, rule');
 });
 
-it('finds memories by the path being edited', function (): void {
+it('returns the memory filename for a matching path', function (): void {
     (new MemoryWrite($this->repository))->handle(new Request([
         'glob' => 'app/Http/Controllers/**',
         'type' => 'gotcha',
@@ -139,10 +139,11 @@ it('finds memories by the path being edited', function (): void {
     ]));
 
     expect($response)->isToolResult()->toolHasNoError()
-        ->toolTextContains('Extend BaseController', 'Tenant scoping lives there.');
+        ->toolTextContains('.ai/memory/controllers.md', 'app/Http/Controllers/**')
+        ->toolTextContains('Read or grep');
 });
 
-it('does not return memories for an unrelated path', function (): void {
+it('does not return memory files for an unrelated path', function (): void {
     (new MemoryWrite($this->repository))->handle(new Request([
         'glob' => 'app/Http/Controllers/**',
         'type' => 'gotcha',
@@ -155,45 +156,26 @@ it('does not return memories for an unrelated path', function (): void {
     ]));
 
     expect($response)->isToolResult()->toolHasNoError()
-        ->toolTextContains('No matching project memory');
+        ->toolTextContains('No memory recorded for this path yet');
 });
 
-it('finds memories by keyword', function (): void {
-    (new MemoryWrite($this->repository))->handle(new Request([
-        'glob' => 'config/**',
-        'type' => 'decision',
-        'title' => 'Reverb over Pusher',
-        'note' => 'We self-host websockets with Reverb.',
-    ]));
-
-    $response = (new MemorySearch($this->repository))->handle(new Request([
-        'query' => 'reverb',
-    ]));
-
-    expect($response)->isToolResult()->toolHasNoError()
-        ->toolTextContains('Reverb over Pusher');
-});
-
-it('requires at least one search parameter', function (): void {
+it('requires a path parameter', function (): void {
     $response = (new MemorySearch($this->repository))->handle(new Request([]));
 
     expect($response)->isToolResult()->toolHasError()
-        ->toolTextContains('Provide a "path", a "query", or both.');
+        ->toolTextContains('Provide a file "path"');
 });
 
-it('regenerates the glob to file index on write', function (): void {
-    (new MemoryWrite($this->repository))->handle(new Request([
-        'glob' => 'app/Http/Controllers/**',
-        'type' => 'gotcha',
-        'title' => 'A',
-        'note' => 'a',
+it('matches a memory file with no frontmatter against any path', function (): void {
+    File::makeDirectory($this->memoryDir, 0755, true);
+    File::put($this->memoryDir.'/global.md', "# Global\n\n## [rule] Always use transactions\nWrap DB writes in a transaction.\n");
+
+    $response = (new MemorySearch($this->repository))->handle(new Request([
+        'path' => 'app/Http/Controllers/OrderController.php',
     ]));
 
-    $index = $this->memoryDir.'/index.md';
-    expect(File::exists($index))->toBeTrue();
-    expect(File::get($index))
-        ->toContain('app/Http/Controllers/**')
-        ->toContain('[controllers.md](controllers.md)');
+    expect($response)->isToolResult()->toolHasNoError()
+        ->toolTextContains('.ai/memory/global.md', 'entire project');
 });
 
 it('is gated by the memory enabled config flag', function (): void {

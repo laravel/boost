@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Memory;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\Yaml\Yaml;
@@ -18,6 +19,8 @@ class MemoryRepository
      */
     public const TYPES = ['decision', 'gotcha', 'rule'];
 
+    private const TYPE_PATTERN = 'decision|gotcha|rule';
+
     public function __construct(protected string $directory) {}
 
     /**
@@ -29,14 +32,6 @@ class MemoryRepository
     }
 
     /**
-     * The absolute path to the generated index file.
-     */
-    public function indexPath(): string
-    {
-        return $this->directory.DIRECTORY_SEPARATOR.'index.md';
-    }
-
-    /**
      * Record a memory for a glob of files, routing it into a shared area file.
      *
      * @return array{file: string, created: bool, type: string, title: string}
@@ -45,7 +40,7 @@ class MemoryRepository
     {
         $glob = trim($glob);
         $type = strtolower(trim($type));
-        $title = trim(str_replace(["\r\n", "\r", "\n"], ' ', $title));
+        $title = trim((string) preg_replace('/\R/', ' ', $title));
         $note = trim($note);
 
         if (! in_array($type, self::TYPES, true)) {
@@ -58,11 +53,10 @@ class MemoryRepository
         if ($created) {
             $this->createFile($target['path'], $target['heading'], [$glob]);
         } else {
-            $this->ensureGlobApplied($target['path'], $glob);
+            $this->ensureGlobApplied($target['path'], $glob, $target['parsed']);
         }
 
         $this->appendEntry($target['path'], $type, $title, $note);
-        $this->rebuildIndex();
 
         return [
             'file' => $target['path'],
@@ -73,118 +67,47 @@ class MemoryRepository
     }
 
     /**
-     * Find memory entries by the file path being worked on, a keyword, or both.
+     * Find memory files whose globs cover the given path.
      *
-     * @return array<int, array{file: string, applies_to: array<int, string>, type: string, title: string, body: string}>
+     * @return array<int, array{path: string, applies_to: array<int, string>}>
      */
-    public function search(?string $path = null, ?string $query = null): array
+    public function filesForPath(string $path): array
     {
-        $path = $path !== null ? trim($path) : null;
-        $query = $query !== null ? strtolower(trim($query)) : null;
-
-        $matches = [];
-
-        foreach ($this->files() as $file) {
-            try {
-                $parsed = $this->parse($file);
-            } catch (Throwable) {
-                continue;
-            }
-
-            $fileName = basename($file);
-
-            $pathMatchesFile = $path !== null && $path !== ''
-                ? $this->globsMatchPath($parsed['applies_to'], $path)
-                : null;
-
-            foreach ($parsed['entries'] as $entry) {
-                if ($pathMatchesFile === false) {
-                    continue;
-                }
-
-                if ($query !== null && $query !== '' && ! $this->entryMatchesQuery($entry, $query)) {
-                    continue;
-                }
-
-                $matches[] = [
-                    'file' => $fileName,
-                    'applies_to' => $parsed['applies_to'],
-                    'type' => $entry['type'],
-                    'title' => $entry['title'],
-                    'body' => $entry['body'],
-                ];
-            }
-        }
-
-        return $matches;
+        return $this->parsedFiles()
+            ->filter(fn (array $parsed): bool => $this->globsMatchPath($parsed['applies_to'], trim($path)))
+            ->map(fn (array $parsed): array => [
+                'path' => $parsed['file'],
+                'applies_to' => $parsed['applies_to'],
+            ])
+            ->values()
+            ->all();
     }
 
     /**
-     * Regenerate the glob to file index so non-MCP agents can route by hand.
-     */
-    public function rebuildIndex(): void
-    {
-        $files = $this->files();
-
-        $rows = [];
-
-        foreach ($files as $file) {
-            try {
-                $parsed = $this->parse($file);
-            } catch (Throwable) {
-                continue;
-            }
-
-            $name = basename($file);
-
-            foreach ($parsed['applies_to'] as $glob) {
-                $rows[] = '| `'.$glob.'` | ['.$name.']('.$name.') |';
-            }
-        }
-
-        sort($rows);
-
-        $body = "# Project Memory Index\n\n"
-            ."This file maps file globs to the memory that documents them. It is generated\n"
-            ."by Laravel Boost; edit the linked files, not this index.\n\n";
-
-        if ($rows === []) {
-            $body .= "No memories recorded yet.\n";
-        } else {
-            $body .= "| Applies to | Memory |\n| --- | --- |\n".implode("\n", $rows)."\n";
-        }
-
-        if (! is_dir($this->directory)) {
-            mkdir($this->directory, 0755, true);
-        }
-
-        file_put_contents($this->indexPath(), $body);
-    }
-
-    /**
-     * Resolve the file a glob should be written to, plus its heading.
+     * Resolve the file a glob should be written to, plus its heading and already-parsed data.
+     * Passing parsed data through avoids re-reading the file in ensureGlobApplied().
      *
-     * @return array{path: string, heading: string}
+     * @return array{path: string, heading: string, parsed: array<string, mixed>|null}
      */
     protected function resolveTargetFile(string $glob): array
     {
-        foreach ($this->files() as $file) {
-            try {
-                $parsed = $this->parse($file);
-            } catch (Throwable) {
-                continue;
-            }
+        $allParsed = $this->parsedFiles();
 
-            if (in_array($glob, $parsed['applies_to'], true)) {
-                return ['path' => $file, 'heading' => $parsed['heading']];
-            }
+        $existing = $allParsed->first(fn (array $parsed): bool => in_array($glob, $parsed['applies_to'], true));
+
+        if ($existing !== null) {
+            return ['path' => $existing['file'], 'heading' => $existing['heading'], 'parsed' => $existing];
         }
 
         $name = $this->fileNameForGlob($glob);
+        $path = $this->directory.DIRECTORY_SEPARATOR.$name.'.md';
+
+        $existingByName = $allParsed->first(fn (array $parsed): bool => $parsed['file'] === $path);
 
         return [
-            'path' => $this->directory.DIRECTORY_SEPARATOR.$name.'.md',
+            'path' => $path,
             'heading' => Str::headline($name),
+            'parsed' => $existingByName,
         ];
     }
 
@@ -193,14 +116,11 @@ class MemoryRepository
      */
     protected function fileNameForGlob(string $glob): string
     {
-        $segments = array_filter(
-            explode('/', trim($glob, '/')),
-            static fn (string $segment): bool => $segment !== '' && ! str_contains($segment, '*') && ! str_contains($segment, '.'),
-        );
+        $last = Str::of($glob)->trim('/')->explode('/')
+            ->filter(static fn (string $segment): bool => $segment !== '' && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
+            ->last();
 
-        $last = end($segments);
-
-        if ($last === false) {
+        if ($last === null) {
             return 'general';
         }
 
@@ -223,15 +143,17 @@ class MemoryRepository
         file_put_contents($path, $frontmatter.'# '.$heading."\n");
     }
 
-    protected function ensureGlobApplied(string $path, string $glob): void
+    protected function ensureGlobApplied(string $path, string $glob, ?array $parsed = null): void
     {
-        try {
-            $parsed = $this->parse($path);
-        } catch (Throwable) {
-            // Parse failed (bad YAML); preserve raw file bytes so existing entries survive.
-            // The strip regex below will remove the broken frontmatter block.
-            $raw = str_replace(["\r\n", "\r"], "\n", (string) file_get_contents($path));
-            $parsed = ['applies_to' => [], 'body' => $raw, 'heading' => '', 'entries' => []];
+        if ($parsed === null) {
+            try {
+                $parsed = $this->parse($path);
+            } catch (Throwable) {
+                // Parse failed (bad YAML); preserve raw file bytes so existing entries survive.
+                // The strip regex below will remove the broken frontmatter block.
+                $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
+                $parsed = ['applies_to' => [], 'body' => $raw, 'heading' => '', 'entries' => []];
+            }
         }
 
         if (in_array($glob, $parsed['applies_to'], true)) {
@@ -273,7 +195,7 @@ class MemoryRepository
      */
     protected function parse(string $path): array
     {
-        $raw = str_replace(["\r\n", "\r"], "\n", (string) file_get_contents($path));
+        $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
 
         $appliesTo = [];
         $body = $raw;
@@ -288,15 +210,15 @@ class MemoryRepository
 
         $entries = [];
 
-        // Require a blank line before ## to avoid matching `## [` inside note bodies.
-        if (preg_match_all('/^## \[(\w+)\]\s*(.+?)\n(.*?)(?=\n\n## |\z)/ms', $body, $entryMatches, PREG_SET_ORDER) > 0) {
-            foreach ($entryMatches as $match) {
-                $entries[] = [
+        // Require a blank line before ## and restrict to known types so ## [ lines in note bodies are not parsed as entries.
+        if (preg_match_all('/(?<=\n\n)## \[('.self::TYPE_PATTERN.')\]\s*(.+?)\n(.*?)(?=\n\n## |\z)/s', $body, $entryMatches, PREG_SET_ORDER) > 0) {
+            $entries = collect($entryMatches)
+                ->map(static fn (array $match): array => [
                     'type' => strtolower(trim($match[1])),
                     'title' => trim($match[2]),
                     'body' => trim($match[3]),
-                ];
-            }
+                ])
+                ->all();
         }
 
         return [
@@ -308,35 +230,38 @@ class MemoryRepository
     }
 
     /**
+     * Strip the project base path prefix so the returned path is repo-relative.
+     */
+    public function relativePath(string $path): string
+    {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
+        $base = rtrim(str_replace(DIRECTORY_SEPARATOR, '/', base_path()), '/').'/';
+
+        if (str_starts_with($path, $base)) {
+            $path = substr($path, strlen($base));
+        }
+
+        return ltrim($path, '/');
+    }
+
+    /**
      * @param  array<int, string>  $globs
      */
     protected function globsMatchPath(array $globs, string $path): bool
     {
-        $path = ltrim(str_replace('\\', '/', $path), '/');
+        if ($globs === []) {
+            return true;
+        }
+
+        $path = ltrim(str_replace(DIRECTORY_SEPARATOR, '/', $path), '/');
 
         foreach ($globs as $glob) {
-            if (fnmatch(trim($glob, '/'), $path)) {
+            if (Str::is(trim($glob, '/'), $path)) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    /**
-     * @param  array{type: string, title: string, body: string}  $entry
-     */
-    protected function entryMatchesQuery(array $entry, string $query): bool
-    {
-        $haystack = strtolower($entry['title'].' '.$entry['body'].' '.$entry['type']);
-
-        foreach (preg_split('/\s+/', $query) ?: [] as $term) {
-            if ($term !== '' && ! str_contains($haystack, $term)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -352,9 +277,28 @@ class MemoryRepository
 
         $files = glob($this->directory.DIRECTORY_SEPARATOR.'*.md') ?: [];
 
-        return array_values(array_filter(
-            $files,
-            fn (string $file): bool => basename($file) !== 'index.md',
-        ));
+        return collect($files)
+            ->reject(fn (string $file): bool => basename($file) === 'index.md')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Parse every memory file, skipping any that fail to parse.
+     *
+     * @return Collection<int, array{file: string, applies_to: array<int, string>, heading: string, body: string, entries: array<int, array{type: string, title: string, body: string}>}>
+     */
+    protected function parsedFiles(): Collection
+    {
+        return collect($this->files())
+            ->map(function (string $file): ?array {
+                try {
+                    return ['file' => $file, ...$this->parse($file)];
+                } catch (Throwable) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->values();
     }
 }

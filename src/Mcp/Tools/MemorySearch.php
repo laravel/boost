@@ -21,7 +21,7 @@ class MemorySearch extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = "Search this project's committed memory for relevant decisions and gotchas before working in an area. Pass the file path you are about to edit (e.g. app/Http/Controllers/OrderController.php) to get everything recorded for that area, and/or a keyword to find a specific note. Always check memory before changing code so you do not repeat a settled decision or hit a known trap.";
+    protected string $description = "Find the memory file(s) that cover the path you are about to edit. Pass the file path you are working on and Boost returns the .ai/memory/ file(s) whose glob covers it. Then read or grep the returned file for specific decisions, gotchas, and rules. Always check memory before changing code so you do not repeat a settled decision or hit a known trap.";
 
     /**
      * Determine whether the tool should be registered with the MCP server.
@@ -40,9 +40,8 @@ class MemorySearch extends Tool
     {
         return [
             'path' => $schema->string()
-                ->description('The file path you are about to work on. Returns memories whose glob matches this path.'),
-            'query' => $schema->string()
-                ->description('A keyword or phrase to match against memory titles and bodies.'),
+                ->description('The file path you are about to work on. Returns the .ai/memory/ file(s) whose glob covers this path.')
+                ->required(),
         ];
     }
 
@@ -51,45 +50,30 @@ class MemorySearch extends Tool
      */
     public function handle(Request $request): Response
     {
-        $path = trim((string) $request->get('path'));
-        $query = trim((string) $request->get('query'));
+        $path = $this->memory->relativePath(trim((string) $request->get('path')));
 
-        if ($path !== '') {
-            $path = $this->relativePath($path);
-        }
-
-        if ($path === '' && $query === '') {
-            return Response::error('Provide a "path", a "query", or both.');
+        if ($path === '') {
+            return Response::error('Provide a file "path" to find relevant memory files.');
         }
 
         try {
-            $matches = $this->memory->search($path ?: null, $query ?: null);
+            $files = $this->memory->filesForPath($path);
         } catch (Throwable $throwable) {
             return Response::error('Failed to search memory: '.$throwable->getMessage());
         }
 
-        if ($matches === []) {
-            return Response::text('No matching project memory. Nothing has been recorded for this yet.');
+        if ($files === []) {
+            return Response::text('No memory recorded for this path yet.');
         }
 
-        return Response::text(
-            collect($matches)
-                ->map(fn (array $match): string => '## ['.$match['type'].'] '.$match['title']."\n"
-                    .'File: '.$match['file'].' (applies to: '.implode(', ', $match['applies_to']).")\n"
-                    .$match['body'])
-                ->join("\n\n")
-        );
-    }
+        $list = collect($files)
+            ->map(function (array $file): string {
+                $scope = $file['applies_to'] !== [] ? implode(', ', $file['applies_to']) : 'entire project';
 
-    private function relativePath(string $path): string
-    {
-        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
-        $base = rtrim(str_replace(DIRECTORY_SEPARATOR, '/', base_path()), '/').'/';
+                return $this->memory->relativePath($file['path']).' (applies to: '.$scope.')';
+            })
+            ->join("\n");
 
-        if (str_starts_with($path, $base)) {
-            $path = substr($path, strlen($base));
-        }
-
-        return ltrim($path, '/');
+        return Response::text("Memory file(s) for this path:\n\n".$list."\n\nRead or grep the file(s) above to find specific entries.");
     }
 }

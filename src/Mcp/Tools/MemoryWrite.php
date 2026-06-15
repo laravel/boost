@@ -59,20 +59,16 @@ class MemoryWrite extends Tool
     public function handle(Request $request): Response
     {
         $glob = trim((string) $request->get('glob'));
-        $type = strtolower(trim((string) $request->get('type')));
+        $type = trim((string) $request->get('type'));
         $title = trim((string) $request->get('title'));
         $note = trim((string) $request->get('note'));
 
         if ($glob !== '') {
-            $glob = $this->relativePath($glob);
+            $glob = $this->memory->relativePath($glob);
         }
 
         if ($glob === '' || $title === '' || $note === '') {
             return Response::error('A memory needs a non-empty glob, title, and note.');
-        }
-
-        if (! in_array($type, MemoryRepository::TYPES, true)) {
-            return Response::error('The "type" must be one of: '.collect(MemoryRepository::TYPES)->join(', ').'.');
         }
 
         try {
@@ -83,23 +79,11 @@ class MemoryWrite extends Tool
 
         $verb = $result['created'] ? 'Created' : 'Updated';
 
-        $relPath = $this->relativePath($result['file']);
+        $relPath = $this->memory->relativePath($result['file']);
 
         return Response::text(
             $verb.' memory in '.$relPath.' as ['.$result['type'].'] '.$result['title'].'. '
             .'Commit this file so the whole team and every agent shares it.'
         );
-    }
-
-    private function relativePath(string $path): string
-    {
-        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
-        $base = rtrim(str_replace(DIRECTORY_SEPARATOR, '/', base_path()), '/').'/';
-
-        if (str_starts_with($path, $base)) {
-            $path = substr($path, strlen($base));
-        }
-
-        return ltrim($path, '/');
     }
 }
