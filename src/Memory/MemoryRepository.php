@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Memory;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\Yaml\Yaml;
@@ -13,8 +14,6 @@ use Throwable;
 class MemoryRepository
 {
     /**
-     * The memory entry types Boost ships with.
-     *
      * @var array<int, string>
      */
     public const TYPES = ['decision', 'gotcha', 'rule'];
@@ -23,17 +22,12 @@ class MemoryRepository
 
     public function __construct(protected string $directory) {}
 
-    /**
-     * The absolute path to the memory directory.
-     */
     public function directory(): string
     {
         return $this->directory;
     }
 
     /**
-     * Record a memory for a glob of files, routing it into a shared area file.
-     *
      * @return array{file: string, created: bool, type: string, title: string}
      */
     public function write(string $glob, string $type, string $title, string $note): array
@@ -67,8 +61,6 @@ class MemoryRepository
     }
 
     /**
-     * Find memory files whose globs cover the given path.
-     *
      * @return array<int, array{path: string, applies_to: array<int, string>}>
      */
     public function filesForPath(string $path): array
@@ -83,8 +75,15 @@ class MemoryRepository
             ->all();
     }
 
+    public function relativePath(string $path): string
+    {
+        $path = Str::replace(DIRECTORY_SEPARATOR, '/', $path);
+        $base = Str::finish(Str::replace(DIRECTORY_SEPARATOR, '/', base_path()), '/');
+
+        return ltrim(str_starts_with($path, $base) ? substr($path, strlen($base)) : $path, '/');
+    }
+
     /**
-     * Resolve the file a glob should be written to, plus its heading and already-parsed data.
      * Passing parsed data through avoids re-reading the file in ensureGlobApplied().
      *
      * @return array{path: string, heading: string, parsed: array<string, mixed>|null}
@@ -111,9 +110,7 @@ class MemoryRepository
         ];
     }
 
-    /**
-     * Derive a stable, shared file name from a glob (app/Http/Controllers/** => controllers).
-     */
+    // Derives a stable file name from the last meaningful segment: app/Http/Controllers/** → controllers
     protected function fileNameForGlob(string $glob): string
     {
         $last = Str::of($glob)->trim('/')->explode('/')
@@ -134,13 +131,9 @@ class MemoryRepository
      */
     protected function createFile(string $path, string $heading, array $appliesTo): void
     {
-        if (! is_dir(dirname($path))) {
-            mkdir(dirname($path), 0755, true);
-        }
+        File::ensureDirectoryExists(dirname($path));
 
-        $frontmatter = $this->renderFrontmatter($appliesTo);
-
-        file_put_contents($path, $frontmatter.'# '.$heading."\n");
+        file_put_contents($path, $this->renderFrontmatter($appliesTo).'# '.$heading."\n");
     }
 
     protected function ensureGlobApplied(string $path, string $glob, ?array $parsed = null): void
@@ -173,9 +166,8 @@ class MemoryRepository
     protected function appendEntry(string $path, string $type, string $title, string $note): void
     {
         $contents = rtrim((string) file_get_contents($path), "\n");
-        $entry = "\n\n## [".$type.'] '.$title."\n".$note."\n";
 
-        file_put_contents($path, $contents.$entry);
+        file_put_contents($path, $contents."\n\n## [".$type.'] '.$title."\n".$note."\n");
     }
 
     /**
@@ -189,8 +181,6 @@ class MemoryRepository
     }
 
     /**
-     * Parse a memory file into its globs, heading, body, and entries.
-     *
      * @return array{applies_to: array<int, string>, heading: string, body: string, entries: array<int, array{type: string, title: string, body: string}>}
      */
     protected function parse(string $path): array
@@ -230,21 +220,6 @@ class MemoryRepository
     }
 
     /**
-     * Strip the project base path prefix so the returned path is repo-relative.
-     */
-    public function relativePath(string $path): string
-    {
-        $path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
-        $base = rtrim(str_replace(DIRECTORY_SEPARATOR, '/', base_path()), '/').'/';
-
-        if (str_starts_with($path, $base)) {
-            $path = substr($path, strlen($base));
-        }
-
-        return ltrim($path, '/');
-    }
-
-    /**
      * @param  array<int, string>  $globs
      */
     protected function globsMatchPath(array $globs, string $path): bool
@@ -253,7 +228,7 @@ class MemoryRepository
             return true;
         }
 
-        $path = ltrim(str_replace(DIRECTORY_SEPARATOR, '/', $path), '/');
+        $path = ltrim(Str::replace(DIRECTORY_SEPARATOR, '/', $path), '/');
 
         foreach ($globs as $glob) {
             if (Str::is(trim($glob, '/'), $path)) {
@@ -265,8 +240,6 @@ class MemoryRepository
     }
 
     /**
-     * All memory files, excluding the generated index.
-     *
      * @return array<int, string>
      */
     protected function files(): array
@@ -275,17 +248,13 @@ class MemoryRepository
             return [];
         }
 
-        $files = glob($this->directory.DIRECTORY_SEPARATOR.'*.md') ?: [];
-
-        return collect($files)
+        return collect(glob($this->directory.DIRECTORY_SEPARATOR.'*.md') ?: [])
             ->reject(fn (string $file): bool => basename($file) === 'index.md')
             ->values()
             ->all();
     }
 
     /**
-     * Parse every memory file, skipping any that fail to parse.
-     *
      * @return Collection<int, array{file: string, applies_to: array<int, string>, heading: string, body: string, entries: array<int, array{type: string, title: string, body: string}>}>
      */
     protected function parsedFiles(): Collection
