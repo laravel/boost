@@ -22,15 +22,10 @@ class MemoryRepository
 
     public function __construct(protected string $directory) {}
 
-    public function directory(): string
-    {
-        return $this->directory;
-    }
-
     /**
-     * @return array{file: string, created: bool, type: string, title: string}
+     * Record a memory and return the location it was stored at.
      */
-    public function write(string $glob, string $type, string $title, string $note): array
+    public function write(string $glob, string $type, string $title, string $note): string
     {
         $glob = trim($glob);
         $type = strtolower(trim($type));
@@ -42,9 +37,8 @@ class MemoryRepository
         }
 
         $target = $this->resolveTargetFile($glob);
-        $created = ! is_file($target['path']);
 
-        if ($created) {
+        if (! is_file($target['path'])) {
             $this->createFile($target['path'], $target['heading'], [$glob]);
         } else {
             $this->ensureGlobApplied($target['path'], $glob, $target['parsed']);
@@ -52,18 +46,13 @@ class MemoryRepository
 
         $this->appendEntry($target['path'], $type, $title, $note);
 
-        return [
-            'file' => $target['path'],
-            'created' => $created,
-            'type' => $type,
-            'title' => $title,
-        ];
+        return $target['path'];
     }
 
     /**
      * @return array<int, array{path: string, applies_to: array<int, string>}>
      */
-    public function filesForPath(string $path): array
+    public function read(string $path): array
     {
         return $this->parsedFiles()
             ->filter(fn (array $parsed): bool => $this->globsMatchPath($parsed['applies_to'], trim($path)))

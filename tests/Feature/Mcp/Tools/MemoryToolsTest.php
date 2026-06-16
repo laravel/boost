@@ -37,7 +37,7 @@ it('writes a memory into an area file with frontmatter and a tagged entry', func
     ]));
 
     expect($response)->isToolResult()->toolHasNoError()
-        ->toolTextContains('controllers.md', 'Commit this file');
+        ->toolTextContains('controllers.md', '[gotcha] Extend BaseController for tenant scoping');
 
     $file = $this->memoryDir.'/controllers.md';
     expect(File::exists($file))->toBeTrue();

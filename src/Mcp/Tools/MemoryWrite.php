@@ -14,7 +14,7 @@ use Throwable;
 
 class MemoryWrite extends Tool
 {
-    public function __construct(protected MemoryRepository $memory) {}
+    public function __construct(protected MemoryRepository $memoryRepository) {}
 
     /**
      * The tool's description.
@@ -64,7 +64,7 @@ class MemoryWrite extends Tool
         $note = trim((string) $request->get('note'));
 
         if ($glob !== '') {
-            $glob = $this->memory->relativePath($glob);
+            $glob = $this->memoryRepository->relativePath($glob);
         }
 
         if ($glob === '' || $title === '' || $note === '') {
@@ -72,18 +72,15 @@ class MemoryWrite extends Tool
         }
 
         try {
-            $result = $this->memory->write($glob, $type, $title, $note);
+            $location = $this->memoryRepository->write($glob, $type, $title, $note);
         } catch (Throwable $throwable) {
             return Response::error('Failed to write memory: '.$throwable->getMessage());
         }
 
-        $verb = $result['created'] ? 'Created' : 'Updated';
-
-        $relPath = $this->memory->relativePath($result['file']);
+        $relPath = $this->memoryRepository->relativePath($location);
 
         return Response::text(
-            $verb.' memory in '.$relPath.' as ['.$result['type'].'] '.$result['title'].'. '
-            .'Commit this file so the whole team and every agent shares it.'
+            "Recorded memory in {$relPath} as [{$type}] {$title}."
         );
     }
 }

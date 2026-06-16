@@ -16,7 +16,7 @@ use Throwable;
 #[IsReadOnly]
 class MemorySearch extends Tool
 {
-    public function __construct(protected MemoryRepository $memory) {}
+    public function __construct(protected MemoryRepository $memoryRepository) {}
 
     /**
      * The tool's description.
@@ -50,14 +50,14 @@ class MemorySearch extends Tool
      */
     public function handle(Request $request): Response
     {
-        $path = $this->memory->relativePath(trim((string) $request->get('path')));
+        $path = $this->memoryRepository->relativePath(trim((string) $request->get('path')));
 
         if ($path === '') {
             return Response::error('Provide a file "path" to find relevant memory files.');
         }
 
         try {
-            $files = $this->memory->filesForPath($path);
+            $files = $this->memoryRepository->read($path);
         } catch (Throwable $throwable) {
             return Response::error('Failed to search memory: '.$throwable->getMessage());
         }
@@ -69,11 +69,12 @@ class MemorySearch extends Tool
         $list = collect($files)
             ->map(function (array $file): string {
                 $scope = $file['applies_to'] !== [] ? implode(', ', $file['applies_to']) : 'entire project';
+                $relPath = $this->memoryRepository->relativePath($file['path']);
 
-                return $this->memory->relativePath($file['path']).' (applies to: '.$scope.')';
+                return "{$relPath} (applies to: {$scope})";
             })
             ->join("\n");
 
-        return Response::text("Memory file(s) for this path:\n\n".$list."\n\nRead or grep the file(s) above to find specific entries.");
+        return Response::text("Memory file(s) for this path:\n\n{$list}\n\nRead or grep the file(s) above to find specific entries.");
     }
 }
