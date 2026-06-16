@@ -84,8 +84,6 @@ class MemoryRepository
     }
 
     /**
-     * Passing parsed data through avoids re-reading the file in ensureGlobApplied().
-     *
      * @return array{path: string, heading: string, parsed: array<string, mixed>|null}
      */
     protected function resolveTargetFile(string $glob): array
@@ -110,7 +108,6 @@ class MemoryRepository
         ];
     }
 
-    // Derives a stable file name from the last meaningful segment: app/Http/Controllers/** → controllers
     protected function fileNameForGlob(string $glob): string
     {
         $last = Str::of($glob)->trim('/')->explode('/')
@@ -142,8 +139,6 @@ class MemoryRepository
             try {
                 $parsed = $this->parse($path);
             } catch (Throwable) {
-                // Parse failed (bad YAML); preserve raw file bytes so existing entries survive.
-                // The strip regex below will remove the broken frontmatter block.
                 $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
                 $parsed = ['applies_to' => [], 'body' => $raw, 'heading' => '', 'entries' => []];
             }
@@ -156,8 +151,7 @@ class MemoryRepository
         $appliesTo = [...$parsed['applies_to'], $glob];
         $frontmatter = $this->renderFrontmatter($appliesTo);
 
-        // Strip any existing (possibly malformed) frontmatter from the body before prepending
-        // the new valid frontmatter, so a broken file is repaired rather than doubled.
+        // fix any invalid frontmatter
         $body = (string) preg_replace('/^---\r?\n.*?\r?\n---\r?\n?/s', '', (string) $parsed['body']);
 
         file_put_contents($path, $frontmatter.ltrim($body, "\n"));
@@ -200,7 +194,6 @@ class MemoryRepository
 
         $entries = [];
 
-        // Require a blank line before ## and restrict to known types so ## [ lines in note bodies are not parsed as entries.
         if (preg_match_all('/(?<=\n\n)## \[('.self::TYPE_PATTERN.')\]\s*(.+?)\n(.*?)(?=\n\n## |\z)/s', $body, $entryMatches, PREG_SET_ORDER) > 0) {
             $entries = collect($entryMatches)
                 ->map(static fn (array $match): array => [
@@ -231,7 +224,6 @@ class MemoryRepository
         $path = ltrim(Str::replace(DIRECTORY_SEPARATOR, '/', $path), '/');
 
         foreach ($globs as $glob) {
-            // ** crosses directory separators; * stays within a single segment.
             $pattern = '#^'.str_replace(['\*\*', '\*', '\?'], ['.*', '[^/]*', '[^/]'], preg_quote(trim($glob, '/'), '#')).'$#u';
 
             if (preg_match($pattern, $path) === 1) {
