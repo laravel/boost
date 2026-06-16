@@ -149,6 +149,18 @@ test('respects custom timeout parameter', function (): void {
     expect($response->isError())->toBeFalse();
 });
 
+test('uses configured default timeout when no timeout argument is provided', function (): void {
+    config(['boost.mcp.tool_timeout' => 600]);
+
+    $executor = new ToolExecutor;
+
+    $reflection = new ReflectionClass($executor);
+    $method = $reflection->getMethod('getTimeout');
+
+    expect($method->invoke($executor, []))->toBe(600)
+        ->and($method->invoke($executor, ['timeout' => 60]))->toBe(60);
+});
+
 test('output buffering discards stray stdout during tool execution', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
