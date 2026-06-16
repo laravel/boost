@@ -9,15 +9,21 @@ use Laravel\Boost\Memory\MemoryRepository;
 use Laravel\Mcp\Request;
 
 beforeEach(function (): void {
+    $this->originalBasePath = base_path();
+    $this->memoryBasePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost-memory-test-'.uniqid();
+
+    File::makeDirectory($this->memoryBasePath, 0755, true);
+    $this->app->setBasePath($this->memoryBasePath);
+
     $this->memoryDir = base_path('.ai/memory');
-    File::deleteDirectory($this->memoryDir);
 
     $this->repository = new MemoryRepository($this->memoryDir);
     $this->app->instance(MemoryRepository::class, $this->repository);
 });
 
 afterEach(function (): void {
-    File::deleteDirectory($this->memoryDir);
+    File::deleteDirectory($this->memoryBasePath);
+    $this->app->setBasePath($this->originalBasePath);
 });
 
 it('writes a memory into an area file with frontmatter and a tagged entry', function (): void {
