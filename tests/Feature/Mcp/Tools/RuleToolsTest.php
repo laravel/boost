@@ -131,3 +131,34 @@ it('is gated by the rules enabled config flag', function (): void {
     config()->set('boost.rules.enabled', true);
     expect((new RecordRule($this->repository))->shouldRegister())->toBeTrue();
 });
+
+it('regenerates index.md mapping globs to rule files on every write', function (): void {
+    $tool = new RecordRule($this->repository);
+
+    $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'A', 'note' => 'a']));
+    $tool->handle(new Request(['glob' => 'app/Models/*.php', 'title' => 'B', 'note' => 'b']));
+
+    $index = $this->rulesDir.'/index.md';
+    expect(File::exists($index))->toBeTrue();
+    expect(File::get($index))
+        ->toContain('app/Http/Controllers/**')
+        ->toContain('.ai/rules/controllers.md')
+        ->toContain('app/Models/*.php')
+        ->toContain('.ai/rules/models.md');
+});
+
+it('excludes a rule file with no paths frontmatter from the index', function (): void {
+    File::makeDirectory($this->rulesDir, 0755, true);
+    File::put($this->rulesDir.'/global.md', "# Global\n\n## Always use transactions\nWrap DB writes in a transaction.\n");
+
+    (new RecordRule($this->repository))->handle(new Request([
+        'glob' => 'app/Http/Controllers/**',
+        'title' => 'A',
+        'note' => 'a',
+    ]));
+
+    expect(File::get($this->rulesDir.'/index.md'))
+        ->toContain('.ai/rules/controllers.md')
+        ->not->toContain('.ai/rules/global.md')
+        ->not->toContain('entire project');
+});

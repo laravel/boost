@@ -36,7 +36,28 @@ class RuleRepository
 
         $this->appendEntry($target['path'], $title, $note);
 
+        $this->writeIndex();
+
         return $target['path'];
+    }
+
+    public function writeIndex(): string
+    {
+        $rows = $this->parsedFiles()
+            ->filter(fn (array $parsed): bool => $parsed['paths'] !== [])
+            ->map(fn (array $parsed): string => '| '.implode(', ', $parsed['paths']).' | '.$this->relativePath($parsed['file']).' |')
+            ->join("\n");
+
+        $body = "# Project Rules Index\n\n"
+            ."Before planning or editing, find the row whose globs match the file's path and read that rule file.\n\n"
+            ."| Applies to | Rule file |\n| --- | --- |\n".$rows."\n";
+
+        $path = $this->directory.DIRECTORY_SEPARATOR.'index.md';
+
+        File::ensureDirectoryExists($this->directory);
+        file_put_contents($path, $body);
+
+        return $path;
     }
 
     public function relativePath(string $path): string
@@ -57,18 +78,16 @@ class RuleRepository
         $existing = $allParsed->first(fn (array $parsed): bool => in_array($glob, $parsed['paths'], true));
 
         if ($existing !== null) {
-            return ['path' => $existing['file'], 'heading' => $existing['heading'], 'parsed' => $existing];
+            return ['path' => $existing['file'], 'heading' => '', 'parsed' => $existing];
         }
 
         $name = $this->fileNameForGlob($glob);
         $path = $this->directory.DIRECTORY_SEPARATOR.$name.'.md';
 
-        $existingByName = $allParsed->first(fn (array $parsed): bool => $parsed['file'] === $path);
-
         return [
             'path' => $path,
             'heading' => Str::headline($name),
-            'parsed' => $existingByName,
+            'parsed' => $allParsed->first(fn (array $parsed): bool => $parsed['file'] === $path),
         ];
     }
 
@@ -100,7 +119,7 @@ class RuleRepository
                 $parsed = $this->parse($path);
             } catch (Throwable) {
                 $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
-                $parsed = ['paths' => [], 'body' => $raw, 'heading' => '', 'entries' => []];
+                $parsed = ['paths' => [], 'body' => $raw];
             }
         }
 
@@ -134,39 +153,21 @@ class RuleRepository
     }
 
     /**
-     * @return array{paths: array<int, string>, heading: string, body: string, entries: array<int, array{title: string, body: string}>}
+     * @return array{paths: array<int, string>, body: string}
      */
     protected function parse(string $path): array
     {
         $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
 
-        $paths = [];
-        $body = $raw;
-
-        if (preg_match('/^---\n(.*?)\n---\n?(.*)$/s', $raw, $matches) === 1) {
-            $front = Yaml::parse($matches[1]) ?: [];
-            $paths = array_values(array_filter((array) ($front['paths'] ?? []), is_string(...)));
-            $body = $matches[2];
+        if (preg_match('/^---\n(.*?)\n---\n?(.*)$/s', $raw, $matches) !== 1) {
+            return ['paths' => [], 'body' => $raw];
         }
 
-        $heading = Str::of($body)->after('# ')->before("\n")->trim()->value();
-
-        $entries = [];
-
-        if (preg_match_all('/(?<=\n\n)## (.+?)\n(.*?)(?=\n\n## |\z)/s', $body, $entryMatches, PREG_SET_ORDER) > 0) {
-            $entries = collect($entryMatches)
-                ->map(static fn (array $match): array => [
-                    'title' => trim($match[1]),
-                    'body' => trim($match[2]),
-                ])
-                ->all();
-        }
+        $front = Yaml::parse($matches[1]) ?: [];
 
         return [
-            'paths' => $paths,
-            'heading' => $heading,
-            'body' => $body,
-            'entries' => $entries,
+            'paths' => array_values(array_filter((array) ($front['paths'] ?? []), is_string(...))),
+            'body' => $matches[2],
         ];
     }
 
@@ -186,7 +187,7 @@ class RuleRepository
     }
 
     /**
-     * @return Collection<int, array{file: string, paths: array<int, string>, heading: string, body: string, entries: array<int, array{title: string, body: string}>}>
+     * @return Collection<int, array{file: string, paths: array<int, string>, body: string}>
      */
     protected function parsedFiles(): Collection
     {

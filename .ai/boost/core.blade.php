@@ -1,4 +1,12 @@
 # Laravel Boost
+@if(config('boost.rules.enabled', true))
+
+## Project Rules (IMPORTANT)
+- **You MUST consult the project rules before you plan or change anything — every time, no exceptions.** This project keeps committed, area-grouped rules in `.ai/rules` (settled decisions, non-obvious traps, standing constraints); treat them like code and always honor them. The moment you enter plan mode or are about to create or edit a file, STOP and do this first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch anything a path match alone misses. Do not finalize a plan or write a single line of code until you have read every matching rule and are following it.
+@if($assist->hasMcpEnabled())
+- Record durable rules with `record-rule` — a decision, trap, or constraint worth reading in three months. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`; Boost files it into the matching area. Do not record secrets, transient state, or anything obvious from the code. Always use `record-rule`, never your native memory or notes tool — that is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
+@endif
+@endif
 @if($assist->hasMcpEnabled())
 
 ## Tools
@@ -20,13 +28,6 @@
 2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
 3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
 4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
-@if(config('boost.rules.enabled', true))
-
-## Project Rules (IMPORTANT)
-- This project keeps shared, committed rules in `.ai/rules` — settled decisions, non-obvious traps, and standing constraints, grouped by file area. They are committed and reviewed in PRs: treat them like code and always honor them.
-- **Before you plan or change anything, check the rules first — every time, no exceptions.** Start at @.ai/rules/index.md: it maps file globs to rule files. Read every rule file whose globs cover the path(s) you are about to plan for or edit, then follow them — do not finalize a plan or write code until you have. To catch rules a path match alone might miss, also `grep -rin 'keyword' .ai/rules`. A rule file with no `paths` frontmatter applies to the entire project.
-- Record durable rules with `record-rule` — a decision, trap, or constraint worth reading in three months. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`; Boost files it into the matching area. Do not record secrets, transient state, or anything obvious from the code. Always use `record-rule`, never your native memory or notes tool — that is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
-@endif
 @endif
 
 ## Artisan
