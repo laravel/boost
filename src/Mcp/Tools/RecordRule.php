@@ -59,7 +59,7 @@ class RecordRule extends Tool
         $note = trim((string) $request->get('note'));
 
         if ($glob !== '') {
-            $glob = $this->ruleRepository->relativePath($glob);
+            $glob = $this->ruleRepository->normalizeGlob($glob);
         }
 
         if ($glob === '' || $title === '' || $note === '') {

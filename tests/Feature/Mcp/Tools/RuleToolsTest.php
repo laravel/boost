@@ -162,3 +162,32 @@ it('excludes a rule file with no paths frontmatter from the index', function ():
         ->not->toContain('.ai/rules/global.md')
         ->not->toContain('entire project');
 });
+
+it('normalizes an absolute path glob to the same area as its relative twin', function (): void {
+    $tool = new RecordRule($this->repository);
+
+    $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'Relative', 'note' => 'a']));
+    $tool->handle(new Request([
+        'glob' => base_path('app/Http/Controllers/**'),
+        'title' => 'Absolute',
+        'note' => 'b',
+    ]));
+
+    $files = glob($this->rulesDir.'/*.md');
+    $files = array_filter($files, fn (string $f): bool => basename($f) !== 'index.md');
+
+    expect($files)->toHaveCount(1);
+    expect(File::get($this->rulesDir.'/controllers.md'))
+        ->toContain('## Relative')
+        ->toContain('## Absolute')
+        ->not->toContain(base_path('app/Http/Controllers/**'));
+});
+
+it('writes a placeholder index when no rule files have paths', function (): void {
+    $this->repository->writeIndex();
+
+    expect(File::get($this->rulesDir.'/index.md'))
+        ->toContain('# Project Rules Index')
+        ->toContain('No rules recorded yet.')
+        ->not->toContain('| Applies to |');
+});

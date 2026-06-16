@@ -28,7 +28,7 @@ class RuleRepository
 
         $target = $this->resolveTargetFile($glob);
 
-        if (! is_file($target['path'])) {
+        if (! File::exists($target['path'])) {
             $this->createFile($target['path'], $target['heading'], [$glob]);
         } else {
             $this->ensureGlobApplied($target['path'], $glob, $target['parsed']);
@@ -48,16 +48,25 @@ class RuleRepository
             ->map(fn (array $parsed): string => '| '.implode(', ', $parsed['paths']).' | '.$this->relativePath($parsed['file']).' |')
             ->join("\n");
 
+        $table = $rows === ''
+            ? 'No rules recorded yet.'
+            : "| Applies to | Rule file |\n| --- | --- |\n".$rows;
+
         $body = "# Project Rules Index\n\n"
             ."Before planning or editing, find the row whose globs match the file's path and read that rule file.\n\n"
-            ."| Applies to | Rule file |\n| --- | --- |\n".$rows."\n";
+            .$table."\n";
 
         $path = $this->directory.DIRECTORY_SEPARATOR.'index.md';
 
         File::ensureDirectoryExists($this->directory);
-        file_put_contents($path, $body);
+        File::put($path, $body);
 
         return $path;
+    }
+
+    public function normalizeGlob(string $glob): string
+    {
+        return $this->relativePath(trim($glob));
     }
 
     public function relativePath(string $path): string
@@ -109,7 +118,7 @@ class RuleRepository
     {
         File::ensureDirectoryExists(dirname($path));
 
-        file_put_contents($path, $this->renderFrontmatter($paths).'# '.$heading."\n");
+        File::put($path, $this->renderFrontmatter($paths).'# '.$heading."\n");
     }
 
     protected function ensureGlobApplied(string $path, string $glob, ?array $parsed = null): void
@@ -118,7 +127,7 @@ class RuleRepository
             try {
                 $parsed = $this->parse($path);
             } catch (Throwable) {
-                $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
+                $raw = (string) preg_replace('/\R/', "\n", (string) File::get($path));
                 $parsed = ['paths' => [], 'body' => $raw];
             }
         }
@@ -132,14 +141,14 @@ class RuleRepository
 
         $body = (string) preg_replace('/^---\r?\n.*?\r?\n---\r?\n?/s', '', (string) $parsed['body']);
 
-        file_put_contents($path, $frontmatter.ltrim($body, "\n"));
+        File::put($path, $frontmatter.ltrim($body, "\n"));
     }
 
     protected function appendEntry(string $path, string $title, string $note): void
     {
-        $contents = rtrim((string) file_get_contents($path), "\n");
+        $contents = rtrim((string) File::get($path), "\n");
 
-        file_put_contents($path, $contents."\n\n## ".$title."\n".$note."\n");
+        File::put($path, $contents."\n\n## ".$title."\n".$note."\n");
     }
 
     /**
@@ -157,7 +166,7 @@ class RuleRepository
      */
     protected function parse(string $path): array
     {
-        $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
+        $raw = (string) preg_replace('/\R/', "\n", (string) File::get($path));
 
         if (preg_match('/^---\n(.*?)\n---\n?(.*)$/s', $raw, $matches) !== 1) {
             return ['paths' => [], 'body' => $raw];
@@ -176,11 +185,11 @@ class RuleRepository
      */
     protected function files(): array
     {
-        if (! is_dir($this->directory)) {
+        if (! File::isDirectory($this->directory)) {
             return [];
         }
 
-        return collect(glob($this->directory.DIRECTORY_SEPARATOR.'*.md') ?: [])
+        return collect(File::glob($this->directory.DIRECTORY_SEPARATOR.'*.md') ?: [])
             ->reject(fn (string $file): bool => basename($file) === 'index.md')
             ->values()
             ->all();
