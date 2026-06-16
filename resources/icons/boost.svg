@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg fill="none" viewBox="0 0 41 40" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#f)">
+<rect transform="translate(.27734)" width="40" height="40" fill="url(#a)"/>
+<g filter="url(#e)">
+<ellipse cx="2.7773" cy="2.8125" rx="20" ry="19.688" fill="#EFB0F9"/>
+</g>
+<g filter="url(#d)">
+<ellipse cx="30.902" cy="31.562" rx="23.75" ry="23.438" fill="#B29FF4"/>
+</g>
+<mask id="b" x="0" y="20" width="41" height="20" style="mask-type:alpha" maskUnits="userSpaceOnUse">
+<rect transform="matrix(1 0 0 -1 .27734 40)" width="40" height="20" fill="#D9D9D9"/>
+</mask>
+<g mask="url(#b)">
+<g filter="url(#c)">
+<ellipse cx="10.902" cy="27.812" rx="20" ry="19.688" fill="#D8F8EF"/>
+</g>
+</g>
+<rect x="9.7004" y="9.4231" width="15.385" height="15.385" stroke="#000" stroke-width="3.8462"/>
+<rect x="14.028" y="13.75" width="18.269" height="18.269" stroke="#000" stroke-width=".96154"/>
+<rect x="16.911" y="16.635" width="12.5" height="12.5" stroke="#000" stroke-width=".96154"/>
+</g>
+<defs>
+<filter id="e" x="-35.973" y="-35.625" width="77.5" height="76.875" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur result="effect1_foregroundBlur_1_1027" stdDeviation="9.375"/>
+</filter>
+<filter id="d" x="-11.598" y="-10.625" width="85" height="84.375" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur result="effect1_foregroundBlur_1_1027" stdDeviation="9.375"/>
+</filter>
+<filter id="c" x="-27.848" y="-10.625" width="77.5" height="76.875" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur result="effect1_foregroundBlur_1_1027" stdDeviation="9.375"/>
+</filter>
+<radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="translate(20 20) scale(20)" gradientUnits="userSpaceOnUse">
+<stop stop-color="#EEE6F4" offset="0"/>
+<stop stop-color="#DBE0F6" offset="1"/>
+</radialGradient>
+<clipPath id="f">
+<rect transform="translate(.27734)" width="40" height="40" fill="#fff"/>
+</clipPath>
+</defs>
+</svg>
