@@ -235,8 +235,8 @@ test('filters out empty guidelines', function (): void {
         ->not->toMatch('/=== \w+.*? rules ===\s*===/');
 });
 
-test('includes the project memory pointer when memory is enabled and MCP is on', function (): void {
-    config()->set('boost.memory.enabled', true);
+test('includes the project rules pointer when rules are enabled and MCP is on', function (): void {
+    config()->set('boost.rules.enabled', true);
 
     $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -248,14 +248,14 @@ test('includes the project memory pointer when memory is enabled and MCP is on',
     $guidelines = $this->composer->config($config)->compose();
 
     expect($guidelines)
-        ->toContain('## Project Memory')
-        ->toContain('memory-search')
-        ->toContain('memory-write')
-        ->toContain('.ai/memory');
+        ->toContain('## Project Rules')
+        ->toContain('@.ai/rules/index.md')
+        ->toContain('record-rule')
+        ->toContain('.ai/rules');
 });
 
-test('omits the project memory pointer when memory is disabled', function (): void {
-    config()->set('boost.memory.enabled', false);
+test('omits the project rules pointer when rules are disabled', function (): void {
+    config()->set('boost.rules.enabled', false);
 
     $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -267,8 +267,8 @@ test('omits the project memory pointer when memory is disabled', function (): vo
     $guidelines = $this->composer->config($config)->compose();
 
     expect($guidelines)
-        ->not->toContain('## Project Memory')
-        ->not->toContain('memory-search');
+        ->not->toContain('## Project Rules')
+        ->not->toContain('@.ai/rules/index.md');
 });
 
 test('returns list of used guidelines', function (): void {

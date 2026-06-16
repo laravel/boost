@@ -2,39 +2,29 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Memory;
+namespace Laravel\Boost\Rules;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
-class MemoryRepository
+class RuleRepository
 {
-    /**
-     * @var array<int, string>
-     */
-    public const TYPES = ['decision', 'gotcha', 'rule'];
-
-    private const TYPE_PATTERN = 'decision|gotcha|rule';
-
-    public function __construct(protected string $directory) {}
+    public function __construct(protected string $directory)
+    {
+        //
+    }
 
     /**
-     * Record a memory and return the location it was stored at.
+     * Record a rule and return the location it was stored at.
      */
-    public function write(string $glob, string $type, string $title, string $note): string
+    public function write(string $glob, string $title, string $note): string
     {
         $glob = trim($glob);
-        $type = strtolower(trim($type));
         $title = trim((string) preg_replace('/\R/', ' ', $title));
         $note = trim($note);
-
-        if (! in_array($type, self::TYPES, true)) {
-            throw new InvalidArgumentException('Memory type must be one of: '.implode(', ', self::TYPES).'.');
-        }
 
         $target = $this->resolveTargetFile($glob);
 
@@ -44,24 +34,9 @@ class MemoryRepository
             $this->ensureGlobApplied($target['path'], $glob, $target['parsed']);
         }
 
-        $this->appendEntry($target['path'], $type, $title, $note);
+        $this->appendEntry($target['path'], $title, $note);
 
         return $target['path'];
-    }
-
-    /**
-     * @return array<int, array{path: string, applies_to: array<int, string>}>
-     */
-    public function read(string $path): array
-    {
-        return $this->parsedFiles()
-            ->filter(fn (array $parsed): bool => $this->globsMatchPath($parsed['applies_to'], trim($path)))
-            ->map(fn (array $parsed): array => [
-                'path' => $parsed['file'],
-                'applies_to' => $parsed['applies_to'],
-            ])
-            ->values()
-            ->all();
     }
 
     public function relativePath(string $path): string
@@ -79,7 +54,7 @@ class MemoryRepository
     {
         $allParsed = $this->parsedFiles();
 
-        $existing = $allParsed->first(fn (array $parsed): bool => in_array($glob, $parsed['applies_to'], true));
+        $existing = $allParsed->first(fn (array $parsed): bool => in_array($glob, $parsed['paths'], true));
 
         if ($existing !== null) {
             return ['path' => $existing['file'], 'heading' => $existing['heading'], 'parsed' => $existing];
@@ -100,26 +75,22 @@ class MemoryRepository
     protected function fileNameForGlob(string $glob): string
     {
         $last = Str::of($glob)->trim('/')->explode('/')
-            ->filter(static fn (string $segment): bool => $segment !== '' && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
+            ->filter(static fn (string $segment): bool => filled($segment) && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
             ->last();
 
-        if ($last === null) {
-            return 'general';
-        }
+        $slug = Str::slug(Str::snake((string) $last));
 
-        $slug = Str::slug(Str::snake($last));
-
-        return $slug === '' ? 'general' : $slug;
+        return blank($slug) ? 'general' : $slug;
     }
 
     /**
-     * @param  array<int, string>  $appliesTo
+     * @param  array<int, string>  $paths
      */
-    protected function createFile(string $path, string $heading, array $appliesTo): void
+    protected function createFile(string $path, string $heading, array $paths): void
     {
         File::ensureDirectoryExists(dirname($path));
 
-        file_put_contents($path, $this->renderFrontmatter($appliesTo).'# '.$heading."\n");
+        file_put_contents($path, $this->renderFrontmatter($paths).'# '.$heading."\n");
     }
 
     protected function ensureGlobApplied(string $path, string $glob, ?array $parsed = null): void
@@ -129,53 +100,52 @@ class MemoryRepository
                 $parsed = $this->parse($path);
             } catch (Throwable) {
                 $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
-                $parsed = ['applies_to' => [], 'body' => $raw, 'heading' => '', 'entries' => []];
+                $parsed = ['paths' => [], 'body' => $raw, 'heading' => '', 'entries' => []];
             }
         }
 
-        if (in_array($glob, $parsed['applies_to'], true)) {
+        if (in_array($glob, $parsed['paths'], true)) {
             return;
         }
 
-        $appliesTo = [...$parsed['applies_to'], $glob];
-        $frontmatter = $this->renderFrontmatter($appliesTo);
+        $paths = [...$parsed['paths'], $glob];
+        $frontmatter = $this->renderFrontmatter($paths);
 
-        // fix any invalid frontmatter
         $body = (string) preg_replace('/^---\r?\n.*?\r?\n---\r?\n?/s', '', (string) $parsed['body']);
 
         file_put_contents($path, $frontmatter.ltrim($body, "\n"));
     }
 
-    protected function appendEntry(string $path, string $type, string $title, string $note): void
+    protected function appendEntry(string $path, string $title, string $note): void
     {
         $contents = rtrim((string) file_get_contents($path), "\n");
 
-        file_put_contents($path, $contents."\n\n## [".$type.'] '.$title."\n".$note."\n");
+        file_put_contents($path, $contents."\n\n## ".$title."\n".$note."\n");
     }
 
     /**
-     * @param  array<int, string>  $appliesTo
+     * @param  array<int, string>  $paths
      */
-    protected function renderFrontmatter(array $appliesTo): string
+    protected function renderFrontmatter(array $paths): string
     {
-        $yaml = Yaml::dump(['applies_to' => array_values($appliesTo)], 2, 2);
+        $yaml = Yaml::dump(['paths' => array_values($paths)], 2, 2);
 
         return "---\n".$yaml."---\n\n";
     }
 
     /**
-     * @return array{applies_to: array<int, string>, heading: string, body: string, entries: array<int, array{type: string, title: string, body: string}>}
+     * @return array{paths: array<int, string>, heading: string, body: string, entries: array<int, array{title: string, body: string}>}
      */
     protected function parse(string $path): array
     {
         $raw = (string) preg_replace('/\R/', "\n", (string) file_get_contents($path));
 
-        $appliesTo = [];
+        $paths = [];
         $body = $raw;
 
         if (preg_match('/^---\n(.*?)\n---\n?(.*)$/s', $raw, $matches) === 1) {
             $front = Yaml::parse($matches[1]) ?: [];
-            $appliesTo = array_values(array_filter((array) ($front['applies_to'] ?? []), is_string(...)));
+            $paths = array_values(array_filter((array) ($front['paths'] ?? []), is_string(...)));
             $body = $matches[2];
         }
 
@@ -183,44 +153,21 @@ class MemoryRepository
 
         $entries = [];
 
-        if (preg_match_all('/(?<=\n\n)## \[('.self::TYPE_PATTERN.')\]\s*(.+?)\n(.*?)(?=\n\n## |\z)/s', $body, $entryMatches, PREG_SET_ORDER) > 0) {
+        if (preg_match_all('/(?<=\n\n)## (.+?)\n(.*?)(?=\n\n## |\z)/s', $body, $entryMatches, PREG_SET_ORDER) > 0) {
             $entries = collect($entryMatches)
                 ->map(static fn (array $match): array => [
-                    'type' => strtolower(trim($match[1])),
-                    'title' => trim($match[2]),
-                    'body' => trim($match[3]),
+                    'title' => trim($match[1]),
+                    'body' => trim($match[2]),
                 ])
                 ->all();
         }
 
         return [
-            'applies_to' => $appliesTo,
+            'paths' => $paths,
             'heading' => $heading,
             'body' => $body,
             'entries' => $entries,
         ];
-    }
-
-    /**
-     * @param  array<int, string>  $globs
-     */
-    protected function globsMatchPath(array $globs, string $path): bool
-    {
-        if ($globs === []) {
-            return true;
-        }
-
-        $path = ltrim(Str::replace(DIRECTORY_SEPARATOR, '/', $path), '/');
-
-        foreach ($globs as $glob) {
-            $pattern = '#^'.str_replace(['\*\*', '\*', '\?'], ['.*', '[^/]*', '[^/]'], preg_quote(trim($glob, '/'), '#')).'$#u';
-
-            if (preg_match($pattern, $path) === 1) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -239,7 +186,7 @@ class MemoryRepository
     }
 
     /**
-     * @return Collection<int, array{file: string, applies_to: array<int, string>, heading: string, body: string, entries: array<int, array{type: string, title: string, body: string}>}>
+     * @return Collection<int, array{file: string, paths: array<int, string>, heading: string, body: string, entries: array<int, array{title: string, body: string}>}>
      */
     protected function parsedFiles(): Collection
     {

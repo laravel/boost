@@ -15,8 +15,8 @@ use Illuminate\View\Compilers\BladeCompiler;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Mcp\Boost;
-use Laravel\Boost\Memory\MemoryRepository;
 use Laravel\Boost\Middleware\InjectBoost;
+use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Services\BrowserLogger;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\Roster;
@@ -40,7 +40,7 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
 
-        $this->app->singleton(MemoryRepository::class, fn (): MemoryRepository => new MemoryRepository(base_path('.ai/memory')));
+        $this->app->singleton(RuleRepository::class, fn (): RuleRepository => new RuleRepository(base_path('.ai/rules')));
 
         $this->app->singleton(GuidelineAssist::class, fn ($app): GuidelineAssist => new GuidelineAssist(
             $app->make(Roster::class),

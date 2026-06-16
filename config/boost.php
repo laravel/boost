@@ -32,17 +32,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Boost Project Memory
+    | Boost Project Rules
     |--------------------------------------------------------------------------
     |
-    | Project memory lets agents store and retrieve notes about this codebase as
-    | committed markdown files in .ai/memory/, grouped by file area. Setting
-    | this to false removes the memory-search and memory-write MCP tools.
+    | Project rules let agents store and retrieve notes about this codebase as
+    | committed markdown files in .ai/rules/, grouped by file area. Setting
+    | this to false removes the record-rule MCP tool.
     |
     */
 
-    'memory' => [
-        'enabled' => env('BOOST_MEMORY_ENABLED', true),
+    'rules' => [
+        'enabled' => env('BOOST_RULES_ENABLED', true),
     ],
 
     /*

@@ -20,13 +20,12 @@
 2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
 3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
 4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
-@if(config('boost.memory.enabled', true))
+@if(config('boost.rules.enabled', true))
 
-## Project Memory (IMPORTANT)
-- This project keeps shared, committed memory of decisions and gotchas in `.ai/memory`. Always check it so you do not repeat a settled decision or hit a known trap.
-- Use `memory-search` before changing code: pass the `path` you are about to edit to get the relevant memory file(s). Then grep the returned file(s) for specific entries — by keyword: `grep -i 'keyword' .ai/memory/file.md`, or by type: `grep -A4 '\[gotcha\]' .ai/memory/file.md`.
-- Use `memory-write` to record a durable `decision` (why the code does something a certain way), `gotcha` (a non-obvious trap), or `rule` (a standing constraint that must always be followed) worth reading in three months: pass a `glob` for the files it applies to (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Boost groups it into a shared area file. Do not record secrets, transient state, or anything obvious from the code. Always use `memory-write` — never your native memory or notes tool; native memory is personal and session-scoped, only Boost memory is shared with the team and persists in the repo.
-- Memory files are committed and reviewed in PRs — treat them like code. Files without frontmatter apply to the entire project.
+## Project Rules (IMPORTANT)
+- This project keeps shared, committed rules in `.ai/rules` — settled decisions, non-obvious traps, and standing constraints, grouped by file area. They are committed and reviewed in PRs: treat them like code and always honor them.
+- **Before you plan or change anything, check the rules first — every time, no exceptions.** Start at @.ai/rules/index.md: it maps file globs to rule files. Read every rule file whose globs cover the path(s) you are about to plan for or edit, then follow them — do not finalize a plan or write code until you have. To catch rules a path match alone might miss, also `grep -rin 'keyword' .ai/rules`. A rule file with no `paths` frontmatter applies to the entire project.
+- Record durable rules with `record-rule` — a decision, trap, or constraint worth reading in three months. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`; Boost files it into the matching area. Do not record secrets, transient state, or anything obvious from the code. Always use `record-rule`, never your native memory or notes tool — that is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
 @endif
 @endif
 

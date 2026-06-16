@@ -16,9 +16,8 @@ use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema;
 use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
 use Laravel\Boost\Mcp\Tools\LastError;
-use Laravel\Boost\Mcp\Tools\MemorySearch;
-use Laravel\Boost\Mcp\Tools\MemoryWrite;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
+use Laravel\Boost\Mcp\Tools\RecordRule;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Server;
@@ -92,9 +91,8 @@ class Boost extends Server
             DatabaseSchema::class,
             GetAbsoluteUrl::class,
             LastError::class,
-            MemorySearch::class,
-            MemoryWrite::class,
             ReadLogEntries::class,
+            RecordRule::class,
             SearchDocs::class,
             Tinker::class,
         ], 'tools');
