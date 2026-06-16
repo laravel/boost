@@ -35,9 +35,9 @@ return [
     | Boost Project Rules
     |--------------------------------------------------------------------------
     |
-    | Project rules let agents store and retrieve notes about this codebase as
-    | committed markdown files in .ai/rules/, grouped by file area. Setting
-    | this to false removes the record-rule MCP tool.
+    | Project rules let agents record durable decisions, non-obvious traps, and
+    | standing constraints as committed markdown files in .ai/rules/, grouped
+    | by file area. Set this to false to remove the record-rule MCP tool.
     |
     */
 

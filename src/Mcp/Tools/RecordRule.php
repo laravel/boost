@@ -19,7 +19,7 @@ class RecordRule extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Record a durable project rule so future agents and teammates do not rediscover it — a decision (why the project does something a certain way), a non-obvious trap, or a standing constraint that must always be followed. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**) and Boost files it into a shared, committed markdown note grouped by area. Keep it to a few lines; only record what you would want to read in three months. Do not record secrets, transient state, or anything already obvious from the code.';
+    protected string $description = 'Record a durable project rule so future agents and teammates do not rediscover it. Use it for a settled decision (why the project does something a certain way), a non-obvious trap, or a standing constraint that must always be followed. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**) and Boost files it into a shared, committed markdown note grouped by area. Keep it to a few lines; only record what you would want to read in three months. Do not record secrets, transient state, or anything already obvious from the code.';
 
     /**
      * Determine whether the tool should be registered with the MCP server.
