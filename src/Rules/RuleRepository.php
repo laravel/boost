@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
+use function Illuminate\Filesystem\join_paths;
+
 class RuleRepository
 {
     public function __construct(protected string $directory)
@@ -56,7 +58,7 @@ class RuleRepository
             ."Before planning or editing, find the row whose globs match the file's path and read that rule file.\n\n"
             .$table."\n";
 
-        $path = $this->directory.DIRECTORY_SEPARATOR.'index.md';
+        $path = join_paths($this->directory, 'index.md');
 
         File::ensureDirectoryExists($this->directory);
         File::put($path, $body);
@@ -91,7 +93,7 @@ class RuleRepository
         }
 
         $name = $this->fileNameForGlob($glob);
-        $path = $this->directory.DIRECTORY_SEPARATOR.$name.'.md';
+        $path = join_paths($this->directory, $name.'.md');
 
         return [
             'path' => $path,
@@ -189,7 +191,7 @@ class RuleRepository
             return [];
         }
 
-        return collect(File::glob($this->directory.DIRECTORY_SEPARATOR.'*.md') ?: [])
+        return collect(File::glob(join_paths($this->directory, '*.md')) ?: [])
             ->reject(fn (string $file): bool => basename($file) === 'index.md')
             ->values()
             ->all();
