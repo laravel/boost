@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Console\OutputStyle;
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\AgentsDetector;
@@ -36,14 +35,8 @@ function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null
     $terminal = Mockery::mock(Terminal::class);
     $terminal->shouldReceive('initDimensions');
 
-    return new class(
-        $detector ?? app(AgentsDetector::class),
-        Mockery::mock(Cloud::class),
-        $config,
-        $nightwatch,
-        $sail,
-        $terminal,
-    ) extends InstallCommand {
+    return new class($detector ?? app(AgentsDetector::class), Mockery::mock(Cloud::class), $config, $nightwatch, $sail, $terminal) extends InstallCommand
+    {
         protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
 
         protected function performInstallation(): void {}
@@ -64,6 +57,7 @@ it('does not throw when no agents are saved and none are auto-detected in non-in
 
     $input = new ArrayInput(['--guidelines' => true], $command->getDefinition());
     $input->setInteractive(false);
+
     $command->setLaravel(app());
 
     expect($command->run($input, new NullOutput))->toBe(0);
@@ -77,6 +71,7 @@ it('silently drops stale agents no longer in the available list in non-interacti
 
     $input = new ArrayInput(['--guidelines' => true], $command->getDefinition());
     $input->setInteractive(false);
+
     $command->setLaravel(app());
 
     expect($command->run($input, new NullOutput))->toBe(0);

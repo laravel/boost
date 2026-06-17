@@ -484,7 +484,13 @@ class InstallCommand extends Command
 
     protected function isExplicitFlagMode(): bool
     {
-        return (bool) ($this->option('guidelines') || $this->option('skills') || $this->option('mcp'));
+        if ($this->option('guidelines')) {
+            return true;
+        }
+        if ($this->option('skills')) {
+            return true;
+        }
+        return (bool) $this->option('mcp');
     }
 
     protected function installMcpServerConfig(): void

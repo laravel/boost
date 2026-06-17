@@ -10,8 +10,8 @@ use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\NullOutput;
 
 beforeEach(function (): void {
     (new Config)->flush();
@@ -467,6 +467,7 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
 
     $nonInteractiveInput = new ArrayInput([]);
     $nonInteractiveInput->setInteractive(false);
+
     $command->setInput($nonInteractiveInput);
     $command->setLaravel($this->app);
     $command->setOutput(new OutputStyle($nonInteractiveInput, new NullOutput));
