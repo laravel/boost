@@ -200,6 +200,10 @@ class InstallCommand extends Command
 
         $defaults = $configValues->filter()->keys()->whenEmpty(fn () => $featureLabels->keys());
 
+        if (! $this->input->isInteractive()) {
+            return $defaults->values();
+        }
+
         return collect(multiselect(
             label: 'Which Boost features would you like to configure?',
             options: $featureLabels->all(),
@@ -318,7 +322,6 @@ class InstallCommand extends Command
         if (! $this->input->isInteractive()) {
             return $defaults
                 ->map(fn (string $name) => $filteredAgents->get($name))
-                ->filter()
                 ->values();
         }
 
@@ -332,7 +335,6 @@ class InstallCommand extends Command
 
         return collect($selected)
             ->map(fn (string $name) => $filteredAgents->get($name))
-            ->filter()
             ->values();
     }
 
@@ -482,15 +484,7 @@ class InstallCommand extends Command
 
     protected function isExplicitFlagMode(): bool
     {
-        if ($this->option('guidelines')) {
-            return true;
-        }
-
-        if ($this->option('skills')) {
-            return true;
-        }
-
-        return (bool) $this->option('mcp');
+        return (bool) ($this->option('guidelines') || $this->option('skills') || $this->option('mcp'));
     }
 
     protected function installMcpServerConfig(): void
