@@ -1,6 +1,20 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.9...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.10...main)
+
+## [v2.4.10](https://github.com/laravel/boost/compare/v2.4.9...v2.4.10) - 2026-06-09
+
+### What's Changed
+
+* fix: preserve literal $N patterns when replacing guidelines block by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/840
+* Fix Zed detection when the binary is `zeditor` by [@PHLAK](https://github.com/PHLAK) in https://github.com/laravel/boost/pull/846
+* Support laravel/mcp 0.8.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/847
+
+### New Contributors
+
+* [@PHLAK](https://github.com/PHLAK) made their first contribution in https://github.com/laravel/boost/pull/846
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.9...v2.4.10
 
 ## [v2.4.9](https://github.com/laravel/boost/compare/v2.4.8...v2.4.9) - 2026-06-04
 
@@ -328,11 +342,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -393,12 +409,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 

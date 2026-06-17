@@ -102,7 +102,7 @@ it('system detection uses command -v on Linux', function (): void {
 
     $config = $agent->systemDetectionConfig(Platform::Linux);
 
-    expect($config['command'])->toBe('command -v zed');
+    expect($config['command'])->toBe('command -v zed || command -v zeditor');
 });
 
 it('system detection uses where on Windows', function (): void {
