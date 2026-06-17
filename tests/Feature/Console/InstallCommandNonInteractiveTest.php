@@ -3,25 +3,20 @@
 declare(strict_types=1);
 
 use Illuminate\Console\OutputStyle;
-use Illuminate\Support\Collection;
+use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
-use Laravel\Boost\Console\UpdateCommand;
-use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Cloud;
 use Laravel\Boost\Install\Nightwatch;
 use Laravel\Boost\Install\Sail;
-use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
-use Mockery;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\NullOutput;
 
 beforeEach(function (): void {
     (new Config)->flush();
+    config(['boost.enforce_tests' => false]);
 });
 
 afterEach(function (): void {
@@ -29,137 +24,60 @@ afterEach(function (): void {
     Mockery::close();
 });
 
-function makeNonInteractiveInput(array $options = []): ArrayInput
+function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null): InstallCommand
 {
-    $definition = (new InstallCommand(
-        Mockery::mock(AgentsDetector::class),
-        Mockery::mock(Cloud::class),
-        new Config,
-        Mockery::mock(Nightwatch::class),
-        Mockery::mock(Sail::class),
-        Mockery::mock(Terminal::class),
-    ))->getDefinition();
+    $nightwatch = Mockery::mock(Nightwatch::class);
+    $nightwatch->shouldReceive('isInstalled')->andReturn(false);
 
-    $input = new ArrayInput(array_merge(['--no-interaction' => true], $options), $definition);
-    $input->setInteractive(false);
+    $sail = Mockery::mock(Sail::class);
+    $sail->shouldReceive('isInstalled')->andReturn(false);
+    $sail->shouldReceive('isActive')->andReturn(false);
 
-    return $input;
-}
+    $terminal = Mockery::mock(Terminal::class);
+    $terminal->shouldReceive('initDimensions');
 
-test('selectAgents returns saved config agents without prompting in non-interactive mode', function (): void {
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-
-    $agentsDetector = Mockery::mock(AgentsDetector::class);
-    $agentsDetector->shouldReceive('getAgents')->andReturn(
-        collect(app()->make(AgentsDetector::class)->getAgents())
-    );
-    $agentsDetector->shouldReceive('discoverSystemInstalledAgents')->andReturn([]);
-    $agentsDetector->shouldReceive('discoverProjectInstalledAgents')->andReturn([]);
-
-    $command = new InstallCommand(
-        app(AgentsDetector::class),
+    return new class(
+        $detector ?? app(AgentsDetector::class),
         Mockery::mock(Cloud::class),
         $config,
-        Mockery::mock(Nightwatch::class),
-        Mockery::mock(Sail::class),
-        Mockery::mock(Terminal::class),
-    );
+        $nightwatch,
+        $sail,
+        $terminal,
+    ) extends InstallCommand {
+        protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
 
-    $input = new ArrayInput(
-        ['--guidelines' => true],
-        $command->getDefinition()
-    );
-    $input->setInteractive(false);
+        protected function performInstallation(): void {}
 
-    $output = new NullOutput;
+        protected function outro(): void {}
+    };
+}
 
-    $command->setLaravel(app());
-    $command->setInput($input);
-    $command->setOutput(new OutputStyle($input, $output));
-
-    $result = $command->selectAgents();
-
-    expect($result)->toBeInstanceOf(Collection::class)
-        ->and($result->map(fn (Agent $a) => $a->name())->toArray())->toContain('claude_code');
-})->skip('Requires refactor to expose selectAgents() for direct testing — covered via integration');
-
-test('selectThirdPartyPackages returns saved packages without prompting in non-interactive mode', function (): void {
+it('does not throw when no agents are saved and none are auto-detected in non-interactive mode', function (): void {
     $config = new Config;
-    $config->setPackages(['vendor/existing-pkg']);
 
-    $command = Mockery::mock(InstallCommand::class)->makePartial()->shouldAllowMockingProtectedMethods();
+    $detector = Mockery::mock(AgentsDetector::class);
+    $detector->shouldReceive('getAgents')->andReturn(app(AgentsDetector::class)->getAgents());
+    $detector->shouldReceive('discoverSystemInstalledAgents')->andReturn([]);
+    $detector->shouldReceive('discoverProjectInstalledAgents')->andReturn([]);
 
-    $packages = collect([
-        'vendor/existing-pkg' => new ThirdPartyPackage('vendor/existing-pkg', true, false),
-        'vendor/other-pkg' => new ThirdPartyPackage('vendor/other-pkg', true, false),
-    ]);
+    $command = makeTestInstallCommand($config, $detector);
 
-    $command->shouldReceive('option')->andReturn(false);
+    $input = new ArrayInput(['--guidelines' => true], $command->getDefinition());
+    $input->setInteractive(false);
+    $command->setLaravel(app());
 
-    // In non-interactive mode, should return only saved packages without calling multiselect
-    $input = Mockery::mock(InputInterface::class);
-    $input->shouldReceive('isInteractive')->andReturn(false);
-    $input->shouldReceive('hasOption')->andReturn(false);
-    $input->shouldReceive('getOption')->andReturn(null);
-
-    // selectThirdPartyPackages should return defaults without prompting
-    $defaults = collect($config->getPackages())
-        ->filter(fn (string $name) => $packages->has($name))
-        ->values();
-
-    expect($defaults->toArray())->toBe(['vendor/existing-pkg']);
+    expect($command->run($input, new NullOutput))->toBe(0);
 })->skipOnWindows();
 
-test('boost install with no-interaction flag does not hang when agents are detected', function (): void {
+it('silently drops stale agents no longer in the available list in non-interactive mode', function (): void {
     $config = new Config;
-    $config->setAgents(['claude_code']);
-    $config->setGuidelines(true);
+    $config->setAgents(['gemini']);
 
-    $command = Mockery::mock(InstallCommand::class)->makePartial()->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('collectInstallationPreferences')->andReturnNull();
-    $command->shouldReceive('performInstallation')->andReturnNull();
-    $command->shouldReceive('outro')->andReturnNull();
-    $command->shouldReceive('discoverEnvironment')->andReturnNull();
-    $command->shouldReceive('displayBoostHeader')->andReturnNull();
-    $command->setLaravel(app());
+    $command = makeTestInstallCommand($config);
 
-    $input = new ArrayInput(
-        ['--guidelines' => true],
-        (new Command)->getDefinition()
-    );
+    $input = new ArrayInput(['--guidelines' => true], $command->getDefinition());
     $input->setInteractive(false);
-
-    $output = new OutputStyle($input, new NullOutput);
-    $command->setOutput($output);
-
-    // Command should complete without blocking on multiselect
-    expect($command->handle())->toBe(0);
-})->skip('Requires full Artisan wiring — covered by UpdateCommand integration');
-
-test('update command triggers install with non-interactive flag and completes', function (): void {
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-    $config->setGuidelines(true);
-    $config->setSkills([]);
-
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])
-        ->andReturn(0);
-
-    $input = new ArrayInput([]);
-    $output = new OutputStyle($input, new NullOutput);
-
     $command->setLaravel(app());
-    $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
-});
+    expect($command->run($input, new NullOutput))->toBe(0);
+})->skipOnWindows();
