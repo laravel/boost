@@ -487,9 +487,11 @@ class InstallCommand extends Command
         if ($this->option('guidelines')) {
             return true;
         }
+
         if ($this->option('skills')) {
             return true;
         }
+
         return (bool) $this->option('mcp');
     }
 
