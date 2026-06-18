@@ -201,6 +201,10 @@ class InstallCommand extends Command
 
         $defaults = $configValues->filter()->keys()->whenEmpty(fn () => $featureLabels->keys());
 
+        if (! $this->input->isInteractive()) {
+            return $defaults->values();
+        }
+
         return collect(multiselect(
             label: 'Which Boost features would you like to configure?',
             options: $featureLabels->all(),
@@ -221,14 +225,20 @@ class InstallCommand extends Command
             return collect();
         }
 
+        $defaults = collect($this->config->getPackages())
+            ->filter(fn (string $name) => $packages->has($name))
+            ->values();
+
+        if (! $this->input->isInteractive()) {
+            return $defaults;
+        }
+
         return collect(multiselect(
             label: 'Which third-party AI guidelines/skills would you like to install?',
             options: $packages->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [
                 $name => $pkg->displayLabel(),
             ])->toArray(),
-            default: collect($this->config->getPackages())
-                ->filter(fn (string $name) => $packages->has($name))
-                ->values(),
+            default: $defaults->all(),
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
@@ -254,10 +264,18 @@ class InstallCommand extends Command
             ],
         ])->filter(fn (array $integration): bool => $integration['available']);
 
+        $defaults = $integrations->filter(fn (array $integration): bool => $integration['default'])->keys()->all();
+
+        if (! $this->input->isInteractive()) {
+            $this->selectedBoostFeatures->push(...$defaults);
+
+            return;
+        }
+
         $selected = multiselect(
             label: 'Which integrations would you like to configure for Boost?',
             options: $integrations->map(fn (array $integration): string => $integration['label'])->all(),
-            default: $integrations->filter(fn (array $integration): bool => $integration['default'])->keys()->all(),
+            default: $defaults,
             hint: 'Selected integrations will have their MCP servers or skills automatically configured',
         );
 
@@ -302,6 +320,12 @@ class InstallCommand extends Command
             )
             ->values();
 
+        if (! $this->input->isInteractive()) {
+            return $defaults
+                ->map(fn (string $name) => $filteredAgents->get($name))
+                ->values();
+        }
+
         $selected = multiselect(
             label: 'Which AI agents would you like to configure?',
             options: $options->all(),
@@ -312,7 +336,6 @@ class InstallCommand extends Command
 
         return collect($selected)
             ->map(fn (string $name) => $filteredAgents->get($name))
-            ->filter()
             ->values();
     }
 

@@ -11,6 +11,7 @@ use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\NullOutput;
 
 beforeEach(function (): void {
     (new Config)->flush();
@@ -393,6 +394,7 @@ it('adds selected new packages to config when using --discover', function (): vo
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config))->toBe(0)
@@ -526,3 +528,34 @@ it('enables skills when --fresh is set even with no skills configured', function
 
     expect($command->handle($config))->toBe(0);
 });
+
+it('skips new-package discovery prompt when running in non-interactive mode', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setPackages([]);
+
+    $newPackage = new ThirdPartyPackage('vendor/awesome-pkg', true, false);
+
+    Prompt::fake([]);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('option')->with('discover')->andReturn(true);
+    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
+    $command->shouldReceive('option')->with('fresh')->andReturn(false);
+    $command->shouldReceive('resolveNewPackages')->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->shouldReceive('callSilently')->andReturn(0);
+
+    $nonInteractiveInput = new ArrayInput([]);
+    $nonInteractiveInput->setInteractive(false);
+
+    $command->setInput($nonInteractiveInput);
+    $command->setLaravel($this->app);
+    $command->setOutput(new OutputStyle($nonInteractiveInput, new NullOutput));
+
+    expect($command->handle($config))->toBe(0);
+
+    expect($config->getPackages())->toBe([]);
+})->skipOnWindows();
