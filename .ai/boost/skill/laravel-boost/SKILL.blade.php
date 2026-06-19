@@ -20,6 +20,12 @@ Laravel Boost installs and maintains AI context for this project. Use this skill
 - Add or update custom guidance there instead of editing generated agent files directly.
 - Keep instructions focused and actionable so Boost can compose them into each supported agent's format.
 
+## Where Custom Skills Live
+
+- Reusable custom workflows and domain-specific instructions can be added as skills in `.ai/skills`.
+- Each custom skill should live in its own directory with a `SKILL.md` or `SKILL.blade.php` file.
+- Boost tracks installed skills in `boost.json`; do not edit generated agent skill directories directly.
+
 ## Do Not Edit Generated Agent Files
 
 - Never edit `AGENTS.md` to change project guidelines.
