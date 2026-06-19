@@ -25,6 +25,7 @@ Laravel Boost installs and maintains AI context for this project. Use this skill
 - Reusable custom workflows and domain-specific instructions can be added as skills in `.ai/skills`.
 - Each custom skill should live in its own directory with a `SKILL.md` or `SKILL.blade.php` file.
 - Boost tracks installed skills in `boost.json`; do not edit generated agent skill directories directly.
+- Agent-specific skill directories may be symlinks to `.ai/skills` or regenerated copies, depending on the agent and platform.
 
 ## Do Not Edit Generated Agent Files
 
