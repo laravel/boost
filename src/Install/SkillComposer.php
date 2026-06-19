@@ -53,10 +53,19 @@ class SkillComposer
         $excluded = config('boost.skills.exclude', []);
 
         return $this->skills = collect()
+            ->merge($this->getCoreBoostSkills())
             ->merge($this->getBoostSkills())
             ->merge($this->getThirdPartySkills())
             ->reject(fn (Skill $skill, string $key): bool => in_array($key, $excluded, true))
             ->merge($this->getUserSkills());
+    }
+
+    /**
+     * @return Collection<string, Skill>
+     */
+    protected function getCoreBoostSkills(): Collection
+    {
+        return $this->discoverSkillsFromPath($this->getBoostAiPath().DIRECTORY_SEPARATOR.'boost', 'boost', null);
     }
 
     /**

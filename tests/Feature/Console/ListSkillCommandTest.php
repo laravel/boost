@@ -21,10 +21,12 @@ it('lists available skills', function (): void {
 
     $this->artisan('boost:list-skills')
         ->assertSuccessful()
-        ->expectsOutputToContain('Found 2 skills');
+        ->expectsOutputToContain('Found 3 skills');
 });
 
 it('shows message when no skills available', function (): void {
+    config(['boost.skills.exclude' => ['laravel-boost']]);
+
     $this->artisan('boost:list-skills')
         ->assertSuccessful()
         ->expectsOutputToContain('No skills available in this project.');

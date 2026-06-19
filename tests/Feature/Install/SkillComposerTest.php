@@ -48,6 +48,17 @@ test('skills are discovered from Boost built-in .ai directory', function (): voi
     expect($skills->has('livewire-development'))->toBeTrue();
 });
 
+test('core Boost skills are always discovered', function (): void {
+    $packages = new PackageCollection([]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $skills = (new SkillComposer($this->roster))->skills();
+
+    expect($skills->has('laravel-boost'))->toBeTrue()
+        ->and($skills->get('laravel-boost')->package)->toBe('boost');
+});
+
 test('skills only includes skills for installed packages', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
