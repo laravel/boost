@@ -30,6 +30,6 @@ Laravel Boost installs and maintains AI context for this project. Use this skill
 
 ## Syncing Boost Changes
 
-- After changing Boost-managed guidelines or skills, run `php artisan boost:update`.
-- Use `php artisan boost:update --discover` when newly installed packages may provide additional guidelines or skills.
+- After changing Boost-managed guidelines or skills, run `{{ $assist->artisanCommand('boost:update') }}`.
+- Use `{{ $assist->artisanCommand('boost:update --discover') }}` when newly installed packages may provide additional guidelines or skills.
 - Do not skip the update step after adding or changing `.ai/guidelines` content, because agents consume the synced outputs.
