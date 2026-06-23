@@ -14,6 +14,8 @@ use function Illuminate\Filesystem\join_paths;
 
 class RuleRepository
 {
+    protected const INDEX_FILENAME = 'index.md';
+
     public function __construct(protected string $directory)
     {
         //
@@ -58,7 +60,7 @@ class RuleRepository
             ."Before planning or editing, find the row whose globs match the file's path and read that rule file.\n\n"
             .$table."\n";
 
-        $path = join_paths($this->directory, 'index.md');
+        $path = join_paths($this->directory, self::INDEX_FILENAME);
 
         File::ensureDirectoryExists($this->directory);
         File::put($path, $body);
@@ -85,32 +87,94 @@ class RuleRepository
     protected function resolveTargetFile(string $glob): array
     {
         $allParsed = $this->parsedFiles();
+        $area = $this->areaKey($glob);
 
-        $existing = $allParsed->first(fn (array $parsed): bool => in_array($glob, $parsed['paths'], true));
+        $existing = $allParsed->first(function (array $parsed) use ($glob, $area): bool {
+            if (in_array($glob, $parsed['paths'], true)) {
+                return true;
+            }
+
+            return collect($parsed['paths'])
+                ->contains(fn (string $path): bool => $this->areaKey($path) === $area);
+        });
 
         if ($existing !== null) {
             return ['path' => $existing['file'], 'heading' => '', 'parsed' => $existing];
         }
 
-        $name = $this->fileNameForGlob($glob);
-        $path = join_paths($this->directory, $name.'.md');
+        $path = $this->uniqueFilePath($glob, $allParsed);
 
         return [
             'path' => $path,
-            'heading' => Str::headline($name),
-            'parsed' => $allParsed->first(fn (array $parsed): bool => $parsed['file'] === $path),
+            'heading' => Str::headline(basename($path, '.md')),
+            'parsed' => null,
         ];
     }
 
-    protected function fileNameForGlob(string $glob): string
+    /**
+     * @param  Collection<int, array{file: string, paths: array<int, string>, body: string}>  $allParsed
+     */
+    protected function uniqueFilePath(string $glob, Collection $allParsed): string
     {
-        $last = Str::of($glob)->trim('/')->explode('/')
+        $segments = $this->meaningfulSegments($glob);
+        $taken = $allParsed->map(fn (array $parsed): string => $parsed['file'])->all();
+        $reserved = join_paths($this->directory, self::INDEX_FILENAME);
+
+        $candidates = [];
+
+        for ($take = 1; $take <= count($segments); $take++) {
+            $slug = $this->slugForSegments(array_slice($segments, -$take));
+
+            if (filled($slug)) {
+                $candidates[] = $slug;
+            }
+        }
+
+        if ($candidates === []) {
+            $candidates[] = 'general';
+        }
+
+        foreach ($candidates as $candidate) {
+            $path = join_paths($this->directory, $candidate.'.md');
+
+            if ($path !== $reserved && ! in_array($path, $taken, true) && ! File::exists($path)) {
+                return $path;
+            }
+        }
+
+        $base = (string) end($candidates);
+        $suffix = 2;
+
+        do {
+            $path = join_paths($this->directory, $base.'-'.$suffix.'.md');
+            $suffix++;
+        } while (in_array($path, $taken, true) || File::exists($path));
+
+        return $path;
+    }
+
+    protected function areaKey(string $glob): string
+    {
+        return implode('/', $this->meaningfulSegments($glob));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function meaningfulSegments(string $glob): array
+    {
+        return Str::of($glob)->trim('/')->explode('/')
             ->filter(static fn (string $segment): bool => filled($segment) && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
-            ->last();
+            ->values()
+            ->all();
+    }
 
-        $slug = Str::slug(Str::snake((string) $last));
-
-        return blank($slug) ? 'general' : $slug;
+    /**
+     * @param  array<int, string>  $segments
+     */
+    protected function slugForSegments(array $segments): string
+    {
+        return Str::slug(Str::snake(implode(' ', $segments)));
     }
 
     /**
@@ -192,7 +256,7 @@ class RuleRepository
         }
 
         return collect(File::glob(join_paths($this->directory, '*.md')) ?: [])
-            ->reject(fn (string $file): bool => basename($file) === 'index.md')
+            ->reject(fn (string $file): bool => basename($file) === self::INDEX_FILENAME)
             ->values()
             ->all();
     }

@@ -113,6 +113,48 @@ it('routes different globs to their own area files', function (): void {
     expect(File::exists($this->rulesDir.'/models.md'))->toBeTrue();
 });
 
+it('keeps distinct areas that share a last path segment in separate files', function (): void {
+    $tool = new RecordRule($this->repository);
+
+    $tool->handle(new Request(['glob' => 'app/Admin/Controllers/**', 'title' => 'Admin rule', 'note' => 'Admin only.']));
+    $tool->handle(new Request(['glob' => 'app/Api/Controllers/**', 'title' => 'Api rule', 'note' => 'Api only.']));
+
+    $files = glob($this->rulesDir.'/*.md');
+    $files = array_filter($files, fn (string $f): bool => basename($f) !== 'index.md');
+
+    expect($files)->toHaveCount(2);
+    expect(File::exists($this->rulesDir.'/controllers.md'))->toBeTrue();
+    expect(File::exists($this->rulesDir.'/api-controllers.md'))->toBeTrue();
+
+    expect(File::get($this->rulesDir.'/controllers.md'))
+        ->toContain('app/Admin/Controllers/**')
+        ->toContain('## Admin rule')
+        ->not->toContain('app/Api/Controllers/**')
+        ->not->toContain('## Api rule');
+
+    expect(File::get($this->rulesDir.'/api-controllers.md'))
+        ->toContain('app/Api/Controllers/**')
+        ->toContain('## Api rule')
+        ->not->toContain('app/Admin/Controllers/**')
+        ->not->toContain('## Admin rule');
+});
+
+it('does not record a rule into the reserved index file', function (): void {
+    $located = $this->repository->write('index/**', 'Index area rule', 'This must survive.');
+
+    expect(basename($located))->not->toBe('index.md');
+
+    $index = File::get($this->rulesDir.'/index.md');
+    expect($index)
+        ->toContain('# Project Rules Index')
+        ->toContain('index/**')
+        ->not->toContain('This must survive.');
+
+    expect(File::get($located))
+        ->toContain('## Index area rule')
+        ->toContain('This must survive.');
+});
+
 it('rejects a rule with a missing glob, title, or note', function (): void {
     $response = (new RecordRule($this->repository))->handle(new Request([
         'glob' => 'app/**',
