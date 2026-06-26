@@ -69,7 +69,7 @@ class ToolExecutor
     {
         $timeout = (int) ($arguments['timeout'] ?? config('boost.mcp.tool_timeout') ?? 180);
 
-        return max(1, min(600, $timeout));
+        return max(1, $timeout);
     }
 
     /**

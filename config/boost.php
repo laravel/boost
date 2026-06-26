@@ -32,21 +32,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Boost MCP
-    |--------------------------------------------------------------------------
-    |
-    | This option controls how many seconds Boost will wait for an MCP tool
-    | subprocess to finish before timing out. Individual tool calls may pass a
-    | timeout argument to override this default for that execution.
-    |
-    */
-
-    'mcp' => [
-        'tool_timeout' => env('BOOST_MCP_TOOL_TIMEOUT', 180),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
