@@ -1,6 +1,31 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.10...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v.2.4.11...main)
+
+## [v.2.4.11](https://github.com/laravel/boost/compare/v2.4.10...v.2.4.11) - 2026-06-26
+
+### What's Changed
+
+* Bump actions/checkout from 6.0.2 to 6.0.3 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/848
+* Add MCP server icon metadata by [@sneycampos](https://github.com/sneycampos) in https://github.com/laravel/boost/pull/849
+* Remove circular MCP server icon test by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/853
+* feat(pint): add --dirty flag for faster formatting by [@calebdw](https://github.com/calebdw) in https://github.com/laravel/boost/pull/845
+* fix: guard non-interactive mode in selectThirdPartyPackages and selectIntegrations by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/839
+* Bump shivammathur/setup-php from 2.37.1 to 2.37.2 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/854
+* docs: use handle() in action class example instead of execute by [@3bd-ulrahman](https://github.com/3bd-ulrahman) in https://github.com/laravel/boost/pull/858
+* Bump actions/checkout from 6.0.3 to 7.0.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/860
+* fix: make MCP tool timeout configurable by [@jstar0](https://github.com/jstar0) in https://github.com/laravel/boost/pull/856
+* feat: add Pi agent support by [@cyrodjohn](https://github.com/cyrodjohn) in https://github.com/laravel/boost/pull/841
+* Testing with interactive ptys by [@ohnotnow](https://github.com/ohnotnow) in https://github.com/laravel/boost/pull/859
+
+### New Contributors
+
+* [@sneycampos](https://github.com/sneycampos) made their first contribution in https://github.com/laravel/boost/pull/849
+* [@3bd-ulrahman](https://github.com/3bd-ulrahman) made their first contribution in https://github.com/laravel/boost/pull/858
+* [@jstar0](https://github.com/jstar0) made their first contribution in https://github.com/laravel/boost/pull/856
+* [@cyrodjohn](https://github.com/cyrodjohn) made their first contribution in https://github.com/laravel/boost/pull/841
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.10...v.2.4.11
 
 ## [v2.4.10](https://github.com/laravel/boost/compare/v2.4.9...v2.4.10) - 2026-06-09
 
@@ -343,11 +368,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -410,12 +437,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
