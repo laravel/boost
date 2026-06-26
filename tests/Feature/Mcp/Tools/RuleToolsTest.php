@@ -142,7 +142,7 @@ it('keeps distinct areas that share a last path segment in separate files', func
 it('does not record a rule into the reserved index file', function (): void {
     $located = $this->repository->write('index/**', 'Index area rule', 'This must survive.');
 
-    expect(basename($located))->not->toBe('index.md');
+    expect(basename((string) $located))->not->toBe('index.md');
 
     $index = File::get($this->rulesDir.'/index.md');
     expect($index)
@@ -163,7 +163,8 @@ it('rejects a rule with a missing glob, title, or note', function (): void {
     ]));
 
     expect($response)->isToolResult()->toolHasError()
-        ->toolTextContains('non-empty glob, title, and note');
+        ->toolTextContains('non-empty glob, title, and note')
+        ->toolTextContains('Missing or empty: title');
 });
 
 it('is gated by the rules enabled config flag', function (): void {

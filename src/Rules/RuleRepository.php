@@ -121,8 +121,9 @@ class RuleRepository
         $reserved = join_paths($this->directory, self::INDEX_FILENAME);
 
         $candidates = [];
+        $counter = count($segments);
 
-        for ($take = 1; $take <= count($segments); $take++) {
+        for ($take = 1; $take <= $counter; $take++) {
             $slug = $this->slugForSegments(array_slice($segments, -$take));
 
             if (filled($slug)) {
@@ -142,7 +143,7 @@ class RuleRepository
             }
         }
 
-        $base = (string) end($candidates);
+        $base = end($candidates);
         $suffix = 2;
 
         do {
@@ -163,7 +164,8 @@ class RuleRepository
      */
     protected function meaningfulSegments(string $glob): array
     {
-        return Str::of($glob)->trim('/')->explode('/')
+        return Str::of($glob)
+            ->explode('/')
             ->filter(static fn (string $segment): bool => filled($segment) && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
             ->values()
             ->all();

@@ -14,12 +14,15 @@ use Throwable;
 
 class RecordRule extends Tool
 {
-    public function __construct(protected RuleRepository $ruleRepository) {}
+    public function __construct(protected RuleRepository $ruleRepository)
+    {
+        //
+    }
 
     /**
      * The tool's description.
      */
-    protected string $description = 'Record a durable project rule so future agents and teammates do not rediscover it. Use it for a settled decision (why the project does something a certain way), a non-obvious trap, or a standing constraint that must always be followed. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**) and Boost files it into a shared, committed markdown note grouped by area. Keep it to a few lines; only record what you would want to read in three months. Do not record secrets, transient state, or anything already obvious from the code.';
+    protected string $description = 'Record a durable project rule so the next agent or teammate inherits it instead of working it out again. Use it for a settled decision (why the project does something a certain way), a non-obvious trap, or a standing constraint that must always be followed. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**) and Boost files it into a shared, committed markdown note grouped by area. Keep it to a few lines; only record what you would want to read in three months. Do not record secrets, transient state, or anything already obvious from the code.';
 
     /**
      * Determine whether the tool should be registered with the MCP server.
@@ -44,7 +47,7 @@ class RecordRule extends Tool
                 ->description('A short, specific heading, for example "Extend BaseController for tenant scoping".')
                 ->required(),
             'note' => $schema->string()
-                ->description('A few lines stating the fact plainly. No essays.')
+                ->description('A few lines stating the rule plainly. No essays.')
                 ->required(),
         ];
     }
@@ -62,8 +65,22 @@ class RecordRule extends Tool
             $glob = $this->ruleRepository->normalizeGlob($glob);
         }
 
-        if ($glob === '' || $title === '' || $note === '') {
-            return Response::error('A rule needs a non-empty glob, title, and note.');
+        $missing = [];
+
+        if ($glob === '') {
+            $missing[] = 'glob';
+        }
+
+        if ($title === '') {
+            $missing[] = 'title';
+        }
+
+        if ($note === '') {
+            $missing[] = 'note';
+        }
+
+        if ($missing !== []) {
+            return Response::error('A rule needs a non-empty glob, title, and note. Missing or empty: '.implode(', ', $missing).'.');
         }
 
         try {

@@ -23,10 +23,10 @@
 @endif
 
 @if(config('boost.rules.enabled', true))
-## Project Rules (IMPORTANT)
-- You MUST consult the project rules before you plan or change anything, every time. This project keeps committed, area-grouped rules in `.ai/rules` (settled decisions, non-obvious traps, standing constraints); treat them like code and always honor them. The moment you enter plan mode or are about to create or edit a file, STOP and do this first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch anything a path match alone misses. Do not finalize a plan or write a single line of code until you have read every matching rule and are following it.
+## Project Rules
+- This project keeps committed, area-grouped rules in `.ai/rules` (settled decisions, non-obvious traps, standing constraints). Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule.
 @if($assist->hasMcpEnabled())
-- Record durable rules with `record-rule` so future agents and teammates do not rediscover them. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`; Boost files it into the matching area. Always use `record-rule`, never your native memory or notes tool; native memory is personal and session-scoped, only `.ai/rules` is shared with the team and persists in the repo.
+- Record durable rules with `record-rule` so the next agent or teammate inherits them instead of working them out again. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Always use `record-rule`, never your native memory or notes tool — native memory is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
 @endif
 
 @endif
