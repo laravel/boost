@@ -13,6 +13,7 @@ use Laravel\Boost\Install\Agents\Factory;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
+use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Agents\Zed;
 use Tests\Unit\Install\ExampleAgent;
 
@@ -32,6 +33,7 @@ it('returns default agents', function (): void {
         'opencode' => OpenCode::class,
         'antigravity' => Antigravity::class,
         'zed' => Zed::class,
+        'pi' => Pi::class,
     ]);
 });
 

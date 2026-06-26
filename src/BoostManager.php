@@ -16,6 +16,7 @@ use Laravel\Boost\Install\Agents\Factory;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
+use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Agents\Zed;
 
 class BoostManager
@@ -33,6 +34,7 @@ class BoostManager
         'opencode' => OpenCode::class,
         'antigravity' => Antigravity::class,
         'zed' => Zed::class,
+        'pi' => Pi::class,
     ];
 
     /**
