@@ -54,21 +54,27 @@ class UpdateCommand extends Command
     {
         $newPackages = $this->resolveNewPackages($config);
 
-        if ($newPackages->isNotEmpty()) {
-            /** @var array<int, string> $selectedPackages */
-            $selectedPackages = multiselect(
-                label: 'New packages with guidelines/skills discovered! Which would you like to add?',
-                options: $newPackages
-                    ->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [$name => $pkg->displayLabel()])
-                    ->toArray(),
-                scroll: 10,
-                required: false,
-                hint: 'Select packages to include their guidelines and skills',
-            );
+        if ($newPackages->isEmpty()) {
+            return;
+        }
 
-            if ($selectedPackages !== []) {
-                $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
-            }
+        if (! $this->input->isInteractive()) {
+            return;
+        }
+
+        /** @var array<int, string> $selectedPackages */
+        $selectedPackages = multiselect(
+            label: 'New packages with guidelines/skills discovered! Which would you like to add?',
+            options: $newPackages
+                ->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [$name => $pkg->displayLabel()])
+                ->toArray(),
+            scroll: 10,
+            required: false,
+            hint: 'Select packages to include their guidelines and skills',
+        );
+
+        if ($selectedPackages !== []) {
+            $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
         }
     }
 
