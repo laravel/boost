@@ -88,6 +88,7 @@ class InstallCommand extends Command
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
         $this->performInstallation();
+        $this->displayGitignoreSuggestions();
         $this->outro();
 
         return self::SUCCESS;
@@ -138,6 +139,18 @@ class InstallCommand extends Command
         }
 
         $this->storeConfig();
+    }
+
+    protected function displayGitignoreSuggestions(): void
+    {
+        if (! $this->input->isInteractive()) {
+            return;
+        }
+
+        $this->newLine();
+        $this->info('Suggested .gitignore entry for Boost:');
+        $this->line('# Laravel Boost');
+        $this->line('boost.json');
     }
 
     protected function outro(): void
