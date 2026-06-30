@@ -235,6 +235,42 @@ test('filters out empty guidelines', function (): void {
         ->not->toMatch('/=== \w+.*? rules ===\s*===/');
 });
 
+test('includes the project rules pointer when rules are enabled and MCP is on', function (): void {
+    config()->set('boost.rules.enabled', true);
+
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]));
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = true;
+
+    $guidelines = $this->composer->config($config)->compose();
+
+    expect($guidelines)
+        ->toContain('## Project Rules')
+        ->toContain('@.ai/rules/index.md')
+        ->toContain('record-rule')
+        ->toContain('.ai/rules');
+});
+
+test('omits the project rules pointer when rules are disabled', function (): void {
+    config()->set('boost.rules.enabled', false);
+
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]));
+
+    $config = new GuidelineConfig;
+    $config->hasMcp = true;
+
+    $guidelines = $this->composer->config($config)->compose();
+
+    expect($guidelines)
+        ->not->toContain('## Project Rules')
+        ->not->toContain('@.ai/rules/index.md');
+});
+
 test('returns list of used guidelines', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),

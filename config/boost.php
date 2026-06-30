@@ -32,6 +32,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Boost Project Rules
+    |--------------------------------------------------------------------------
+    |
+    | Project rules let agents record durable decisions, non-obvious traps, and
+    | standing constraints as committed markdown files in .ai/rules/, grouped
+    | by file area. Set this to false to remove the record-rule MCP tool.
+    |
+    */
+
+    'rules' => [
+        'enabled' => env('BOOST_RULES_ENABLED', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |

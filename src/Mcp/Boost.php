@@ -17,6 +17,7 @@ use Laravel\Boost\Mcp\Tools\DatabaseSchema;
 use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
 use Laravel\Boost\Mcp\Tools\LastError;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
+use Laravel\Boost\Mcp\Tools\RecordRule;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Boost\Mcp\Tools\Tinker;
 use Laravel\Mcp\Schema\Icon;
@@ -106,6 +107,7 @@ class Boost extends Server
             GetAbsoluteUrl::class,
             LastError::class,
             ReadLogEntries::class,
+            RecordRule::class,
             SearchDocs::class,
             Tinker::class,
         ], 'tools');
