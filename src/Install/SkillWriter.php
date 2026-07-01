@@ -108,8 +108,15 @@ class SkillWriter
      * @param  array<int, string>  $previouslyTrackedSkills
      * @return array<string, int>
      */
-    public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
+    public function sync(Collection $skills, array $previouslyTrackedSkills = [], bool $fresh = false): array
     {
+        $targetRoot = base_path($this->agent->skillsPath());
+        $canonicalRoot = base_path('.ai'.DIRECTORY_SEPARATOR.'skills');
+
+        if ($fresh && ! $this->pathsMatch($targetRoot, $canonicalRoot)) {
+            $this->deleteDirectory($targetRoot);
+        }
+
         $written = $this->writeAll($skills);
 
         $newSkillNames = $skills->keys()->all();
@@ -154,17 +161,7 @@ class SkillWriter
     protected function deleteDirectory(string $path): bool
     {
         if (is_link($path)) {
-            if (@unlink($path)) {
-                return true;
-            }
-
-            // On Windows, directory symlinks can require rmdir instead of unlink,
-            // even when the symlink target no longer exists (dangling symlinks).
-            if (@rmdir($path)) {
-                return true;
-            }
-
-            return ! file_exists($path) && ! is_link($path);
+            return $this->deleteSymlink($path);
         }
 
         if (is_file($path)) {
@@ -182,11 +179,7 @@ class SkillWriter
 
         foreach ($files as $file) {
             if ($file->isLink()) {
-                $linkPath = $file->getPathname();
-
-                if (! @unlink($linkPath) && is_dir($linkPath)) {
-                    @rmdir($linkPath);
-                }
+                $this->deleteSymlink($file->getPathname());
 
                 continue;
             }
@@ -195,6 +188,21 @@ class SkillWriter
         }
 
         return @rmdir($path) || ! is_dir($path);
+    }
+
+    protected function deleteSymlink(string $path): bool
+    {
+        if (@unlink($path)) {
+            return true;
+        }
+
+        // On Windows, directory symlinks can require rmdir instead of unlink,
+        // even when the symlink target no longer exists (dangling symlinks).
+        if (@rmdir($path)) {
+            return true;
+        }
+
+        return ! file_exists($path) && ! is_link($path);
     }
 
     protected function copyDirectory(string $source, string $target): bool
