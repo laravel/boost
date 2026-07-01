@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Illuminate\Database\ConnectionInterface;
+use InvalidArgumentException;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\DB;
@@ -43,10 +45,26 @@ class DatabaseQuery extends Tool
     public function handle(Request $request): Response
     {
         $query = trim((string) $request->string('query'));
+        $connection = DB::connection($request->get('database'));
+
+        try {
+            return Response::json($this->handleSql($query, $connection));
+        } catch (\InvalidArgumentException $e) {
+            return Response::error($e->getMessage());
+        } catch (Throwable $e) {
+            return Response::error('Query failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function handleSql(string $query, ConnectionInterface $connection): array
+    {
         $token = strtok(ltrim($query), " \t\n\r");
 
         if (! $token) {
-            return Response::error('Please pass a valid query');
+            throw new InvalidArgumentException('Please pass a valid query');
         }
 
         $firstWord = strtoupper($token);
@@ -77,25 +95,16 @@ class DatabaseQuery extends Tool
         }
 
         if (! $isReadOnly) {
-            return Response::error('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
+            throw new InvalidArgumentException('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
         }
 
-        $connectionName = $request->get('database');
+        $prefix = $connection->getTablePrefix();
 
-        try {
-            $connection = DB::connection($connectionName);
-            $prefix = $connection->getTablePrefix();
-
-            if ($prefix) {
-                $query = $this->addPrefixToQuery($query, $prefix);
-            }
-
-            return Response::json(
-                $connection->select($query)
-            );
-        } catch (Throwable $throwable) {
-            return Response::error('Query failed: '.$throwable->getMessage());
+        if ($prefix) {
+            $query = $this->addPrefixToQuery($query, $prefix);
         }
+
+        return $connection->select($query);
     }
 
     protected function addPrefixToQuery(string $query, string $prefix): string

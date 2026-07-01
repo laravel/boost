@@ -2,14 +2,24 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Mcp\Request;
 
-function expectSelect(): void {
-    DB::shouldReceive('connection')->andReturnSelf();
-    DB::shouldReceive('select')->andReturn([]);
-    DB::shouldReceive('getTablePrefix')->andReturn('');
+function fakeConnection(): Mockery\MockInterface {
+    $connection = Mockery::mock(ConnectionInterface::class);
+    DB::shouldReceive('connection')->andReturn($connection);
+
+    return $connection;
+}
+
+function expectSelect(): Mockery\MockInterface {
+    $connection = fakeConnection();
+    $connection->shouldReceive('select')->andReturn([]);
+    $connection->shouldReceive('getTablePrefix')->andReturn('');
+
+    return $connection;
 }
 
 it('executes allowed read-only queries', function (): void {
@@ -35,7 +45,7 @@ it('executes allowed read-only queries', function (): void {
 });
 
 it('blocks destructive queries', function (): void {
-    DB::shouldReceive('select')->never();
+    fakeConnection()->shouldReceive('select')->never();
 
     $tool = new DatabaseQuery;
 
@@ -55,7 +65,7 @@ it('blocks destructive queries', function (): void {
 });
 
 it('blocks extended destructive keywords for mysql postgres and sqlite', function (): void {
-    DB::shouldReceive('select')->never();
+    fakeConnection()->shouldReceive('select')->never();
 
     $tool = new DatabaseQuery;
 
@@ -113,8 +123,8 @@ it('allows queries starting with any allowed keyword even when identifiers look 
 });
 
 it('adds table prefix to queries', function (): void {
-    DB::shouldReceive('connection')->andReturnSelf();
-    DB::shouldReceive('getTablePrefix')->andReturn('wp_');
+    $connection = fakeConnection();
+    $connection->shouldReceive('getTablePrefix')->andReturn('wp_');
 
     $testCases = [
         'SELECT * FROM users' => 'SELECT * FROM wp_users',
@@ -151,7 +161,7 @@ it('adds table prefix to queries', function (): void {
     ];
 
     foreach ($testCases as $input => $expected) {
-        DB::shouldReceive('select')->with($expected)->once()->andReturn([]);
+        $connection->shouldReceive('select')->with($expected)->once()->andReturn([]);
 
         $tool = new DatabaseQuery;
         $response = $tool->handle(new Request(['query' => $input]));
@@ -207,9 +217,9 @@ test('it rejects a with … write query', function (): void {
 });
 
 test('it reports a failure when the database call throws', function (): void {
-    DB::shouldReceive('connection')->andReturnSelf();
-    DB::shouldReceive('getTablePrefix')->andReturn('');
-    DB::shouldReceive('select')
+    $connection = fakeConnection();
+    $connection->shouldReceive('getTablePrefix')->andReturn('');
+    $connection->shouldReceive('select')
         ->once()
         ->andThrow(new RuntimeException('Simulated DB failure'));
 
