@@ -3,7 +3,7 @@
 
 ## Tools
 - Laravel Boost is an MCP server with tools designed specifically for this application. Prefer Boost tools over manual alternatives like shell commands or file reads.
-- Use `database-query` to run read-only queries against the database instead of writing raw SQL in tinker.
+- Use `database-query` to run read-only queries against the database instead of writing raw SQL or MQL in tinker.
 - Use `database-schema` to inspect table structure before writing migrations or models.
 - Use `get-absolute-url` to resolve the correct scheme, domain, and port for project URLs. Always use this before sharing a URL with the user.
 @if (config('boost.browser_logs', false) !== false || config('boost.browser_logs_watcher', true) !== false)
@@ -43,4 +43,21 @@
 @else
 - Always use single quotes to prevent shell expansion: `{{ $assist->artisanCommand("tinker --execute 'Your::code();'") }}`
   - Double quotes for PHP strings inside: `{{ $assist->artisanCommand("tinker --execute 'User::where(\"active\", true)->count();'") }}`
+ - Use the `list-artisan-commands` tool when you need to call an Artisan command to double-check the available parameters.
+
+ ## URLs
+ - Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
+
+ ## Tinker / Debugging
+ - You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
+ - Use the `database-query` tool when you only need to read from the database.
+
++## Querying the Database
++- Connections can use different drivers (e.g. `mysql`, `pgsql`, `sqlite`, `mongodb`). If you don't already know the driver for the connection you're targeting, use the `database-connections` tool once to check before querying.
++- Use the `database-query` tool to read data directly. For SQL drivers, pass a read-only `query` argument. For the `mongodb` driver, pass a `command` argument instead (an MQL command document) — never SQL.
++
+ @if (config('boost.browser_logs', true) !== false || config('boost.browser_logs_watcher', true) !== false)
+ ## Reading Browser Logs With the `browser-logs` Tool
+ - You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
+ - Only recent browser logs will be useful - ignore old logs.
 @endif

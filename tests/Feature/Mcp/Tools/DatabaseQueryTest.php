@@ -6,6 +6,8 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Mcp\Request;
+use MongoDB\Database;
+use MongoDB\Laravel\Connection as MongoDBConnection;
 
 function fakeConnection(): Mockery\MockInterface {
     $connection = Mockery::mock(ConnectionInterface::class);
@@ -92,7 +94,7 @@ it('handles empty queries gracefully', function (): void {
         $response = $tool->handle(new Request(['query' => $query]));
         expect($response)->isToolResult()
             ->toolHasError()
-            ->toolTextContains('Please pass a valid query');
+            ->toolTextContains('Please pass a valid SQL query');
     }
 });
 
@@ -230,3 +232,191 @@ test('it reports a failure when the database call throws', function (): void {
         ->toolHasError()
         ->toolTextContains('Query failed: Simulated DB failure');
 });
+
+/**
+ * Point DB::connection() at a mocked MongoDB connection so the tool takes the MQL path.
+ * Validation-error tests never reach the driver, so getDatabase() may go unused.
+ */
+function fakeMongoConnection(array $documents = []): MongoDBConnection
+{
+    // Mockery can't mock CursorInterface on Mockery 1.6.x / PHP 8.4 (its Iterator::current(): mixed
+    // clashes with CursorInterface::current(): object|array|null), so use a concrete double.
+    $cursor = new class($documents) implements \MongoDB\Driver\CursorInterface
+    {
+        public function __construct(private array $documents) {}
+
+        public function toArray(): array
+        {
+            return $this->documents;
+        }
+
+        public function current(): array|object|null
+        {
+            return current($this->documents) ?: null;
+        }
+
+        public function key(): ?int
+        {
+            return key($this->documents);
+        }
+
+        public function next(): void
+        {
+            next($this->documents);
+        }
+
+        public function valid(): bool
+        {
+            return key($this->documents) !== null;
+        }
+
+        public function rewind(): void
+        {
+            reset($this->documents);
+        }
+
+        public function getId(): \MongoDB\BSON\Int64
+        {
+            throw new \LogicException('unused in tests');
+        }
+
+        public function getServer(): \MongoDB\Driver\Server
+        {
+            throw new \LogicException('unused in tests');
+        }
+
+        public function isDead(): bool
+        {
+            return true;
+        }
+
+        public function setTypeMap(array $typemap): void {}
+    };
+
+    $database = Mockery::mock(Database::class);
+    $database->shouldReceive('command')->andReturn($cursor);
+
+    $connection = Mockery::mock(MongoDBConnection::class);
+    $connection->shouldReceive('getDatabase')->andReturn($database);
+
+    DB::shouldReceive('connection')->with(null)->andReturn($connection);
+
+    return $connection;
+}
+
+test('it runs a successful mql find command', function (): void {
+    fakeMongoConnection([
+        ['_id' => 1, 'name' => 'Taylor'],
+    ]);
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request([
+        'command' => ['find' => 'examples', 'filter' => ['name' => 'Taylor']],
+    ]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $rows): void {
+            expect($rows)->toHaveCount(1)
+                ->and($rows[0]['name'])->toBe('Taylor');
+        });
+});
+
+test('it runs a successful read-only aggregation', function (array $pipeline): void {
+    fakeMongoConnection([['count' => 1]]);
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request([
+        'command' => ['aggregate' => 'examples', 'pipeline' => $pipeline],
+    ]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+})->with([
+    'flat stages' => [[
+        ['$match' => ['name' => 'Taylor']],
+        ['$sort' => ['name' => 1]],
+    ]],
+    'nested read-only lookup' => [[
+        ['$lookup' => ['from' => 'others', 'pipeline' => [['$match' => ['ok' => true]]]]],
+    ]],
+    'nested read-only unionWith' => [[
+        ['$unionWith' => ['coll' => 'others', 'pipeline' => [['$match' => ['ok' => true]]]]],
+    ]],
+    'nested read-only facet' => [[
+        ['$facet' => [
+            'a' => [['$match' => ['ok' => true]]],
+            'b' => [['$count' => 'total']],
+        ]],
+    ]],
+    'deeply nested read-only pipelines' => [[
+        ['$lookup' => ['from' => 'others', 'pipeline' => [
+            ['$unionWith' => ['coll' => 'more', 'pipeline' => [['$match' => ['ok' => true]]]]],
+        ]]],
+    ]],
+]);
+
+test('it rejects an empty mql command', function (): void {
+    fakeMongoConnection();
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request(['command' => []]));
+
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('Please pass a valid MongoDB command');
+});
+
+test('it rejects a write mql command', function (): void {
+    fakeMongoConnection();
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request([
+        'command' => ['insert' => 'examples', 'documents' => [['name' => 'Otwell']]],
+    ]));
+
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('Only read commands are allowed (aggregate, count, distinct, find).');
+});
+
+test('it rejects a write stage nested in an aggregation', function (array $pipeline, string $writeStage): void {
+    fakeMongoConnection();
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request([
+        'command' => ['aggregate' => 'examples', 'pipeline' => $pipeline],
+    ]));
+
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains(sprintf('Only read aggregation stages are allowed. Found: %s', $writeStage));
+})->with([
+    'write nested in lookup' => [
+        [['$lookup' => ['from' => 'others', 'pipeline' => [
+            ['$match' => ['name' => 'Taylor']],
+            ['$merge' => 'evil'],
+        ]]]],
+        'merge',
+    ],
+    'write nested in unionWith' => [
+        [['$unionWith' => ['coll' => 'others', 'pipeline' => [
+            ['$out' => 'evil'],
+        ]]]],
+        'out',
+    ],
+    'write nested in facet' => [
+        [['$facet' => [
+            'a' => [['$match' => ['ok' => true]]],
+            'b' => [['$merge' => 'evil']],
+        ]]],
+        'merge',
+    ],
+    'write nested three levels deep' => [
+        [['$lookup' => ['from' => 'a', 'pipeline' => [
+            ['$unionWith' => ['coll' => 'b', 'pipeline' => [
+                ['$out' => 'evil'],
+            ]]],
+        ]]]],
+        'out',
+    ],
+]);
