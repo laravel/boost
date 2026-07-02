@@ -1,8 +1,0 @@
-{
-    "name": "acme/fillable-models-app",
-    "autoload": {
-        "psr-4": {
-            "App\\": "app/"
-        }
-    }
-}

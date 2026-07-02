@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Conventions\Detectors;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Conventions\Concerns\DerivesTitleFromMarkdown;
 use Laravel\Boost\Install\Conventions\Contracts\Detector;
 use Laravel\Boost\Install\Conventions\Detection;
-use Laravel\Boost\Install\Conventions\DetectionContext;
 use Laravel\Boost\Support\Composer;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
@@ -25,13 +25,13 @@ class PackageRulesDetector implements Detector
         return 'package-rules';
     }
 
-    public function detect(DetectionContext $context): Collection
+    public function detect(): Collection
     {
         $detections = new Collection;
 
         foreach (Composer::packagesDirectoriesWithBoostRules() as $package => $directory) {
             foreach ($this->ruleFiles($directory) as $file) {
-                $parsed = $this->parse($context->sampler->contents($file));
+                $parsed = $this->parse(File::get($file));
 
                 if ($parsed['paths'] === []) {
                     continue;

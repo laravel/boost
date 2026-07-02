@@ -15,9 +15,7 @@ afterEach(function (): void {
 });
 
 it('surfaces a rule shipped in a package resources/boost/rules directory', function (): void {
-    $base = base_path();
-
-    $detections = (new PackageRulesDetector)->detect(conventionContext($base, [$base.'/app']));
+    $detections = (new PackageRulesDetector)->detect();
 
     expect($detections)->toHaveCount(1);
 
@@ -33,10 +31,9 @@ it('surfaces a rule shipped in a package resources/boost/rules directory', funct
 });
 
 it('emits nothing when no package ships boost rules', function (): void {
-    $this->app->setBasePath(fixture('conventions/fillable-models-app'));
-    $base = base_path();
+    $this->app->setBasePath(fixture('conventions/guidelines-app'));
 
-    $detections = (new PackageRulesDetector)->detect(conventionContext($base, [$base.'/app']));
+    $detections = (new PackageRulesDetector)->detect();
 
     expect($detections)->toBeEmpty();
 });

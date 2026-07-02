@@ -13,8 +13,9 @@ declare(strict_types=1);
 |
 */
 
-use Laravel\Boost\Install\Conventions\DetectionContext;
-use Laravel\Boost\Install\Conventions\FileSampler;
+use Illuminate\Support\Collection;
+use Laravel\Boost\Install\Conventions\Contracts\Detector;
+use Laravel\Boost\Install\Conventions\Detection;
 use Laravel\Mcp\Response;
 use Tests\TestCase;
 
@@ -80,16 +81,20 @@ function fixtureContent(string $name): string
     return file_get_contents(fixture($name));
 }
 
-/**
- * Build a convention DetectionContext for a fixture app.
- *
- * @param  array<int, string>  $roots
- */
-function conventionContext(string $basePath, array $roots): DetectionContext
+function stubDetector(Detection $detection): Detector
 {
-    return new DetectionContext(
-        roots: $roots,
-        basePath: $basePath,
-        sampler: new FileSampler,
-    );
+    return new class($detection) implements Detector
+    {
+        public function __construct(private Detection $detection) {}
+
+        public function id(): string
+        {
+            return $this->detection->id;
+        }
+
+        public function detect(): Collection
+        {
+            return new Collection([$this->detection]);
+        }
+    };
 }

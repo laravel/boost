@@ -8,7 +8,7 @@ use Laravel\Boost\Install\Conventions\GuidelinePartitioner;
 it('offers directory-specific guidelines as path-scoped boost-guideline candidates', function (): void {
     $base = fixture('conventions/guidelines-app');
 
-    $detections = (new GuidelinePartitioner($base.'/rules'))->detect(conventionContext($base, [$base.'/app']));
+    $detections = (new GuidelinePartitioner($base.'/rules'))->detect();
 
     $byId = $detections->keyBy('id');
 
@@ -27,7 +27,7 @@ it('offers directory-specific guidelines as path-scoped boost-guideline candidat
 it('emits nothing when the guideline directory is absent', function (): void {
     $base = fixture('conventions/guidelines-app');
 
-    $detections = (new GuidelinePartitioner($base.'/missing'))->detect(conventionContext($base, [$base.'/app']));
+    $detections = (new GuidelinePartitioner($base.'/missing'))->detect();
 
     expect($detections)->toBeEmpty();
 });

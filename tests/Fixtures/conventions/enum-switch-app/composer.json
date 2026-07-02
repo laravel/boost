@@ -1,4 +1,0 @@
-{
-    "name": "acme/enum-switch-app",
-    "autoload": { "psr-4": { "App\\": "app/" } }
-}

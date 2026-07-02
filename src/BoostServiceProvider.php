@@ -13,14 +13,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
 use Laravel\Boost\Install\Conventions\ConventionInspector;
-use Laravel\Boost\Install\Conventions\Detectors\EnumKeyCasingDetector;
-use Laravel\Boost\Install\Conventions\Detectors\GuardedFillableDetector;
 use Laravel\Boost\Install\Conventions\Detectors\PackageRulesDetector;
-use Laravel\Boost\Install\Conventions\Detectors\QueryScopeStyleDetector;
-use Laravel\Boost\Install\Conventions\Detectors\ValidationRuleSyntaxDetector;
-use Laravel\Boost\Install\Conventions\FileSampler;
 use Laravel\Boost\Install\Conventions\GuidelinePartitioner;
-use Laravel\Boost\Install\Conventions\SourceRoots;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Mcp\Boost;
@@ -56,21 +50,10 @@ class BoostServiceProvider extends ServiceProvider
             $app->make(GuidelineConfig::class)
         ));
 
-        $this->app->singleton(SourceRoots::class);
-        $this->app->singleton(FileSampler::class);
-
-        $this->app->singleton(ConventionInspector::class, fn ($app): ConventionInspector => new ConventionInspector(
-            $app->make(SourceRoots::class),
-            $app->make(FileSampler::class),
-            [
-                $app->make(GuardedFillableDetector::class),
-                $app->make(EnumKeyCasingDetector::class),
-                $app->make(ValidationRuleSyntaxDetector::class),
-                $app->make(QueryScopeStyleDetector::class),
-                $app->make(PackageRulesDetector::class),
-                new GuidelinePartitioner(dirname(__DIR__).'/.ai/laravel/skill/laravel-best-practices/rules'),
-            ],
-        ));
+        $this->app->singleton(ConventionInspector::class, fn ($app): ConventionInspector => new ConventionInspector([
+            $app->make(PackageRulesDetector::class),
+            new GuidelinePartitioner(dirname(__DIR__).'/.ai/laravel/skill/laravel-best-practices/rules'),
+        ]));
     }
 
     public function boot(Router $router): void

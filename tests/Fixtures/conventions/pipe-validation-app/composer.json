@@ -1,4 +1,0 @@
-{
-    "name": "acme/pipe-validation-app",
-    "autoload": { "psr-4": { "App\\": "app/" } }
-}

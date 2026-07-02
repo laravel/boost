@@ -15,8 +15,6 @@ class ConventionInspector
      * @param  iterable<Detector>  $detectors
      */
     public function __construct(
-        protected SourceRoots $sourceRoots,
-        protected FileSampler $sampler,
         protected iterable $detectors,
     ) {}
 
@@ -29,14 +27,8 @@ class ConventionInspector
     {
         $threshold ??= self::PRESELECT_THRESHOLD;
 
-        $context = new DetectionContext(
-            roots: $this->sourceRoots->resolve(),
-            basePath: base_path(),
-            sampler: $this->sampler,
-        );
-
         return (new Collection($this->detectors))
-            ->flatMap(fn (Detector $detector): Collection => $detector->detect($context))
+            ->flatMap(fn (Detector $detector): Collection => $detector->detect())
             ->sortByDesc(fn (Detection $detection): float => $detection->confidence)
             ->unique(fn (Detection $detection): string => $detection->id)
             ->map(fn (Detection $detection): Detection => $detection->withPreselected($detection->isInferred() && $detection->confidence >= $threshold))

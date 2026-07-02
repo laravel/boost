@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Conventions;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Conventions\Concerns\DerivesTitleFromMarkdown;
 use Laravel\Boost\Install\Conventions\Contracts\Detector;
 
@@ -43,7 +44,7 @@ class GuidelinePartitioner implements Detector
         return 'guideline-partitioner';
     }
 
-    public function detect(DetectionContext $context): Collection
+    public function detect(): Collection
     {
         if (! is_dir($this->guidelineRulesPath)) {
             return new Collection;
@@ -58,7 +59,7 @@ class GuidelinePartitioner implements Detector
                 continue;
             }
 
-            $body = trim($context->sampler->contents($file));
+            $body = trim(File::get($file));
 
             if ($body === '') {
                 continue;
