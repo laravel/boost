@@ -139,6 +139,17 @@ it('adds table prefix to queries', function (): void {
         'DESCRIBE users' => 'DESCRIBE wp_users',
         'DESC users' => 'DESC wp_users',
         'DESCRIBE `users`' => 'DESCRIBE `wp_users`',
+        // The `ORDER BY ... DESC` sort direction must NOT be treated as a
+        // `DESC <table>` statement (regression: it used to prefix the next word).
+        'SELECT * FROM users ORDER BY name DESC' => 'SELECT * FROM wp_users ORDER BY name DESC',
+        'SELECT * FROM users ORDER BY name DESC LIMIT 10' => 'SELECT * FROM wp_users ORDER BY name DESC LIMIT 10',
+        'SELECT * FROM users ORDER BY name DESC OFFSET 5' => 'SELECT * FROM wp_users ORDER BY name DESC OFFSET 5',
+        'SELECT * FROM users ORDER BY created_at DESC, name ASC' => 'SELECT * FROM wp_users ORDER BY created_at DESC, name ASC',
+        // Schema/database-qualified table names: only the table segment is prefixed.
+        'SELECT * FROM public.users' => 'SELECT * FROM public.wp_users',
+        'SELECT * FROM public.users JOIN public.posts ON public.users.id = public.posts.user_id' => 'SELECT * FROM public.wp_users JOIN public.wp_posts ON public.users.id = public.posts.user_id',
+        'SELECT * FROM "public"."users"' => 'SELECT * FROM "public"."wp_users"',
+        'SELECT * FROM `mydb`.`users`' => 'SELECT * FROM `mydb`.`wp_users`',
     ];
 
     foreach ($testCases as $input => $expected) {
