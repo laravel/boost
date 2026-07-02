@@ -102,19 +102,44 @@ class DatabaseQuery extends Tool
     {
         $cteNames = $this->extractCteNames($query);
 
-        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE|DESCRIBE|DESC)\s+([`"\']?)(\w+)\2/i';
+        // `DESCRIBE`/`DESC` as a statement only appears at the very start of a
+        // query, where the following identifier is a table name. Handle it
+        // separately and anchored to the start so we never confuse it with the
+        // `ORDER BY ... DESC` sort direction elsewhere in the query.
+        $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
 
-        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
-            $keyword = $matches[1];
-            $quote = $matches[2];
-            $tableName = $matches[3];
+        $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix, $cteNames): string {
+            [$full, $leading, $keyword, $qualifier, $quote, $tableName] = $matches;
 
-            if (str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true)) {
-                return $matches[0];
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+                return $full;
             }
 
-            return "{$keyword} {$quote}{$prefix}{$tableName}{$quote}";
+            return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
+
+        // Table references introduced by these keywords may be schema/database
+        // qualified (e.g. `public.users`); only the table segment is prefixed,
+        // never the schema/database qualifier.
+        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
+
+        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
+            [$full, $keyword, $qualifier, $quote, $tableName] = $matches;
+
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+                return $full;
+            }
+
+            return "{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
+        }, $query) ?? $query;
+    }
+
+    /**
+     * @param  array<int, string>  $cteNames
+     */
+    protected function tableIsPrefixedOrCte(string $tableName, string $prefix, array $cteNames): bool
+    {
+        return str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true);
     }
 
     /**
