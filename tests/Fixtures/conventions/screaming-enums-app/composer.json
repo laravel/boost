@@ -1,0 +1,4 @@
+{
+    "name": "acme/screaming-enums-app",
+    "autoload": { "psr-4": { "App\\": "app/" } }
+}

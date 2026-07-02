@@ -1,0 +1,8 @@
+{
+    "name": "acme/naming-scopes-app",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}

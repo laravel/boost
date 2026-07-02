@@ -234,3 +234,36 @@ it('writes a placeholder index when no rule files have paths', function (): void
         ->toContain('No rules recorded yet.')
         ->not->toContain('| Applies to |');
 });
+
+it('does not duplicate an identical entry when the rule file uses CRLF line endings', function (): void {
+    $path = $this->repository->write('app/Models/**', 'Use casts()', 'Prefer the casts() method.');
+
+    File::put($path, str_replace("\n", "\r\n", File::get($path)));
+
+    $this->repository->write('app/Models/**', 'Use casts()', 'Prefer the casts() method.');
+
+    expect(substr_count(File::get($path), '## Use casts()'))->toBe(1);
+});
+
+it('appends a distinct note recorded under the same title', function (): void {
+    $path = $this->repository->write('app/Models/**', 'Casts', 'Prefer the casts() method.');
+    $this->repository->write('app/Models/**', 'Casts', 'Also cast money to integers.');
+
+    expect(File::get($path))
+        ->toContain('Prefer the casts() method.')
+        ->toContain('Also cast money to integers.');
+});
+
+it('deduplicates a note that contains CRLF line endings', function (): void {
+    $path = $this->repository->write('app/Models/**', 'Multi', "First line.\r\nSecond line.");
+    $this->repository->write('app/Models/**', 'Multi', "First line.\r\nSecond line.");
+
+    expect(substr_count(File::get($path), '## Multi'))->toBe(1);
+});
+
+it('appends a rule whose note is a prefix of an existing note under the same title', function (): void {
+    $path = $this->repository->write('app/Models/**', 'Casts', 'Use strict casts everywhere in code.');
+    $this->repository->write('app/Models/**', 'Casts', 'Use strict casts everywhere');
+
+    expect(substr_count(File::get($path), '## Casts'))->toBe(2);
+});

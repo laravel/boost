@@ -26,9 +26,9 @@ class RuleRepository
      */
     public function write(string $glob, string $title, string $note): string
     {
-        $glob = trim($glob);
+        $glob = $this->normalizeGlob($glob);
         $title = trim((string) preg_replace('/\R/', ' ', $title));
-        $note = trim($note);
+        $note = trim((string) preg_replace('/\R/', "\n", $note));
 
         $target = $this->resolveTargetFile($glob);
 
@@ -214,9 +214,20 @@ class RuleRepository
 
     protected function appendEntry(string $path, string $title, string $note): void
     {
-        $contents = rtrim((string) File::get($path), "\n");
+        $contents = rtrim((string) preg_replace('/\R/', "\n", (string) File::get($path)), "\n");
+
+        if ($this->hasEntry($contents, $title, $note)) {
+            return;
+        }
 
         File::put($path, $contents."\n\n## ".$title."\n".$note."\n");
+    }
+
+    protected function hasEntry(string $contents, string $title, string $note): bool
+    {
+        $entry = '## '.$title."\n".$note."\n";
+
+        return str_contains($contents."\n", $entry);
     }
 
     /**

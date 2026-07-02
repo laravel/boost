@@ -13,6 +13,8 @@ declare(strict_types=1);
 |
 */
 
+use Laravel\Boost\Install\Conventions\DetectionContext;
+use Laravel\Boost\Install\Conventions\FileSampler;
 use Laravel\Mcp\Response;
 use Tests\TestCase;
 
@@ -76,4 +78,18 @@ if (! function_exists('fixture')) {
 function fixtureContent(string $name): string
 {
     return file_get_contents(fixture($name));
+}
+
+/**
+ * Build a convention DetectionContext for a fixture app.
+ *
+ * @param  array<int, string>  $roots
+ */
+function conventionContext(string $basePath, array $roots): DetectionContext
+{
+    return new DetectionContext(
+        roots: $roots,
+        basePath: $basePath,
+        sampler: new FileSampler,
+    );
 }

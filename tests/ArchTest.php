@@ -3,6 +3,7 @@
 declare(strict_types=1);
 use Illuminate\Console\Command;
 use Laravel\Boost\BoostServiceProvider;
+use Laravel\Boost\Install\Conventions\Contracts\Detector;
 
 arch('strict types')
     ->expect('Laravel\Boost')
@@ -16,6 +17,11 @@ arch('commands')
     ->expect('Laravel\Boost\Commands')
     ->toExtend(Command::class)
     ->toHaveSuffix('Command');
+
+arch('convention detectors')
+    ->expect('Laravel\Boost\Install\Conventions\Detectors')
+    ->toImplement(Detector::class)
+    ->toHaveSuffix('Detector');
 
 arch('no direct env calls')
     ->expect('env')

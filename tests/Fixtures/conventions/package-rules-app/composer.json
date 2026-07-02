@@ -1,0 +1,6 @@
+{
+    "name": "acme/package-rules-app",
+    "require": {
+        "acme/widgets": "^1.0"
+    }
+}

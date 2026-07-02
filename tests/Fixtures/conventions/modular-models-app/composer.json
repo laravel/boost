@@ -1,0 +1,4 @@
+{
+    "name": "acme/modular-models-app",
+    "autoload": { "psr-4": { "Domain\\": "src/Domain/" } }
+}

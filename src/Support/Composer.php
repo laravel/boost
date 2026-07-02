@@ -75,6 +75,14 @@ class Composer
     /**
      * @return array<string, string>
      */
+    public static function packagesDirectoriesWithBoostRules(): array
+    {
+        return self::packagesDirectoriesWithBoostSubpath('rules');
+    }
+
+    /**
+     * @return array<string, string>
+     */
     private static function packagesDirectoriesWithBoostSubpath(string $subpath): array
     {
         return collect(self::packagesDirectories())
