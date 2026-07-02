@@ -6,11 +6,14 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Mcp\Request;
 
-it('executes allowed read-only queries', function (): void {
+function expectSelect(): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
     DB::shouldReceive('getTablePrefix')->andReturn('');
+}
 
+it('executes allowed read-only queries', function (): void {
+    expectSelect();
     $tool = new DatabaseQuery;
 
     $queries = [
@@ -84,9 +87,7 @@ it('handles empty queries gracefully', function (): void {
 });
 
 it('allows queries starting with any allowed keyword even when identifiers look like SQL keywords', function (): void {
-    DB::shouldReceive('connection')->andReturnSelf();
-    DB::shouldReceive('select')->andReturn([]);
-    DB::shouldReceive('getTablePrefix')->andReturn('');
+    expectSelect();
 
     $tool = new DatabaseQuery;
 
@@ -157,4 +158,65 @@ it('adds table prefix to queries', function (): void {
 
         expect($response)->isToolResult()->toolHasNoError();
     }
+});
+
+test('it runs a successful lowercase select query', function (): void {
+    expectSelect();
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request(['query' => 'select * from examples']));
+
+    expect($response)->isToolResult()->toolHasNoError();
+});
+
+test('it runs a successful with … select query', function (): void {
+    expectSelect();
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request([
+        'query' => 'WITH cte AS (SELECT * FROM examples) SELECT * FROM cte',
+    ]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+});
+
+test('it rejects an insert query', function (): void {
+    expectSelect();
+    $tool = new DatabaseQuery;
+
+    $response = $tool->handle(new Request([
+        'query' => "INSERT INTO examples (name) VALUES ('Otwell')",
+    ]));
+
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
+});
+
+test('it rejects a with … write query', function (): void {
+    expectSelect();
+    $tool = new DatabaseQuery;
+
+    $response = $tool->handle(new Request([
+        'query' => 'WITH data AS (VALUES (1)) DELETE FROM examples',
+    ]));
+
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
+});
+
+test('it reports a failure when the database call throws', function (): void {
+    DB::shouldReceive('connection')->andReturnSelf();
+    DB::shouldReceive('getTablePrefix')->andReturn('');
+    DB::shouldReceive('select')
+        ->once()
+        ->andThrow(new RuntimeException('Simulated DB failure'));
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request(['query' => 'SELECT * FROM examples']));
+
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('Query failed: Simulated DB failure');
 });
