@@ -36,8 +36,13 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsSkills
     {
         return [
             'paths' => ['.agents'],
-            'files' => ['GEMINI.md'],
+            'files' => ['.agents/mcp_config.json'],
         ];
+    }
+
+    public function mcpConfigPath(): string
+    {
+        return config('boost.agents.antigravity.mcp_config_path', '.agents/mcp_config.json');
     }
 
     public function guidelinesPath(): string
