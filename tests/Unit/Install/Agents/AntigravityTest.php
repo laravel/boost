@@ -31,6 +31,14 @@ it('returns default mcp config path', function (): void {
     expect($agent->mcpConfigPath())->toBe('.agents/mcp_config.json');
 });
 
+it('returns configured mcp config path', function (): void {
+    config()->set('boost.agents.antigravity.mcp_config_path', '.gemini/mcp.json');
+
+    $agent = new Antigravity($this->strategyFactory);
+
+    expect($agent->mcpConfigPath())->toBe('.gemini/mcp.json');
+});
+
 it('returns default guidelines path', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
