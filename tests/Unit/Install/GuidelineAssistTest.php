@@ -154,6 +154,51 @@ test('enumContents returns empty string when app directory does not exist', func
     expect($assist->enumContents())->toBe('');
 });
 
+test('enumContents includes all discovered enum files in stable order', function (): void {
+    $tempDir = sys_get_temp_dir().'/boost-enum-contents-'.uniqid();
+    mkdir($tempDir, 0755, true);
+
+    $countryCodePath = $tempDir.'/CountryCode.php';
+    $flashKeyPath = $tempDir.'/FlashKey.php';
+
+    try {
+        file_put_contents($flashKeyPath, <<<'PHP'
+<?php
+
+enum FlashKey: string
+{
+    case Success = 'success';
+}
+PHP);
+
+        file_put_contents($countryCodePath, <<<'PHP'
+<?php
+
+enum CountryCode: string
+{
+    case USD = 'USD';
+}
+PHP);
+
+        $assist = new GuidelineAssist($this->roster, $this->config);
+
+        $enumPathsProperty = new ReflectionProperty($assist, 'enumPaths');
+        $enumPathsProperty->setValue($assist, [
+            'App\\Enums\\FlashKey' => $flashKeyPath,
+            'App\\Enums\\CountryCode' => $countryCodePath,
+        ]);
+
+        expect($assist->enumContents())
+            ->toStartWith("<?php\n\nenum CountryCode")
+            ->toContain("case USD = 'USD';")
+            ->toContain("case Success = 'success';");
+    } finally {
+        @unlink($countryCodePath);
+        @unlink($flashKeyPath);
+        @rmdir($tempDir);
+    }
+});
+
 test('hasSkillsEnabled returns false when skills are disabled', function (): void {
     $this->config->hasSkills = false;
 
