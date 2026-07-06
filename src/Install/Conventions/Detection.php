@@ -18,6 +18,7 @@ final class Detection
         public readonly float $confidence,
         public readonly bool $preselected = false,
         public readonly string $provenance = self::PROVENANCE_INFERRED,
+        public readonly ?string $guidelineKey = null,
     ) {}
 
     public function withPreselected(bool $preselected): self
@@ -30,6 +31,7 @@ final class Detection
             $this->confidence,
             $preselected,
             $this->provenance,
+            $this->guidelineKey,
         );
     }
 

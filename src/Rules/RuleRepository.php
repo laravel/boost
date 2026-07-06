@@ -22,9 +22,10 @@ class RuleRepository
     }
 
     /**
-     * Record a rule and return the location it was stored at.
+     * Record a rule and return the location it was stored at. A guideline key marks the rule
+     * as a re-homed Boost guideline so the composer stops inlining that guideline.
      */
-    public function write(string $glob, string $title, string $note): string
+    public function write(string $glob, string $title, string $note, ?string $guidelineKey = null): string
     {
         $glob = $this->normalizeGlob($glob);
         $title = trim((string) preg_replace('/\R/', ' ', $title));
@@ -33,9 +34,9 @@ class RuleRepository
         $target = $this->resolveTargetFile($glob);
 
         if (! File::exists($target['path'])) {
-            $this->createFile($target['path'], $target['heading'], [$glob]);
+            $this->createFile($target['path'], $target['heading'], [$glob], array_filter([$guidelineKey]));
         } else {
-            $this->ensureGlobApplied($target['path'], $glob, $target['parsed']);
+            $this->ensureFrontmatterApplied($target['path'], $glob, $guidelineKey, $target['parsed']);
         }
 
         $this->appendEntry($target['path'], $title, $note);
@@ -43,6 +44,20 @@ class RuleRepository
         $this->writeIndex();
 
         return $target['path'];
+    }
+
+    /**
+     * Guideline keys that have been re-homed into path-scoped rule files.
+     *
+     * @return array<int, string>
+     */
+    public function scopedGuidelineKeys(): array
+    {
+        return $this->parsedFiles()
+            ->flatMap(fn (array $parsed): array => $parsed['guidelines'])
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function writeIndex(): string
@@ -181,31 +196,36 @@ class RuleRepository
 
     /**
      * @param  array<int, string>  $paths
+     * @param  array<int, string>  $guidelines
      */
-    protected function createFile(string $path, string $heading, array $paths): void
+    protected function createFile(string $path, string $heading, array $paths, array $guidelines = []): void
     {
         File::ensureDirectoryExists(dirname($path));
 
-        File::put($path, $this->renderFrontmatter($paths).'# '.$heading."\n");
+        File::put($path, $this->renderFrontmatter($paths, $guidelines).'# '.$heading."\n");
     }
 
-    protected function ensureGlobApplied(string $path, string $glob, ?array $parsed = null): void
+    protected function ensureFrontmatterApplied(string $path, string $glob, ?string $guidelineKey = null, ?array $parsed = null): void
     {
         if ($parsed === null) {
             try {
                 $parsed = $this->parse($path);
             } catch (Throwable) {
                 $raw = (string) preg_replace('/\R/', "\n", (string) File::get($path));
-                $parsed = ['paths' => [], 'body' => $raw];
+                $parsed = ['paths' => [], 'guidelines' => [], 'body' => $raw];
             }
         }
 
-        if (in_array($glob, $parsed['paths'], true)) {
+        $hasGlob = in_array($glob, $parsed['paths'], true);
+        $hasGuideline = $guidelineKey === null || in_array($guidelineKey, $parsed['guidelines'], true);
+
+        if ($hasGlob && $hasGuideline) {
             return;
         }
 
-        $paths = [...$parsed['paths'], $glob];
-        $frontmatter = $this->renderFrontmatter($paths);
+        $paths = $hasGlob ? $parsed['paths'] : [...$parsed['paths'], $glob];
+        $guidelines = $hasGuideline ? $parsed['guidelines'] : [...$parsed['guidelines'], $guidelineKey];
+        $frontmatter = $this->renderFrontmatter($paths, $guidelines);
 
         $body = (string) preg_replace('/^---\r?\n.*?\r?\n---\r?\n?/s', '', (string) $parsed['body']);
 
@@ -232,29 +252,37 @@ class RuleRepository
 
     /**
      * @param  array<int, string>  $paths
+     * @param  array<int, string>  $guidelines
      */
-    protected function renderFrontmatter(array $paths): string
+    protected function renderFrontmatter(array $paths, array $guidelines = []): string
     {
-        $yaml = Yaml::dump(['paths' => array_values($paths)], 2, 2);
+        $front = ['paths' => array_values($paths)];
+
+        if ($guidelines !== []) {
+            $front['guidelines'] = array_values($guidelines);
+        }
+
+        $yaml = Yaml::dump($front, 2, 2);
 
         return "---\n".$yaml."---\n\n";
     }
 
     /**
-     * @return array{paths: array<int, string>, body: string}
+     * @return array{paths: array<int, string>, guidelines: array<int, string>, body: string}
      */
     protected function parse(string $path): array
     {
         $raw = (string) preg_replace('/\R/', "\n", (string) File::get($path));
 
         if (preg_match('/^---\n(.*?)\n---\n?(.*)$/s', $raw, $matches) !== 1) {
-            return ['paths' => [], 'body' => $raw];
+            return ['paths' => [], 'guidelines' => [], 'body' => $raw];
         }
 
         $front = Yaml::parse($matches[1]) ?: [];
 
         return [
             'paths' => array_values(array_filter((array) ($front['paths'] ?? []), is_string(...))),
+            'guidelines' => array_values(array_filter((array) ($front['guidelines'] ?? []), is_string(...))),
             'body' => $matches[2],
         ];
     }
@@ -275,7 +303,7 @@ class RuleRepository
     }
 
     /**
-     * @return Collection<int, array{file: string, paths: array<int, string>, body: string}>
+     * @return Collection<int, array{file: string, paths: array<int, string>, guidelines: array<int, string>, body: string}>
      */
     protected function parsedFiles(): Collection
     {

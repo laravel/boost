@@ -51,7 +51,7 @@ class InferConventionsCommand extends Command
         }
 
         foreach ($selected as $detection) {
-            $location = $repository->write($detection->glob, $detection->title, $detection->note);
+            $location = $repository->write($detection->glob, $detection->title, $detection->note, $detection->guidelineKey);
 
             $this->line('  '.$this->green('✓').' '.$detection->title.' → '.$repository->relativePath($location));
         }

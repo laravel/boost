@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
+use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
@@ -27,7 +28,7 @@ class GuidelineComposer
 
     protected GuidelineConfig $config;
 
-    public function __construct(protected Roster $roster, protected Herd $herd)
+    public function __construct(protected Roster $roster, protected Herd $herd, protected ?RuleRepository $rules = null)
     {
         $this->config = new GuidelineConfig;
     }
@@ -98,7 +99,11 @@ class GuidelineComposer
             return $this->guidelines;
         }
 
-        $excluded = config('boost.guidelines.exclude', []);
+        // Guidelines re-homed as path-scoped rules (via boost:infer-conventions) are no longer inlined.
+        $excluded = [
+            ...config('boost.guidelines.exclude', []),
+            ...($this->rules?->scopedGuidelineKeys() ?? []),
+        ];
 
         $base = collect()
             ->merge($this->getCoreGuidelines())

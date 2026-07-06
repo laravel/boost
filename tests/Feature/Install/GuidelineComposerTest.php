@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\Npm;
 use Laravel\Roster\Enums\NodePackageManager;
@@ -1234,4 +1236,28 @@ test('symlinked custom guideline file does not produce duplicates', function ():
         @rmdir($customDir.'/laravel');
         @rmdir($customDir);
     }
+});
+
+test('skips inlining guidelines that were re-homed as path-scoped rules', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $rulesDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost-scoped-'.uniqid();
+    $repository = new RuleRepository($rulesDir);
+    $repository->write('tests/**', 'Pest', 'Use Pest for testing.', 'pest/core');
+
+    $composed = (new GuidelineComposer($this->roster, $this->herd, $repository))->compose();
+
+    expect($composed)->not->toContain('=== pest/core rules ===');
+
+    // Deleting the rule file restores the inline guideline on the next compose.
+    File::deleteDirectory($rulesDir);
+
+    $composed = (new GuidelineComposer($this->roster, $this->herd, $repository))->compose();
+
+    expect($composed)->toContain('=== pest/core rules ===');
 });

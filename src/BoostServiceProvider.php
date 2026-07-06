@@ -14,6 +14,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
 use Laravel\Boost\Install\Conventions\ConventionInspector;
 use Laravel\Boost\Install\Conventions\Detectors\PackageRulesDetector;
+use Laravel\Boost\Install\Conventions\Detectors\ScopedGuidelinesDetector;
 use Laravel\Boost\Install\Conventions\GuidelinePartitioner;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -53,6 +54,7 @@ class BoostServiceProvider extends ServiceProvider
         $this->app->singleton(ConventionInspector::class, fn ($app): ConventionInspector => new ConventionInspector([
             $app->make(PackageRulesDetector::class),
             new GuidelinePartitioner(dirname(__DIR__).'/.ai/laravel/skill/laravel-best-practices/rules'),
+            $app->make(ScopedGuidelinesDetector::class),
         ]));
     }
 
