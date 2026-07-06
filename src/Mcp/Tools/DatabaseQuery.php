@@ -102,10 +102,7 @@ class DatabaseQuery extends Tool
     {
         $cteNames = $this->extractCteNames($query);
 
-        // `DESCRIBE`/`DESC` as a statement only appears at the very start of a
-        // query, where the following identifier is a table name. Handle it
-        // separately and anchored to the start so we never confuse it with the
-        // `ORDER BY ... DESC` sort direction elsewhere in the query.
+        // Anchored to the start so the `ORDER BY ... DESC` sort direction is never matched.
         $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
 
         $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix, $cteNames): string {
@@ -118,9 +115,6 @@ class DatabaseQuery extends Tool
             return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
 
-        // Table references introduced by these keywords may be schema/database
-        // qualified (e.g. `public.users`); only the table segment is prefixed,
-        // never the schema/database qualifier.
         $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
 
         return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
