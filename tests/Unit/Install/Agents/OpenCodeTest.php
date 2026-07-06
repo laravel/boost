@@ -12,11 +12,11 @@ beforeEach(function (): void {
     $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
 });
 
-test('projectDetectionConfig only uses opencode.json', function (): void {
+test('projectDetectionConfig checks for both opencode.jsonc and opencode.json', function (): void {
     $agent = new OpenCode($this->strategyFactory);
 
     expect($agent->projectDetectionConfig())->toBe([
-        'files' => ['opencode.json'],
+        'files' => ['opencode.json', 'opencode.jsonc'],
     ]);
 });
 
@@ -32,6 +32,25 @@ test('detectInProject returns false when only AGENTS.md exists', function (): vo
         unlink($tempDir.DIRECTORY_SEPARATOR.'AGENTS.md');
         rmdir($tempDir);
     }
+});
+
+test('mcpConfigPath prefers opencode.jsonc when it exists', function (): void {
+    $agent = new OpenCode($this->strategyFactory);
+    $jsoncPath = base_path('opencode.jsonc');
+
+    touch($jsoncPath);
+
+    try {
+        expect($agent->mcpConfigPath())->toBe('opencode.jsonc');
+    } finally {
+        unlink($jsoncPath);
+    }
+});
+
+test('mcpConfigPath returns opencode.json when jsonc does not exist', function (): void {
+    $agent = new OpenCode($this->strategyFactory);
+
+    expect($agent->mcpConfigPath())->toBe('opencode.json');
 });
 
 test('httpMcpServerConfig returns remote type config', function (): void {
