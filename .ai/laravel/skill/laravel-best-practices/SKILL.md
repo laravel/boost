@@ -8,20 +8,26 @@ metadata:
 
 # Laravel Best Practices
 
-Consistency first: the application's established conventions outrank every rule in this skill. These rules are defaults for when no local pattern exists, not overrides — inconsistency is worse than a suboptimal pattern.
+Best practices for Laravel, organized as an index of rule files. Each rule file teaches what to do and why. For exact API syntax, verify with `search-docs`.
 
-## Workflow
+## Consistency First
 
-1. Inspect the changed files, nearby code, project configuration, and relevant tests. Treat an established project pattern as authoritative; deviate only for a correctness or security defect, and call the deviation out.
-2. Map every affected concern to the rule index below. Read each mapped rule file before editing; do not load unrelated rule files.
-3. Implement the smallest coherent change. Preserve the application's architecture and naming rather than introducing a second pattern for the same job.
-4. Verify version-sensitive Laravel APIs against the installed version. Use `search-docs` when available; otherwise inspect the installed framework or its version-matched documentation.
+Before applying any rule, check what the application already does. Laravel offers multiple valid approaches, and the best choice is the one the codebase already uses, even if another pattern would be theoretically better. Inconsistency is worse than a suboptimal pattern.
+
+Check sibling files, related controllers, models, or tests for established patterns. If one exists, follow it. Don't introduce a second way. These rules are defaults for when no pattern exists yet, not overrides.
+
+## How to Apply
+
+1. Check the changed files, nearby code, project configuration, and relevant tests for established patterns. Deviate only for a correctness or security defect, and call the deviation out.
+2. Map every affected concern to the rule index below. Read each mapped rule file before editing. Skip unrelated rule files.
+3. Make the smallest coherent change. Keep the application's architecture and naming instead of introducing a second pattern for the same job.
+4. Verify version-sensitive Laravel APIs for the installed version with `search-docs`, or inspect the installed framework when it is unavailable.
 5. Run the narrowest relevant tests first, then the project's formatting and static-analysis checks when the change warrants them.
-6. Re-read the diff against every mapped rule. Finish only when each affected concern is accounted for, the code follows local conventions, and relevant verification passes or any remaining failure is reported.
+6. Re-read the diff against every mapped rule before finishing.
 
 ## Rule Index
 
-Cross-cutting changes commonly require more than one file.
+Cross-cutting changes often need more than one rule file.
 
 | Concern | Read |
 | --- | --- |
