@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Blade;
+use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
@@ -1235,3 +1237,20 @@ test('symlinked custom guideline file does not produce duplicates', function ():
         @rmdir($customDir);
     }
 });
+
+test('php core guideline adapts enum naming guidance to the application enums', function (array $enums, ?string $fixtureName, string $expected, string $notExpected): void {
+    $assist = Mockery::mock(GuidelineAssist::class);
+    $assist->shouldReceive('enums')->andReturn($enums);
+    $assist->shouldReceive('enumContents')->andReturn($fixtureName === null ? '' : fixtureContent($fixtureName));
+
+    $rendered = Blade::render(file_get_contents(testDirectory('../.ai/php/core.blade.php')), ['assist' => $assist]);
+
+    expect($rendered)
+        ->toContain($expected)
+        ->not->toContain($notExpected);
+})->with([
+    'no enums' => [[], null, 'Use TitleCase for Enum keys', 'Follow existing application Enum naming conventions'],
+    'TitleCase keys' => [['App\Enums\FlashKey' => 'FlashKey.php'], 'Enums/FlashKey.php', 'Use TitleCase for Enum keys', 'Follow existing application Enum naming conventions'],
+    'TitleCase keys with uppercase values' => [['App\Enums\Currency' => 'Currency.php'], 'Enums/Currency.php', 'Use TitleCase for Enum keys', 'Follow existing application Enum naming conventions'],
+    'uppercase keys' => [['App\Enums\CountryCode' => 'CountryCode.php'], 'Enums/CountryCode.php', 'Follow existing application Enum naming conventions', 'Use TitleCase for Enum keys'],
+]);

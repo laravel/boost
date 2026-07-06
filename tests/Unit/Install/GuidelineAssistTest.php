@@ -154,6 +154,44 @@ test('enumContents returns empty string when app directory does not exist', func
     expect($assist->enumContents())->toBe('');
 });
 
+test('enumContents includes all discovered enum files in stable order', function (): void {
+    $assist = new class($this->roster, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+                'App\Enums\CountryCode' => fixture('Enums/CountryCode.php'),
+            ];
+        }
+    };
+
+    $contents = $assist->enumContents();
+
+    expect($contents)
+        ->toContain("case USA = 'USA';")
+        ->toContain("case Success = 'success';")
+        ->and(strpos($contents, 'enum CountryCode'))
+        ->toBeLessThan(strpos($contents, 'enum FlashKey'));
+});
+
+test('enumContents skips enum paths that are not files', function (): void {
+    $assist = new class($this->roster, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\Deleted' => fixture('Enums'),
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+            ];
+        }
+    };
+
+    expect($assist->enumContents())
+        ->toStartWith('<?php')
+        ->toContain('enum FlashKey');
+});
+
 test('hasSkillsEnabled returns false when skills are disabled', function (): void {
     $this->config->hasSkills = false;
 
