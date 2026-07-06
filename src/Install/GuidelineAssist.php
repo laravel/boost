@@ -79,17 +79,11 @@ class GuidelineAssist
             }
         }
 
-        ksort($enums);
-
         return $enums;
     }
 
     public function enumContents(): string
     {
-        if ($this->enumPaths === []) {
-            return '';
-        }
-
         return collect($this->enumPaths)
             ->sortKeys()
             ->map(fn (string $path): string => is_file($path) ? (file_get_contents($path) ?: '') : '')

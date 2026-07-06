@@ -155,48 +155,41 @@ test('enumContents returns empty string when app directory does not exist', func
 });
 
 test('enumContents includes all discovered enum files in stable order', function (): void {
-    $tempDir = sys_get_temp_dir().'/boost-enum-contents-'.uniqid();
-    mkdir($tempDir, 0755, true);
+    $assist = new class($this->roster, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+                'App\Enums\CountryCode' => fixture('Enums/CountryCode.php'),
+            ];
+        }
+    };
 
-    $countryCodePath = $tempDir.'/CountryCode.php';
-    $flashKeyPath = $tempDir.'/FlashKey.php';
+    $contents = $assist->enumContents();
 
-    try {
-        file_put_contents($flashKeyPath, <<<'PHP'
-<?php
+    expect($contents)
+        ->toContain("case USA = 'USA';")
+        ->toContain("case Success = 'success';")
+        ->and(strpos($contents, 'enum CountryCode'))
+        ->toBeLessThan(strpos($contents, 'enum FlashKey'));
+});
 
-enum FlashKey: string
-{
-    case Success = 'success';
-}
-PHP);
+test('enumContents skips enum paths that are not files', function (): void {
+    $assist = new class($this->roster, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\Deleted' => fixture('Enums'),
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+            ];
+        }
+    };
 
-        file_put_contents($countryCodePath, <<<'PHP'
-<?php
-
-enum CountryCode: string
-{
-    case USD = 'USD';
-}
-PHP);
-
-        $assist = new GuidelineAssist($this->roster, $this->config);
-
-        $enumPathsProperty = new ReflectionProperty($assist, 'enumPaths');
-        $enumPathsProperty->setValue($assist, [
-            'App\\Enums\\FlashKey' => $flashKeyPath,
-            'App\\Enums\\CountryCode' => $countryCodePath,
-        ]);
-
-        expect($assist->enumContents())
-            ->toStartWith("<?php\n\nenum CountryCode")
-            ->toContain("case USD = 'USD';")
-            ->toContain("case Success = 'success';");
-    } finally {
-        @unlink($countryCodePath);
-        @unlink($flashKeyPath);
-        @rmdir($tempDir);
-    }
+    expect($assist->enumContents())
+        ->toStartWith('<?php')
+        ->toContain('enum FlashKey');
 });
 
 test('hasSkillsEnabled returns false when skills are disabled', function (): void {
