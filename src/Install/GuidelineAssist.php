@@ -84,17 +84,11 @@ class GuidelineAssist
 
     public function enumContents(): string
     {
-        if ($this->enumPaths === []) {
-            return '';
-        }
-
-        $path = current($this->enumPaths);
-
-        if (! is_file($path)) {
-            return '';
-        }
-
-        return file_get_contents($path) ?: '';
+        return collect($this->enumPaths)
+            ->sortKeys()
+            ->map(fn (string $path): string => is_file($path) ? (file_get_contents($path) ?: '') : '')
+            ->filter()
+            ->join(PHP_EOL);
     }
 
     public function inertia(): Inertia

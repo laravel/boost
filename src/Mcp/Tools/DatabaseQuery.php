@@ -102,19 +102,38 @@ class DatabaseQuery extends Tool
     {
         $cteNames = $this->extractCteNames($query);
 
-        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE|DESCRIBE|DESC)\s+([`"\']?)(\w+)\2/i';
+        // Anchored to the start so the `ORDER BY ... DESC` sort direction is never matched.
+        $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
 
-        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
-            $keyword = $matches[1];
-            $quote = $matches[2];
-            $tableName = $matches[3];
+        $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix, $cteNames): string {
+            [$full, $leading, $keyword, $qualifier, $quote, $tableName] = $matches;
 
-            if (str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true)) {
-                return $matches[0];
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+                return $full;
             }
 
-            return "{$keyword} {$quote}{$prefix}{$tableName}{$quote}";
+            return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
+
+        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
+
+        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
+            [$full, $keyword, $qualifier, $quote, $tableName] = $matches;
+
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+                return $full;
+            }
+
+            return "{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
+        }, $query) ?? $query;
+    }
+
+    /**
+     * @param  array<int, string>  $cteNames
+     */
+    protected function tableIsPrefixedOrCte(string $tableName, string $prefix, array $cteNames): bool
+    {
+        return str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true);
     }
 
     /**
