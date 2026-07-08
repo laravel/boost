@@ -1,6 +1,25 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.11...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.12...main)
+
+## [v2.4.12](https://github.com/laravel/boost/compare/v2.4.11...v2.4.12) - 2026-07-08
+
+### What's Changed
+
+* Add committed project rules with a record-rule MCP tool by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/852
+* fix: prefer opencode.jsonc when updating existing configuration by [@alaminfirdows](https://github.com/alaminfirdows) in https://github.com/laravel/boost/pull/862
+* fix: unterminated single quote string by [@maiobarbero](https://github.com/maiobarbero) in https://github.com/laravel/boost/pull/866
+* Make enum guideline generation deterministic by [@hosmelq](https://github.com/hosmelq) in https://github.com/laravel/boost/pull/870
+* Fix table-prefix corrupting "ORDER BY … DESC" and schema-qualified queries by [@matthewjohns0n](https://github.com/matthewjohns0n) in https://github.com/laravel/boost/pull/868
+* Restructure laravel-best-practices skill into a compact rule index by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/871
+
+### New Contributors
+
+* [@alaminfirdows](https://github.com/alaminfirdows) made their first contribution in https://github.com/laravel/boost/pull/862
+* [@maiobarbero](https://github.com/maiobarbero) made their first contribution in https://github.com/laravel/boost/pull/866
+* [@matthewjohns0n](https://github.com/matthewjohns0n) made their first contribution in https://github.com/laravel/boost/pull/868
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.11...v2.4.12
 
 ## [v2.4.11](https://github.com/laravel/boost/compare/v.2.4.11...v2.4.11) - 2026-06-26
 
@@ -395,11 +414,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -466,12 +487,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
