@@ -29,7 +29,7 @@ class RecordRule extends Tool
      */
     public function shouldRegister(): bool
     {
-        return (bool) config('boost.rules.enabled', true);
+        return (bool) config('boost.rules.enabled', false);
     }
 
     /**

@@ -42,7 +42,7 @@ return [
     */
 
     'rules' => [
-        'enabled' => env('BOOST_RULES_ENABLED', true),
+        'enabled' => env('BOOST_RULES_ENABLED', false),
     ],
 
     /*
