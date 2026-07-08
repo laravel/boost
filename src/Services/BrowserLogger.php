@@ -20,6 +20,8 @@ class BrowserLogger
             'id' => 'browser-logger-active',
         ]);
 
+        $levels = json_encode(config('boost.browser_log_levels'));
+
         if ($nonce = Vite::cspNonce()) {
             $attributes = $attributes->merge(['nonce' => $nonce]);
         }
@@ -30,6 +32,13 @@ class BrowserLogger
     const ENDPOINT = '{$endpoint}';
     const logQueue = [];
     let flushTimeout = null;
+    let levels = {$levels};
+    const severityMap = {
+        error: ['error'],
+        warning: ['warning', 'error'],
+        info: ['info', 'warning', 'error'],
+        debug: ['log', 'info', 'warning', 'error', 'table']
+    };
 
     console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
 
@@ -59,6 +68,24 @@ class BrowserLogger
             }
             return value;
         });
+    }
+
+    // Normalize log type for consistency (e.g., 'warn' to 'warning')
+    function normalizeType(type) {
+        return type === 'warn' ? 'warning' : type;
+    }
+
+    // Determine if a log type should be captured based on configured levels
+    function shouldCapture(type) {
+        const normalizedType = normalizeType(type);
+
+        if (!Array.isArray(levels) || levels.length === 0) {
+            return false;
+        }
+
+        const expandedLevels = levels.flatMap(level => severityMap[level] ?? [level]);
+
+        return expandedLevels.includes(normalizedType);
     }
 
     // Batch and send logs
@@ -94,6 +121,10 @@ class BrowserLogger
 
             // Capture log data
             try {
+                if (!shouldCapture(method)) {
+                    return;
+                }
+
                 logQueue.push({
                     type: method,
                     timestamp: new Date().toISOString(),
@@ -119,6 +150,10 @@ class BrowserLogger
     const originalOnError = window.onerror;
     window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
         try {
+            if (!shouldCapture('error')) {
+                return false;
+            }
+
             logQueue.push({
                 type: 'uncaught_error',
                 timestamp: new Date().toISOString(),
@@ -152,6 +187,10 @@ class BrowserLogger
     }
     window.addEventListener('error', (event) => {
         try {
+            if (!shouldCapture('error')) {
+                return false;
+            }
+
             logQueue.push({
                 type: 'window_error',
                 timestamp: new Date().toISOString(),
@@ -180,6 +219,10 @@ class BrowserLogger
     });
     window.addEventListener('unhandledrejection', (event) => {
         try {
+            if (!shouldCapture('error')) {
+                return false;
+            }
+
             logQueue.push({
                 type: 'error',
                 timestamp: new Date().toISOString(),
