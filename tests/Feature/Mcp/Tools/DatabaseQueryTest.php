@@ -6,17 +6,23 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
 use Laravel\Mcp\Request;
+use Mockery\MockInterface;
+use MongoDB\BSON\Int64;
 use MongoDB\Database;
+use MongoDB\Driver\CursorInterface;
+use MongoDB\Driver\Server;
 use MongoDB\Laravel\Connection as MongoDBConnection;
 
-function fakeConnection(): Mockery\MockInterface {
+function fakeConnection(): MockInterface
+{
     $connection = Mockery::mock(ConnectionInterface::class);
     DB::shouldReceive('connection')->andReturn($connection);
 
     return $connection;
 }
 
-function expectSelect(): Mockery\MockInterface {
+function expectSelect(): MockInterface
+{
     $connection = fakeConnection();
     $connection->shouldReceive('select')->andReturn([]);
     $connection->shouldReceive('getTablePrefix')->andReturn('');
@@ -241,7 +247,7 @@ function fakeMongoConnection(array $documents = []): MongoDBConnection
 {
     // Mockery can't mock CursorInterface on Mockery 1.6.x / PHP 8.4 (its Iterator::current(): mixed
     // clashes with CursorInterface::current(): object|array|null), so use a concrete double.
-    $cursor = new class($documents) implements \MongoDB\Driver\CursorInterface
+    $cursor = new class($documents) implements CursorInterface
     {
         public function __construct(private array $documents) {}
 
@@ -275,14 +281,14 @@ function fakeMongoConnection(array $documents = []): MongoDBConnection
             reset($this->documents);
         }
 
-        public function getId(): \MongoDB\BSON\Int64
+        public function getId(): Int64
         {
-            throw new \LogicException('unused in tests');
+            throw new LogicException('unused in tests');
         }
 
-        public function getServer(): \MongoDB\Driver\Server
+        public function getServer(): Server
         {
-            throw new \LogicException('unused in tests');
+            throw new LogicException('unused in tests');
         }
 
         public function isDead(): bool

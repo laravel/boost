@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
-use Illuminate\Database\ConnectionInterface;
-use InvalidArgumentException;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
-use Throwable;
 use MongoDB\Laravel\Connection as MongoDBConnection;
+use Stringable;
+use Throwable;
 
 #[IsReadOnly]
 class DatabaseQuery extends Tool
@@ -54,17 +55,17 @@ class DatabaseQuery extends Tool
                 : $this->handleSql($request->string('query'), $connection);
 
             return Response::json($result);
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return Response::error($e->getMessage());
         } catch (Throwable $e) {
-            return Response::error('Query failed: ' . $e->getMessage());
+            return Response::error('Query failed: '.$e->getMessage());
         }
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    private function handleSql(\Stringable $query, ConnectionInterface $connection): array
+    private function handleSql(Stringable $query, ConnectionInterface $connection): array
     {
         $query = trim((string) $query);
         $token = strtok(ltrim($query), " \t\n\r");
@@ -166,7 +167,7 @@ class DatabaseQuery extends Tool
     }
 
     /**
-     * @param array<string,mixed> $command
+     * @param  array<string,mixed>  $command
      *
      * @throws InvalidArgumentException
      */
@@ -181,7 +182,7 @@ class DatabaseQuery extends Tool
         $operation = array_key_first($command);
 
         if (! in_array($operation, $allowList, true)) {
-            throw new InvalidArgumentException(sprintf('Only read commands are allowed (%s).', join(', ', $allowList)));
+            throw new InvalidArgumentException(sprintf('Only read commands are allowed (%s).', implode(', ', $allowList)));
         }
 
         if ($operation === 'aggregate') {
@@ -217,31 +218,31 @@ class DatabaseQuery extends Tool
 
         // These aggregation stages may contain nested aggregation pipelines
         // and must be checked for write ops recursively.
-        $supportsNestedWrites = ["facet", "lookup", "unionWith"];
+        $supportsNestedWrites = ['facet', 'lookup', 'unionWith'];
 
         $allowList = array_merge($supportsNestedWrites, [
-            "addFields",
-            "bucket",
-            "bucketAuto",
-            "count",
-            "densify",
-            "fill",
-            "graphLookup",
-            "group",
-            "limit",
-            "match",
-            "project",
-            "redact",
-            "replaceRoot",
-            "replaceWith",
-            "sample",
-            "set",
-            "setWindowFields",
-            "skip",
-            "sort",
-            "sortByCount",
-            "unwind",
-            "unset"
+            'addFields',
+            'bucket',
+            'bucketAuto',
+            'count',
+            'densify',
+            'fill',
+            'graphLookup',
+            'group',
+            'limit',
+            'match',
+            'project',
+            'redact',
+            'replaceRoot',
+            'replaceWith',
+            'sample',
+            'set',
+            'setWindowFields',
+            'skip',
+            'sort',
+            'sortByCount',
+            'unwind',
+            'unset',
         ]);
 
         // A pipeline is a list of single-key stage documents, e.g. [['$match' => [...]], ...].
@@ -261,13 +262,16 @@ class DatabaseQuery extends Tool
             switch ($stageName) {
                 case 'facet':
                     array_walk($stageBody, fn ($pipeline) => $this->ensureNoNestedWriteInAggregation($pipeline, $level + 1));
+
                     break;
+
                 case 'lookup':
                 case 'unionWith':
                     // Both stages take an optional single sub-pipeline; unionWith may also be a plain collection name.
                     if (is_array($stageBody) && isset($stageBody['pipeline'])) {
                         $this->ensureNoNestedWriteInAggregation($stageBody['pipeline'], $level + 1);
                     }
+
                     break;
             }
         }
