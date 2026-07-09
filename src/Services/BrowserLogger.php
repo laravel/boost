@@ -20,7 +20,7 @@ class BrowserLogger
             'id' => 'browser-logger-active',
         ]);
 
-        $levels = json_encode(config('boost.browser_log_levels'));
+        $levels = json_encode(config('boost.browser_log_levels') ?? ['debug']);
 
         if ($nonce = Vite::cspNonce()) {
             $attributes = $attributes->merge(['nonce' => $nonce]);
@@ -79,8 +79,12 @@ class BrowserLogger
     function shouldCapture(type) {
         const normalizedType = normalizeType(type);
 
-        if (!Array.isArray(levels) || levels.length === 0) {
+        if (!Array.isArray(levels)) {
             return false;
+        }
+
+        if (levels.length === 0) {
+            return true;
         }
 
         const expandedLevels = levels.flatMap(level => severityMap[level] ?? [level]);
@@ -150,29 +154,28 @@ class BrowserLogger
     const originalOnError = window.onerror;
     window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
         try {
-            if (!shouldCapture('error')) {
-                return false;
+            if (shouldCapture('error')) {
+                logQueue.push({
+                    type: 'uncaught_error',
+                    timestamp: new Date().toISOString(),
+                    data: [{
+                        message: errorMsg,
+                        filename: url,
+                        lineno: lineNumber,
+                        colno: colNumber,
+                        error: error ? {
+                            name: error.name,
+                            message: error.message,
+                            stack: error.stack
+                        } : null
+                    }],
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                });
+
+                scheduleFlush();
             }
 
-            logQueue.push({
-                type: 'uncaught_error',
-                timestamp: new Date().toISOString(),
-                data: [{
-                    message: errorMsg,
-                    filename: url,
-                    lineno: lineNumber,
-                    colno: colNumber,
-                    error: error ? {
-                        name: error.name,
-                        message: error.message,
-                        stack: error.stack
-                    } : null
-                }],
-                url: window.location.href,
-                userAgent: navigator.userAgent
-            });
-
-            scheduleFlush();
         } catch (e) {
             // Fail silently
         }
