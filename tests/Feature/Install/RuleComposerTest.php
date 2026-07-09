@@ -220,3 +220,172 @@ test('composeManaged groups rules with different paths into separate files', fun
         ->and($livewireFile['content'])->not->toContain('Pest')
         ->and($testsFile['content'])->not->toContain('Livewire');
 });
+
+test('a scoped block inside a false Blade conditional is not extracted as a rule', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $customDir = testDirectory('Fixtures/.ai/conditional-scoped-guidelines');
+    @mkdir($customDir, 0755, true);
+    file_put_contents(
+        $customDir.'/conditional.blade.php',
+        "@if(false)\n@scoped(['app/Never/**'])\n## Never\nHidden branch rule.\n@endscoped\n@endif\n@if(true)\n@scoped(['app/Always/**'])\n## Always\nVisible branch rule.\n@endscoped\n@endif\n"
+    );
+
+    try {
+        $guidelines = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $guidelines
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $rules = (new RuleComposer($guidelines))->rules();
+
+        expect($rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Never/**']))->toBeNull()
+            ->and($rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Always/**']))->not->toBeNull();
+    } finally {
+        @unlink($customDir.'/conditional.blade.php');
+        @rmdir($customDir);
+    }
+});
+
+test('a headingless scoped block gets a slug-derived title instead of its first line', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $customDir = testDirectory('Fixtures/.ai/headingless-scoped-guidelines');
+    @mkdir($customDir, 0755, true);
+    file_put_contents(
+        $customDir.'/widgets.blade.php',
+        "@scoped(['app/Widgets/**'])\n- Always use widget factories.\n- Never delete widgets.\n@endscoped\n"
+    );
+
+    try {
+        $guidelines = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $guidelines
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $managed = (new RuleComposer($guidelines))->composeManaged();
+        $file = $managed->first(fn (array $file): bool => $file['paths'] === ['app/Widgets/**']);
+
+        expect($file)->not->toBeNull()
+            ->and($file['title'])->toBe('Widgets')
+            ->and($file['content'])->toContain('Always use widget factories');
+    } finally {
+        @unlink($customDir.'/widgets.blade.php');
+        @rmdir($customDir);
+    }
+});
+
+test('a glob containing a bracket character class survives scoped path parsing', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $customDir = testDirectory('Fixtures/.ai/bracket-glob-guidelines');
+    @mkdir($customDir, 0755, true);
+    file_put_contents(
+        $customDir.'/brackets.blade.php',
+        "@scoped(['app/[Ff]oo/**'])\n## Foo\nBracket glob rule.\n@endscoped\n"
+    );
+
+    try {
+        $guidelines = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $guidelines
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $rules = (new RuleComposer($guidelines))->rules();
+        $rule = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/[Ff]oo/**']);
+
+        expect($rule)->not->toBeNull()
+            ->and($rule['content'])->toContain('Bracket glob rule');
+    } finally {
+        @unlink($customDir.'/brackets.blade.php');
+        @rmdir($customDir);
+    }
+});
+
+test('a scoped block with no parseable paths keeps its content inline instead of losing it', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $customDir = testDirectory('Fixtures/.ai/empty-paths-scoped-guidelines');
+    @mkdir($customDir, 0755, true);
+    file_put_contents(
+        $customDir.'/empty.blade.php',
+        "# Empty Paths\n\n@scoped([])\n- Guidance that must not vanish.\n@endscoped\n"
+    );
+
+    try {
+        $guidelines = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $guidelines
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $rules = (new RuleComposer($guidelines))->rules();
+        $inline = $guidelines->guidelines()->get('.ai/empty')['content'] ?? '';
+
+        expect($rules->contains(fn (array $rule): bool => str_contains($rule['content'], 'must not vanish')))->toBeFalse()
+            ->and($inline)->toContain('Guidance that must not vanish');
+    } finally {
+        @unlink($customDir.'/empty.blade.php');
+        @rmdir($customDir);
+    }
+});
+
+test('a glob containing parentheses survives scoped path parsing', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $customDir = testDirectory('Fixtures/.ai/paren-glob-guidelines');
+    @mkdir($customDir, 0755, true);
+    file_put_contents(
+        $customDir.'/parens.blade.php',
+        "@scoped(['app/(Foo)/**'])\n## Foo\nParen glob rule.\n@endscoped\n"
+    );
+
+    try {
+        $guidelines = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $guidelines
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $rules = (new RuleComposer($guidelines))->rules();
+        $rule = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/(Foo)/**']);
+
+        expect($rule)->not->toBeNull()
+            ->and($rule['content'])->toContain('Paren glob rule');
+    } finally {
+        @unlink($customDir.'/parens.blade.php');
+        @rmdir($customDir);
+    }
+});
+
+test('nested scoped blocks never leak sentinels into rule content or inline output', function (): void {
+    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+
+    $customDir = testDirectory('Fixtures/.ai/nested-scoped-guidelines');
+    @mkdir($customDir, 0755, true);
+    file_put_contents(
+        $customDir.'/nested.blade.php',
+        "@scoped(['app/Outer/**'])\n## Outer\nOuter rule.\n@scoped(['app/Inner/**'])\n## Inner\nInner rule.\n@endscoped\n@endscoped\n"
+    );
+
+    try {
+        $guidelines = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $guidelines
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $rules = (new RuleComposer($guidelines))->rules();
+        $inline = $guidelines->guidelines()->get('.ai/nested')['content'] ?? '';
+
+        $rules->each(function (array $rule): void {
+            expect($rule['content'])->not->toContain('___SCOPED');
+        });
+
+        expect($inline)->not->toContain('___SCOPED');
+    } finally {
+        @unlink($customDir.'/nested.blade.php');
+        @rmdir($customDir);
+    }
+});

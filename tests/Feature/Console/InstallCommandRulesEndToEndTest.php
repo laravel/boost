@@ -87,3 +87,24 @@ it('re-inlines everything and removes the managed directory when rules are disab
         ->toContain('php artisan test --compact')
         ->toContain('Pest');
 });
+
+it('falls back to inlining scoped content with a warning when rule syncing fails', function (): void {
+    config(['boost.rules.enabled' => true]);
+
+    $this->mock(RuleRepository::class, function ($mock): void {
+        $mock->shouldReceive('syncManaged')->andThrow(new RuntimeException('disk full'));
+        $mock->shouldReceive('clearManaged')->andReturn(false);
+    });
+
+    $this->artisan('boost:install', ['--guidelines' => true, '--no-interaction' => true])
+        ->expectsOutputToContain('Could not write path-scoped rules to .ai/rules/boost')
+        ->assertSuccessful();
+
+    expect(File::isDirectory($this->tempBasePath.'/.ai/rules/boost'))->toBeFalse();
+
+    $claude = File::get($this->tempBasePath.'/CLAUDE.md');
+
+    expect($claude)
+        ->toContain('php artisan test --compact')
+        ->toContain('Pest');
+});

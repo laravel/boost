@@ -29,19 +29,24 @@ class GuidelineComposer
 
     protected GuidelineConfig $config;
 
+    protected bool $extractRules = true;
+
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->config = new GuidelineConfig;
     }
 
-    public function guidelineAssist(): GuidelineAssist
+    public function withoutRuleExtraction(): self
     {
-        return $this->buildGuidelineAssist();
+        $this->extractRules = false;
+        $this->guidelines = null;
+
+        return $this;
     }
 
     protected function rulesExtractionEnabled(): bool
     {
-        return (bool) config('boost.rules.enabled', true);
+        return $this->extractRules && (bool) config('boost.rules.enabled', true);
     }
 
     protected function getRoster(): Roster
@@ -111,10 +116,8 @@ class GuidelineComposer
     }
 
     /**
-     * All resolved guidelines before the "has content" filter — includes entries whose only
-     * content lived inside a `@scoped` block, so `guidelines()` sees them as empty once that
-     * block is stripped for inlining. RuleComposer still needs the resolved `path` for these
-     * to go extract the block itself, so it reads from here instead of guidelines().
+     * All resolved guidelines before the "has content" filter, including entries whose
+     * content lived entirely inside `@scoped` blocks.
      *
      * @return Collection<string, array>
      */
@@ -231,7 +234,7 @@ class GuidelineComposer
     }
 
     /**
-     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
+     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool, scoped?: array<int, array{paths: array<int, string>, body: string}>, tokens?: float}
      */
     private function resolveGuideline(?string $vendorPath, string $guidelineKey): array
     {
@@ -273,7 +276,7 @@ class GuidelineComposer
     }
 
     /**
-     * @return array<array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}>
+     * @return array<array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool, scoped?: array<int, array{paths: array<int, string>, body: string}>, tokens?: float}>
      */
     protected function guidelinesDir(string $dirPath, bool $thirdParty = false): array
     {
@@ -299,7 +302,7 @@ class GuidelineComposer
     }
 
     /**
-     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
+     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool, scoped?: array<int, array{paths: array<int, string>, body: string}>, tokens?: float}
      */
     protected function guideline(string $path, bool $thirdParty = false, ?string $overrideKey = null): array
     {
@@ -313,10 +316,12 @@ class GuidelineComposer
                 'path' => null,
                 'custom' => false,
                 'third_party' => $thirdParty,
+                'scoped' => [],
             ];
         }
 
-        $rendered = $this->renderBladeFile($path, [], $this->rulesExtractionEnabled());
+        $result = $this->renderBladeFileWithScopedBlocks($path, [], $this->rulesExtractionEnabled());
+        $rendered = $result['content'];
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -333,6 +338,7 @@ class GuidelineComposer
             'path' => $path,
             'custom' => $this->isCustomGuideline($path),
             'third_party' => $thirdParty,
+            'scoped' => $result['blocks'],
             'tokens' => round(str_word_count($rendered) * 1.3),
         ];
     }

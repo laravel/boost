@@ -33,6 +33,7 @@ use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
 use Symfony\Component\Process\Process;
+use Throwable;
 
 use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
@@ -369,10 +370,12 @@ class InstallCommand extends Command
         $guidelinesAgents = $this->agentsWithGuidelines();
         $guidelineConfig = $this->buildGuidelineConfig();
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
+
+        // Must run before compose(): a failed sync falls back to inlining scoped content.
+        $this->syncRuleFiles($composer);
+
         $guidelines = $composer->guidelines();
         $composedAiGuidelines = $composer->compose();
-
-        $this->syncRuleFiles($composer);
 
         $this->installFeature(
             agents: $guidelinesAgents,
@@ -396,11 +399,17 @@ class InstallCommand extends Command
             return;
         }
 
-        $written = rescue(function () use ($repository, $composer): array {
-            $managed = (new RuleComposer($composer))->composeManaged();
+        try {
+            $written = $repository->syncManaged((new RuleComposer($composer))->composeManaged());
+        } catch (Throwable) {
+            rescue(fn () => $repository->clearManaged(), report: false);
 
-            return $repository->syncManaged($managed);
-        }, rescue: [], report: false);
+            $composer->withoutRuleExtraction();
+
+            $this->warn('Could not write path-scoped rules to .ai/rules/boost — keeping them inline in the guidelines instead.');
+
+            return;
+        }
 
         if ($written !== []) {
             $this->info(sprintf('Extracted %d path-scoped rule file%s to .ai/rules/boost', count($written), count($written) === 1 ? '' : 's'));

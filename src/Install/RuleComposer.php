@@ -6,30 +6,16 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Laravel\Boost\Concerns\RendersBladeGuidelines;
 
 class RuleComposer
 {
-    use RendersBladeGuidelines;
-
     /** @var Collection<string, array{paths: array<int, string>, content: string, third_party: bool}>|null */
     protected ?Collection $rules = null;
 
     public function __construct(protected GuidelineComposer $guidelines) {}
 
-    protected function getGuidelineAssist(): GuidelineAssist
-    {
-        return $this->guidelines->guidelineAssist();
-    }
-
     /**
-     * All `@scoped` blocks found inside GuidelineComposer's already-resolved guideline files,
-     * one entry per block.
-     *
-     * A scoped block lives in the same file as its guideline's always-inline content, so
-     * whatever already decided that file's fate — package priority/exclusion, a user override
-     * in `.ai/guidelines/`, `boost.guidelines.exclude` — decides the block's fate too. There is
-     * no separate resolution path to keep in sync.
+     * One entry per rendered `@scoped` block, keyed by guideline key and block index.
      *
      * @return Collection<string, array{paths: array<int, string>, content: string, third_party: bool}>
      */
@@ -42,11 +28,7 @@ class RuleComposer
         $rules = collect();
 
         $this->guidelines->resolvedGuidelines()->each(function (array $guideline, string $key) use ($rules): void {
-            if ($guideline['path'] === null) {
-                return;
-            }
-
-            foreach ($this->scopedBlocksIn($guideline['path']) as $index => $block) {
+            foreach ($guideline['scoped'] ?? [] as $index => $block) {
                 if ($block['paths'] === []) {
                     continue;
                 }
@@ -57,7 +39,7 @@ class RuleComposer
 
                 $rules->put($key.'#'.$index, [
                     'paths' => $block['paths'],
-                    'content' => trim($this->renderBladeString($block['body'], $guideline['path'])),
+                    'content' => $block['body'],
                     'third_party' => $guideline['third_party'],
                 ]);
             }
@@ -67,8 +49,7 @@ class RuleComposer
     }
 
     /**
-     * Group scoped rules by their normalized paths set, merging rules that apply to the
-     * exact same globs into a single managed rule file payload.
+     * Merge rules that apply to the exact same globs into a single managed rule file.
      *
      * @return Collection<string, array{paths: array<int, string>, title: string, content: string}>
      */
@@ -111,9 +92,13 @@ class RuleComposer
 
     protected function titleFor(string $content, string $fallbackSlug): string
     {
-        $heading = Str::of($content)->after('# ')->before("\n")->trim()->value();
+        $firstLine = Str::of($content)->trim()->before("\n")->trim()->value();
 
-        return filled($heading) ? $heading : Str::headline($fallbackSlug);
+        if (preg_match('/^#+\s+(?<heading>.+)$/', $firstLine, $matches) === 1) {
+            return trim($matches['heading']);
+        }
+
+        return Str::headline($fallbackSlug);
     }
 
     /**

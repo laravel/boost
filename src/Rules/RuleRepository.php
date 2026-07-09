@@ -24,8 +24,7 @@ class RuleRepository
     }
 
     /**
-     * Wholesale-replace the Boost-managed rule files with the given set, then regenerate the index.
-     * Collection keys are the filename slugs (e.g. `tests` writes `boost/tests.md`).
+     * Replace the Boost-managed rule files, keyed by filename slug, and regenerate the index.
      *
      * @param  Collection<string, array{paths: array<int, string>, title: string, content: string}>  $files
      * @return array<int, string> the written file paths
@@ -78,10 +77,6 @@ class RuleRepository
         return true;
     }
 
-    /**
-     * After the managed directory is gone, regenerate the index if root-level rules
-     * remain, or remove the whole .ai/rules tree when nothing is left in it at all.
-     */
     protected function reconcileAfterManagedRemoval(): void
     {
         if ($this->parsedFiles()->isNotEmpty()) {
@@ -397,9 +392,8 @@ class RuleRepository
     {
         $content = trim($content);
 
-        // titleFor() only falls back to a slug-derived title when the content has no heading
-        // of its own; when it does, prepending one here would just duplicate it.
-        $heading = str_starts_with($content, '#') ? '' : '# '.$title."\n\n";
+        // Content that already starts with a markdown heading supplies its own title.
+        $heading = preg_match('/^#+\s/', $content) === 1 ? '' : '# '.$title."\n\n";
 
         return $this->renderFrontmatter($paths).$heading.$content."\n";
     }
