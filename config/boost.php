@@ -76,7 +76,7 @@ return [
 
     'browser_log_levels' => array_values(array_filter(array_map(
         'trim',
-        explode(',', env('BOOST_BROWSER_LOG_LEVELS', 'error,warning,info,log'))
+        explode(',', env('BOOST_BROWSER_LOG_LEVELS', 'error,warning,info,debug'))
     ))),
 
 ];
