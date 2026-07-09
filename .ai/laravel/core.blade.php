@@ -13,8 +13,11 @@
 - When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `{{ $assist->artisanCommand('make:model --help') }}` to check the available options.
 @endscoped
 
+@scoped(['app/Http/**', 'routes/**'])
 ## APIs & Eloquent Resources
+
 - For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
+@endscoped
 
 ## URL Generation
 - When generating links to other pages, prefer named routes and the `route()` function.

@@ -69,14 +69,17 @@ test('a guideline with multiple scoped blocks produces one rule entry per block'
     $rules = (new RuleComposer($this->guidelines))->rules();
     $laravelBlocks = $rules->filter(fn (array $rule, string $key): bool => str_starts_with($key, 'laravel/core#'));
 
-    expect($laravelBlocks)->toHaveCount(2);
+    expect($laravelBlocks)->toHaveCount(3);
 
     $modelsBlock = $laravelBlocks->first(fn (array $rule): bool => $rule['paths'] === ['app/Models/**']);
+    $apisBlock = $laravelBlocks->first(fn (array $rule): bool => $rule['paths'] === ['app/Http/**', 'routes/**']);
     $testsBlock = $laravelBlocks->first(fn (array $rule): bool => $rule['paths'] === ['tests/**']);
 
     expect($modelsBlock)->not->toBeNull()
         ->and($modelsBlock['content'])->toContain('Model Creation')
         ->and($modelsBlock['content'])->not->toContain('Faker')
+        ->and($apisBlock)->not->toBeNull()
+        ->and($apisBlock['content'])->toContain('Eloquent API Resources')
         ->and($testsBlock)->not->toBeNull()
         ->and($testsBlock['content'])->toContain('Faker')
         ->and($testsBlock['content'])->not->toContain('Model Creation');
@@ -388,4 +391,21 @@ test('nested scoped blocks never leak sentinels into rule content or inline outp
         @unlink($customDir.'/nested.blade.php');
         @rmdir($customDir);
     }
+});
+
+test('scopes inertia server-side guidelines to http, routes and js paths', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+    $this->roster->shouldReceive('uses')->andReturn(false)->byDefault();
+
+    $rules = (new RuleComposer($this->guidelines))->rules();
+    $inertiaRule = $rules->first(fn (array $rule, string $key): bool => str_starts_with($key, 'inertia-laravel/core#'));
+
+    expect($inertiaRule)->not->toBeNull()
+        ->and($inertiaRule['paths'])->toBe(['app/Http/**', 'routes/**', 'resources/js/**'])
+        ->and($inertiaRule['content'])->toContain('Inertia::render()');
 });

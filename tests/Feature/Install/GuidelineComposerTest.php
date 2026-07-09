@@ -34,6 +34,8 @@ beforeEach(function (): void {
 });
 
 test('includes Inertia React conditional guidelines based on version', function (string $version): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', $version),
@@ -101,7 +103,8 @@ test('strips only the scoped portion of a partially-scoped guideline, keeping th
     expect(config('boost.rules.enabled'))->toBeTrue()
         ->and($guidelines)
         ->toContain('=== laravel/core rules ===')
-        ->toContain('APIs & Eloquent Resources')
+        ->toContain('URL Generation')
+        ->not->toContain('APIs & Eloquent Resources')
         ->not->toContain('Model Creation')
         ->not->toContain('When creating new models, create useful factories');
 });
