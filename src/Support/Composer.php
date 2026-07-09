@@ -72,6 +72,11 @@ class Composer
         return self::packagesDirectoriesWithBoostSubpath('skills');
     }
 
+    public static function packagesDirectoriesWithBoostRules(): array
+    {
+        return self::packagesDirectoriesWithBoostSubpath('rules');
+    }
+
     /**
      * @return array<string, string>
      */

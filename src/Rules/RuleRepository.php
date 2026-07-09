@@ -16,9 +16,89 @@ class RuleRepository
 {
     protected const INDEX_FILENAME = 'index.md';
 
+    protected const MANAGED_DIRNAME = 'boost';
+
     public function __construct(protected string $directory)
     {
         //
+    }
+
+    /**
+     * Wholesale-replace the Boost-managed rule files with the given set, then regenerate the index.
+     * Collection keys are the filename slugs (e.g. `tests` writes `boost/tests.md`).
+     *
+     * @param  Collection<string, array{paths: array<int, string>, title: string, content: string}>  $files
+     * @return array<int, string> the written file paths
+     */
+    public function syncManaged(Collection $files): array
+    {
+        $dir = $this->managedDir();
+
+        if (File::isDirectory($dir)) {
+            File::deleteDirectory($dir);
+        }
+
+        if ($files->isEmpty()) {
+            $this->reconcileAfterManagedRemoval();
+
+            return [];
+        }
+
+        File::ensureDirectoryExists($dir);
+
+        $written = [];
+
+        foreach ($files as $slug => $file) {
+            $path = join_paths($dir, $slug.'.md');
+            $written[] = $path;
+
+            File::put($path, $this->renderManagedFile($file['paths'], $file['title'], $file['content']));
+        }
+
+        $this->writeIndex();
+
+        return $written;
+    }
+
+    /**
+     * Remove all Boost-managed rule files. Returns whether the managed directory existed.
+     */
+    public function clearManaged(): bool
+    {
+        $dir = $this->managedDir();
+
+        if (! File::isDirectory($dir)) {
+            return false;
+        }
+
+        File::deleteDirectory($dir);
+
+        $this->reconcileAfterManagedRemoval();
+
+        return true;
+    }
+
+    /**
+     * After the managed directory is gone, regenerate the index if root-level rules
+     * remain, or remove the whole .ai/rules tree when nothing is left in it at all.
+     */
+    protected function reconcileAfterManagedRemoval(): void
+    {
+        if ($this->parsedFiles()->isNotEmpty()) {
+            $this->writeIndex();
+
+            return;
+        }
+
+        $indexPath = join_paths($this->directory, self::INDEX_FILENAME);
+
+        if (File::exists($indexPath)) {
+            File::delete($indexPath);
+        }
+
+        if (File::isDirectory($this->directory) && File::isEmptyDirectory($this->directory)) {
+            File::deleteDirectory($this->directory);
+        }
     }
 
     /**
@@ -48,8 +128,11 @@ class RuleRepository
     public function writeIndex(): string
     {
         $rows = $this->parsedFiles()
+            ->merge($this->parsedManagedFiles())
             ->filter(fn (array $parsed): bool => $parsed['paths'] !== [])
+            ->sortBy(fn (array $parsed): string => $this->relativePath($parsed['file']))
             ->map(fn (array $parsed): string => '| '.implode(', ', $parsed['paths']).' | '.$this->relativePath($parsed['file']).' |')
+            ->values()
             ->join("\n");
 
         $table = $rows === ''
@@ -234,18 +317,7 @@ class RuleRepository
      */
     protected function parse(string $path): array
     {
-        $raw = (string) preg_replace('/\R/', "\n", (string) File::get($path));
-
-        if (preg_match('/^---\n(.*?)\n---\n?(.*)$/s', $raw, $matches) !== 1) {
-            return ['paths' => [], 'body' => $raw];
-        }
-
-        $front = Yaml::parse($matches[1]) ?: [];
-
-        return [
-            'paths' => array_values(array_filter((array) ($front['paths'] ?? []), is_string(...))),
-            'body' => $matches[2],
-        ];
+        return RuleFrontmatter::parse((string) File::get($path));
     }
 
     /**
@@ -253,14 +325,7 @@ class RuleRepository
      */
     protected function files(): array
     {
-        if (! File::isDirectory($this->directory)) {
-            return [];
-        }
-
-        return collect(File::glob(join_paths($this->directory, '*.md')) ?: [])
-            ->reject(fn (string $file): bool => basename($file) === self::INDEX_FILENAME)
-            ->values()
-            ->all();
+        return $this->markdownFilesIn($this->directory, excludeIndex: true);
     }
 
     /**
@@ -268,7 +333,52 @@ class RuleRepository
      */
     protected function parsedFiles(): Collection
     {
-        return collect($this->files())
+        return $this->parseAll($this->files());
+    }
+
+    protected function managedDir(): string
+    {
+        return join_paths($this->directory, self::MANAGED_DIRNAME);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function managedFiles(): array
+    {
+        return $this->markdownFilesIn($this->managedDir());
+    }
+
+    /**
+     * @return Collection<int, array{file: string, paths: array<int, string>, body: string}>
+     */
+    protected function parsedManagedFiles(): Collection
+    {
+        return $this->parseAll($this->managedFiles());
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function markdownFilesIn(string $dir, bool $excludeIndex = false): array
+    {
+        if (! File::isDirectory($dir)) {
+            return [];
+        }
+
+        return collect(File::glob(join_paths($dir, '*.md')) ?: [])
+            ->when($excludeIndex, fn (Collection $files): Collection => $files->reject(fn (string $file): bool => basename($file) === self::INDEX_FILENAME))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, string>  $files
+     * @return Collection<int, array{file: string, paths: array<int, string>, body: string}>
+     */
+    protected function parseAll(array $files): Collection
+    {
+        return collect($files)
             ->map(function (string $file): ?array {
                 try {
                     return ['file' => $file, ...$this->parse($file)];
@@ -278,5 +388,15 @@ class RuleRepository
             })
             ->filter()
             ->values();
+    }
+
+    /**
+     * @param  array<int, string>  $paths
+     */
+    protected function renderManagedFile(array $paths, string $title, string $content): string
+    {
+        return $this->renderFrontmatter($paths)
+            .'# '.$title."\n\n"
+            .trim($content)."\n";
     }
 }

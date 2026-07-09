@@ -1,3 +1,7 @@
+---
+paths:
+  - "tests/**"
+---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp

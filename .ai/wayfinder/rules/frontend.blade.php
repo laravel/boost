@@ -1,3 +1,7 @@
+---
+paths:
+  - "resources/js/**"
+---
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp

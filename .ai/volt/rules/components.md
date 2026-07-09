@@ -1,3 +1,8 @@
+---
+paths:
+  - "resources/views/livewire/**"
+  - "resources/views/pages/**"
+---
 # Livewire Volt
 
 - Single-file Livewire components: PHP logic and Blade templates in one file.

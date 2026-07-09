@@ -69,9 +69,14 @@ trait RendersBladeGuidelines
             return '';
         }
 
+        return $this->renderBladeString($content, $bladePath, $data);
+    }
+
+    protected function renderBladeString(string $content, string $path, array $data = []): string
+    {
         $content = $this->processBoostSnippets($content);
 
-        $rendered = $this->renderContent($content, $bladePath, $data);
+        $rendered = $this->renderContent($content, $path, $data);
 
         $rendered = str_replace(array_keys($this->storedSnippets), array_values($this->storedSnippets), $rendered);
 

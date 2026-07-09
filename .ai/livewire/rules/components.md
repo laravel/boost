@@ -1,3 +1,8 @@
+---
+paths:
+  - "app/Livewire/**"
+  - "resources/views/**"
+---
 # Livewire
 
 - Livewire allow to build dynamic, reactive interfaces in PHP without writing JavaScript.

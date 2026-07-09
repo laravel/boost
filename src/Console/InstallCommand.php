@@ -20,11 +20,13 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\McpWriter;
 use Laravel\Boost\Install\Nightwatch;
+use Laravel\Boost\Install\RuleComposer;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\ThirdPartyPackage;
+use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
@@ -365,9 +367,12 @@ class InstallCommand extends Command
     protected function installGuidelines(): void
     {
         $guidelinesAgents = $this->agentsWithGuidelines();
-        $composer = app(GuidelineComposer::class)->config($this->buildGuidelineConfig());
+        $guidelineConfig = $this->buildGuidelineConfig();
+        $composer = app(GuidelineComposer::class)->config($guidelineConfig);
         $guidelines = $composer->guidelines();
         $composedAiGuidelines = $composer->compose();
+
+        $this->syncRuleFiles($guidelineConfig);
 
         $this->installFeature(
             agents: $guidelinesAgents,
@@ -379,6 +384,27 @@ class InstallCommand extends Command
             beforeProcess: fn () => grid($guidelines->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))->sort()->values()->toArray()),
             withDelay: true,
         );
+    }
+
+    protected function syncRuleFiles(GuidelineConfig $guidelineConfig): void
+    {
+        $repository = app(RuleRepository::class);
+
+        if (! config('boost.rules.enabled', true)) {
+            rescue(fn () => $repository->clearManaged(), report: false);
+
+            return;
+        }
+
+        $written = rescue(function () use ($repository, $guidelineConfig): array {
+            $managed = app(RuleComposer::class)->config($guidelineConfig)->composeManaged();
+
+            return $repository->syncManaged($managed);
+        }, rescue: [], report: false);
+
+        if ($written !== []) {
+            $this->info(sprintf('Extracted %d path-scoped rule file%s to .ai/rules/boost', count($written), count($written) === 1 ? '' : 's'));
+        }
     }
 
     protected function installSkills(): void
