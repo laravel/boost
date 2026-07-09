@@ -116,8 +116,7 @@ class GuidelineComposer
     }
 
     /**
-     * All resolved guidelines before the "has content" filter, including entries whose
-     * content lived entirely inside `@scoped` blocks.
+     * All resolved guidelines before the "has content" filter, including `@scoped`-only entries.
      *
      * @return Collection<string, array>
      */
@@ -255,6 +254,7 @@ class GuidelineComposer
     protected function getThirdPartyGuidelines(): Collection
     {
         $guidelines = collect();
+        $packageForKey = [];
 
         foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
             if (Composer::isFirstPartyPackage($package)) {
@@ -262,7 +262,9 @@ class GuidelineComposer
             }
 
             foreach ($this->guidelinesDir($path, true) as $guideline) {
-                $guidelines->put($package, $guideline);
+                $key = $package.'/'.$guideline['name'];
+                $packageForKey[$key] = $package;
+                $guidelines->put($key, $guideline);
             }
         }
 
@@ -271,7 +273,7 @@ class GuidelineComposer
         }
 
         return $guidelines->filter(
-            fn (mixed $guideline, string $name): bool => in_array($name, $this->config->aiGuidelines, true),
+            fn (mixed $guideline, string $key): bool => in_array($packageForKey[$key] ?? $key, $this->config->aiGuidelines, true),
         );
     }
 

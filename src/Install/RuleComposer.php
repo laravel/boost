@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class RuleComposer
 {
-    /** @var Collection<string, array{paths: array<int, string>, content: string, third_party: bool}>|null */
+    /** @var Collection<string, array{paths: array<int, string>, content: string}>|null */
     protected ?Collection $rules = null;
 
     public function __construct(protected GuidelineComposer $guidelines) {}
@@ -17,7 +17,7 @@ class RuleComposer
     /**
      * One entry per rendered `@scoped` block, keyed by guideline key and block index.
      *
-     * @return Collection<string, array{paths: array<int, string>, content: string, third_party: bool}>
+     * @return Collection<string, array{paths: array<int, string>, content: string}>
      */
     public function rules(): Collection
     {
@@ -40,7 +40,6 @@ class RuleComposer
                 $rules->put($key.'#'.$index, [
                     'paths' => $block['paths'],
                     'content' => $block['body'],
-                    'third_party' => $guideline['third_party'],
                 ]);
             }
         });

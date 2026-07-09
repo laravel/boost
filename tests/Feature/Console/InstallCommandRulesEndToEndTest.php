@@ -24,8 +24,7 @@ beforeEach(function (): void {
         ],
     ]));
 
-    // BoostServiceProvider::register() skips all its bindings under app()->runningUnitTests(),
-    // so bind the services InstallCommand resolves via app() the same way it would in production.
+    // BoostServiceProvider::register() skips its bindings under runningUnitTests(), so bind them as production would.
     $this->app->instance(Roster::class, Roster::scan($this->tempBasePath));
     $this->app->instance(RuleRepository::class, new RuleRepository($this->tempBasePath.'/.ai/rules'));
     $this->app->instance(GuidelineConfig::class, new GuidelineConfig);
@@ -85,7 +84,8 @@ it('re-inlines everything and removes the managed directory when rules are disab
 
     expect($claude)
         ->toContain('php artisan test --compact')
-        ->toContain('Pest');
+        ->toContain('Pest')
+        ->toContain('### Model Creation');
 });
 
 it('falls back to inlining scoped content with a warning when rule syncing fails', function (): void {
@@ -106,5 +106,6 @@ it('falls back to inlining scoped content with a warning when rule syncing fails
 
     expect($claude)
         ->toContain('php artisan test --compact')
-        ->toContain('Pest');
+        ->toContain('Pest')
+        ->toContain('### Model Creation');
 });

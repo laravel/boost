@@ -7,6 +7,7 @@ namespace Laravel\Boost\Rules;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
@@ -33,9 +34,7 @@ class RuleRepository
     {
         $dir = $this->managedDir();
 
-        if (File::isDirectory($dir)) {
-            File::deleteDirectory($dir);
-        }
+        $this->removeManagedDir($dir);
 
         if ($files->isEmpty()) {
             $this->reconcileAfterManagedRemoval();
@@ -65,16 +64,31 @@ class RuleRepository
     public function clearManaged(): bool
     {
         $dir = $this->managedDir();
+        $existed = File::isDirectory($dir);
 
+        $this->removeManagedDir($dir);
+
+        if ($existed) {
+            $this->reconcileAfterManagedRemoval();
+        }
+
+        return $existed;
+    }
+
+    /**
+     * Delete the managed directory, throwing if any locked child leaves it partially removed.
+     */
+    protected function removeManagedDir(string $dir): void
+    {
         if (! File::isDirectory($dir)) {
-            return false;
+            return;
         }
 
         File::deleteDirectory($dir);
 
-        $this->reconcileAfterManagedRemoval();
-
-        return true;
+        if (File::exists($dir)) {
+            throw new RuntimeException('Unable to remove managed rules directory: '.$dir);
+        }
     }
 
     protected function reconcileAfterManagedRemoval(): void

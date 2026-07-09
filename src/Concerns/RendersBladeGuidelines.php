@@ -57,18 +57,26 @@ trait RendersBladeGuidelines
         }, $content);
     }
 
-    /**
-     * Swap `@scoped` markers for plain-text sentinels so bodies render in their Blade context.
-     */
     protected function markScopedBlocks(string $content): string
     {
+        $fences = [];
+
+        $content = (string) preg_replace_callback('/```.*?```/s', function (array $matches) use (&$fences): string {
+            $placeholder = '___SCOPED_FENCE_'.count($fences).'___';
+            $fences[$placeholder] = $matches[0];
+
+            return $placeholder;
+        }, $content);
+
         $content = (string) preg_replace_callback(
             '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
             fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
             $content
         );
 
-        return (string) preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $content);
+        $content = (string) preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $content);
+
+        return str_replace(array_keys($fences), array_values($fences), $content);
     }
 
     /**
@@ -146,18 +154,13 @@ trait RendersBladeGuidelines
         return $this->renderBladeStringWithScopedBlocks($content, $bladePath, $data, $stripScoped);
     }
 
-    protected function renderBladeString(string $content, string $path, array $data = [], bool $stripScoped = false): string
-    {
-        return $this->renderBladeStringWithScopedBlocks($content, $path, $data, $stripScoped)['content'];
-    }
-
     /**
      * @return array{content: string, blocks: array<int, array{paths: array<int, string>, body: string}>}
      */
     protected function renderBladeStringWithScopedBlocks(string $content, string $path, array $data = [], bool $stripScoped = false): array
     {
-        $content = $this->markScopedBlocks($content);
         $content = $this->processBoostSnippets($content);
+        $content = $this->markScopedBlocks($content);
 
         $rendered = $this->renderContent($content, $path, $data);
 

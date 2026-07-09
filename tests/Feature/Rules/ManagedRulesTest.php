@@ -143,6 +143,16 @@ it('clearManaged is a no-op when there is nothing managed', function (): void {
     expect(File::isDirectory($this->rulesDir))->toBeFalse();
 });
 
+it('syncManaged throws when the managed directory cannot be fully removed', function (): void {
+    File::makeDirectory($this->rulesDir.'/boost', 0755, true);
+    File::put($this->rulesDir.'/boost/stale.md', 'stale');
+
+    File::partialMock()->shouldReceive('deleteDirectory')->andReturn(false);
+
+    expect(fn (): array => $this->repository->syncManaged(managedRuleFiles('tests')))
+        ->toThrow(RuntimeException::class);
+});
+
 it('syncManaged with an empty collection clears any previously managed files', function (): void {
     $this->repository->syncManaged(managedRuleFiles('tests'));
     expect(File::exists($this->rulesDir.'/boost/tests.md'))->toBeTrue();
