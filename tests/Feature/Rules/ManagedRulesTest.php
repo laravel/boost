@@ -30,7 +30,7 @@ function managedRuleFiles(string ...$slugs): Collection
     return collect($slugs)->mapWithKeys(fn (string $slug): array => [$slug => [
         'paths' => ['tests/**'],
         'title' => ucfirst($slug),
-        'content' => "# {$slug}\n\nRule body for {$slug}.",
+        'content' => "Rule body for {$slug}.",
     ]]);
 }
 

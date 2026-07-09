@@ -29,16 +29,14 @@ class GuidelineComposer
 
     protected GuidelineConfig $config;
 
-    protected ?RuleComposer $ruleComposer = null;
-
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->config = new GuidelineConfig;
     }
 
-    protected function ruleComposer(): RuleComposer
+    public function guidelineAssist(): GuidelineAssist
     {
-        return ($this->ruleComposer ??= new RuleComposer($this->roster))->config($this->config);
+        return $this->buildGuidelineAssist();
     }
 
     protected function rulesExtractionEnabled(): bool
@@ -108,6 +106,20 @@ class GuidelineComposer
      */
     public function guidelines(): Collection
     {
+        return $this->resolvedGuidelines()
+            ->filter(fn ($guideline): bool => filled($guideline['content']));
+    }
+
+    /**
+     * All resolved guidelines before the "has content" filter — includes entries whose only
+     * content lived inside a `@scoped` block, so `guidelines()` sees them as empty once that
+     * block is stripped for inlining. RuleComposer still needs the resolved `path` for these
+     * to go extract the block itself, so it reads from here instead of guidelines().
+     *
+     * @return Collection<string, array>
+     */
+    public function resolvedGuidelines(): Collection
+    {
         if ($this->guidelines instanceof Collection) {
             return $this->guidelines;
         }
@@ -118,7 +130,6 @@ class GuidelineComposer
             ->merge($this->getCoreGuidelines())
             ->merge($this->getConditionalGuidelines())
             ->merge($this->getPackageGuidelines())
-            ->merge($this->rulesExtractionEnabled() ? collect() : $this->ruleComposer()->composeInline())
             ->merge($this->getThirdPartyGuidelines())
             ->reject(fn (array $guideline, string $key): bool => in_array($key, $excluded, true));
 
@@ -127,9 +138,7 @@ class GuidelineComposer
         $customGuidelines = $this->getUserGuidelines()
             ->reject(fn ($guideline): bool => $basePaths->contains($guideline['path']));
 
-        return $this->guidelines = $customGuidelines
-            ->merge($base)
-            ->filter(fn ($guideline): bool => filled($guideline['content']));
+        return $this->guidelines = $customGuidelines->merge($base);
     }
 
     /**
@@ -277,7 +286,6 @@ class GuidelineComposer
                 ->files()
                 ->in($dirPath)
                 ->exclude('skill')
-                ->notPath('#^rules(/|$)#')
                 ->name('*.blade.php')
                 ->name('*.md')
                 ->sortByName();
@@ -308,7 +316,7 @@ class GuidelineComposer
             ];
         }
 
-        $rendered = $this->renderBladeFile($path);
+        $rendered = $this->renderBladeFile($path, [], $this->rulesExtractionEnabled());
 
         $description = Str::of($rendered)
             ->after('# ')

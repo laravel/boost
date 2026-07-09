@@ -67,11 +67,11 @@ test('includes package guidelines only for installed packages', function (): voi
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== pest/rules/testing rules ===')
-        ->not->toContain('=== inertia-react/rules/frontend rules ===');
+        ->toContain('=== pest/core rules ===')
+        ->not->toContain('=== inertia-react/core rules ===');
 });
 
-test('excludes path-scoped rule content from the composed blob when rules are enabled by default', function (): void {
+test('excludes scoped block content from the composed blob when rules are enabled by default', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
@@ -84,70 +84,26 @@ test('excludes path-scoped rule content from the composed blob when rules are en
 
     expect(config('boost.rules.enabled'))->toBeTrue()
         ->and($guidelines)
-        ->not->toContain('=== pest/rules/testing rules ===')
-        ->not->toContain('=== livewire/rules/components rules ===')
+        ->not->toContain('=== pest/core rules ===')
+        ->not->toContain('=== livewire/core rules ===')
         ->toContain('=== foundation rules ===');
 });
 
-test('never discovers guideline templates nested under a rules subdirectory', function (): void {
+test('strips only the scoped portion of a partially-scoped guideline, keeping the rest inline', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
     ]);
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    $customDir = testDirectory('Fixtures/.ai/rules-exclusion-guidelines');
-    @mkdir($customDir.'/rules', 0755, true);
-    file_put_contents($customDir.'/top-level.md', '# Top Level Guideline');
-    file_put_contents($customDir.'/rules/nested.md', "---\npaths:\n  - \"tests/**\"\n---\n# Nested Rule\n");
+    $guidelines = $this->composer->compose();
 
-    try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
-
-        $composed = $composer->compose();
-        $keys = $composer->used();
-
-        expect($composed)
-            ->toContain('Top Level Guideline')
-            ->not->toContain('Nested Rule')
-            ->and($keys)
-            ->toContain('.ai/top-level')
-            ->not->toContain('.ai/rules/nested');
-    } finally {
-        @unlink($customDir.'/rules/nested.md');
-        @unlink($customDir.'/top-level.md');
-        @rmdir($customDir.'/rules');
-        @rmdir($customDir);
-    }
-});
-
-test('does not exclude a coincidentally-named rules directory nested deeper in the tree', function (): void {
-    $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-    ]);
-
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $customDir = testDirectory('Fixtures/.ai/rules-nested-elsewhere-guidelines');
-    @mkdir($customDir.'/some-package/rules', 0755, true);
-    file_put_contents($customDir.'/some-package/rules/notes.md', '# Coincidental Rules Folder');
-
-    try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
-
-        expect($composer->compose())->toContain('Coincidental Rules Folder');
-    } finally {
-        @unlink($customDir.'/some-package/rules/notes.md');
-        @rmdir($customDir.'/some-package/rules');
-        @rmdir($customDir.'/some-package');
-        @rmdir($customDir);
-    }
+    expect(config('boost.rules.enabled'))->toBeTrue()
+        ->and($guidelines)
+        ->toContain('=== laravel/core rules ===')
+        ->toContain('APIs & Eloquent Resources')
+        ->not->toContain('Model Creation')
+        ->not->toContain('When creating new models, create useful factories');
 });
 
 test('excludes conditional guidelines when config is false', function (): void {
@@ -301,9 +257,9 @@ test('handles multiple package versions correctly', function (): void {
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== inertia-react/rules/frontend rules ===')
-        ->toContain('=== inertia-vue/rules/frontend rules ===')
-        ->toContain('=== pest/rules/testing rules ===');
+        ->toContain('=== inertia-react/core rules ===')
+        ->toContain('=== inertia-vue/core rules ===')
+        ->toContain('=== pest/core rules ===');
 });
 
 test('filters out empty guidelines', function (): void {
@@ -382,7 +338,7 @@ test('returns list of used guidelines', function (): void {
         ->toContain('laravel/core')
         ->toContain('deployments')
         ->toContain('laravel/v11')
-        ->toContain('pest/rules/testing');
+        ->toContain('pest/core');
 });
 
 test('includes user custom guidelines from .ai/guidelines directory', function (): void {
@@ -478,8 +434,8 @@ test('excludes PHPUnit guidelines when Pest is present due to package priority',
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== pest/rules/testing rules ===')
-        ->not->toContain('=== phpunit/rules/testing rules ===');
+        ->toContain('=== pest/core rules ===')
+        ->not->toContain('=== phpunit/core rules ===');
 });
 
 test('excludes laravel/mcp guidelines when indirectly required', function (): void {
@@ -505,7 +461,7 @@ test('excludes livewire guidelines when indirectly required', function (): void 
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    expect($this->composer->compose())->not->toContain('=== livewire/rules/components rules ===');
+    expect($this->composer->compose())->not->toContain('=== livewire/core rules ===');
 });
 
 test('includes livewire guidelines when directly required', function (): void {
@@ -518,7 +474,7 @@ test('includes livewire guidelines when directly required', function (): void {
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    expect($this->composer->compose())->toContain('=== livewire/rules/components rules ===');
+    expect($this->composer->compose())->toContain('=== livewire/core rules ===');
 });
 
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
@@ -535,8 +491,8 @@ test('includes PHPUnit guidelines when Pest is not present', function (): void {
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== phpunit/rules/testing rules ===')
-        ->not->toContain('=== pest/rules/testing rules ===');
+        ->toContain('=== phpunit/core rules ===')
+        ->not->toContain('=== pest/core rules ===');
 });
 
 test('includes correct package manager commands in guidelines based on lockfile', function (NodePackageManager $packageManager, string $expectedCommand): void {
@@ -644,7 +600,7 @@ test('includes wayfinder guidelines with inertia integration when both packages 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/rules/frontend rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
@@ -682,7 +638,7 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/rules/frontend rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
@@ -720,7 +676,7 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/rules/frontend rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
@@ -756,7 +712,7 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->toContain('=== wayfinder/rules/frontend rules ===')
+        ->toContain('=== wayfinder/core rules ===')
         ->toContain('# Laravel Wayfinder')
         ->toContain('Use Wayfinder to generate TypeScript functions for Laravel routes');
 });
@@ -1002,12 +958,12 @@ test('excludes package guidelines when listed in exclude config', function (): v
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    config(['boost.guidelines.exclude' => ['pest/rules/testing']]);
+    config(['boost.guidelines.exclude' => ['pest/core']]);
 
     $guidelines = $this->composer->compose();
 
     expect($guidelines)
-        ->not->toContain('=== pest/rules/testing rules ===')
+        ->not->toContain('=== pest/core rules ===')
         ->toContain('=== foundation rules ===');
 });
 
@@ -1090,12 +1046,12 @@ test('excludes guidelines from used() list', function (): void {
 
     $this->roster->shouldReceive('packages')->andReturn($packages);
 
-    config(['boost.guidelines.exclude' => ['pest/rules/testing']]);
+    config(['boost.guidelines.exclude' => ['pest/core']]);
 
     $used = $this->composer->used();
 
     expect($used)
-        ->not->toContain('pest/rules/testing')
+        ->not->toContain('pest/core')
         ->toContain('foundation');
 });
 

@@ -372,7 +372,7 @@ class InstallCommand extends Command
         $guidelines = $composer->guidelines();
         $composedAiGuidelines = $composer->compose();
 
-        $this->syncRuleFiles($guidelineConfig);
+        $this->syncRuleFiles($composer);
 
         $this->installFeature(
             agents: $guidelinesAgents,
@@ -386,7 +386,7 @@ class InstallCommand extends Command
         );
     }
 
-    protected function syncRuleFiles(GuidelineConfig $guidelineConfig): void
+    protected function syncRuleFiles(GuidelineComposer $composer): void
     {
         $repository = app(RuleRepository::class);
 
@@ -396,8 +396,8 @@ class InstallCommand extends Command
             return;
         }
 
-        $written = rescue(function () use ($repository, $guidelineConfig): array {
-            $managed = app(RuleComposer::class)->config($guidelineConfig)->composeManaged();
+        $written = rescue(function () use ($repository, $composer): array {
+            $managed = (new RuleComposer($composer))->composeManaged();
 
             return $repository->syncManaged($managed);
         }, rescue: [], report: false);

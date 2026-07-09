@@ -57,7 +57,71 @@ trait RendersBladeGuidelines
         }, $content);
     }
 
-    protected function renderBladeFile(string $bladePath, array $data = []): string
+    /**
+     * Extract `@scoped(['glob/**'])...@endscoped` blocks from raw (unrendered) guideline content.
+     *
+     * Always collects the blocks so callers can extract path-scoped rules regardless of $remove.
+     * When $remove is true, blocks are cut from the returned content (for callers that compose the
+     * always-inline blob and want scoped content pulled out); when false, a block's body is spliced
+     * back in place with only its `@scoped`/`@endscoped` markers stripped, leaving the file's normal
+     * rendering byte-for-byte as if the markers were never there.
+     *
+     * @return array{content: string, blocks: array<int, array{paths: array<int, string>, body: string}>}
+     */
+    protected function extractScopedBlocks(string $content, bool $remove): array
+    {
+        $blocks = [];
+
+        $stripped = preg_replace_callback(
+            '/(?<!@)@scoped\(\s*(?P<paths>\[.*?\])\s*\)(?P<body>.*?)@endscoped/s',
+            function (array $matches) use (&$blocks, $remove): string {
+                $body = trim($matches['body']);
+
+                $blocks[] = [
+                    'paths' => $this->parseScopedPaths($matches['paths']),
+                    'body' => $body,
+                ];
+
+                return $remove ? '' : $body;
+            },
+            $content
+        );
+
+        return ['content' => (string) $stripped, 'blocks' => $blocks];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function parseScopedPaths(string $expression): array
+    {
+        preg_match_all('/[\'"]([^\'"]+)[\'"]/', $expression, $matches);
+
+        return array_values(array_unique($matches[1]));
+    }
+
+    /**
+     * The raw (unrendered) `@scoped` blocks declared in a guideline file, keyed by nothing in
+     * particular — callers render each body themselves via renderBladeString().
+     *
+     * @return array<int, array{paths: array<int, string>, body: string}>
+     */
+    protected function scopedBlocksIn(string $path): array
+    {
+        if (! file_exists($path)) {
+            return [];
+        }
+
+        $content = file_get_contents($path);
+
+        if ($content === false) {
+            return [];
+        }
+
+        return $this->extractScopedBlocks($content, remove: true)['blocks'];
+    }
+
+    protected function renderBladeFile(string $bladePath, array $data = [], bool $stripScoped = false): string
     {
         if (! file_exists($bladePath)) {
             return '';
@@ -69,11 +133,12 @@ trait RendersBladeGuidelines
             return '';
         }
 
-        return $this->renderBladeString($content, $bladePath, $data);
+        return $this->renderBladeString($content, $bladePath, $data, $stripScoped);
     }
 
-    protected function renderBladeString(string $content, string $path, array $data = []): string
+    protected function renderBladeString(string $content, string $path, array $data = [], bool $stripScoped = false): string
     {
+        $content = $this->extractScopedBlocks($content, $stripScoped)['content'];
         $content = $this->processBoostSnippets($content);
 
         $rendered = $this->renderContent($content, $path, $data);

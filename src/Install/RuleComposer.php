@@ -6,45 +6,32 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Laravel\Boost\Concerns\BuildsGuidelineAssist;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
-use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
-use Laravel\Boost\Rules\RuleFrontmatter;
-use Laravel\Boost\Support\Composer;
-use Laravel\Roster\Package;
-use Laravel\Roster\Roster;
-use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 
 class RuleComposer
 {
-    use BuildsGuidelineAssist;
-    use DiscoverPackagePaths;
     use RendersBladeGuidelines;
 
-    /** @var Collection<string, array{name: string, paths: array<int, string>, content: string, third_party: bool}>|null */
+    /** @var Collection<string, array{paths: array<int, string>, content: string, third_party: bool}>|null */
     protected ?Collection $rules = null;
 
-    public function __construct(protected Roster $roster, protected GuidelineConfig $config = new GuidelineConfig) {}
+    public function __construct(protected GuidelineComposer $guidelines) {}
 
-    protected function getRoster(): Roster
+    protected function getGuidelineAssist(): GuidelineAssist
     {
-        return $this->roster;
-    }
-
-    public function config(GuidelineConfig $config): self
-    {
-        $this->config = $config;
-        $this->rules = null;
-
-        return $this;
+        return $this->guidelines->guidelineAssist();
     }
 
     /**
-     * All discovered path-scoped rules, keyed by a stable identifier.
+     * All `@scoped` blocks found inside GuidelineComposer's already-resolved guideline files,
+     * one entry per block.
      *
-     * @return Collection<string, array{name: string, paths: array<int, string>, content: string, third_party: bool}>
+     * A scoped block lives in the same file as its guideline's always-inline content, so
+     * whatever already decided that file's fate — package priority/exclusion, a user override
+     * in `.ai/guidelines/`, `boost.guidelines.exclude` — decides the block's fate too. There is
+     * no separate resolution path to keep in sync.
+     *
+     * @return Collection<string, array{paths: array<int, string>, content: string, third_party: bool}>
      */
     public function rules(): Collection
     {
@@ -52,13 +39,31 @@ class RuleComposer
             return $this->rules;
         }
 
-        $excluded = config('boost.guidelines.exclude', []);
+        $rules = collect();
 
-        return $this->rules = collect()
-            ->merge($this->getPackageRules())
-            ->merge($this->getThirdPartyRules())
-            ->reject(fn (array $rule, string $key): bool => in_array($key, $excluded, true))
-            ->filter(fn (array $rule): bool => filled($rule['content']) && $rule['paths'] !== []);
+        $this->guidelines->resolvedGuidelines()->each(function (array $guideline, string $key) use ($rules): void {
+            if ($guideline['path'] === null) {
+                return;
+            }
+
+            foreach ($this->scopedBlocksIn($guideline['path']) as $index => $block) {
+                if ($block['paths'] === []) {
+                    continue;
+                }
+
+                if ($block['body'] === '') {
+                    continue;
+                }
+
+                $rules->put($key.'#'.$index, [
+                    'paths' => $block['paths'],
+                    'content' => trim($this->renderBladeString($block['body'], $guideline['path'])),
+                    'third_party' => $guideline['third_party'],
+                ]);
+            }
+        });
+
+        return $this->rules = $rules;
     }
 
     /**
@@ -94,144 +99,6 @@ class RuleComposer
                     'content' => $content,
                 ]];
             });
-    }
-
-    /**
-     * Flag-off fallback: expose scoped rules as guideline-shaped entries so their content can be
-     * merged into the inline composed blob instead of extracted into `.ai/rules`.
-     *
-     * @return Collection<string, array{content: string, name: string, description: string, path: null, custom: bool, third_party: bool, tokens: float}>
-     */
-    public function composeInline(): Collection
-    {
-        return $this->rules()->map(fn (array $rule): array => [
-            'content' => $rule['content'],
-            'name' => $rule['name'],
-            'description' => Str::of($rule['content'])
-                ->after('# ')
-                ->before("\n")
-                ->trim()
-                ->limit(50)
-                ->whenEmpty(fn () => Str::of('No description provided'))
-                ->value(),
-            'path' => null,
-            'custom' => false,
-            'third_party' => $rule['third_party'],
-            'tokens' => round(str_word_count($rule['content']) * 1.3),
-        ]);
-    }
-
-    protected function getPackageRules(): Collection
-    {
-        return $this->roster->packages()
-            ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
-            ->flatMap(function (Package $package): Collection {
-                $name = $this->normalizePackageName($package->name());
-                $vendorPath = $this->resolveFirstPartyBoostPath($package, 'rules');
-
-                // Merge by filename so a vendor override doesn't hide other bundled files.
-                $bundled = collect($this->rulesDir($name.'/rules'))->keyBy(fn (array $rule): string => $rule['name']);
-                $vendor = $vendorPath !== null
-                    ? collect($this->rulesDir($vendorPath))->keyBy(fn (array $rule): string => $rule['name'])
-                    : collect();
-
-                $rules = collect();
-
-                foreach ($bundled->merge($vendor) as $rule) {
-                    $rules->put($name.'/rules/'.$rule['name'], $rule);
-                }
-
-                $majorVersion = $package->majorVersion();
-
-                if (filled($majorVersion)) {
-                    foreach ($this->rulesDir($name.'/'.$majorVersion.'/rules') as $rule) {
-                        $rules->put($name.'/v'.$majorVersion.'/rules/'.$rule['name'], $rule);
-                    }
-                }
-
-                return $rules;
-            });
-    }
-
-    /**
-     * @return Collection<string, array{name: string, paths: array<int, string>, content: string, third_party: bool}>
-     */
-    protected function getThirdPartyRules(): Collection
-    {
-        $rules = collect();
-        $selected = $this->config->aiGuidelines ?? null;
-
-        foreach (Composer::packagesDirectoriesWithBoostRules() as $package => $path) {
-            if (Composer::isFirstPartyPackage($package)) {
-                continue;
-            }
-
-            if ($selected !== null && ! in_array($package, $selected, true)) {
-                continue;
-            }
-
-            foreach ($this->rulesDir($path, thirdParty: true) as $rule) {
-                $rules->put($package.'/rules/'.$rule['name'], $rule);
-            }
-        }
-
-        return $rules;
-    }
-
-    /**
-     * @return array<int, array{name: string, paths: array<int, string>, content: string, third_party: bool}>
-     */
-    protected function rulesDir(string $dirPath, bool $thirdParty = false): array
-    {
-        if (! is_dir($dirPath)) {
-            $dirPath = $this->getBoostAiPath().DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $dirPath);
-        }
-
-        try {
-            $finder = Finder::create()
-                ->files()
-                ->in($dirPath)
-                ->name('*.blade.php')
-                ->name('*.md')
-                ->sortByName();
-        } catch (DirectoryNotFoundException) {
-            return [];
-        }
-
-        return collect($finder)
-            ->map(fn (SplFileInfo $file): ?array => $this->parseRuleFile($file->getRealPath(), $thirdParty))
-            ->filter()
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @return array{name: string, paths: array<int, string>, content: string, third_party: bool}|null
-     */
-    protected function parseRuleFile(string $path, bool $thirdParty = false): ?array
-    {
-        $raw = file_get_contents($path);
-
-        if ($raw === false) {
-            return null;
-        }
-
-        ['paths' => $paths, 'body' => $body] = RuleFrontmatter::parse($raw);
-
-        if ($paths === []) {
-            return null;
-        }
-
-        $content = str_ends_with($path, '.blade.php')
-            ? $this->renderBladeString($body, $path)
-            : $body;
-
-        return [
-            'name' => str_replace(['.blade.php', '.md'], '', basename($path)),
-            'paths' => $paths,
-            'content' => trim($content),
-            'third_party' => $thirdParty,
-        ];
     }
 
     /**
@@ -284,10 +151,5 @@ class RuleComposer
         }
 
         return $base.'-'.$suffix;
-    }
-
-    protected function getGuidelineAssist(): GuidelineAssist
-    {
-        return $this->buildGuidelineAssist();
     }
 }

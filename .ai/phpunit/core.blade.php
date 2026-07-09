@@ -1,10 +1,7 @@
----
-paths:
-  - "tests/**"
----
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
+@scoped(['tests/**'])
 # PHPUnit
 
 - This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `{{ $assist->artisanCommand('make:test --phpunit {name}') }}` to create a new test.
@@ -19,3 +16,4 @@ paths:
 - To run all tests: `{{ $assist->artisanCommand('test --compact') }}`.
 - To run all tests in a file: `{{ $assist->artisanCommand('test --compact tests/Feature/ExampleTest.php') }}`.
 - To filter on a particular test name: `{{ $assist->artisanCommand('test --compact --filter=testName') }}` (recommended after making a change to a related file).
+@endscoped

@@ -395,8 +395,12 @@ class RuleRepository
      */
     protected function renderManagedFile(array $paths, string $title, string $content): string
     {
-        return $this->renderFrontmatter($paths)
-            .'# '.$title."\n\n"
-            .trim($content)."\n";
+        $content = trim($content);
+
+        // titleFor() only falls back to a slug-derived title when the content has no heading
+        // of its own; when it does, prepending one here would just duplicate it.
+        $heading = str_starts_with($content, '#') ? '' : '# '.$title."\n\n";
+
+        return $this->renderFrontmatter($paths).$heading.$content."\n";
     }
 }
