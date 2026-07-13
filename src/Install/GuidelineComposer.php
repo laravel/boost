@@ -6,7 +6,6 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Laravel\Boost\Concerns\BuildsGuidelineAssist;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
@@ -18,7 +17,6 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class GuidelineComposer
 {
-    use BuildsGuidelineAssist;
     use DiscoverPackagePaths;
     use RendersBladeGuidelines;
 
@@ -254,7 +252,6 @@ class GuidelineComposer
     protected function getThirdPartyGuidelines(): Collection
     {
         $guidelines = collect();
-        $packageForKey = [];
 
         foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
             if (Composer::isFirstPartyPackage($package)) {
@@ -262,9 +259,7 @@ class GuidelineComposer
             }
 
             foreach ($this->guidelinesDir($path, true) as $guideline) {
-                $key = $package.'/'.$guideline['name'];
-                $packageForKey[$key] = $package;
-                $guidelines->put($key, $guideline);
+                $guidelines->put($package.'/'.$guideline['name'], $guideline);
             }
         }
 
@@ -273,7 +268,7 @@ class GuidelineComposer
         }
 
         return $guidelines->filter(
-            fn (mixed $guideline, string $key): bool => in_array($packageForKey[$key] ?? $key, $this->config->aiGuidelines, true),
+            fn (mixed $guideline, string $key): bool => in_array(Str::beforeLast($key, '/'), $this->config->aiGuidelines, true),
         );
     }
 
@@ -410,6 +405,6 @@ class GuidelineComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return $this->buildGuidelineAssist();
+        return new GuidelineAssist($this->roster, $this->config);
     }
 }

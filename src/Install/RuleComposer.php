@@ -107,12 +107,10 @@ class RuleComposer
     protected function uniqueSlug(array $paths, array $taken): string
     {
         $lastSegments = collect($paths)
-            ->map(fn (string $glob): array => Str::of($glob)
+            ->map(fn (string $glob): string => (string) Str::of($glob)
                 ->explode('/')
-                ->filter(fn (string $segment): bool => filled($segment) && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
-                ->values()
-                ->all())
-            ->map(fn (array $segments): string => (string) end($segments))
+                ->filter(fn (string $segment): bool => filled($segment) && ! Str::contains($segment, ['*', '.']))
+                ->last())
             ->filter()
             ->unique()
             ->sort()

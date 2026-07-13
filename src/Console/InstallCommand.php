@@ -412,7 +412,7 @@ class InstallCommand extends Command
         }
 
         if ($written !== []) {
-            $this->info(sprintf('Extracted %d path-scoped rule file%s to .ai/rules/boost', count($written), count($written) === 1 ? '' : 's'));
+            $this->info(sprintf('Extracted %d path-scoped %s to .ai/rules/boost', count($written), Str::plural('rule file', count($written))));
         }
     }
 

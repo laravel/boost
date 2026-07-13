@@ -6,7 +6,6 @@ namespace Laravel\Boost\Install;
 
 use Exception;
 use Illuminate\Support\Collection;
-use Laravel\Boost\Concerns\BuildsGuidelineAssist;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
@@ -16,7 +15,6 @@ use Symfony\Component\Yaml\Yaml;
 
 class SkillComposer
 {
-    use BuildsGuidelineAssist;
     use DiscoverPackagePaths;
     use RendersBladeGuidelines;
 
@@ -257,6 +255,6 @@ class SkillComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return $this->buildGuidelineAssist();
+        return new GuidelineAssist($this->roster, $this->config);
     }
 }
