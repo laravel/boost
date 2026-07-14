@@ -10,6 +10,22 @@ use Illuminate\View\ComponentAttributeBag;
 
 class BrowserLogger
 {
+    private const AllBrowserLogTypes = [
+        'log',
+        'debug',
+        'info',
+        'warning',
+        'error',
+        'table',
+    ];
+
+    private const BrowserLogLevelTypes = [
+        'error' => ['error'],
+        'warning' => ['warning', 'error'],
+        'info' => ['info', 'warning', 'error'],
+        'debug' => self::AllBrowserLogTypes,
+    ];
+
     public static function getScript(): string
     {
         $endpoint = Route::has('boost.browser-logs')
@@ -20,7 +36,7 @@ class BrowserLogger
             'id' => 'browser-logger-active',
         ]);
 
-        $levels = json_encode(config('boost.browser_log_levels') ?? ['debug']);
+        $captureTypes = json_encode(self::captureTypes(config('boost.browser_log_levels')), JSON_THROW_ON_ERROR);
 
         if ($nonce = Vite::cspNonce()) {
             $attributes = $attributes->merge(['nonce' => $nonce]);
@@ -32,19 +48,14 @@ class BrowserLogger
     const ENDPOINT = '{$endpoint}';
     const logQueue = [];
     let flushTimeout = null;
-    let levels = {$levels};
-    const severityMap = {
-        error: ['error'],
-        warning: ['warning', 'error'],
-        info: ['info', 'warning', 'error'],
-        debug: ['log', 'info', 'warning', 'error', 'table']
-    };
+    const captureTypes = {$captureTypes};
 
     console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
 
     // Store original console methods
     const originalConsole = {
         log: console.log,
+        debug: console.debug,
         info: console.info,
         error: console.error,
         warn: console.warn,
@@ -77,19 +88,7 @@ class BrowserLogger
 
     // Determine if a log type should be captured based on configured levels
     function shouldCapture(type) {
-        const normalizedType = normalizeType(type);
-
-        if (!Array.isArray(levels)) {
-            return false;
-        }
-
-        if (levels.length === 0) {
-            return true;
-        }
-
-        const expandedLevels = levels.flatMap(level => severityMap[level] ?? [level]);
-
-        return expandedLevels.includes(normalizedType);
+        return captureTypes.includes(normalizeType(type));
     }
 
     // Batch and send logs
@@ -118,7 +117,7 @@ class BrowserLogger
     }
 
     // Intercept console methods
-    ['log', 'info', 'error', 'warn', 'table'].forEach(method => {
+    ['log', 'debug', 'info', 'error', 'warn', 'table'].forEach(method => {
         console[method] = function(...args) {
             // Call original method
             originalConsole[method].apply(console, args);
@@ -259,5 +258,32 @@ class BrowserLogger
 })();
 </script>
 HTML;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function captureTypes(mixed $levels): array
+    {
+        if (! is_array($levels) || $levels === []) {
+            return self::AllBrowserLogTypes;
+        }
+
+        $captureTypes = [];
+
+        foreach ($levels as $level) {
+            if (! is_string($level)) {
+                continue;
+            }
+
+            $level = strtolower(trim($level));
+            $level = $level === 'warn' ? 'warning' : $level;
+
+            foreach (self::BrowserLogLevelTypes[$level] ?? [$level] as $type) {
+                $captureTypes[] = $type;
+            }
+        }
+
+        return array_values(array_unique($captureTypes));
     }
 }
