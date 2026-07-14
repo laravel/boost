@@ -406,7 +406,6 @@ class RuleRepository
     {
         $content = trim($content);
 
-        // Content that already starts with a markdown heading supplies its own title.
         $heading = preg_match('/^#+\s/', $content) === 1 ? '' : '# '.$title."\n\n";
 
         return $this->renderFrontmatter($paths).$heading.$content."\n";

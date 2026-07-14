@@ -361,7 +361,6 @@ class GuidelineComposer
 
     protected function guidelinePath(string $path, ?string $overrideKey = null): ?string
     {
-        // Check for a user override first: a guideline may have no bundled or vendor default at all.
         if ($overrideKey !== null) {
             foreach (['.blade.php', '.md'] as $ext) {
                 $customPath = $this->prependUserGuidelinePath($overrideKey.$ext);

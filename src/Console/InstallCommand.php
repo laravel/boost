@@ -371,7 +371,6 @@ class InstallCommand extends Command
         $guidelineConfig = $this->buildGuidelineConfig();
         $composer = app(GuidelineComposer::class)->config($guidelineConfig);
 
-        // Must run before compose(): a failed sync falls back to inlining scoped content.
         $this->syncRuleFiles($composer);
 
         $guidelines = $composer->guidelines();
