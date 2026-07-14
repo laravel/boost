@@ -69,14 +69,12 @@ return [
     | Browser Log Levels
     |--------------------------------------------------------------------------
     |
-    | These console log levels will be captured by Boost's browser logger.
-    | You may limit this to ['error'] if warnings or info logs are too noisy.
+    | This option controls which browser console log levels will be captured by
+    | Boost's browser logger. You may trim this list down to ['error'] when
+    | warnings, info, and debug messages become too noisy to be helpful.
     |
     */
 
-    'browser_log_levels' => array_values(array_filter(array_map(
-        'trim',
-        explode(',', env('BOOST_BROWSER_LOG_LEVELS', 'error,warning,info,debug'))
-    ))),
+    'browser_log_levels' => explode(',', env('BOOST_BROWSER_LOG_LEVELS', 'error,warning,info,debug')),
 
 ];
