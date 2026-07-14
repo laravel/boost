@@ -32,6 +32,7 @@ use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
+use RuntimeException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -401,7 +402,16 @@ class InstallCommand extends Command
         try {
             $written = $repository->syncManaged((new RuleComposer($composer))->composeManaged());
         } catch (Throwable) {
-            rescue(fn () => $repository->clearManaged(), report: false);
+            try {
+                $repository->clearManaged();
+            } catch (Throwable $cleanupError) {
+                throw new RuntimeException(
+                    'Failed to write path-scoped rules and could not clear .ai/rules/boost. '
+                    .'Resolve the directory (it may be locked) and re-run boost:install.',
+                    0,
+                    $cleanupError,
+                );
+            }
 
             $composer->withoutRuleExtraction();
 

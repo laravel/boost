@@ -258,8 +258,16 @@ class GuidelineComposer
                 continue;
             }
 
-            foreach ($this->guidelinesDir($path, true) as $guideline) {
-                $guidelines->put($package.'/'.$guideline['name'], $guideline);
+            $root = str_replace('\\', '/', (string) (realpath($path) ?: $path));
+
+            $keyed = $this->guidelinesDir(
+                $path,
+                true,
+                fn (SplFileInfo $file): string => $package.'/'.$this->relativeGuidelineKey($root, $file->getRealPath()),
+            );
+
+            foreach ($keyed as $key => $guideline) {
+                $guidelines->put($key, $guideline);
             }
         }
 
@@ -267,15 +275,36 @@ class GuidelineComposer
             return $guidelines;
         }
 
-        return $guidelines->filter(
-            fn (mixed $guideline, string $key): bool => in_array(Str::beforeLast($key, '/'), $this->config->aiGuidelines, true),
-        );
+        return $guidelines->filter(fn (mixed $guideline, string $key): bool => $this->keyBelongsToSelectedPackage($key));
+    }
+
+    private function keyBelongsToSelectedPackage(string $key): bool
+    {
+        foreach ($this->config->aiGuidelines as $package) {
+            if ($key === $package || str_starts_with($key, $package.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function relativeGuidelineKey(string $root, string $file): string
+    {
+        $file = str_replace('\\', '/', $file);
+
+        $relative = str_starts_with($file, $root)
+            ? ltrim(Str::after($file, $root), '/')
+            : basename($file);
+
+        return (string) preg_replace('/\.(blade\.php|md)$/', '', $relative);
     }
 
     /**
+     * @param  ?callable(SplFileInfo): string  $keyResolver  keys each entry and doubles as its override key
      * @return array<array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool, scoped?: array<int, array{paths: array<int, string>, body: string}>, tokens?: float}>
      */
-    protected function guidelinesDir(string $dirPath, bool $thirdParty = false): array
+    protected function guidelinesDir(string $dirPath, bool $thirdParty = false, ?callable $keyResolver = null): array
     {
         if (! is_dir($dirPath)) {
             $dirPath = str_replace('/', DIRECTORY_SEPARATOR, $this->getBoostAiPath().'/'.$dirPath);
@@ -293,8 +322,18 @@ class GuidelineComposer
             return [];
         }
 
+        if ($keyResolver === null) {
+            return collect($finder)
+                ->map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty))
+                ->all();
+        }
+
         return collect($finder)
-            ->map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty))
+            ->mapWithKeys(function (SplFileInfo $file) use ($thirdParty, $keyResolver): array {
+                $key = $keyResolver($file);
+
+                return [$key => $this->guideline($file->getRealPath(), $thirdParty, $key)];
+            })
             ->all();
     }
 

@@ -109,3 +109,15 @@ it('falls back to inlining scoped content with a warning when rule syncing fails
         ->toContain('Pest')
         ->toContain('### Model Creation');
 });
+
+it('aborts instead of re-inlining when both rule syncing and cleanup fail', function (): void {
+    config(['boost.rules.enabled' => true]);
+
+    $this->mock(RuleRepository::class, function ($mock): void {
+        $mock->shouldReceive('syncManaged')->andThrow(new RuntimeException('disk full'));
+        $mock->shouldReceive('clearManaged')->andThrow(new RuntimeException('locked directory'));
+    });
+
+    expect(fn (): int => $this->artisan('boost:install', ['--guidelines' => true, '--no-interaction' => true])->run())
+        ->toThrow(RuntimeException::class, 'could not clear .ai/rules/boost');
+});
