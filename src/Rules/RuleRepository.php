@@ -99,7 +99,7 @@ class RuleRepository
             return;
         }
 
-        $indexPath = join_paths($this->directory, self::INDEX_FILENAME);
+        $indexPath = $this->indexPath();
 
         if (File::exists($indexPath)) {
             File::delete($indexPath);
@@ -152,7 +152,7 @@ class RuleRepository
             ."Before planning or editing, find the row whose globs match the file's path and read that rule file.\n\n"
             .$table."\n";
 
-        $path = join_paths($this->directory, self::INDEX_FILENAME);
+        $path = $this->indexPath();
 
         File::ensureDirectoryExists($this->directory);
         File::put($path, $body);
@@ -210,7 +210,7 @@ class RuleRepository
     {
         $segments = $this->meaningfulSegments($glob);
         $taken = $allParsed->map(fn (array $parsed): string => $parsed['file'])->all();
-        $reserved = join_paths($this->directory, self::INDEX_FILENAME);
+        $reserved = $this->indexPath();
 
         $candidates = [];
         $counter = count($segments);
@@ -258,7 +258,7 @@ class RuleRepository
     {
         return Str::of($glob)
             ->explode('/')
-            ->filter(static fn (string $segment): bool => filled($segment) && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
+            ->filter(static fn (string $segment): bool => filled($segment) && ! Str::contains($segment, ['*', '.']))
             ->values()
             ->all();
     }
@@ -348,6 +348,11 @@ class RuleRepository
     protected function managedDir(): string
     {
         return join_paths($this->directory, self::MANAGED_DIRNAME);
+    }
+
+    protected function indexPath(): string
+    {
+        return join_paths($this->directory, self::INDEX_FILENAME);
     }
 
     /**

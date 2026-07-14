@@ -34,6 +34,15 @@ function managedRuleFiles(string ...$slugs): Collection
     ]]);
 }
 
+function recordRule(RuleRepository $repository, string $glob, string $title, string $note): void
+{
+    (new RecordRule($repository))->handle(new Request([
+        'glob' => $glob,
+        'title' => $title,
+        'note' => $note,
+    ]));
+}
+
 it('writes managed rule files under a boost subdirectory with frontmatter', function (): void {
     $written = $this->repository->syncManaged(managedRuleFiles('tests'));
 
@@ -63,11 +72,7 @@ it('wipes and regenerates managed files on every sync', function (): void {
 });
 
 it('leaves root user-recorded rule files untouched when syncing managed rules', function (): void {
-    (new RecordRule($this->repository))->handle(new Request([
-        'glob' => 'app/Http/Controllers/**',
-        'title' => 'Team rule',
-        'note' => 'A team-recorded rule.',
-    ]));
+    recordRule($this->repository, 'app/Http/Controllers/**', 'Team rule', 'A team-recorded rule.');
 
     $this->repository->syncManaged(managedRuleFiles('tests'));
 
@@ -79,11 +84,7 @@ it('leaves root user-recorded rule files untouched when syncing managed rules', 
 it('record-rule never appends into a managed rule file even with a matching glob', function (): void {
     $this->repository->syncManaged(managedRuleFiles('tests'));
 
-    (new RecordRule($this->repository))->handle(new Request([
-        'glob' => 'tests/**',
-        'title' => 'Team testing note',
-        'note' => 'A team addition.',
-    ]));
+    recordRule($this->repository, 'tests/**', 'Team testing note', 'A team addition.');
 
     $managed = File::get($this->rulesDir.'/boost/tests.md');
     expect($managed)->not->toContain('Team testing note');
@@ -94,11 +95,7 @@ it('record-rule never appends into a managed rule file even with a matching glob
 });
 
 it('includes both root and managed rows in the index sorted by path', function (): void {
-    (new RecordRule($this->repository))->handle(new Request([
-        'glob' => 'app/Models/**',
-        'title' => 'Team rule',
-        'note' => 'note',
-    ]));
+    recordRule($this->repository, 'app/Models/**', 'Team rule', 'note');
 
     $this->repository->syncManaged(managedRuleFiles('tests'));
 
@@ -110,11 +107,7 @@ it('includes both root and managed rows in the index sorted by path', function (
 });
 
 it('clearManaged removes the managed directory and regenerates the index when root rules remain', function (): void {
-    (new RecordRule($this->repository))->handle(new Request([
-        'glob' => 'app/Models/**',
-        'title' => 'Team rule',
-        'note' => 'note',
-    ]));
+    recordRule($this->repository, 'app/Models/**', 'Team rule', 'note');
 
     $this->repository->syncManaged(managedRuleFiles('tests'));
 
@@ -172,11 +165,7 @@ it('syncManaged with an empty collection removes the whole rules directory when 
 });
 
 it('syncManaged with an empty collection keeps the index when root rules remain', function (): void {
-    (new RecordRule($this->repository))->handle(new Request([
-        'glob' => 'app/Models/**',
-        'title' => 'Team rule',
-        'note' => 'note',
-    ]));
+    recordRule($this->repository, 'app/Models/**', 'Team rule', 'note');
 
     $this->repository->syncManaged(collect());
 

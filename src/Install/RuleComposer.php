@@ -59,12 +59,7 @@ class RuleComposer
         return $this->rules()
             ->groupBy(fn (array $rule): string => $this->pathsKey($rule['paths']))
             ->mapWithKeys(function (Collection $group) use (&$slugs): array {
-                $paths = collect($group->first()['paths'])
-                    ->map(fn (string $path): string => trim($path))
-                    ->unique()
-                    ->sort()
-                    ->values()
-                    ->all();
+                $paths = $this->normalizePaths($group->first()['paths'])->all();
 
                 $content = MarkdownFormatter::format(
                     $group->map(fn (array $rule): string => trim($rule['content']))->filter()->join("\n\n")
@@ -86,7 +81,20 @@ class RuleComposer
      */
     protected function pathsKey(array $paths): string
     {
-        return collect($paths)->map(fn (string $path): string => trim($path))->unique()->sort()->values()->join('|');
+        return $this->normalizePaths($paths)->join('|');
+    }
+
+    /**
+     * @param  array<int, string>  $paths
+     * @return Collection<int, string>
+     */
+    protected function normalizePaths(array $paths): Collection
+    {
+        return collect($paths)
+            ->map(fn (string $path): string => trim($path))
+            ->unique()
+            ->sort()
+            ->values();
     }
 
     protected function titleFor(string $content, string $fallbackSlug): string

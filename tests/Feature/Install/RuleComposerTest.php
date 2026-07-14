@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
@@ -35,6 +36,42 @@ function composerWithFixtureGuidelines(Roster $roster, Herd $herd, string $fixtu
         ->andReturnUsing(fn ($path = ''): string => $dir.'/'.ltrim((string) $path, '/'));
 
     return $guidelines;
+}
+
+/**
+ * Scaffold third-party package guideline files under vendor/, require them in composer.json,
+ * run the assertions, then remove everything the scaffold created.
+ *
+ * @param  array<string, array<string, string>>  $packages  package name => [relative guideline file => contents]
+ */
+function withThirdPartyPackages(array $packages, Closure $assert): void
+{
+    $requires = [];
+
+    foreach ($packages as $name => $files) {
+        $requires[$name] = '^1.0';
+        $guidelineDir = base_path('vendor/'.$name.'/resources/boost/guidelines');
+
+        foreach ($files as $relativePath => $contents) {
+            $path = $guidelineDir.'/'.$relativePath;
+
+            File::ensureDirectoryExists(dirname($path));
+            File::put($path, $contents);
+        }
+    }
+
+    File::put(base_path('composer.json'), (string) json_encode(['require' => $requires]));
+
+    try {
+        $assert();
+    } finally {
+        foreach (array_keys($packages) as $name) {
+            File::deleteDirectory(base_path('vendor/'.explode('/', $name)[0]));
+        }
+
+        @rmdir(base_path('vendor'));
+        File::delete(base_path('composer.json'));
+    }
 }
 
 test('discovers a scoped block for an installed package', function (): void {
@@ -149,42 +186,28 @@ test('overriding a guideline via .ai/guidelines also overrides its scoped blocks
 test('a scoped block from a third-party package guideline produces a managed rule file', function (): void {
     $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
 
-    $guidelineDir = base_path('vendor/some/third-party/resources/boost/guidelines');
-    @mkdir($guidelineDir, 0755, true);
-    file_put_contents(
-        $guidelineDir.'/core.md',
-        "# Some Third Party\n\n@scoped(['app/Widgets/**'])\n## Widgets\n\nThird-party widget rule.\n@endscoped\n"
-    );
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
-
-    try {
+    withThirdPartyPackages([
+        'some/third-party' => [
+            'core.md' => "# Some Third Party\n\n@scoped(['app/Widgets/**'])\n## Widgets\n\nThird-party widget rule.\n@endscoped\n",
+        ],
+    ], function (): void {
         $managed = (new RuleComposer($this->guidelines))->composeManaged();
         $widgetFile = $managed->first(fn (array $file): bool => $file['paths'] === ['app/Widgets/**']);
 
         expect($widgetFile)->not->toBeNull()
             ->and($widgetFile['content'])->toContain('Third-party widget rule');
-    } finally {
-        @unlink($guidelineDir.'/core.md');
-        @rmdir($guidelineDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    });
 });
 
 test('two scoped guideline files from one third-party package each produce a rule', function (): void {
     $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
 
-    $guidelineDir = base_path('vendor/some/multi/resources/boost/guidelines');
-    @mkdir($guidelineDir, 0755, true);
-    file_put_contents($guidelineDir.'/core.md', "# Multi Core\n\n@scoped(['app/Alpha/**'])\n## Alpha\n\nAlpha rule.\n@endscoped\n");
-    file_put_contents($guidelineDir.'/extra.md', "# Multi Extra\n\n@scoped(['app/Beta/**'])\n## Beta\n\nBeta rule.\n@endscoped\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/multi' => '^1.0']]));
-
-    try {
+    withThirdPartyPackages([
+        'some/multi' => [
+            'core.md' => "# Multi Core\n\n@scoped(['app/Alpha/**'])\n## Alpha\n\nAlpha rule.\n@endscoped\n",
+            'extra.md' => "# Multi Extra\n\n@scoped(['app/Beta/**'])\n## Beta\n\nBeta rule.\n@endscoped\n",
+        ],
+    ], function (): void {
         $rules = (new RuleComposer($this->guidelines))->rules();
         $alpha = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Alpha/**']);
         $beta = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Beta/**']);
@@ -193,17 +216,7 @@ test('two scoped guideline files from one third-party package each produce a rul
             ->and($alpha['content'])->toContain('Alpha rule')
             ->and($beta)->not->toBeNull()
             ->and($beta['content'])->toContain('Beta rule');
-    } finally {
-        @unlink($guidelineDir.'/core.md');
-        @unlink($guidelineDir.'/extra.md');
-        @rmdir($guidelineDir);
-        @rmdir(base_path('vendor/some/multi/resources/boost'));
-        @rmdir(base_path('vendor/some/multi/resources'));
-        @rmdir(base_path('vendor/some/multi'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    });
 });
 
 test('composeManaged merges rules that share the exact same paths into one file', function (): void {
@@ -395,14 +408,12 @@ test('nested scoped blocks are left inline instead of being mis-scoped', functio
 test('two third-party guideline files sharing a basename in different dirs are both kept', function (): void {
     $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
 
-    $guidelineDir = base_path('vendor/some/nested/resources/boost/guidelines');
-    @mkdir($guidelineDir.'/admin', 0755, true);
-    @mkdir($guidelineDir.'/api', 0755, true);
-    file_put_contents($guidelineDir.'/admin/core.md', "# Admin\n\n@scoped(['app/Admin/**'])\n## Admin\n\nAdmin rule.\n@endscoped\n");
-    file_put_contents($guidelineDir.'/api/core.md', "# Api\n\n@scoped(['app/Api/**'])\n## Api\n\nApi rule.\n@endscoped\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/nested' => '^1.0']]));
-
-    try {
+    withThirdPartyPackages([
+        'some/nested' => [
+            'admin/core.md' => "# Admin\n\n@scoped(['app/Admin/**'])\n## Admin\n\nAdmin rule.\n@endscoped\n",
+            'api/core.md' => "# Api\n\n@scoped(['app/Api/**'])\n## Api\n\nApi rule.\n@endscoped\n",
+        ],
+    ], function (): void {
         $rules = (new RuleComposer($this->guidelines))->rules();
         $admin = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Admin/**']);
         $api = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Api/**']);
@@ -411,87 +422,52 @@ test('two third-party guideline files sharing a basename in different dirs are b
             ->and($admin['content'])->toContain('Admin rule')
             ->and($api)->not->toBeNull()
             ->and($api['content'])->toContain('Api rule');
-    } finally {
-        @unlink($guidelineDir.'/admin/core.md');
-        @unlink($guidelineDir.'/api/core.md');
-        @rmdir($guidelineDir.'/admin');
-        @rmdir($guidelineDir.'/api');
-        @rmdir($guidelineDir);
-        @rmdir(base_path('vendor/some/nested/resources/boost'));
-        @rmdir(base_path('vendor/some/nested/resources'));
-        @rmdir(base_path('vendor/some/nested'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    });
 });
 
 test('a user override in .ai/guidelines overrides a third-party guideline', function (): void {
     $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
 
-    $guidelineDir = base_path('vendor/some/ovr/resources/boost/guidelines');
-    @mkdir($guidelineDir, 0755, true);
-    file_put_contents($guidelineDir.'/core.md', "# Vendor Default\n\nOriginal third-party guidance.\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/ovr' => '^1.0']]));
-
     $overrideDir = base_path('.ai/guidelines/some/ovr');
-    @mkdir($overrideDir, 0755, true);
-    file_put_contents($overrideDir.'/core.md', "# Overridden\n\nProject-specific third-party guidance.\n");
+    File::ensureDirectoryExists($overrideDir);
+    File::put($overrideDir.'/core.md', "# Overridden\n\nProject-specific third-party guidance.\n");
 
     try {
-        $composer = new GuidelineComposer($this->roster, $this->herd);
-        $guideline = $composer->resolvedGuidelines()->get('some/ovr/core');
+        withThirdPartyPackages([
+            'some/ovr' => ['core.md' => "# Vendor Default\n\nOriginal third-party guidance.\n"],
+        ], function (): void {
+            $composer = new GuidelineComposer($this->roster, $this->herd);
+            $guideline = $composer->resolvedGuidelines()->get('some/ovr/core');
 
-        expect($guideline)->not->toBeNull()
-            ->and($guideline['content'])->toContain('Project-specific third-party guidance')
-            ->and($guideline['content'])->not->toContain('Original third-party guidance');
+            expect($guideline)->not->toBeNull()
+                ->and($guideline['content'])->toContain('Project-specific third-party guidance')
+                ->and($guideline['content'])->not->toContain('Original third-party guidance');
+        });
     } finally {
-        @unlink($guidelineDir.'/core.md');
-        @unlink($overrideDir.'/core.md');
-        @rmdir($overrideDir);
-        @rmdir(base_path('.ai/guidelines/some'));
-        @rmdir(base_path('.ai/guidelines'));
-        @rmdir($guidelineDir);
-        @rmdir(base_path('vendor/some/ovr/resources/boost'));
-        @rmdir(base_path('vendor/some/ovr/resources'));
-        @rmdir(base_path('vendor/some/ovr'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
+        File::deleteDirectory(base_path('.ai/guidelines'));
     }
 });
 
 test('third-party package selection matches multi-segment guideline keys', function (): void {
     $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
 
-    $dir = base_path('vendor/some/sel/resources/boost/guidelines');
-    @mkdir($dir.'/admin', 0755, true);
-    file_put_contents($dir.'/admin/core.md', "# Admin\n\nAdmin guidance.\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/sel' => '^1.0']]));
-
-    try {
+    withThirdPartyPackages([
+        'some/sel' => ['admin/core.md' => "# Admin\n\nAdmin guidance.\n"],
+    ], function (): void {
         $selected = new GuidelineConfig;
         $selected->aiGuidelines = ['some/sel'];
+
         $composer = (new GuidelineComposer($this->roster, $this->herd))->config($selected);
 
         expect($composer->resolvedGuidelines()->keys())->toContain('some/sel/admin/core');
 
         $other = new GuidelineConfig;
         $other->aiGuidelines = ['some/other'];
+
         $composer = (new GuidelineComposer($this->roster, $this->herd))->config($other);
 
         expect($composer->resolvedGuidelines()->keys())->not->toContain('some/sel/admin/core');
-    } finally {
-        @unlink($dir.'/admin/core.md');
-        @rmdir($dir.'/admin');
-        @rmdir($dir);
-        @rmdir(base_path('vendor/some/sel/resources/boost'));
-        @rmdir(base_path('vendor/some/sel/resources'));
-        @rmdir(base_path('vendor/some/sel'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    });
 });
 
 test('scopes inertia server-side guidelines to http, routes and js paths', function (): void {
