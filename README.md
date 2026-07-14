@@ -18,23 +18,6 @@ Laravel Boost accelerates AI-assisted development by providing the essential con
 
 Documentation for Laravel Boost can be found on the [Laravel website](https://laravel.com/docs/boost).
 
-## Browser Log Levels
-
-Boost captures browser console output to provide debugging context. Use `BOOST_BROWSER_LOG_LEVELS` to reduce noisy logs:
-
-```env
-BOOST_BROWSER_LOG_LEVELS=warning
-```
-
-| Value | Captured browser events |
-| --- | --- |
-| `error` | `console.error()` and browser errors |
-| `warning` | warnings and errors |
-| `info` | info, warnings, and errors |
-| `debug` | `console.log()`, `console.debug()`, `console.info()`, `console.warn()`, `console.error()`, and `console.table()` |
-
-The default is `debug`, which preserves Boost's existing behavior by capturing all supported browser events. An empty value also preserves that default. To disable browser logging entirely, set `BOOST_BROWSER_LOGS_WATCHER=false`.
-
 ## Contributing
 
 Thank you for considering contributing to Boost! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
