@@ -94,10 +94,25 @@ test('browser logger script contains required functionality', function (): void 
         'browser-logger-active',
         '/_boost/browser-logs',
         'console.log',
+        'console.debug',
         'console.error',
         'window.onerror'
     );
 });
+
+test('browser logger script captures the configured log levels', function (?array $configuredLevels, array $capturedTypes): void {
+    config(['boost.browser_log_levels' => $configuredLevels]);
+
+    expect(BrowserLogger::getScript())->toContain('const captureTypes = '.json_encode($capturedTypes).';');
+})->with([
+    'error' => [['error'], ['error']],
+    'warning' => [['warning'], ['warning', 'error']],
+    'info' => [['info'], ['info', 'warning', 'error']],
+    'debug' => [['debug'], ['log', 'debug', 'info', 'warning', 'error', 'table']],
+    'warn alias' => [['warn'], ['warning', 'error']],
+    'missing configuration' => [null, ['log', 'debug', 'info', 'warning', 'error', 'table']],
+    'empty configuration' => [[], ['log', 'debug', 'info', 'warning', 'error', 'table']],
+]);
 
 test('browser logs endpoint processes logs correctly', function (): void {
     $response = $this->postJson('/_boost/browser-logs', [

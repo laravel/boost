@@ -64,4 +64,17 @@ return [
         'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Browser Log Levels
+    |--------------------------------------------------------------------------
+    |
+    | This option controls which browser console log levels will be captured by
+    | Boost's browser logger. You may trim this list down to ['error'] when
+    | warnings, info, and debug messages become too noisy to be helpful.
+    |
+    */
+
+    'browser_log_levels' => explode(',', env('BOOST_BROWSER_LOG_LEVELS', 'error,warning,info,debug')),
+
 ];

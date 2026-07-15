@@ -10,6 +10,22 @@ use Illuminate\View\ComponentAttributeBag;
 
 class BrowserLogger
 {
+    private const AllBrowserLogTypes = [
+        'log',
+        'debug',
+        'info',
+        'warning',
+        'error',
+        'table',
+    ];
+
+    private const BrowserLogLevelTypes = [
+        'error' => ['error'],
+        'warning' => ['warning', 'error'],
+        'info' => ['info', 'warning', 'error'],
+        'debug' => self::AllBrowserLogTypes,
+    ];
+
     public static function getScript(): string
     {
         $endpoint = Route::has('boost.browser-logs')
@@ -19,6 +35,8 @@ class BrowserLogger
         $attributes = new ComponentAttributeBag([
             'id' => 'browser-logger-active',
         ]);
+
+        $captureTypes = json_encode(self::captureTypes(config('boost.browser_log_levels')), JSON_THROW_ON_ERROR);
 
         if ($nonce = Vite::cspNonce()) {
             $attributes = $attributes->merge(['nonce' => $nonce]);
@@ -30,12 +48,14 @@ class BrowserLogger
     const ENDPOINT = '{$endpoint}';
     const logQueue = [];
     let flushTimeout = null;
+    const captureTypes = {$captureTypes};
 
     console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
 
     // Store original console methods
     const originalConsole = {
         log: console.log,
+        debug: console.debug,
         info: console.info,
         error: console.error,
         warn: console.warn,
@@ -59,6 +79,16 @@ class BrowserLogger
             }
             return value;
         });
+    }
+
+    // Normalize log type for consistency (e.g., 'warn' to 'warning')
+    function normalizeType(type) {
+        return type === 'warn' ? 'warning' : type;
+    }
+
+    // Determine if a log type should be captured based on configured levels
+    function shouldCapture(type) {
+        return captureTypes.includes(normalizeType(type));
     }
 
     // Batch and send logs
@@ -87,13 +117,17 @@ class BrowserLogger
     }
 
     // Intercept console methods
-    ['log', 'info', 'error', 'warn', 'table'].forEach(method => {
+    ['log', 'debug', 'info', 'error', 'warn', 'table'].forEach(method => {
         console[method] = function(...args) {
             // Call original method
             originalConsole[method].apply(console, args);
 
             // Capture log data
             try {
+                if (!shouldCapture(method)) {
+                    return;
+                }
+
                 logQueue.push({
                     type: method,
                     timestamp: new Date().toISOString(),
@@ -119,25 +153,28 @@ class BrowserLogger
     const originalOnError = window.onerror;
     window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
         try {
-            logQueue.push({
-                type: 'uncaught_error',
-                timestamp: new Date().toISOString(),
-                data: [{
-                    message: errorMsg,
-                    filename: url,
-                    lineno: lineNumber,
-                    colno: colNumber,
-                    error: error ? {
-                        name: error.name,
-                        message: error.message,
-                        stack: error.stack
-                    } : null
-                }],
-                url: window.location.href,
-                userAgent: navigator.userAgent
-            });
+            if (shouldCapture('error')) {
+                logQueue.push({
+                    type: 'uncaught_error',
+                    timestamp: new Date().toISOString(),
+                    data: [{
+                        message: errorMsg,
+                        filename: url,
+                        lineno: lineNumber,
+                        colno: colNumber,
+                        error: error ? {
+                            name: error.name,
+                            message: error.message,
+                            stack: error.stack
+                        } : null
+                    }],
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                });
 
-            scheduleFlush();
+                scheduleFlush();
+            }
+
         } catch (e) {
             // Fail silently
         }
@@ -152,6 +189,10 @@ class BrowserLogger
     }
     window.addEventListener('error', (event) => {
         try {
+            if (!shouldCapture('error')) {
+                return false;
+            }
+
             logQueue.push({
                 type: 'window_error',
                 timestamp: new Date().toISOString(),
@@ -180,6 +221,10 @@ class BrowserLogger
     });
     window.addEventListener('unhandledrejection', (event) => {
         try {
+            if (!shouldCapture('error')) {
+                return false;
+            }
+
             logQueue.push({
                 type: 'error',
                 timestamp: new Date().toISOString(),
@@ -213,5 +258,32 @@ class BrowserLogger
 })();
 </script>
 HTML;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function captureTypes(mixed $levels): array
+    {
+        if (! is_array($levels) || $levels === []) {
+            return self::AllBrowserLogTypes;
+        }
+
+        $captureTypes = [];
+
+        foreach ($levels as $level) {
+            if (! is_string($level)) {
+                continue;
+            }
+
+            $level = strtolower(trim($level));
+            $level = $level === 'warn' ? 'warning' : $level;
+
+            foreach (self::BrowserLogLevelTypes[$level] ?? [$level] as $type) {
+                $captureTypes[] = $type;
+            }
+        }
+
+        return array_values(array_unique($captureTypes));
     }
 }
