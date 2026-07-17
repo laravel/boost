@@ -7,6 +7,7 @@ namespace Laravel\Boost\Rules;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
@@ -16,9 +17,97 @@ class RuleRepository
 {
     protected const INDEX_FILENAME = 'index.md';
 
+    protected const MANAGED_DIRNAME = 'boost';
+
     public function __construct(protected string $directory)
     {
         //
+    }
+
+    /**
+     * Replace the Boost-managed rule files, keyed by filename slug, and regenerate the index.
+     *
+     * @param  Collection<string, array{paths: array<int, string>, title: string, content: string}>  $files
+     * @return array<int, string> the written file paths
+     */
+    public function syncManaged(Collection $files): array
+    {
+        $dir = $this->managedDir();
+
+        $this->removeManagedDir($dir);
+
+        if ($files->isEmpty()) {
+            $this->reconcileAfterManagedRemoval();
+
+            return [];
+        }
+
+        File::ensureDirectoryExists($dir);
+
+        $written = [];
+
+        foreach ($files as $slug => $file) {
+            $path = join_paths($dir, $slug.'.md');
+            $written[] = $path;
+
+            File::put($path, $this->renderManagedFile($file['paths'], $file['title'], $file['content']));
+        }
+
+        $this->writeIndex();
+
+        return $written;
+    }
+
+    /**
+     * Remove all Boost-managed rule files. Returns whether the managed directory existed.
+     */
+    public function clearManaged(): bool
+    {
+        $dir = $this->managedDir();
+        $existed = File::isDirectory($dir);
+
+        $this->removeManagedDir($dir);
+
+        if ($existed) {
+            $this->reconcileAfterManagedRemoval();
+        }
+
+        return $existed;
+    }
+
+    /**
+     * Delete the managed directory, throwing if any locked child leaves it partially removed.
+     */
+    protected function removeManagedDir(string $dir): void
+    {
+        if (! File::isDirectory($dir)) {
+            return;
+        }
+
+        File::deleteDirectory($dir);
+
+        if (File::exists($dir)) {
+            throw new RuntimeException('Unable to remove managed rules directory: '.$dir);
+        }
+    }
+
+    protected function reconcileAfterManagedRemoval(): void
+    {
+        if ($this->parsedFiles()->isNotEmpty()) {
+            $this->writeIndex();
+
+            return;
+        }
+
+        $indexPath = $this->indexPath();
+
+        if (File::exists($indexPath)) {
+            File::delete($indexPath);
+        }
+
+        if (File::isDirectory($this->directory) && File::isEmptyDirectory($this->directory)) {
+            File::deleteDirectory($this->directory);
+        }
     }
 
     /**
@@ -48,8 +137,11 @@ class RuleRepository
     public function writeIndex(): string
     {
         $rows = $this->parsedFiles()
+            ->merge($this->parsedManagedFiles())
             ->filter(fn (array $parsed): bool => $parsed['paths'] !== [])
+            ->sortBy(fn (array $parsed): string => $this->relativePath($parsed['file']))
             ->map(fn (array $parsed): string => '| '.implode(', ', $parsed['paths']).' | '.$this->relativePath($parsed['file']).' |')
+            ->values()
             ->join("\n");
 
         $table = $rows === ''
@@ -60,7 +152,7 @@ class RuleRepository
             ."Before planning or editing, find the row whose globs match the file's path and read that rule file.\n\n"
             .$table."\n";
 
-        $path = join_paths($this->directory, self::INDEX_FILENAME);
+        $path = $this->indexPath();
 
         File::ensureDirectoryExists($this->directory);
         File::put($path, $body);
@@ -118,7 +210,7 @@ class RuleRepository
     {
         $segments = $this->meaningfulSegments($glob);
         $taken = $allParsed->map(fn (array $parsed): string => $parsed['file'])->all();
-        $reserved = join_paths($this->directory, self::INDEX_FILENAME);
+        $reserved = $this->indexPath();
 
         $candidates = [];
         $counter = count($segments);
@@ -166,7 +258,7 @@ class RuleRepository
     {
         return Str::of($glob)
             ->explode('/')
-            ->filter(static fn (string $segment): bool => filled($segment) && ! str_contains($segment, '*') && ! str_contains($segment, '.'))
+            ->filter(static fn (string $segment): bool => filled($segment) && ! Str::contains($segment, ['*', '.']))
             ->values()
             ->all();
     }
@@ -234,18 +326,7 @@ class RuleRepository
      */
     protected function parse(string $path): array
     {
-        $raw = (string) preg_replace('/\R/', "\n", (string) File::get($path));
-
-        if (preg_match('/^---\n(.*?)\n---\n?(.*)$/s', $raw, $matches) !== 1) {
-            return ['paths' => [], 'body' => $raw];
-        }
-
-        $front = Yaml::parse($matches[1]) ?: [];
-
-        return [
-            'paths' => array_values(array_filter((array) ($front['paths'] ?? []), is_string(...))),
-            'body' => $matches[2],
-        ];
+        return RuleFrontmatter::parse((string) File::get($path));
     }
 
     /**
@@ -253,14 +334,7 @@ class RuleRepository
      */
     protected function files(): array
     {
-        if (! File::isDirectory($this->directory)) {
-            return [];
-        }
-
-        return collect(File::glob(join_paths($this->directory, '*.md')) ?: [])
-            ->reject(fn (string $file): bool => basename($file) === self::INDEX_FILENAME)
-            ->values()
-            ->all();
+        return $this->markdownFilesIn($this->directory, excludeIndex: true);
     }
 
     /**
@@ -268,7 +342,57 @@ class RuleRepository
      */
     protected function parsedFiles(): Collection
     {
-        return collect($this->files())
+        return $this->parseAll($this->files());
+    }
+
+    protected function managedDir(): string
+    {
+        return join_paths($this->directory, self::MANAGED_DIRNAME);
+    }
+
+    protected function indexPath(): string
+    {
+        return join_paths($this->directory, self::INDEX_FILENAME);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function managedFiles(): array
+    {
+        return $this->markdownFilesIn($this->managedDir());
+    }
+
+    /**
+     * @return Collection<int, array{file: string, paths: array<int, string>, body: string}>
+     */
+    protected function parsedManagedFiles(): Collection
+    {
+        return $this->parseAll($this->managedFiles());
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function markdownFilesIn(string $dir, bool $excludeIndex = false): array
+    {
+        if (! File::isDirectory($dir)) {
+            return [];
+        }
+
+        return collect(File::glob(join_paths($dir, '*.md')) ?: [])
+            ->when($excludeIndex, fn (Collection $files): Collection => $files->reject(fn (string $file): bool => basename($file) === self::INDEX_FILENAME))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, string>  $files
+     * @return Collection<int, array{file: string, paths: array<int, string>, body: string}>
+     */
+    protected function parseAll(array $files): Collection
+    {
+        return collect($files)
             ->map(function (string $file): ?array {
                 try {
                     return ['file' => $file, ...$this->parse($file)];
@@ -278,5 +402,17 @@ class RuleRepository
             })
             ->filter()
             ->values();
+    }
+
+    /**
+     * @param  array<int, string>  $paths
+     */
+    protected function renderManagedFile(array $paths, string $title, string $content): string
+    {
+        $content = trim($content);
+
+        $heading = preg_match('/^#+\s/', $content) === 1 ? '' : '# '.$title."\n\n";
+
+        return $this->renderFrontmatter($paths).$heading.$content."\n";
     }
 }

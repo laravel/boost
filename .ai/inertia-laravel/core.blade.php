@@ -1,3 +1,4 @@
+@scoped(['app/Http/**', 'routes/**', 'resources/js/**'])
 # Inertia
 
 - Inertia creates fully client-side rendered SPAs without modern SPA complexity, leveraging existing server-side patterns.
@@ -22,3 +23,4 @@
 
 - Inertia v1 does not support the following v2 features: deferred props, infinite scrolling (merging props + `WhenVisible`), lazy loading on scroll, polling, or prefetching. Do not use these.
 @endif
+@endscoped
