@@ -10,7 +10,7 @@ use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -29,7 +29,7 @@ class GuidelineComposer
 
     protected bool $extractRules = true;
 
-    public function __construct(protected Roster $roster, protected Herd $herd)
+    public function __construct(protected ProjectManager $project, protected Herd $herd)
     {
         $this->config = new GuidelineConfig;
     }
@@ -47,9 +47,9 @@ class GuidelineComposer
         return $this->extractRules && (bool) config('boost.rules.enabled', true);
     }
 
-    protected function getRoster(): Roster
+    protected function getProject(): ProjectManager
     {
-        return $this->roster;
+        return $this->project;
     }
 
     public function config(GuidelineConfig $config): self
@@ -200,7 +200,7 @@ class GuidelineComposer
 
     protected function getPackageGuidelines(): Collection
     {
-        return $this->roster->packages()
+        return $this->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function (Package $package): Collection {
                 $guidelineDir = $this->normalizePackageName($package->name());
@@ -215,13 +215,13 @@ class GuidelineComposer
                     $guidelineDir.'/core' => $this->resolveGuideline($vendorCorePath, $guidelineDir.'/core'),
                 ]);
 
-                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
+                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->major());
 
                 foreach ($packageGuidelines as $guideline) {
                     $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
 
                     $guidelines->put(
-                        $guidelineDir.'/v'.$package->majorVersion().$suffix,
+                        $guidelineDir.'/v'.$package->major().$suffix,
                         $guideline
                     );
                 }
@@ -443,6 +443,6 @@ class GuidelineComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config);
+        return new GuidelineAssist($this->project, $this->config);
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Support\Config;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
     $this->originalBasePath = base_path();
@@ -25,7 +25,7 @@ beforeEach(function (): void {
     ]));
 
     // BoostServiceProvider::register() skips its bindings under runningUnitTests(), so bind them as production would.
-    $this->app->instance(Roster::class, Roster::scan($this->tempBasePath));
+    $this->app->instance(ProjectManager::class, new ProjectManager);
     $this->app->instance(RuleRepository::class, new RuleRepository($this->tempBasePath.'/.ai/rules'));
     $this->app->instance(GuidelineConfig::class, new GuidelineConfig);
 

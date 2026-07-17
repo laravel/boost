@@ -7,30 +7,25 @@ use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Install\RuleComposer;
-use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->roster = Mockery::mock(Roster::class);
-    $this->roster->shouldReceive('nodePackageManager')->andReturn(NodePackageManager::NPM)->byDefault();
-    $this->roster->shouldReceive('usesVersion')->andReturn(false)->byDefault();
+    $this->project = Mockery::mock(ProjectManager::class);
 
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
 
-    $this->app->instance(Roster::class, $this->roster);
+    $this->app->instance(ProjectManager::class, $this->project);
 
-    $this->guidelines = new GuidelineComposer($this->roster, $this->herd);
+    $this->guidelines = new GuidelineComposer($this->project, $this->herd);
 });
 
-function composerWithFixtureGuidelines(Roster $roster, Herd $herd, string $fixture): GuidelineComposer
+function composerWithFixtureGuidelines(ProjectManager $project, Herd $herd, string $fixture): GuidelineComposer
 {
     $dir = fixture($fixture);
 
-    $guidelines = Mockery::mock(GuidelineComposer::class, [$roster, $herd])->makePartial();
+    $guidelines = Mockery::mock(GuidelineComposer::class, [$project, $herd])->makePartial();
     $guidelines
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => $dir.'/'.ltrim((string) $path, '/'));
@@ -76,11 +71,11 @@ function withThirdPartyPackages(array $packages, Closure $assert): void
 
 test('discovers a scoped block for an installed package', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $rules = (new RuleComposer($this->guidelines))->rules();
 
@@ -95,11 +90,11 @@ test('discovers a scoped block for an installed package', function (): void {
 
 test('renders blade expressions inside a scoped block', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $rules = (new RuleComposer($this->guidelines))->rules();
     $pestRule = $rules->first(fn (array $rule, string $key): bool => str_starts_with($key, 'pest/core#'));
@@ -109,10 +104,10 @@ test('renders blade expressions inside a scoped block', function (): void {
 
 test('a guideline with multiple scoped blocks produces one rule entry per block', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $rules = (new RuleComposer($this->guidelines))->rules();
     $laravelBlocks = $rules->filter(fn (array $rule, string $key): bool => str_starts_with($key, 'laravel/core#'));
@@ -135,13 +130,12 @@ test('a guideline with multiple scoped blocks produces one rule entry per block'
 
 test('excludes rules for a package excluded by priority', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
-        new Package(Packages::PHPUNIT, 'phpunit/phpunit', '10.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('phpunit/phpunit', '10.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->with(Packages::PEST)->andReturn(true);
+    mockProjectPackages($this->project, $packages);
 
     $rules = (new RuleComposer($this->guidelines))->rules();
 
@@ -151,11 +145,11 @@ test('excludes rules for a package excluded by priority', function (): void {
 
 test('excludes rules for a guideline listed in boost.guidelines.exclude', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.guidelines.exclude' => ['pest/core']]);
 
@@ -166,13 +160,13 @@ test('excludes rules for a guideline listed in boost.guidelines.exclude', functi
 
 test('overriding a guideline via .ai/guidelines also overrides its scoped blocks', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/pest-override');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/pest-override');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $pestRule = $rules->first(fn (array $rule, string $key): bool => str_starts_with($key, 'pest/core#'));
@@ -184,7 +178,7 @@ test('overriding a guideline via .ai/guidelines also overrides its scoped blocks
 });
 
 test('a scoped block from a third-party package guideline produces a managed rule file', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     withThirdPartyPackages([
         'some/third-party' => [
@@ -200,7 +194,7 @@ test('a scoped block from a third-party package guideline produces a managed rul
 });
 
 test('two scoped guideline files from one third-party package each produce a rule', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     withThirdPartyPackages([
         'some/multi' => [
@@ -221,13 +215,13 @@ test('two scoped guideline files from one third-party package each produce a rul
 
 test('composeManaged merges rules that share the exact same paths into one file', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
-        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
-        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/wayfinder', '1.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.0'),
+        rosterPackage('inertiajs/inertia-laravel', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $managed = (new RuleComposer($this->guidelines))->composeManaged();
 
@@ -242,12 +236,12 @@ test('composeManaged merges rules that share the exact same paths into one file'
 
 test('composeManaged groups rules with different paths into separate files', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('livewire/livewire', '3.0.0')->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $managed = (new RuleComposer($this->guidelines))->composeManaged();
 
@@ -264,12 +258,12 @@ test('composeManaged groups rules with different paths into separate files', fun
 
 test('a scoped block inside a false Blade conditional is not extracted as a rule', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/conditional');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/conditional');
 
     $rules = (new RuleComposer($guidelines))->rules();
 
@@ -278,9 +272,9 @@ test('a scoped block inside a false Blade conditional is not extracted as a rule
 });
 
 test('a headingless scoped block gets a slug-derived title instead of its first line', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/headingless');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/headingless');
 
     $managed = (new RuleComposer($guidelines))->composeManaged();
     $file = $managed->first(fn (array $file): bool => $file['paths'] === ['app/Widgets/**']);
@@ -291,9 +285,9 @@ test('a headingless scoped block gets a slug-derived title instead of its first 
 });
 
 test('a glob containing a bracket character class survives scoped path parsing', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/bracket-glob');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/bracket-glob');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $rule = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/[Ff]oo/**']);
@@ -303,9 +297,9 @@ test('a glob containing a bracket character class survives scoped path parsing',
 });
 
 test('a scoped block with no parseable paths keeps its content inline instead of losing it', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/empty-paths');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/empty-paths');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $inline = $guidelines->guidelines()->get('.ai/empty')['content'] ?? '';
@@ -315,9 +309,9 @@ test('a scoped block with no parseable paths keeps its content inline instead of
 });
 
 test('a glob containing parentheses survives scoped path parsing', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/paren-glob');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/paren-glob');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $rule = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/(Foo)/**']);
@@ -327,9 +321,9 @@ test('a glob containing parentheses survives scoped path parsing', function (): 
 });
 
 test('nested scoped blocks never leak sentinels into rule content or inline output', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/nested');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/nested');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $inline = $guidelines->guidelines()->get('.ai/nested')['content'] ?? '';
@@ -342,9 +336,9 @@ test('nested scoped blocks never leak sentinels into rule content or inline outp
 });
 
 test('a literal @scoped example inside a fenced code block is not extracted as a rule', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/fenced-literal');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/fenced-literal');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $inline = $guidelines->guidelines()->get('.ai/fenced')['content'] ?? '';
@@ -355,9 +349,9 @@ test('a literal @scoped example inside a fenced code block is not extracted as a
 });
 
 test('a literal @scoped example inside a boostsnippet is not extracted as a rule', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/snippet-literal');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/snippet-literal');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $inline = $guidelines->guidelines()->get('.ai/snippet')['content'] ?? '';
@@ -367,9 +361,9 @@ test('a literal @scoped example inside a boostsnippet is not extracted as a rule
 });
 
 test('a literal @scoped example inside a ~~~ fenced block is not extracted as a rule', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/tilde-fenced');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/tilde-fenced');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $inline = $guidelines->guidelines()->get('.ai/tilde')['content'] ?? '';
@@ -380,20 +374,20 @@ test('a literal @scoped example inside a ~~~ fenced block is not extracted as a 
 });
 
 test('re-inlining a scoped block preserves its indentation instead of trimming it', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     config(['boost.rules.enabled' => false]);
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/indented');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/indented');
     $inline = $guidelines->guidelines()->get('.ai/indented')['content'] ?? '';
 
     expect($inline)->toContain("\n    Indented body line.");
 });
 
 test('nested scoped blocks are left inline instead of being mis-scoped', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
-    $guidelines = composerWithFixtureGuidelines($this->roster, $this->herd, 'rules/nested');
+    $guidelines = composerWithFixtureGuidelines($this->project, $this->herd, 'rules/nested');
 
     $rules = (new RuleComposer($guidelines))->rules();
     $inline = $guidelines->guidelines()->get('.ai/nested')['content'] ?? '';
@@ -406,7 +400,7 @@ test('nested scoped blocks are left inline instead of being mis-scoped', functio
 });
 
 test('two third-party guideline files sharing a basename in different dirs are both kept', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     withThirdPartyPackages([
         'some/nested' => [
@@ -426,7 +420,7 @@ test('two third-party guideline files sharing a basename in different dirs are b
 });
 
 test('a user override in .ai/guidelines overrides a third-party guideline', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     $overrideDir = base_path('.ai/guidelines/some/ovr');
     File::ensureDirectoryExists($overrideDir);
@@ -436,7 +430,7 @@ test('a user override in .ai/guidelines overrides a third-party guideline', func
         withThirdPartyPackages([
             'some/ovr' => ['core.md' => "# Vendor Default\n\nOriginal third-party guidance.\n"],
         ], function (): void {
-            $composer = new GuidelineComposer($this->roster, $this->herd);
+            $composer = new GuidelineComposer($this->project, $this->herd);
             $guideline = $composer->resolvedGuidelines()->get('some/ovr/core');
 
             expect($guideline)->not->toBeNull()
@@ -449,7 +443,7 @@ test('a user override in .ai/guidelines overrides a third-party guideline', func
 });
 
 test('third-party package selection matches multi-segment guideline keys', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     withThirdPartyPackages([
         'some/sel' => ['admin/core.md' => "# Admin\n\nAdmin guidance.\n"],
@@ -457,14 +451,14 @@ test('third-party package selection matches multi-segment guideline keys', funct
         $selected = new GuidelineConfig;
         $selected->aiGuidelines = ['some/sel'];
 
-        $composer = (new GuidelineComposer($this->roster, $this->herd))->config($selected);
+        $composer = (new GuidelineComposer($this->project, $this->herd))->config($selected);
 
         expect($composer->resolvedGuidelines()->keys())->toContain('some/sel/admin/core');
 
         $other = new GuidelineConfig;
         $other->aiGuidelines = ['some/other'];
 
-        $composer = (new GuidelineComposer($this->roster, $this->herd))->config($other);
+        $composer = (new GuidelineComposer($this->project, $this->herd))->config($other);
 
         expect($composer->resolvedGuidelines()->keys())->not->toContain('some/sel/admin/core');
     });
@@ -472,12 +466,11 @@ test('third-party package selection matches multi-segment guideline keys', funct
 
 test('scopes inertia server-side guidelines to http, routes and js paths', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('inertiajs/inertia-laravel', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->andReturn(false)->byDefault();
+    mockProjectPackages($this->project, $packages);
 
     $rules = (new RuleComposer($this->guidelines))->rules();
     $inertiaRule = $rules->first(fn (array $rule, string $key): bool => str_starts_with($key, 'inertia-laravel/core#'));
