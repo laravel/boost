@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.12...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.13...main)
+
+## [v2.4.13](https://github.com/laravel/boost/compare/v2.4.12...v2.4.13) - 2026-07-17
+
+### What's Changed
+
+* feat: add Grok Build agent support by [@csfh](https://github.com/csfh) in https://github.com/laravel/boost/pull/877
+* feat: add configurable browser log levels by [@JaiveerChavda](https://github.com/JaiveerChavda) in https://github.com/laravel/boost/pull/875
+* Prevent script injection into partial HTML responses by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/880
+* Add support for laravel/mcp ^0.9.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/884
+
+### New Contributors
+
+* [@csfh](https://github.com/csfh) made their first contribution in https://github.com/laravel/boost/pull/877
+* [@JaiveerChavda](https://github.com/JaiveerChavda) made their first contribution in https://github.com/laravel/boost/pull/875
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.12...v2.4.13
 
 ## [v2.4.12](https://github.com/laravel/boost/compare/v2.4.11...v2.4.12) - 2026-07-08
 
@@ -415,11 +431,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -488,12 +506,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
