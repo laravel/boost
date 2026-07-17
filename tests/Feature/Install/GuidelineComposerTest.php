@@ -34,6 +34,8 @@ beforeEach(function (): void {
 });
 
 test('includes Inertia React conditional guidelines based on version', function (string $version): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', $version),
@@ -55,6 +57,8 @@ test('includes Inertia React conditional guidelines based on version', function 
 ]);
 
 test('includes package guidelines only for installed packages', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
@@ -67,6 +71,42 @@ test('includes package guidelines only for installed packages', function (): voi
     expect($guidelines)
         ->toContain('=== pest/core rules ===')
         ->not->toContain('=== inertia-react/core rules ===');
+});
+
+test('excludes scoped block content from the composed blob when rules are enabled by default', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect(config('boost.rules.enabled'))->toBeTrue()
+        ->and($guidelines)
+        ->not->toContain('=== pest/core rules ===')
+        ->not->toContain('=== livewire/core rules ===')
+        ->toContain('=== foundation rules ===');
+});
+
+test('strips only the scoped portion of a partially-scoped guideline, keeping the rest inline', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect(config('boost.rules.enabled'))->toBeTrue()
+        ->and($guidelines)
+        ->toContain('=== laravel/core rules ===')
+        ->toContain('URL Generation')
+        ->not->toContain('APIs & Eloquent Resources')
+        ->not->toContain('Model Creation')
+        ->not->toContain('When creating new models, create useful factories');
 });
 
 test('excludes conditional guidelines when config is false', function (): void {
@@ -183,6 +223,8 @@ test('composes guidelines with proper formatting', function (): void {
 });
 
 test('handles multiple package versions correctly', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
@@ -274,6 +316,8 @@ test('omits the project rules pointer when rules are disabled', function (): voi
 });
 
 test('returns list of used guidelines', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.1', true),
@@ -323,6 +367,35 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
         ->toContain('.ai/project-specific');
 });
 
+test('a user override still applies for a package whose bundled core.blade.php no longer exists', function (): void {
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    $customDir = testDirectory('Fixtures/.ai/pest-core-override-guidelines');
+    @mkdir($customDir.'/pest', 0755, true);
+    file_put_contents($customDir.'/pest/core.blade.php', "# Custom Pest Override\n\nAlways use this project's own Pest conventions.\n");
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $guidelines = $composer->guidelines();
+
+        expect($guidelines->get('pest/core')['content'] ?? null)
+            ->toContain('Custom Pest Override');
+    } finally {
+        @unlink($customDir.'/pest/core.blade.php');
+        @rmdir($customDir.'/pest');
+        @rmdir($customDir);
+    }
+});
+
 test('non-empty custom guidelines override Boost guidelines', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
@@ -350,6 +423,8 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
 });
 
 test('excludes PHPUnit guidelines when Pest is present due to package priority', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
@@ -380,6 +455,8 @@ test('excludes laravel/mcp guidelines when indirectly required', function (): vo
 });
 
 test('excludes livewire guidelines when indirectly required', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(false),
@@ -391,6 +468,8 @@ test('excludes livewire guidelines when indirectly required', function (): void 
 });
 
 test('includes livewire guidelines when directly required', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
@@ -402,6 +481,8 @@ test('includes livewire guidelines when directly required', function (): void {
 });
 
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PHPUNIT, 'phpunit/phpunit', '10.0.0'),
@@ -437,6 +518,8 @@ test('includes correct package manager commands in guidelines based on lockfile'
 ]);
 
 test('renderContent handles blade and markdown files correctly', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::VOLT, 'laravel/volt', '1.0.0'),
@@ -488,6 +571,8 @@ test('renderContent handles blade and markdown files correctly', function (): vo
 });
 
 test('includes wayfinder guidelines with inertia integration when both packages are present', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
@@ -524,6 +609,8 @@ test('includes wayfinder guidelines with inertia integration when both packages 
 });
 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
@@ -560,6 +647,8 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
 });
 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
@@ -596,6 +685,8 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
 });
 
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
@@ -630,6 +721,8 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
 });
 
 test('the guidelines are in correct order', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
@@ -688,6 +781,8 @@ test('composeGuidelines filters out empty guidelines', function (): void {
 });
 
 test('correctly converts package names to hyphens in guideline paths', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
@@ -707,6 +802,8 @@ test('correctly converts package names to hyphens in guideline paths', function 
 });
 
 test('includes enabled conditional guidelines and orders them before packages', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
@@ -855,6 +952,8 @@ test('excludes core guidelines when listed in exclude config', function (): void
 });
 
 test('excludes package guidelines when listed in exclude config', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
@@ -941,6 +1040,8 @@ test('ignores non-existent keys in guidelines exclude list', function (): void {
 });
 
 test('excludes guidelines from used() list', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
         new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
@@ -1039,7 +1140,7 @@ test('falls back to .ai/ when vendor guideline path does not exist', function ()
 
     $guidelines = $composer->compose();
 
-    expect($guidelines)->toContain('=== pest/core rules ===');
+    expect($guidelines)->toContain('=== laravel/core rules ===');
 });
 
 test('guideline key is unchanged regardless of vendor or .ai/ source', function (): void {
@@ -1141,7 +1242,7 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
 
     $guidelines = $composer->compose();
 
-    expect($guidelines)->toContain('=== inertia-react/core rules ===');
+    expect($guidelines)->toContain('=== laravel/core rules ===');
 });
 
 test('user override resolves .md files for vendor-sourced guidelines', function (): void {
