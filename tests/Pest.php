@@ -14,6 +14,13 @@ declare(strict_types=1);
 */
 
 use Laravel\Mcp\Response;
+use Laravel\Roster\Ecosystems\Ecosystem;
+use Laravel\Roster\Ecosystems\JsEcosystem;
+use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\Enums\PackageSource;
+use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
 use Tests\TestCase;
 
 use function Pest\testDirectory;
@@ -76,4 +83,34 @@ if (! function_exists('fixture')) {
 function fixtureContent(string $name): string
 {
     return file_get_contents(fixture($name));
+}
+
+function rosterPackage(string $name, string $version, bool $dev = false, ?string $path = null): Package
+{
+    $source = str_starts_with($name, '@') || ! str_contains($name, '/')
+        ? PackageSource::Npm
+        : PackageSource::Composer;
+
+    return new class($name, $version, $source, $dev, false, '', $path) extends Package
+    {
+        public function setDirect(bool $direct = true): self
+        {
+            $this->direct = $direct;
+
+            return $this;
+        }
+    };
+}
+
+function mockProjectPackages(ProjectManager $project, PackageCollection $packages, ?JsPackageManager $packageManager = null): void
+{
+    $php = new PackageCollection($packages->filter(
+        fn (Package $package): bool => $package->source() === PackageSource::Composer,
+    )->values()->all());
+    $js = new PackageCollection($packages->filter(
+        fn (Package $package): bool => $package->source() === PackageSource::Npm,
+    )->values()->all());
+
+    $project->shouldReceive('php')->andReturn(new Ecosystem($php));
+    $project->shouldReceive('js')->andReturn(new JsEcosystem($js, $packageManager));
 }

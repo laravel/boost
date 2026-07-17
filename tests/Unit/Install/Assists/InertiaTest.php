@@ -3,13 +3,12 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Install\Assists\Inertia;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->roster = Mockery::mock(Roster::class);
-    $this->roster->shouldReceive('usesVersion')->andReturn(false);
+    $this->project = Mockery::mock(ProjectManager::class);
 
-    $this->inertia = new Inertia($this->roster);
+    $this->inertia = new Inertia($this->project);
 });
 
 afterEach(function (): void {

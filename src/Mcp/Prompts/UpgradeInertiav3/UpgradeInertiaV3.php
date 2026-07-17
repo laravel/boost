@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Prompts\UpgradeInertiav3;
 
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
+use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Prompt;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 class UpgradeInertiaV3 extends Prompt
 {
@@ -20,31 +20,31 @@ class UpgradeInertiaV3 extends Prompt
 
     protected string $description = 'Provides step-by-step guidance for upgrading from Inertia v2 to v3.';
 
-    public function shouldRegister(Roster $roster): bool
+    public function shouldRegister(ProjectManager $project): bool
     {
-        if ($roster->uses(Packages::INERTIA_LARAVEL)) {
+        if ($project->php()->uses(PackageRegistry::INERTIA_LARAVEL)) {
             return true;
         }
 
-        if ($roster->uses(Packages::INERTIA_REACT)) {
+        if ($project->js()->uses(PackageRegistry::INERTIA_REACT)) {
             return true;
         }
 
-        if ($roster->uses(Packages::INERTIA_VUE)) {
+        if ($project->js()->uses(PackageRegistry::INERTIA_VUE)) {
             return true;
         }
 
-        return $roster->uses(Packages::INERTIA_SVELTE);
+        return $project->js()->uses(PackageRegistry::INERTIA_SVELTE);
     }
 
     public function handle(): Response
     {
-        $roster = $this->getGuidelineAssist()->roster;
+        $project = $this->getGuidelineAssist()->project;
 
         $content = $this->renderBladeFile(__DIR__.'/upgrade-inertia-v3.blade.php', [
-            'usesReact' => $roster->uses(Packages::INERTIA_REACT),
-            'usesVue' => $roster->uses(Packages::INERTIA_VUE),
-            'usesSvelte' => $roster->uses(Packages::INERTIA_SVELTE),
+            'usesReact' => $project->js()->uses(PackageRegistry::INERTIA_REACT),
+            'usesVue' => $project->js()->uses(PackageRegistry::INERTIA_VUE),
+            'usesSvelte' => $project->js()->uses(PackageRegistry::INERTIA_SVELTE),
         ]);
 
         return Response::text($content);

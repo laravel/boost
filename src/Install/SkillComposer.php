@@ -10,7 +10,7 @@ use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillComposer
@@ -21,14 +21,14 @@ class SkillComposer
     /** @var Collection<string, Skill>|null */
     protected ?Collection $skills = null;
 
-    public function __construct(protected Roster $roster, protected GuidelineConfig $config = new GuidelineConfig)
+    public function __construct(protected ProjectManager $project, protected GuidelineConfig $config = new GuidelineConfig)
     {
         //
     }
 
-    protected function getRoster(): Roster
+    protected function getProject(): ProjectManager
     {
-        return $this->roster;
+        return $this->project;
     }
 
     public function config(GuidelineConfig $config): self
@@ -65,7 +65,7 @@ class SkillComposer
     protected function getBoostSkills(): Collection
     {
         /** @var Collection<string, Skill> $skills */
-        $skills = $this->getRoster()->packages()
+        $skills = $this->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->collect()
             ->flatMap(function (Package $package): Collection {
@@ -79,7 +79,7 @@ class SkillComposer
 
                 $aiPath = $this->getBoostAiPath().DIRECTORY_SEPARATOR.$name;
                 $aiSkills = is_dir($aiPath)
-                    ? $this->discoverSkillsFromPath($aiPath, $name, $package->majorVersion())
+                    ? $this->discoverSkillsFromPath($aiPath, $name, $package->major() === null ? null : (string) $package->major())
                     : collect();
 
                 return $aiSkills->merge($vendorSkills);
@@ -255,6 +255,6 @@ class SkillComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config);
+        return new GuidelineAssist($this->project, $this->config);
     }
 }

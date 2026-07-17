@@ -4,21 +4,19 @@ declare(strict_types=1);
 
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Mcp\Request;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 test('it returns application info with packages', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '2.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '2.0.0'),
     ]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
-    $tool = new ApplicationInfo($roster);
+    $tool = new ApplicationInfo($project);
     $response = $tool->handle(new Request([]));
 
     expect($response)->isToolResult()
@@ -43,10 +41,10 @@ test('it returns application info with packages', function (): void {
 });
 
 test('it returns application info with no packages', function (): void {
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([]));
 
-    $tool = new ApplicationInfo($roster);
+    $tool = new ApplicationInfo($project);
     $response = $tool->handle(new Request([]));
 
     expect($response)->isToolResult()
@@ -61,12 +59,12 @@ test('it returns application info with no packages', function (): void {
 
 it('returns updated package versions when roster binding changes in container', function (): void {
     $initialPackages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($initialPackages);
-    $this->app->instance(Roster::class, $roster);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $initialPackages);
+    $this->app->instance(ProjectManager::class, $project);
 
     $tool = app(ApplicationInfo::class);
     $response = $tool->handle(new Request([]));
@@ -80,13 +78,13 @@ it('returns updated package versions when roster binding changes in container', 
     });
 
     $updatedPackages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '12.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '12.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $updatedRoster = Mockery::mock(Roster::class);
-    $updatedRoster->shouldReceive('packages')->andReturn($updatedPackages);
-    $this->app->instance(Roster::class, $updatedRoster);
+    $updatedProject = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($updatedProject, $updatedPackages);
+    $this->app->instance(ProjectManager::class, $updatedProject);
 
     $tool = app(ApplicationInfo::class);
     $response = $tool->handle(new Request([]));
