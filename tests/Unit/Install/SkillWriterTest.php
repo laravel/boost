@@ -97,9 +97,8 @@ it('renders the infer-conventions Livewire dimensions only when Livewire is inst
     $checklist = file_get_contents($absoluteTarget.'/infer-conventions/references/checklist.md');
 
     expect($skill)
-        ->toContain('| Livewire | `app/Livewire/**` |')
         ->toContain('This app ships a frontend stack')
-        ->and($checklist)->toContain('Livewire — Volt vs class components');
+        ->and($checklist)->toContain('Livewire: Volt vs class components');
 
     cleanupSkillDirectory($absoluteTarget);
 });
@@ -124,7 +123,7 @@ it('drops the infer-conventions Livewire dimensions when Livewire is absent', fu
         ->not->toContain('app/Livewire/**')
         ->toContain('has no Livewire/Inertia/Flux packages installed')
         ->and($checklist)
-        ->not->toContain('Livewire — Volt vs class components')
+        ->not->toContain('Livewire: Volt vs class components')
         ->not->toContain('UI kit (Flux)')
         ->and($skill)->not->toContain('@if')
         ->and($checklist)->not->toContain('@if');

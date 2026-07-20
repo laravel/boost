@@ -3,9 +3,9 @@
 @endphp
 # Detection Checklist
 
-Every dimension here is a genuine fork: Laravel offers two or more valid approaches, the app's choice changes what the next agent writes, and no tool can pick for you. Left out on purpose: pure formatting (Pint owns it), forms a Rector rule mechanically rewrites to one canonical shape (`$casts` to `casts()`, `$fillable` to attributes, pipe-string rules to arrays, named to anonymous migrations, `$signature` to `#[Signature]`), and framework defaults any agent writes unprompted (`ShouldQueue` jobs, relation return types, `HasFactory`).
+Every dimension here is a genuine fork: Laravel offers two or more valid approaches, the app's choice changes what the next agent writes, and no tool can pick for you. Left out on purpose: pure formatting (Pint owns it), any form a Rector rule rewrites to one canonical shape (`$casts` to `casts()`, `$fillable` to attributes, pipe-string rules to arrays, named to anonymous migrations, `$signature` to `#[Signature]`), and framework defaults any agent writes unprompted (`ShouldQueue` jobs, relation return types, `HasFactory`).
 
-For each item: the fork, then a hint (grep or dir to spot which side the app takes). Hints are a start. Read the matched files, never record on a raw count. Apply the ground rules to every verdict: a consistent choice that is a default or a tool's target form is not a pattern. Rows marked ⬥ architecture are the highest-signal, so record presence and deliberate absence.
+Each item gives the fork, then a hint (a grep or dir to spot which side the app takes). Hints are only a start. Read the matched files, never record on a raw count. Apply the ground rules to every verdict: a consistent choice that is a default or a tool's target form is not a pattern. Rows marked ⬥ architecture are the highest-signal, so record presence and deliberate absence.
 
 ---
 
@@ -13,7 +13,7 @@ For each item: the fork, then a hint (grep or dir to spot which side the app tak
 
 1. Validation entry point: inline `$request->validate()` vs Form Request classes vs `Validator::make()`.
    - Hint: `ls app/Http/Requests`; grep `->validate(` / `Validator::make(` in `app/Http/Controllers`.
-2. Custom rule location: invokable rule objects in `app/Rules` vs inline closures vs `Validator::extend()` in a provider. Rule objects are the default `make:rule` path, so a house choice only if the app instead leans on closures or `Validator::extend`, otherwise "no rule objects" is just no-signal.
+2. Custom rule location: invokable rule objects in `app/Rules` vs inline closures vs `Validator::extend()` in a provider. Rule objects are the default `make:rule` path, so record only if the app leans on closures or `Validator::extend` instead. "No rule objects" alone is just no-signal.
    - Hint: `ls app/Rules`; grep `Validator::extend` in `app/Providers`.
 3. Typed input retrieval: typed getters (`$request->string()`, `->integer()`, `->enum()`, `->date()`) vs raw `$request->input()` / dynamic properties.
    - Hint: grep `->string(` / `->integer(` / `->enum(` vs `->input(` in `app/Http`.
@@ -46,7 +46,7 @@ For each item: the fork, then a hint (grep or dir to spot which side the app tak
 
 13. Mass assignment: `$fillable` allow-list vs `$guarded` block-list.
     - Hint: grep `protected $fillable` / `protected $guarded` in `app/Models`.
-14. Accessors/mutators: modern `Attribute` class vs legacy `getXxxAttribute()` / `setXxxAttribute()`. A legacy hold is worth recording, because it goes against the tool's grain.
+14. Accessors/mutators: modern `Attribute` class vs legacy `getXxxAttribute()` / `setXxxAttribute()`. Record a legacy hold, it goes against the tool's grain.
     - Hint: grep `: Attribute` / `Attribute::make` vs `function get[A-Z].*Attribute` in `app/Models`.
 15. Primary keys: auto-increment vs `HasUuids` vs `HasUlids`.
     - Hint: grep `HasUuids` / `HasUlids` in `app/Models`; migration `id()` vs `uuid('id')`.
@@ -63,7 +63,7 @@ For each item: the fork, then a hint (grep or dir to spot which side the app tak
 
 ## E. Architecture & organization
 
-21. ⬥ Action/Service structure: Action classes (invoked via `handle` / `execute` / `__invoke`) vs service objects vs neither. Cross-check the Step 0 `app/` map. Any `Actions`/`Services`/`Pipelines`/`Jobs`-as-actions folder is this pattern, so record how it is invoked.
+21. ⬥ Action/Service structure: Action classes (invoked via `handle` / `execute` / `__invoke`) vs service objects vs neither. Cross-check the Step 0 `app/` map: any `Actions`/`Services`/`Pipelines`/`Jobs`-as-actions folder is this pattern, so record how it is invoked.
     - Hint: `ls app/` (the whole tree, not just `Actions`/`Services`); grep the invocation method in the folder you find.
 22. ⬥ DTOs: spatie/laravel-data vs plain readonly classes vs arrays everywhere.
     - Hint: `ls app/Data`; grep `extends Data`, `readonly class` in `app/`.
@@ -109,7 +109,7 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
     - Hint: grep `function down` vs the migration count.
 35. Enum storage: DB `enum()` column vs `string()` + PHP-enum cast on the model.
     - Hint: grep `->enum(` in migrations vs string columns cast to enums.
-36. Transactions: `DB::transaction(fn …)` closure vs manual `beginTransaction` / `commit` / `rollBack`.
+36. Transactions: `DB::transaction(fn ...)` closure vs manual `beginTransaction` / `commit` / `rollBack`.
     - Hint: grep `DB::transaction`, `beginTransaction` in `app/`.
 37. Idempotent writes: `upsert` / `updateOrCreate` / `firstOrCreate` vs find-then-save.
     - Hint: grep `upsert(`, `updateOrCreate(`, `firstOrCreate(` in `app/`.
@@ -122,7 +122,7 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
     - Hint: grep those trait names in `tests/`.
 40. Fixtures: model factories vs seeders (`$this->seed()`) vs manual inserts.
     - Hint: grep `::factory(`, `$this->seed(` in `tests/`.
-41. Collaborator isolation: how the app doubles its own classes, Mockery `mock()` / `spy()` vs real integration. (Facade fakes like `Mail::fake()` are the default way to isolate framework services, not a house choice and not a fork against Mockery, so ignore them here.)
+41. Collaborator isolation: how the app doubles its own classes, Mockery `mock()` / `spy()` vs real integration. Ignore facade fakes like `Mail::fake()` here, they isolate framework services by default and are not a fork against Mockery.
     - Hint: grep `->mock(`, `->spy(`, `Mockery::` in `tests/`.
 42. Endpoint assertions: array `assertJson([...])` / `assertJsonFragment` vs fluent `AssertableJson`.
     - Hint: grep `AssertableJson`, `assertJsonFragment` in `tests/`.
@@ -142,7 +142,7 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
 
 47. Iteration idiom: `collect()->map()->filter()` pipelines vs `array_map` / `foreach`.
     - Hint: grep `collect(`, `->map(` vs `array_map`, `foreach` density in `app/`.
-48. String API: fluent `Str::of()->…` (Stringable) vs static `Str::` vs native (`trim`, `strtoupper`).
+48. String API: fluent `Str::of()->...` (Stringable) vs static `Str::` vs native (`trim`, `strtoupper`).
     - Hint: grep `Str::of(` vs `Str::` vs native string funcs.
 49. Dates: `now()` / `today()` helpers vs `Carbon::` vs `CarbonImmutable` (`Date::use(...)`).
     - Hint: grep `now(`, `Carbon::`, `CarbonImmutable`, `Date::use`.
