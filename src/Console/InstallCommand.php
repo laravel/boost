@@ -152,7 +152,7 @@ class InstallCommand extends Command
 
     protected function noteInferConventions(): void
     {
-        note('💡 Ask your agent to run the infer-conventions skill to capture how this application is written. The recorded conventions sharpen future code generation.');
+        note('💡 Run the infer-conventions skill to record your app conventions and sharpen code generation.');
     }
 
     protected function outro(): void
