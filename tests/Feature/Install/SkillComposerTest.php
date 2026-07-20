@@ -44,6 +44,35 @@ test('skills are discovered from Boost built-in .ai directory', function (): voi
     expect($skills->has('livewire-development'))->toBeTrue();
 });
 
+test('ships the infer-conventions core skill regardless of installed packages', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $skills = (new SkillComposer($this->project))->skills();
+
+    $skill = $skills->get('infer-conventions');
+
+    expect($skill)
+        ->not->toBeNull()
+        ->package->toBe('boost')
+        ->description->not->toBeEmpty()
+        ->path->toBeDirectory()
+        ->and($skill->path.DIRECTORY_SEPARATOR.'references'.DIRECTORY_SEPARATOR.'checklist.blade.php')->toBeFile();
+});
+
+test('the infer-conventions core skill can be excluded via config', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    config(['boost.skills.exclude' => ['infer-conventions']]);
+
+    $skills = (new SkillComposer($this->project))->skills();
+
+    expect($skills->has('infer-conventions'))->toBeFalse();
+});
+
 test('skills only includes skills for installed packages', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),

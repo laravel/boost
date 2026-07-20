@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     File::deleteDirectory(base_path('.ai/skills'));
+    config(['boost.skills.exclude' => ['infer-conventions']]);
 });
 
 afterEach(function (): void {
@@ -28,6 +29,14 @@ it('shows message when no skills available', function (): void {
     $this->artisan('boost:list-skills')
         ->assertSuccessful()
         ->expectsOutputToContain('No skills available in this project.');
+});
+
+it('lists the shipped infer-conventions skill by default', function (): void {
+    config(['boost.skills.exclude' => []]);
+
+    $this->artisan('boost:list-skills')
+        ->assertSuccessful()
+        ->expectsOutputToContain('infer-conventions');
 });
 
 it('shows user-defined skills with local source', function (): void {

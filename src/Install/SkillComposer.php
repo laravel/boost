@@ -53,10 +53,25 @@ class SkillComposer
         $excluded = config('boost.skills.exclude', []);
 
         return $this->skills = collect()
+            ->merge($this->getCoreSkills())
             ->merge($this->getBoostSkills())
             ->merge($this->getThirdPartySkills())
             ->reject(fn (Skill $skill, string $key): bool => in_array($key, $excluded, true))
             ->merge($this->getUserSkills());
+    }
+
+    /**
+     * Skills Boost ships itself, discovered from `.ai/boost/skill`. The Boost package is
+     * excluded from Roster-based discovery, so these are loaded directly like the core guidelines.
+     *
+     * @return Collection<string, Skill>
+     */
+    protected function getCoreSkills(): Collection
+    {
+        return $this->discoverSkillsFromDirectory(
+            $this->getBoostAiPath().DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.'skill',
+            'boost',
+        );
     }
 
     /**
