@@ -5,7 +5,7 @@
 
 Every dimension here is a genuine fork: Laravel offers two or more valid approaches, the app's choice changes what the next agent writes, and no tool can pick for you. Left out on purpose: pure formatting (Pint owns it), any form a Rector rule rewrites to one canonical shape (`$casts` to `casts()`, `$fillable` to attributes, pipe-string rules to arrays, named to anonymous migrations, `$signature` to `#[Signature]`), and framework defaults any agent writes unprompted (`ShouldQueue` jobs, relation return types, `HasFactory`).
 
-Each item gives the fork, then a hint (a grep or dir to spot which side the app takes). Hints are only a start. Read the matched files, never record on a raw count. Apply the ground rules to every verdict: a consistent choice that is a default or a tool's target form is not a pattern. Rows marked ⬥ architecture are the highest-signal, so record presence and deliberate absence.
+Each item gives the fork, then a hint (a grep or dir to spot which side the app takes). Hints are only a start. Read the matched files, never record on a raw count. Apply the ground rules to every verdict: a consistent choice that is a default or a tool's target form is not a pattern. Rows tagged (architecture) are the highest-signal, so record presence and deliberate absence.
 
 ---
 
@@ -24,7 +24,7 @@ Each item gives the fork, then a hint (a grep or dir to spot which side the app 
 
 5. Controller shape: invokable single-action (`__invoke`) vs resource controllers vs plain multi-method.
    - Hint: grep `__invoke` in controllers; `Route::resource` / `apiResource` vs verb routes.
-6. ⬥ Business-logic location: fat controllers vs delegated to Actions / Services / Jobs.
+6. Business-logic location (architecture): fat controllers vs delegated to Actions / Services / Jobs.
    - Hint: read a few controller methods; `ls app/Actions app/Services`.
 7. Route handler style: closures in `routes/*.php` vs controller classes.
    - Hint: count `function ()` vs `::class` in `routes/web.php`, `routes/api.php`.
@@ -52,7 +52,7 @@ Each item gives the fork, then a hint (a grep or dir to spot which side the app 
     - Hint: grep `HasUuids` / `HasUlids` in `app/Models`; migration `id()` vs `uuid('id')`.
 16. Custom casts: dedicated `CastsAttributes` classes (`app/Casts`) vs inline `Attribute` vs built-in cast strings.
     - Hint: `ls app/Casts`; grep `Cast::class`, `AsStringable::class` in models.
-17. ⬥ Data/query layer: Eloquent directly in controllers vs repositories vs dedicated query objects (e.g. classes exposing `builder(): Builder`).
+17. Data/query layer (architecture): Eloquent directly in controllers vs repositories vs dedicated query objects (e.g. classes exposing `builder(): Builder`).
     - Hint: `ls app/Repositories app/Queries`; see where non-trivial queries are built.
 18. Query scopes: local `scope`/`#[Scope]` methods vs dedicated builder classes.
     - Hint: grep `function scope` / `#[Scope]` in models; `ls app/*/Builders`.
@@ -63,9 +63,9 @@ Each item gives the fork, then a hint (a grep or dir to spot which side the app 
 
 ## E. Architecture & organization
 
-21. ⬥ Action/Service structure: Action classes (invoked via `handle` / `execute` / `__invoke`) vs service objects vs neither. Cross-check the Step 0 `app/` map: any `Actions`/`Services`/`Pipelines`/`Jobs`-as-actions folder is this pattern, so record how it is invoked.
+21. Action/Service structure (architecture): Action classes (invoked via `handle` / `execute` / `__invoke`) vs service objects vs neither. Cross-check the Step 0 `app/` map: any `Actions`/`Services`/`Pipelines`/`Jobs`-as-actions folder is this pattern, so record how it is invoked.
     - Hint: `ls app/` (the whole tree, not just `Actions`/`Services`); grep the invocation method in the folder you find.
-22. ⬥ DTOs: spatie/laravel-data vs plain readonly classes vs arrays everywhere.
+22. DTOs (architecture): spatie/laravel-data vs plain readonly classes vs arrays everywhere.
     - Hint: `ls app/Data`; grep `extends Data`, `readonly class` in `app/`.
 23. Dependency acquisition: constructor/method injection vs `app()` / `resolve()` / `App::make()` service location.
     - Hint: grep `app(` / `resolve(` / `::make(` in `app/` vs promoted constructor deps.
@@ -73,7 +73,7 @@ Each item gives the fork, then a hint (a grep or dir to spot which side the app 
     - Hint: `ls app/Events app/Listeners`; grep `event(`, `::dispatch(`.
 25. Helper vs facade idiom: global helpers (`config()`, `auth()`, `response()`) vs facades (`Config::`, `Auth::`, `Response::`).
     - Hint: ratio of `config(` vs `Config::` (etc.) across `app/`.
-26. ⬥ Namespace layout: default `app/` skeleton vs domain/module folders (`app/Domain/**`, modules).
+26. Namespace layout (architecture): default `app/` skeleton vs domain/module folders (`app/Domain/**`, modules).
     - Hint: `ls app/`, look for `Domain/`, `Modules/`, bounded-context folders.
 27. Enums: backed vs pure; case naming; where they live.
     - Hint: `ls app/Enums`; grep `enum .*: string`, `enum .*: int`.
@@ -149,4 +149,4 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
 
 ---
 
-Genuine forks only. Every row survived the "no tool can decide this, and it isn't the default" filter. Give each applicable dimension exactly one verdict: pattern, conflict, default, no-signal, tooling-owned, or already-recorded. The ⬥ architecture rows are where the highest-value rules come from.
+Genuine forks only. Every row survived the "no tool can decide this, and it isn't the default" filter. Give each applicable dimension exactly one verdict: pattern, conflict, default, no-signal, tooling-owned, or already-recorded. The rows tagged (architecture) are where the highest-value rules come from.
