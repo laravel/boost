@@ -38,6 +38,7 @@ use Throwable;
 
 use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
+use function Laravel\Prompts\note;
 
 class InstallCommand extends Command
 {
@@ -92,6 +93,11 @@ class InstallCommand extends Command
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
         $this->performInstallation();
+
+        if ($this->selectedBoostFeatures->contains('skills')) {
+            $this->noteInferConventions();
+        }
+
         $this->outro();
 
         return self::SUCCESS;
@@ -142,6 +148,11 @@ class InstallCommand extends Command
         }
 
         $this->storeConfig();
+    }
+
+    protected function noteInferConventions(): void
+    {
+        note('💡 Ask your agent to run the infer-conventions skill to capture how this application is written. The recorded conventions sharpen future code generation.');
     }
 
     protected function outro(): void
