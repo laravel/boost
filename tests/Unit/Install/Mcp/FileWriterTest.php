@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Install\Mcp\FileWriter;
 use Mockery;
 use ReflectionClass;
+use stdClass;
 
 test('constructor sets file path', function (): void {
     $writer = new FileWriter('/path/to/mcp.json');
@@ -125,6 +126,46 @@ test('adds to existing mcpServers in plain JSON', function (): void {
         ->toHaveKey('mcpServers.boost'); // New server added
 
     expect($decoded['mcpServers']['boost']['command'])->toBe('php');
+});
+
+test('preserves empty objects in existing plain JSON files', function (): void {
+    $writtenContent = '';
+    $content = <<<'JSON'
+    {
+        "$schema": "https://opencode.ai/config.json",
+        "mcp": {
+            "existing": {
+                "type": "remote",
+                "enabled": true,
+                "url": "https://example.com/mcp",
+                "oauth": {}
+            }
+        }
+    }
+    JSON;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $content,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/opencode.json'))
+        ->configKey('mcp')
+        ->addServerConfig('laravel-boost', [
+            'type' => 'local',
+            'enabled' => true,
+            'command' => ['php', 'artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    $decoded = json_decode((string) $writtenContent);
+
+    expect($result)->toBeTrue();
+    expect($decoded->mcp->existing->oauth)->toBeInstanceOf(stdClass::class);
+    expect($decoded->mcp->{'laravel-boost'}->command)->toBe(['php', 'artisan', 'boost:mcp']);
 });
 
 test('preserves complex JSON5 features that VS Code supports', function (): void {

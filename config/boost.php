@@ -32,6 +32,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Boost Project Rules
+    |--------------------------------------------------------------------------
+    |
+    | Project rules let agents record durable decisions, non-obvious traps, and
+    | standing constraints as committed markdown files in .ai/rules/, grouped
+    | by file area. Set this to false to remove the record-rule MCP tool.
+    |
+    */
+
+    'rules' => [
+        'enabled' => env('BOOST_RULES_ENABLED', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
@@ -46,7 +61,20 @@ return [
         'composer' => env('BOOST_COMPOSER_EXECUTABLE_PATH'),
         'npm' => env('BOOST_NPM_EXECUTABLE_PATH'),
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
-        'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH', base_path()),
+        'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Browser Log Levels
+    |--------------------------------------------------------------------------
+    |
+    | This option controls which browser console log levels will be captured by
+    | Boost's browser logger. You may trim this list down to ['error'] when
+    | warnings, info, and debug messages become too noisy to be helpful.
+    |
+    */
+
+    'browser_log_levels' => explode(',', env('BOOST_BROWSER_LOG_LEVELS', 'error,warning,info,debug')),
 
 ];

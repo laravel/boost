@@ -252,7 +252,7 @@ class AddSkillCommand extends Command
             return true;
         }
 
-        if (! stream_isatty(STDIN)) {
+        if (! $this->input->isInteractive()) {
             return false;
         }
 
@@ -351,7 +351,7 @@ class AddSkillCommand extends Command
 
         $this->displayAuditResults($auditResults, $skillNames);
 
-        if (! stream_isatty(STDIN)) {
+        if (! $this->input->isInteractive()) {
             return true;
         }
 

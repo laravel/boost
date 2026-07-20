@@ -27,8 +27,6 @@ class GuidelineComposer
 
     protected GuidelineConfig $config;
 
-    protected ?SkillComposer $skillComposer = null;
-
     public function __construct(protected Roster $roster, protected Herd $herd)
     {
         $this->config = new GuidelineConfig;
@@ -317,9 +315,7 @@ class GuidelineComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        $skillsComposer = $this->skillComposer ??= new SkillComposer($this->roster, $this->config);
-
-        return new GuidelineAssist($this->roster, $this->config, $skillsComposer->skills());
+        return new GuidelineAssist($this->roster, $this->config);
     }
 
     protected function prependPackageGuidelinePath(string $path): string

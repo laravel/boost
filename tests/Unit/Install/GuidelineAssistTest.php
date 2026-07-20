@@ -144,16 +144,6 @@ test('hasSkills property can be set to true', function (): void {
     expect($config->hasSkills)->toBeTrue();
 });
 
-test('shouldEnforceStrictTypes returns false when app directory does not exist', function (): void {
-    $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
-
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
-    $assist->shouldAllowMockingProtectedMethods();
-    $assist->shouldReceive('discover')->andReturn($sentinel);
-
-    expect($assist->shouldEnforceStrictTypes())->toBeFalse();
-});
-
 test('enumContents returns empty string when app directory does not exist', function (): void {
     $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
 
@@ -162,6 +152,44 @@ test('enumContents returns empty string when app directory does not exist', func
     $assist->shouldReceive('discover')->andReturn($sentinel);
 
     expect($assist->enumContents())->toBe('');
+});
+
+test('enumContents includes all discovered enum files in stable order', function (): void {
+    $assist = new class($this->roster, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+                'App\Enums\CountryCode' => fixture('Enums/CountryCode.php'),
+            ];
+        }
+    };
+
+    $contents = $assist->enumContents();
+
+    expect($contents)
+        ->toContain("case USA = 'USA';")
+        ->toContain("case Success = 'success';")
+        ->and(strpos($contents, 'enum CountryCode'))
+        ->toBeLessThan(strpos($contents, 'enum FlashKey'));
+});
+
+test('enumContents skips enum paths that are not files', function (): void {
+    $assist = new class($this->roster, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\Deleted' => fixture('Enums'),
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+            ];
+        }
+    };
+
+    expect($assist->enumContents())
+        ->toStartWith('<?php')
+        ->toContain('enum FlashKey');
 });
 
 test('hasSkillsEnabled returns false when skills are disabled', function (): void {
@@ -210,7 +238,7 @@ test('appPath returns default app path', function (): void {
     $assist->shouldReceive('discover')->andReturn([]);
 
     expect($assist->appPath())->toBe('app');
-    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('app'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+    expect($assist->appPath('path/to/file.php'))->toBe('app/path/to/file.php');
 });
 
 test('appPath returns customized path', function (): void {
@@ -221,5 +249,14 @@ test('appPath returns customized path', function (): void {
     app()->useAppPath('src');
 
     expect($assist->appPath())->toBe('src');
-    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('src'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+    expect($assist->appPath('path/to/file.php'))->toBe('src/path/to/file.php');
 })->after(fn () => app()->useAppPath('app'));
+
+test('appPath normalizes separators to forward slashes', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->appPath('Http/Kernel.php'))->toBe('app/Http/Kernel.php');
+    expect($assist->appPath('Console/Commands/'))->toBe('app/Console/Commands/');
+});

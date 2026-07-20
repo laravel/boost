@@ -47,14 +47,14 @@ test('returns correct MCP config key', function (): void {
     expect($codex->mcpConfigKey())->toBe('mcp_servers');
 });
 
-test('builds MCP server config with cwd field', function (): void {
+test('builds MCP server config without cwd by default', function (): void {
     $codex = new Codex($this->strategyFactory);
 
     $config = $codex->mcpServerConfig('php', ['artisan', 'boost:mcp']);
 
     expect($config)->toHaveKey('command', 'php')
         ->toHaveKey('args', ['artisan', 'boost:mcp'])
-        ->toHaveKey('cwd', base_path());
+        ->not->toHaveKey('cwd');
 });
 
 test('builds MCP server config with config "boost.executable_paths.current_directory" override', function (): void {
@@ -76,7 +76,7 @@ test('builds MCP server config with env when provided', function (): void {
 
     expect($config)->toHaveKey('command', 'php')
         ->toHaveKey('args', ['artisan'])
-        ->toHaveKey('cwd')
+        ->not->toHaveKey('cwd')
         ->toHaveKey('env', ['APP_ENV' => 'local']);
 });
 
@@ -86,7 +86,7 @@ test('filters empty values from server config', function (): void {
     $config = $codex->mcpServerConfig('php', [], []);
 
     expect($config)->toHaveKey('command', 'php')
-        ->toHaveKey('cwd')
+        ->not->toHaveKey('cwd')
         ->not->toHaveKey('args')
         ->not->toHaveKey('env');
 });
@@ -97,8 +97,31 @@ test('includes config.toml in project detection', function (): void {
     $detection = $codex->projectDetectionConfig();
 
     expect($detection['files'])->toContain('.codex/config.toml')
-        ->toContain('AGENTS.md');
+        ->not->toContain('AGENTS.md');
     expect($detection['paths'])->toContain('.codex');
+});
+
+test('projectDetectionConfig only uses .codex dir and config.toml', function (): void {
+    $codex = new Codex($this->strategyFactory);
+
+    expect($codex->projectDetectionConfig())->toBe([
+        'paths' => ['.codex'],
+        'files' => ['.codex/config.toml'],
+    ]);
+});
+
+test('detectInProject returns false when only AGENTS.md exists', function (): void {
+    $codex = new Codex(new DetectionStrategyFactory(app()));
+    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_codex_'.uniqid();
+    mkdir($tempDir);
+    touch($tempDir.DIRECTORY_SEPARATOR.'AGENTS.md');
+
+    try {
+        expect($codex->detectInProject($tempDir))->toBeFalse();
+    } finally {
+        unlink($tempDir.DIRECTORY_SEPARATOR.'AGENTS.md');
+        rmdir($tempDir);
+    }
 });
 
 test('returns correct guidelines path', function (): void {
@@ -170,5 +193,5 @@ test('installMcp creates TOML config file', function (): void {
         ->and($capturedContent)->toContain('[mcp_servers.laravel_boost]')
         ->and($capturedContent)->toContain('command = "php"')
         ->and($capturedContent)->toContain('args = ["artisan", "boost:mcp"]')
-        ->and($capturedContent)->toContain('cwd = ');
+        ->and($capturedContent)->not->toContain('cwd = ');
 });

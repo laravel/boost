@@ -38,7 +38,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
     public function projectDetectionConfig(): array
     {
         return [
-            'files' => ['AGENTS.md', 'opencode.json'],
+            'files' => ['opencode.json', 'opencode.jsonc'],
         ];
     }
 
@@ -49,7 +49,13 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
 
     public function mcpConfigPath(): string
     {
-        return config('boost.agents.opencode.mcp_config_path', 'opencode.json');
+        if ($configured = config('boost.agents.opencode.mcp_config_path')) {
+            return $configured;
+        }
+
+        return file_exists(base_path('opencode.jsonc'))
+            ? 'opencode.jsonc'
+            : 'opencode.json';
     }
 
     public function guidelinesPath(): string

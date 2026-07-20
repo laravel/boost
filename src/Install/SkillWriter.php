@@ -243,16 +243,21 @@ class SkillWriter
                 $replacedTargetFile = substr($targetFile, 0, -10).'.md';
             }
 
-            return file_put_contents($replacedTargetFile, $content) !== false;
+            return file_put_contents($replacedTargetFile, $this->ensureTrailingNewline($content)) !== false;
         }
 
         if ($isMarkdownFile) {
             $content = MarkdownFormatter::format(trim(file_get_contents($file->getRealPath())));
 
-            return file_put_contents($targetFile, $content) !== false;
+            return file_put_contents($targetFile, $this->ensureTrailingNewline($content)) !== false;
         }
 
         return @copy($file->getRealPath(), $targetFile);
+    }
+
+    protected function ensureTrailingNewline(string $content): string
+    {
+        return str_ends_with($content, "\n") ? $content : $content."\n";
     }
 
     protected function ensureDirectoryExists(string $path): bool

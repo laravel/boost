@@ -187,6 +187,7 @@ it('skips existing skills without --force flag', function (): void {
     $this->artisan('boost:add-skill', [
         'repo' => 'owner/repo',
         '--all' => true,
+        '--no-interaction' => true,
     ])->assertSuccessful();
 
     $this->assertFileContains(['existing content'], '.ai/skills/skill-one/SKILL.md');
@@ -333,6 +334,7 @@ it('displays audit results before installing skills when risk is medium or highe
     $this->artisan('boost:add-skill', [
         'repo' => 'owner/repo',
         '--all' => true,
+        '--no-interaction' => true,
     ])
         ->expectsOutputToContain('Security Audit')
         ->expectsOutputToContain('Skills installed')
@@ -501,6 +503,7 @@ it('audits only skills that will be installed', function (): void {
     $this->artisan('boost:add-skill', [
         'repo' => 'owner/repo',
         '--all' => true,
+        '--no-interaction' => true,
     ])->assertSuccessful();
 
     Http::assertSent(function ($request): bool {

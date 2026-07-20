@@ -255,6 +255,6 @@ class SkillComposer
 
     protected function getGuidelineAssist(): GuidelineAssist
     {
-        return new GuidelineAssist($this->roster, $this->config, $this->skills ?? collect());
+        return new GuidelineAssist($this->roster, $this->config);
     }
 }

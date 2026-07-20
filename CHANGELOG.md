@@ -1,6 +1,182 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.4.13...main)
+
+## [v2.4.13](https://github.com/laravel/boost/compare/v2.4.12...v2.4.13) - 2026-07-17
+
+### What's Changed
+
+* feat: add Grok Build agent support by [@csfh](https://github.com/csfh) in https://github.com/laravel/boost/pull/877
+* feat: add configurable browser log levels by [@JaiveerChavda](https://github.com/JaiveerChavda) in https://github.com/laravel/boost/pull/875
+* Prevent script injection into partial HTML responses by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/880
+* Add support for laravel/mcp ^0.9.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/884
+
+### New Contributors
+
+* [@csfh](https://github.com/csfh) made their first contribution in https://github.com/laravel/boost/pull/877
+* [@JaiveerChavda](https://github.com/JaiveerChavda) made their first contribution in https://github.com/laravel/boost/pull/875
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.12...v2.4.13
+
+## [v2.4.12](https://github.com/laravel/boost/compare/v2.4.11...v2.4.12) - 2026-07-08
+
+### What's Changed
+
+* Add committed project rules with a record-rule MCP tool by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/852
+* fix: prefer opencode.jsonc when updating existing configuration by [@alaminfirdows](https://github.com/alaminfirdows) in https://github.com/laravel/boost/pull/862
+* fix: unterminated single quote string by [@maiobarbero](https://github.com/maiobarbero) in https://github.com/laravel/boost/pull/866
+* Make enum guideline generation deterministic by [@hosmelq](https://github.com/hosmelq) in https://github.com/laravel/boost/pull/870
+* Fix table-prefix corrupting "ORDER BY … DESC" and schema-qualified queries by [@matthewjohns0n](https://github.com/matthewjohns0n) in https://github.com/laravel/boost/pull/868
+* Restructure laravel-best-practices skill into a compact rule index by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/871
+
+### New Contributors
+
+* [@alaminfirdows](https://github.com/alaminfirdows) made their first contribution in https://github.com/laravel/boost/pull/862
+* [@maiobarbero](https://github.com/maiobarbero) made their first contribution in https://github.com/laravel/boost/pull/866
+* [@matthewjohns0n](https://github.com/matthewjohns0n) made their first contribution in https://github.com/laravel/boost/pull/868
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.11...v2.4.12
+
+## [v2.4.11](https://github.com/laravel/boost/compare/v.2.4.11...v2.4.11) - 2026-06-26
+
+### What's Changed
+
+* Bump actions/checkout from 6.0.2 to 6.0.3 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/848
+* Add MCP server icon metadata by [@sneycampos](https://github.com/sneycampos) in https://github.com/laravel/boost/pull/849
+* Remove circular MCP server icon test by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/853
+* feat(pint): add --dirty flag for faster formatting by [@calebdw](https://github.com/calebdw) in https://github.com/laravel/boost/pull/845
+* fix: guard non-interactive mode in selectThirdPartyPackages and selectIntegrations by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/839
+* Bump shivammathur/setup-php from 2.37.1 to 2.37.2 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/854
+* docs: use handle() in action class example instead of execute by [@3bd-ulrahman](https://github.com/3bd-ulrahman) in https://github.com/laravel/boost/pull/858
+* Bump actions/checkout from 6.0.3 to 7.0.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/860
+* fix: make MCP tool timeout configurable by [@jstar0](https://github.com/jstar0) in https://github.com/laravel/boost/pull/856
+* feat: add Pi agent support by [@cyrodjohn](https://github.com/cyrodjohn) in https://github.com/laravel/boost/pull/841
+* Testing with interactive ptys by [@ohnotnow](https://github.com/ohnotnow) in https://github.com/laravel/boost/pull/859
+
+### New Contributors
+
+* [@sneycampos](https://github.com/sneycampos) made their first contribution in https://github.com/laravel/boost/pull/849
+* [@3bd-ulrahman](https://github.com/3bd-ulrahman) made their first contribution in https://github.com/laravel/boost/pull/858
+* [@jstar0](https://github.com/jstar0) made their first contribution in https://github.com/laravel/boost/pull/856
+* [@cyrodjohn](https://github.com/cyrodjohn) made their first contribution in https://github.com/laravel/boost/pull/841
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.10...v2.4.11
+
+## [v.2.4.11](https://github.com/laravel/boost/compare/v2.4.10...v.2.4.11) - 2026-06-26
+
+### What's Changed
+
+* Bump actions/checkout from 6.0.2 to 6.0.3 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/848
+* Add MCP server icon metadata by [@sneycampos](https://github.com/sneycampos) in https://github.com/laravel/boost/pull/849
+* Remove circular MCP server icon test by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/853
+* feat(pint): add --dirty flag for faster formatting by [@calebdw](https://github.com/calebdw) in https://github.com/laravel/boost/pull/845
+* fix: guard non-interactive mode in selectThirdPartyPackages and selectIntegrations by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/839
+* Bump shivammathur/setup-php from 2.37.1 to 2.37.2 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/854
+* docs: use handle() in action class example instead of execute by [@3bd-ulrahman](https://github.com/3bd-ulrahman) in https://github.com/laravel/boost/pull/858
+* Bump actions/checkout from 6.0.3 to 7.0.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/860
+* fix: make MCP tool timeout configurable by [@jstar0](https://github.com/jstar0) in https://github.com/laravel/boost/pull/856
+* feat: add Pi agent support by [@cyrodjohn](https://github.com/cyrodjohn) in https://github.com/laravel/boost/pull/841
+* Testing with interactive ptys by [@ohnotnow](https://github.com/ohnotnow) in https://github.com/laravel/boost/pull/859
+
+### New Contributors
+
+* [@sneycampos](https://github.com/sneycampos) made their first contribution in https://github.com/laravel/boost/pull/849
+* [@3bd-ulrahman](https://github.com/3bd-ulrahman) made their first contribution in https://github.com/laravel/boost/pull/858
+* [@jstar0](https://github.com/jstar0) made their first contribution in https://github.com/laravel/boost/pull/856
+* [@cyrodjohn](https://github.com/cyrodjohn) made their first contribution in https://github.com/laravel/boost/pull/841
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.10...v.2.4.11
+
+## [v2.4.10](https://github.com/laravel/boost/compare/v2.4.9...v2.4.10) - 2026-06-09
+
+### What's Changed
+
+* fix: preserve literal $N patterns when replacing guidelines block by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/840
+* Fix Zed detection when the binary is `zeditor` by [@PHLAK](https://github.com/PHLAK) in https://github.com/laravel/boost/pull/846
+* Support laravel/mcp 0.8.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/847
+
+### New Contributors
+
+* [@PHLAK](https://github.com/PHLAK) made their first contribution in https://github.com/laravel/boost/pull/846
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.9...v2.4.10
+
+## [v2.4.9](https://github.com/laravel/boost/compare/v2.4.8...v2.4.9) - 2026-06-04
+
+### What's Changed
+
+* Adopt laravel/mcp 0.7.1 namespace renames by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/816
+* feat: adds Google Antigravity agent by [@achyutkneupane](https://github.com/achyutkneupane) in https://github.com/laravel/boost/pull/818
+* Add Antigravity agent to AgentsDetectorTest by [@imKenjo18](https://github.com/imKenjo18) in https://github.com/laravel/boost/pull/820
+* Fix Inertia v3 layout props API name in upgrade prompt by [@TTezcan](https://github.com/TTezcan) in https://github.com/laravel/boost/pull/823
+* Add Factory Droid agent by [@travisobregon](https://github.com/travisobregon) in https://github.com/laravel/boost/pull/828
+* fix: detect all common Docker Compose filenames in Sail check by [@MreeP](https://github.com/MreeP) in https://github.com/laravel/boost/pull/827
+* Remove Gemini CLI agent in favor of Antigravity by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/819
+* Add Dependabot cooldown of 5 days by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/834
+* Enable Dependabot auto-merge by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/boost/pull/836
+* fix: remove AGENTS.md from Codex project detection by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/832
+* fix: remove AGENTS.md from OpenCode project detection by [@impruthvi](https://github.com/impruthvi) in https://github.com/laravel/boost/pull/831
+* Add Zed editor agent by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/830
+
+### New Contributors
+
+* [@achyutkneupane](https://github.com/achyutkneupane) made their first contribution in https://github.com/laravel/boost/pull/818
+* [@imKenjo18](https://github.com/imKenjo18) made their first contribution in https://github.com/laravel/boost/pull/820
+* [@TTezcan](https://github.com/TTezcan) made their first contribution in https://github.com/laravel/boost/pull/823
+* [@travisobregon](https://github.com/travisobregon) made their first contribution in https://github.com/laravel/boost/pull/828
+* [@MreeP](https://github.com/MreeP) made their first contribution in https://github.com/laravel/boost/pull/827
+* [@impruthvi](https://github.com/impruthvi) made their first contribution in https://github.com/laravel/boost/pull/832
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.8...v2.4.9
+
+## [v2.4.8](https://github.com/laravel/boost/compare/v2.4.7...v2.4.8) - 2026-05-19
+
+### What's Changed
+
+* Pin laravel/mcp below 0.7.1 to avoid breaking namespace renames by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/815
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.7...v2.4.8
+
+## [v2.4.7](https://github.com/laravel/boost/compare/v2.4.6...v2.4.7) - 2026-05-18
+
+### What's Changed
+
+* fix: minor typo and comment improvements in ApplicationInfo and Boost by [@iz-ahmad](https://github.com/iz-ahmad) in https://github.com/laravel/boost/pull/792
+* Fix TypeError in RendersBladeGuidelines when Blade::render returns an HtmlString by [@dipaksarkar](https://github.com/dipaksarkar) in https://github.com/laravel/boost/pull/796
+* Fix path separators and trailing newlines in install output by [@barrytarter](https://github.com/barrytarter) in https://github.com/laravel/boost/pull/790
+* Remove redundant guidance to read .env directly by [@loadinglucian](https://github.com/loadinglucian) in https://github.com/laravel/boost/pull/801
+* Preserve empty objects in MCP JSON config files by [@mwikala](https://github.com/mwikala) in https://github.com/laravel/boost/pull/793
+* Pin GitHub Actions to commit SHAs and add Dependabot config by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/boost/pull/804
+* Bump shivammathur/setup-php from 2.37.0 to 2.37.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/806
+* Sync Flux UI free/pro component lists with fluxui.dev by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/808
+* Omit cwd from Codex MCP config to fix Sail and worktree issues by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/809
+* Add Tinker MCP tool (opt-in via config) by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/807
+
+### New Contributors
+
+* [@dipaksarkar](https://github.com/dipaksarkar) made their first contribution in https://github.com/laravel/boost/pull/796
+* [@barrytarter](https://github.com/barrytarter) made their first contribution in https://github.com/laravel/boost/pull/790
+* [@loadinglucian](https://github.com/loadinglucian) made their first contribution in https://github.com/laravel/boost/pull/801
+* [@mwikala](https://github.com/mwikala) made their first contribution in https://github.com/laravel/boost/pull/793
+* [@joetannenbaum](https://github.com/joetannenbaum) made their first contribution in https://github.com/laravel/boost/pull/804
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.6...v2.4.7
+
+## [v2.4.6](https://github.com/laravel/boost/compare/v2.4.5...v2.4.6) - 2026-04-28
+
+### What's Changed
+
+* Add Laravel Cloud integration to install command by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/776
+* Added better instructions for generating tests. by [@samlev](https://github.com/samlev) in https://github.com/laravel/boost/pull/781
+* Handle Http::pool errors when downloading remote skills by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/785
+* Remove model discovery and use token-based class parsing by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/754
+* Remove skills listing from foundation guideline by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/787
+
+### New Contributors
+
+* [@samlev](https://github.com/samlev) made their first contribution in https://github.com/laravel/boost/pull/781
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.5...v2.4.6
 
 ## [v2.4.5](https://github.com/laravel/boost/compare/v2.4.4...v2.4.5) - 2026-04-22
 
@@ -247,11 +423,29 @@ If you have custom overrides in:
 
 
 
+
+
+
+
+
+
+
+
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
+
+
+
+
+
+
+
+
 
 
 
@@ -304,12 +498,30 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
+
+
+
+
+
+
+
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
+
+
+
+
+
+
+
+
 
 
 
