@@ -61,8 +61,7 @@ class SkillComposer
     }
 
     /**
-     * Skills Boost ships itself, discovered from `.ai/boost/skill`. The Boost package is
-     * excluded from Roster-based discovery, so these are loaded directly like the core guidelines.
+     * Skills Boost ships itself, discovered from `.ai/boost/skill`.
      *
      * @return Collection<string, Skill>
      */
