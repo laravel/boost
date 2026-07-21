@@ -393,7 +393,7 @@ class InstallCommand extends Command
     {
         $repository = app(RuleRepository::class);
 
-        if (! config('boost.rules.enabled', true)) {
+        if (! config('boost.rules.enabled', true) || ! config('boost.rules.scoped_guidelines', false)) {
             rescue(fn () => $repository->clearManaged(), report: false);
 
             return;

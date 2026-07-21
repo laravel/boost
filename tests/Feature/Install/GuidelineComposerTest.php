@@ -67,7 +67,9 @@ test('includes package guidelines only for installed packages', function (): voi
         ->not->toContain('=== inertia-react/core rules ===');
 });
 
-test('excludes scoped block content from the composed blob when rules are enabled by default', function (): void {
+test('excludes scoped block content from the composed blob when scoped guidelines are enabled', function (): void {
+    config(['boost.rules.scoped_guidelines' => true]);
+
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
         rosterPackage('pestphp/pest', '3.0.0'),
@@ -78,14 +80,14 @@ test('excludes scoped block content from the composed blob when rules are enable
 
     $guidelines = $this->composer->compose();
 
-    expect(config('boost.rules.enabled'))->toBeTrue()
+    expect(config('boost.rules.scoped_guidelines'))->toBeTrue()
         ->and($guidelines)
         ->not->toContain('=== pest/core rules ===')
         ->not->toContain('=== livewire/core rules ===')
         ->toContain('=== foundation rules ===');
 });
 
-test('strips only the scoped portion of a partially-scoped guideline, keeping the rest inline', function (): void {
+test('inlines scoped block content by default since scoped guidelines are opt-in', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
     ]);
@@ -94,7 +96,25 @@ test('strips only the scoped portion of a partially-scoped guideline, keeping th
 
     $guidelines = $this->composer->compose();
 
-    expect(config('boost.rules.enabled'))->toBeTrue()
+    expect(config('boost.rules.scoped_guidelines'))->toBeFalse()
+        ->and($guidelines)
+        ->toContain('=== laravel/core rules ===')
+        ->toContain('URL Generation')
+        ->toContain('Model Creation');
+});
+
+test('strips only the scoped portion of a partially-scoped guideline, keeping the rest inline', function (): void {
+    config(['boost.rules.scoped_guidelines' => true]);
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect(config('boost.rules.scoped_guidelines'))->toBeTrue()
         ->and($guidelines)
         ->toContain('=== laravel/core rules ===')
         ->toContain('URL Generation')
