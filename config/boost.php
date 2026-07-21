@@ -50,9 +50,9 @@ return [
     | Boost Skills
     |--------------------------------------------------------------------------
     |
-    | Boost ships some skills to every project (such as "infer-conventions").
-    | List any skill name here to opt out of installing it - this is the only
-    | way to exclude a skill that Boost ships unconditionally.
+    | Here you may list the skills Boost ships to every project unconditionally,
+    | such as "infer-conventions", to opt out of having them installed. This
+    | is the only way to exclude a skill that Boost ships unconditionally.
     |
     */
 

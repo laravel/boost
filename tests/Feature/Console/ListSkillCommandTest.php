@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     File::deleteDirectory(base_path('.ai/skills'));
-    // Boost now always ships the infer-conventions core skill; excluding it keeps these tests exercising the empty and user-skill states.
+
     config(['boost.skills.exclude' => ['infer-conventions']]);
 });
 
