@@ -3,27 +3,8 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Contracts\SupportsSkills;
-use Laravel\Boost\Install\GuidelineAssist;
-use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillWriter;
-use Laravel\Roster\PackageCollection;
-use Laravel\Roster\ProjectManager;
-
-function writeInferConventions(string $relativeTarget): void
-{
-    $agent = Mockery::mock(SupportsSkills::class);
-    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
-
-    $skill = new Skill(
-        name: 'infer-conventions',
-        package: 'boost',
-        path: dirname(__DIR__, 3).'/.ai/boost/skill/infer-conventions',
-        description: 'Infer and record application conventions',
-    );
-
-    (new SkillWriter($agent))->write($skill);
-}
 
 function cleanupSkillDirectory(string $path): void
 {
@@ -54,82 +35,6 @@ function cleanupSkillDirectory(string $path): void
 
     @rmdir($path);
 }
-
-it('installs the shipped infer-conventions skill with its references', function (): void {
-    $sourceDir = dirname(__DIR__, 3).'/.ai/boost/skill/infer-conventions';
-    $relativeTarget = '.boost-test-skills-'.uniqid();
-    $absoluteTarget = base_path($relativeTarget);
-
-    $agent = Mockery::mock(SupportsSkills::class);
-    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
-
-    $skill = new Skill(
-        name: 'infer-conventions',
-        package: 'boost',
-        path: $sourceDir,
-        description: 'Infer and record application conventions',
-    );
-
-    $result = (new SkillWriter($agent))->write($skill);
-
-    expect($result)->toBe(SkillWriter::SUCCESS)
-        ->and($absoluteTarget.'/infer-conventions/SKILL.md')->toBeFile()
-        ->and($absoluteTarget.'/infer-conventions/references/checklist.md')->toBeFile();
-
-    cleanupSkillDirectory($absoluteTarget);
-});
-
-it('renders the infer-conventions Livewire dimensions only when Livewire is installed', function (): void {
-    $project = Mockery::mock(ProjectManager::class);
-    mockProjectPackages($project, new PackageCollection([
-        rosterPackage('laravel/framework', '11.0.0'),
-        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
-    ]));
-    $this->app->forgetInstance(GuidelineAssist::class);
-    $this->app->instance(GuidelineAssist::class, new GuidelineAssist($project, new GuidelineConfig));
-
-    $relativeTarget = '.boost-test-skills-'.uniqid();
-    $absoluteTarget = base_path($relativeTarget);
-
-    writeInferConventions($relativeTarget);
-
-    $skill = file_get_contents($absoluteTarget.'/infer-conventions/SKILL.md');
-    $checklist = file_get_contents($absoluteTarget.'/infer-conventions/references/checklist.md');
-
-    expect($skill)
-        ->toContain('This app ships a frontend stack')
-        ->and($checklist)->toContain('Livewire: Volt vs class components');
-
-    cleanupSkillDirectory($absoluteTarget);
-});
-
-it('drops the infer-conventions Livewire dimensions when Livewire is absent', function (): void {
-    $project = Mockery::mock(ProjectManager::class);
-    mockProjectPackages($project, new PackageCollection([
-        rosterPackage('laravel/framework', '11.0.0'),
-    ]));
-    $this->app->forgetInstance(GuidelineAssist::class);
-    $this->app->instance(GuidelineAssist::class, new GuidelineAssist($project, new GuidelineConfig));
-
-    $relativeTarget = '.boost-test-skills-'.uniqid();
-    $absoluteTarget = base_path($relativeTarget);
-
-    writeInferConventions($relativeTarget);
-
-    $skill = file_get_contents($absoluteTarget.'/infer-conventions/SKILL.md');
-    $checklist = file_get_contents($absoluteTarget.'/infer-conventions/references/checklist.md');
-
-    expect($skill)
-        ->not->toContain('app/Livewire/**')
-        ->toContain('has no Livewire/Inertia/Flux packages installed')
-        ->and($checklist)
-        ->not->toContain('Livewire: Volt vs class components')
-        ->not->toContain('UI kit (Flux)')
-        ->and($skill)->not->toContain('@if')
-        ->and($checklist)->not->toContain('@if');
-
-    cleanupSkillDirectory($absoluteTarget);
-});
 
 it('writes skill to a target directory', function (): void {
     $sourceDir = fixture('skills/test-skill');

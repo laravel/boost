@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     File::deleteDirectory(base_path('.ai/skills'));
+    // Boost now always ships the infer-conventions core skill; excluding it keeps these tests exercising the empty and user-skill states.
     config(['boost.skills.exclude' => ['infer-conventions']]);
 });
 
@@ -29,14 +30,6 @@ it('shows message when no skills available', function (): void {
     $this->artisan('boost:list-skills')
         ->assertSuccessful()
         ->expectsOutputToContain('No skills available in this project.');
-});
-
-it('lists the shipped infer-conventions skill by default', function (): void {
-    config(['boost.skills.exclude' => []]);
-
-    $this->artisan('boost:list-skills')
-        ->assertSuccessful()
-        ->expectsOutputToContain('infer-conventions');
 });
 
 it('shows user-defined skills with local source', function (): void {

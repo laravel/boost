@@ -27,6 +27,9 @@ trait RendersBladeGuidelines
             '<?php' => '___OPEN_PHP_TAG___',
             '@volt' => '___VOLT_DIRECTIVE___',
             '@endvolt' => '___ENDVOLT_DIRECTIVE___',
+            '@can' => '___CAN_DIRECTIVE___',
+            '@include' => '___INCLUDE_DIRECTIVE___',
+            '@props' => '___PROPS_DIRECTIVE___',
             '</x-' => '___BLADE_COMPONENT_CLOSE___',
             '<x-' => '___BLADE_COMPONENT_OPEN___',
         ];
