@@ -94,9 +94,7 @@ class InstallCommand extends Command
         $this->collectInstallationPreferences();
         $this->performInstallation();
 
-        if ($this->input->isInteractive() && in_array('infer-conventions', $this->installedSkillNames, true)) {
-            $this->noteInferConventions();
-        }
+        $this->noteInferConventions();
 
         $this->outro();
 
