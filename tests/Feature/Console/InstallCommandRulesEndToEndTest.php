@@ -31,6 +31,7 @@ beforeEach(function (): void {
 
     (new Config)->setAgents(['claude_code']);
     config(['boost.enforce_tests' => false]);
+    config(['boost.rules.scoped_guidelines' => true]);
     config(['boost.agents.claude_code.guidelines_path' => $this->tempBasePath.'/CLAUDE.md']);
 });
 

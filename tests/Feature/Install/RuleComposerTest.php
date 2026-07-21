@@ -18,6 +18,8 @@ beforeEach(function (): void {
 
     $this->app->instance(ProjectManager::class, $this->project);
 
+    config(['boost.rules.scoped_guidelines' => true]);
+
     $this->guidelines = new GuidelineComposer($this->project, $this->herd);
 });
 

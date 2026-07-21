@@ -44,7 +44,9 @@ class GuidelineComposer
 
     protected function rulesExtractionEnabled(): bool
     {
-        return $this->extractRules && (bool) config('boost.rules.enabled', true);
+        return $this->extractRules
+            && (bool) config('boost.rules.enabled', true)
+            && (bool) config('boost.rules.scoped_guidelines', false);
     }
 
     protected function getProject(): ProjectManager
