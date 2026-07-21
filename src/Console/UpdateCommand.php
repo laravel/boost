@@ -17,7 +17,8 @@ class UpdateCommand extends Command
 {
     /** @var string */
     protected $signature = 'boost:update
-        {--discover : Discover and prompt for newly available guidelines and skills}
+        {--discover : Discover and prompt for newly available guidelines and skills (default)}
+        {--no-discover : Skip discovering and prompting for newly available guidelines and skills}
         {--ignore-skills : Skip updating the skills directory}';
 
     public function handle(Config $config): int
@@ -28,7 +29,7 @@ class UpdateCommand extends Command
             return self::FAILURE;
         }
 
-        if ($this->option('discover')) {
+        if (! $this->option('no-discover')) {
             $this->discoverNewContent($config);
         }
 
