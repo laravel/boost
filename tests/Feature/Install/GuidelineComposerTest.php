@@ -390,6 +390,31 @@ test('excludes livewire guidelines when indirectly required', function (): void 
     expect($this->composer->compose())->not->toContain('=== livewire/core rules ===');
 });
 
+test('includes livewire guidelines when indirectly required but opted in through extra laravel-boost', function (): void {
+    file_put_contents(base_path('composer.json'), json_encode([
+        'extra' => [
+            'laravel-boost' => [
+                'packages' => [
+                    'livewire/livewire',
+                ],
+            ],
+        ],
+    ]));
+
+    $packages = new PackageCollection([
+        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(false),
+    ]);
+
+    $this->roster->shouldReceive('packages')->andReturn($packages);
+
+    expect($this->composer->compose())->toContain('=== livewire/core rules ===');
+})->after(function (): void {
+    if (file_exists(base_path('composer.json'))) {
+        unlink(base_path('composer.json'));
+    }
+});
+
 test('includes livewire guidelines when directly required', function (): void {
     $packages = new PackageCollection([
         new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
