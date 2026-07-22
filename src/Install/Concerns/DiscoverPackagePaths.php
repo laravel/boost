@@ -62,7 +62,9 @@ trait DiscoverPackagePaths
             }
         }
 
-        return ! $package->isDirect() && in_array($package->name(), $this->mustBeDirect, true);
+        return ! $package->isDirect()
+            && in_array($package->name(), $this->mustBeDirect, true)
+            && ! in_array($package->name(), Composer::extraPackageNames(), true);
     }
 
     /**

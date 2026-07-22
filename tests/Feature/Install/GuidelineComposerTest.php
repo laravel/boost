@@ -456,6 +456,31 @@ test('excludes livewire guidelines when indirectly required', function (): void 
     expect($this->composer->compose())->not->toContain('=== livewire/core rules ===');
 });
 
+test('includes livewire guidelines when indirectly required but opted in through extra laravel-boost', function (): void {
+    file_put_contents(base_path('composer.json'), json_encode([
+        'extra' => [
+            'laravel-boost' => [
+                'packages' => [
+                    'livewire/livewire',
+                ],
+            ],
+        ],
+    ]));
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(false),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    expect($this->composer->compose())->toContain('=== livewire/core rules ===');
+})->after(function (): void {
+    if (file_exists(base_path('composer.json'))) {
+        unlink(base_path('composer.json'));
+    }
+});
+
 test('includes livewire guidelines when directly required', function (): void {
     config(['boost.rules.enabled' => false]);
 
@@ -466,7 +491,10 @@ test('includes livewire guidelines when directly required', function (): void {
 
     mockProjectPackages($this->project, $packages);
 
-    expect($this->composer->compose())->toContain('=== livewire/core rules ===');
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== livewire/core rules ===');
 });
 
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
