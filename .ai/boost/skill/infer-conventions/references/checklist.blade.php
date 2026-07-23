@@ -3,7 +3,7 @@
 @endphp
 # Detection Checklist
 
-Every dimension here is a genuine fork: Laravel offers two or more valid approaches, the app's choice changes what the next agent writes, and no tool can pick for you. Left out on purpose: pure formatting (Pint owns it), any form a Rector rule rewrites to one canonical shape (`$casts` to `casts()`, `$fillable` to attributes, pipe-string rules to arrays, named to anonymous migrations, `$signature` to `#[Signature]`), and framework defaults any agent writes unprompted (`ShouldQueue` jobs, relation return types, `HasFactory`).
+Every dimension here is a genuine fork: Laravel offers two or more valid approaches, the app's choice changes what the next agent writes, and no active project tool can pick for you. Left out on purpose: pure formatting (Pint owns it), any form an installed and enabled Rector rule rewrites to one canonical shape (`$casts` to `casts()`, `$fillable` to attributes, pipe-string rules to arrays, named to anonymous migrations, `$signature` to `#[Signature]`), and framework defaults any agent writes unprompted (`ShouldQueue` jobs, relation return types, `HasFactory`).
 
 Each item gives the fork, then a hint (a grep or dir to spot which side the app takes). Hints are only a start. Read the matched files, never record on a raw count. Apply the ground rules to every verdict: a consistent choice that is a default or a tool's target form is not a pattern. Rows tagged (architecture) are the highest-signal, so record presence and deliberate absence.
 
@@ -58,8 +58,8 @@ Each item gives the fork, then a hint (a grep or dir to spot which side the app 
     - Hint: grep `function scope` / `#[Scope]` in models; `ls app/*/Builders`.
 19. Model events: observers (`app/Observers`, `#[ObservedBy]`) vs `booted()` closures vs event classes.
     - Hint: `ls app/Observers`; grep `booted`, `::observe`, `#[ObservedBy]`.
-20. Eager-load posture: per-query `->with()` vs model `$with` vs `preventLazyLoading()`.
-    - Hint: grep `protected $with`, `preventLazyLoading` in `app/`.
+20. Eager-load posture: explicit per-query `->with()` vs model-level `$with` defaults. Treat `preventLazyLoading()` separately as a development guard because it can complement either posture.
+    - Hint: grep `protected $with`, `->with(`, and separately `preventLazyLoading` in `app/`.
 
 ## E. Architecture & organization
 
@@ -91,8 +91,8 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
 29. Blade composition: class `<x-*>` components vs anonymous components (`@props`) vs `@include` partials.
     - Hint: `ls app/View/Components`; grep `<x-`, `@include` in `resources/views`.
 @if($assist->hasPackage('livewire/livewire'))
-30. Livewire: Volt vs class components; full-page vs nested.
-    - Hint: `composer.json` for `livewire/volt`; grep `@volt`, `new class extends Component` in `resources/`.
+30. Livewire component format: Volt functional/class components, native Livewire 4 single-file (SFC), multi-file (MFC), view-based, or class-based components. Evaluate full-page vs nested separately because it is an independent usage choice.
+    - Hint: check the installed Livewire major and `livewire/volt`; inspect `app/Livewire`, `resources/views/livewire`, and Livewire 4 component/page directories for `@volt`, SFC, MFC, view-based, and class-based formats.
 @endif
 @if($assist->hasPackage('livewire/flux') || $assist->hasPackage('livewire/flux-pro'))
 31. UI kit (Flux): Flux components vs custom components vs another library.
@@ -120,8 +120,8 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
     - Hint: `ls tests/Pest.php`; grep `it(` / `test(` vs `extends TestCase`.
 39. DB reset: `RefreshDatabase` vs `DatabaseTruncation` vs `DatabaseMigrations`.
     - Hint: grep those trait names in `tests/`.
-40. Fixtures: model factories vs seeders (`$this->seed()`) vs manual inserts.
-    - Hint: grep `::factory(`, `$this->seed(` in `tests/`.
+40. Fixtures: compare how equivalent test-owned records are created, such as factories vs manual inserts. Track seeders separately for shared reference data because `$this->seed()` commonly and legitimately coexists with factories.
+    - Hint: grep `::factory(` and direct inserts in `tests/`; separately inspect `$this->seed(` calls and what those seeders provide.
 41. Collaborator isolation: how the app doubles its own classes, Mockery `mock()` / `spy()` vs real integration. Ignore facade fakes like `Mail::fake()` here, they isolate framework services by default and are not a fork against Mockery.
     - Hint: grep `->mock(`, `->spy(`, `Mockery::` in `tests/`.
 42. Endpoint assertions: array `assertJson([...])` / `assertJsonFragment` vs fluent `AssertableJson`.
@@ -131,10 +131,10 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
 
 43. Response shape: API Resource classes vs `response()->json()` vs returning models/arrays directly.
     - Hint: `ls app/Http/Resources`; grep `JsonResource`, `->json(` in controllers.
-44. Resource field inclusion: `whenLoaded()` / `when()` guards vs unconditional attributes.
-    - Hint: grep `whenLoaded(`, `->when(` in `app/Http/Resources`.
-45. Pagination: `paginate()` vs `simplePaginate()` vs `cursorPaginate()`.
-    - Hint: grep those in `app/`.
+44. Resource relationship inclusion: `whenLoaded()` guards vs unconditional relationship access. Do not count ordinary scalar attributes as rivals to conditional relationships, and evaluate general `when()` fields separately.
+    - Hint: compare relationship fields using `whenLoaded(` with unconditional relationship property access in `app/Http/Resources`.
+45. Pagination contracts: within comparable endpoint categories, length-aware `paginate()` vs `simplePaginate()` vs `cursorPaginate()`. These have different totals, navigation, ordering, and performance contracts, so record only a stable path-scoped API policy, never a project-wide majority.
+    - Hint: grep those in `app/`, then group matches by endpoint type and client contract before comparing them.
 46. Web redirects/URLs: `route('name')` vs `url('/path')` vs `action([...])`.
     - Hint: grep `route('`, `url('/`, `action([` in `app/Http` and views.
 
@@ -144,8 +144,8 @@ No Livewire/Inertia/Flux package is installed. This app may be API-only. Confirm
     - Hint: grep `collect(`, `->map(` vs `array_map`, `foreach` density in `app/`.
 48. String API: fluent `Str::of()->...` (Stringable) vs static `Str::` vs native (`trim`, `strtoupper`).
     - Hint: grep `Str::of(` vs `Str::` vs native string funcs.
-49. Dates: `now()` / `today()` helpers vs `Carbon::` vs `CarbonImmutable` (`Date::use(...)`).
-    - Hint: grep `now(`, `Carbon::`, `CarbonImmutable`, `Date::use`.
+49. Dates: compare equivalent construction call styles (`now()` / `today()` helpers vs `Carbon::`) separately from the application's mutable/immutable date policy. `Date::use(CarbonImmutable::class)` can make helpers return immutable dates, so those signals are complementary rather than conflicting.
+    - Hint: grep `now(` and `Carbon::` for call style; separately inspect `CarbonImmutable` and `Date::use` for mutability policy.
 
 ---
 
