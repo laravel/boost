@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Prompts\UpgradeInertiav3\UpgradeInertiaV3;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Roster;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
     $this->prompt = new UpgradeInertiaV3;
 });
 
-function mockRosterWithFrameworks(bool $react = false, bool $vue = false, bool $svelte = false): Roster
+function mockProjectWithFrameworks(bool $react = false, bool $vue = false, bool $svelte = false): ProjectManager
 {
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn($react);
-    $roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn($vue);
-    $roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn($svelte);
-    $roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(true);
-    $roster->shouldReceive('usesVersion')->andReturn(false);
-    $roster->shouldReceive('packages')->andReturn(collect());
-    $roster->shouldReceive('nodePackageManager')->andReturn(null);
+    $project = Mockery::mock(ProjectManager::class);
+    $packages = new PackageCollection([
+        rosterPackage('inertiajs/inertia-laravel', '2.0.0'),
+        ...($react ? [rosterPackage('@inertiajs/react', '2.0.0')] : []),
+        ...($vue ? [rosterPackage('@inertiajs/vue3', '2.0.0')] : []),
+        ...($svelte ? [rosterPackage('@inertiajs/svelte', '2.0.0')] : []),
+    ]);
+    mockProjectPackages($project, $packages);
 
-    return $roster;
+    return $project;
 }
 
 test('it has the correct name', function (): void {
@@ -88,7 +88,7 @@ test('it avoids the outdated migration guidance from the original draft', functi
 });
 
 test('it shows react-specific content when react adapter is installed', function (): void {
-    $assist = app(GuidelineAssist::class, ['roster' => mockRosterWithFrameworks(react: true)]);
+    $assist = app(GuidelineAssist::class, ['project' => mockProjectWithFrameworks(react: true)]);
     $this->app->instance(GuidelineAssist::class, $assist);
 
     $text = (string) $this->prompt->handle()->content();
@@ -104,7 +104,7 @@ test('it shows react-specific content when react adapter is installed', function
 });
 
 test('it shows vue-specific content when vue adapter is installed', function (): void {
-    $assist = app(GuidelineAssist::class, ['roster' => mockRosterWithFrameworks(vue: true)]);
+    $assist = app(GuidelineAssist::class, ['project' => mockProjectWithFrameworks(vue: true)]);
     $this->app->instance(GuidelineAssist::class, $assist);
 
     $text = (string) $this->prompt->handle()->content();
@@ -119,7 +119,7 @@ test('it shows vue-specific content when vue adapter is installed', function ():
 });
 
 test('it shows svelte-specific content when svelte adapter is installed', function (): void {
-    $assist = app(GuidelineAssist::class, ['roster' => mockRosterWithFrameworks(svelte: true)]);
+    $assist = app(GuidelineAssist::class, ['project' => mockProjectWithFrameworks(svelte: true)]);
     $this->app->instance(GuidelineAssist::class, $assist);
 
     $text = (string) $this->prompt->handle()->content();

@@ -7,9 +7,9 @@ namespace Laravel\Boost\Install;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
-use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Roster;
+use Laravel\Boost\Support\PackageRegistry;
+use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Finder\Finder;
 
 class GuidelineAssist
@@ -17,7 +17,7 @@ class GuidelineAssist
     /** @var array<string, string> */
     protected array $enumPaths = [];
 
-    public function __construct(public Roster $roster, public GuidelineConfig $config, public ?Collection $skills = null)
+    public function __construct(public ProjectManager $project, public GuidelineConfig $config, public ?Collection $skills = null)
     {
         $this->skills ??= collect();
         $this->enumPaths = $this->discover();
@@ -93,24 +93,26 @@ class GuidelineAssist
 
     public function inertia(): Inertia
     {
-        return new Inertia($this->roster);
+        return new Inertia($this->project);
     }
 
     public function supportsPintAgentFormatter(): bool
     {
-        return $this->roster->usesVersion(Packages::PINT, '1.27.0', '>=');
+        return $this->project->php()->uses(PackageRegistry::PINT, '>=1.27.0');
     }
 
-    public function hasPackage(Packages $package): bool
+    public function hasPackage(string $package): bool
     {
-        return $this->roster->packages()->contains(
-            fn ($pkg): bool => $pkg->package() === $package
-        );
+        if ($this->project->php()->uses($package)) {
+            return true;
+        }
+
+        return $this->project->js()->uses($package);
     }
 
     public function nodePackageManager(): string
     {
-        return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
+        return ($this->project->js()->packageManager() ?? JsPackageManager::Npm)->value;
     }
 
     protected function detectedNodePackageManager(): string

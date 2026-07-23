@@ -6,10 +6,10 @@ namespace Laravel\Boost\Mcp\Prompts\UpgradeLaravelv13;
 
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Prompt;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 class UpgradeLaravelV13 extends Prompt
 {
@@ -21,10 +21,9 @@ class UpgradeLaravelV13 extends Prompt
 
     protected string $description = 'Provides step-by-step guidance for upgrading from Laravel 12.x to 13.0.';
 
-    public function shouldRegister(Roster $roster): bool
+    public function shouldRegister(ProjectManager $project): bool
     {
-        return $roster->usesVersion(Packages::LARAVEL, '12.0.0', '>=')
-            && $roster->usesVersion(Packages::LARAVEL, '13.0.0', '<');
+        return $project->php()->uses(PackageRegistry::LARAVEL, '>=12.0.0 <13.0.0');
     }
 
     public function handle(): Response

@@ -5,25 +5,23 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Mcp\Request;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 test('it searches documentation successfully', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '2.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '2.0.0'),
     ]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Documentation search results', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => ['authentication', 'testing']]));
 
     expect($response)->isToolResult()
@@ -42,17 +40,17 @@ test('it searches documentation successfully', function (): void {
 
 test('it handles API error response', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('API Error', 500),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => ['authentication']]));
 
     expect($response)->isToolResult()
@@ -63,14 +61,14 @@ test('it handles API error response', function (): void {
 test('it filters empty queries', function (): void {
     $packages = new PackageCollection([]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Empty results', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => ['test', '  ', '*', ' ']]));
 
     expect($response)->isToolResult()
@@ -84,18 +82,18 @@ test('it filters empty queries', function (): void {
 
 test('it formats package data correctly', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.5.1'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('livewire/livewire', '3.5.1'),
     ]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Package data results', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => ['test']]));
 
     expect($response)->isToolResult()
@@ -110,14 +108,14 @@ test('it formats package data correctly', function (): void {
 test('it handles empty results', function (): void {
     $packages = new PackageCollection([]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Empty response', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => ['nonexistent']]));
 
     expect($response)->isToolResult()
@@ -128,14 +126,14 @@ test('it handles empty results', function (): void {
 test('it uses custom token_limit when provided', function (): void {
     $packages = new PackageCollection([]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Custom token limit results', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => ['test'], 'token_limit' => 5000]));
 
     expect($response)->isToolResult()->toolHasNoError();
@@ -145,17 +143,17 @@ test('it uses custom token_limit when provided', function (): void {
 
 test('it handles queries passed as a JSON-encoded string', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Documentation search results', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => '["authentication","testing"]']));
 
     expect($response)->isToolResult()
@@ -167,18 +165,18 @@ test('it handles queries passed as a JSON-encoded string', function (): void {
 
 test('it handles packages passed as a JSON-encoded string', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.5.1'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('livewire/livewire', '3.5.1'),
     ]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Filtered results', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request([
         'queries' => ['test'],
         'packages' => '["livewire/livewire"]',
@@ -192,27 +190,27 @@ test('it handles packages passed as a JSON-encoded string', function (): void {
 });
 
 test('it returns error for malformed JSON in queries string', function (): void {
-    $roster = Mockery::mock(Roster::class);
+    $project = Mockery::mock(ProjectManager::class);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => '["authentication","testing"']));
 
     expect($response)->isToolResult()->toolHasError();
 });
 
 test('it returns error for non-array JSON in queries string', function (): void {
-    $roster = Mockery::mock(Roster::class);
+    $project = Mockery::mock(ProjectManager::class);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => '"authentication"']));
 
     expect($response)->isToolResult()->toolHasError();
 });
 
 test('it returns error for malformed JSON in packages string', function (): void {
-    $roster = Mockery::mock(Roster::class);
+    $project = Mockery::mock(ProjectManager::class);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request([
         'queries' => ['test'],
         'packages' => '["livewire/livewire"',
@@ -222,9 +220,9 @@ test('it returns error for malformed JSON in packages string', function (): void
 });
 
 test('it returns error for non-array JSON in packages string', function (): void {
-    $roster = Mockery::mock(Roster::class);
+    $project = Mockery::mock(ProjectManager::class);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request([
         'queries' => ['test'],
         'packages' => '"livewire/livewire"',
@@ -234,18 +232,18 @@ test('it returns error for non-array JSON in packages string', function (): void
 });
 
 test('it returns error for JSON object string in queries', function (): void {
-    $roster = Mockery::mock(Roster::class);
+    $project = Mockery::mock(ProjectManager::class);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => '{"q":"authentication"}']));
 
     expect($response)->isToolResult()->toolHasError();
 });
 
 test('it returns error for JSON object string in packages', function (): void {
-    $roster = Mockery::mock(Roster::class);
+    $project = Mockery::mock(ProjectManager::class);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request([
         'queries' => ['test'],
         'packages' => '{"pkg":"laravel/framework"}',
@@ -257,14 +255,14 @@ test('it returns error for JSON object string in packages', function (): void {
 test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 
-    $roster = Mockery::mock(Roster::class);
-    $roster->shouldReceive('packages')->andReturn($packages);
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
 
     Http::fake([
         'https://boost.laravel.com/api/docs' => Http::response('Capped token limit results', 200),
     ]);
 
-    $tool = new SearchDocs($roster);
+    $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => ['test'], 'token_limit' => 2000000]));
 
     expect($response)->isToolResult()->toolHasNoError();

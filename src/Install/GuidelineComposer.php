@@ -10,7 +10,7 @@ use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -27,14 +27,31 @@ class GuidelineComposer
 
     protected GuidelineConfig $config;
 
-    public function __construct(protected Roster $roster, protected Herd $herd)
+    protected bool $extractRules = true;
+
+    public function __construct(protected ProjectManager $project, protected Herd $herd)
     {
         $this->config = new GuidelineConfig;
     }
 
-    protected function getRoster(): Roster
+    public function withoutRuleExtraction(): self
     {
-        return $this->roster;
+        $this->extractRules = false;
+        $this->guidelines = null;
+
+        return $this;
+    }
+
+    protected function rulesExtractionEnabled(): bool
+    {
+        return $this->extractRules
+            && (bool) config('boost.rules.enabled', true)
+            && (bool) config('boost.rules.scoped_guidelines', false);
+    }
+
+    protected function getProject(): ProjectManager
+    {
+        return $this->project;
     }
 
     public function config(GuidelineConfig $config): self
@@ -94,6 +111,17 @@ class GuidelineComposer
      */
     public function guidelines(): Collection
     {
+        return $this->resolvedGuidelines()
+            ->filter(fn ($guideline): bool => filled($guideline['content']));
+    }
+
+    /**
+     * All resolved guidelines before the "has content" filter, including `@scoped`-only entries.
+     *
+     * @return Collection<string, array>
+     */
+    public function resolvedGuidelines(): Collection
+    {
         if ($this->guidelines instanceof Collection) {
             return $this->guidelines;
         }
@@ -112,9 +140,7 @@ class GuidelineComposer
         $customGuidelines = $this->getUserGuidelines()
             ->reject(fn ($guideline): bool => $basePaths->contains($guideline['path']));
 
-        return $this->guidelines = $customGuidelines
-            ->merge($base)
-            ->filter(fn ($guideline): bool => filled($guideline['content']));
+        return $this->guidelines = $customGuidelines->merge($base);
     }
 
     /**
@@ -176,7 +202,7 @@ class GuidelineComposer
 
     protected function getPackageGuidelines(): Collection
     {
-        return $this->roster->packages()
+        return $this->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package))
             ->flatMap(function (Package $package): Collection {
                 $guidelineDir = $this->normalizePackageName($package->name());
@@ -191,13 +217,13 @@ class GuidelineComposer
                     $guidelineDir.'/core' => $this->resolveGuideline($vendorCorePath, $guidelineDir.'/core'),
                 ]);
 
-                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->majorVersion());
+                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->major());
 
                 foreach ($packageGuidelines as $guideline) {
                     $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];
 
                     $guidelines->put(
-                        $guidelineDir.'/v'.$package->majorVersion().$suffix,
+                        $guidelineDir.'/v'.$package->major().$suffix,
                         $guideline
                     );
                 }
@@ -207,7 +233,7 @@ class GuidelineComposer
     }
 
     /**
-     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
+     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool, scoped?: array<int, array{paths: array<int, string>, body: string}>, tokens?: float}
      */
     private function resolveGuideline(?string $vendorPath, string $guidelineKey): array
     {
@@ -219,7 +245,7 @@ class GuidelineComposer
             }
         }
 
-        return $this->guideline($guidelineKey);
+        return $this->guideline($guidelineKey, false, $guidelineKey);
     }
 
     /**
@@ -234,8 +260,16 @@ class GuidelineComposer
                 continue;
             }
 
-            foreach ($this->guidelinesDir($path, true) as $guideline) {
-                $guidelines->put($package, $guideline);
+            $root = str_replace('\\', '/', (string) (realpath($path) ?: $path));
+
+            $keyed = $this->guidelinesDir(
+                $path,
+                true,
+                fn (SplFileInfo $file): string => $package.'/'.$this->relativeGuidelineKey($root, $file->getRealPath()),
+            );
+
+            foreach ($keyed as $key => $guideline) {
+                $guidelines->put($key, $guideline);
             }
         }
 
@@ -243,15 +277,36 @@ class GuidelineComposer
             return $guidelines;
         }
 
-        return $guidelines->filter(
-            fn (mixed $guideline, string $name): bool => in_array($name, $this->config->aiGuidelines, true),
-        );
+        return $guidelines->filter(fn (mixed $guideline, string $key): bool => $this->keyBelongsToSelectedPackage($key));
+    }
+
+    private function keyBelongsToSelectedPackage(string $key): bool
+    {
+        foreach ($this->config->aiGuidelines as $package) {
+            if ($key === $package || str_starts_with($key, $package.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function relativeGuidelineKey(string $root, string $file): string
+    {
+        $file = str_replace('\\', '/', $file);
+
+        $relative = str_starts_with($file, $root)
+            ? ltrim(Str::after($file, $root), '/')
+            : basename($file);
+
+        return (string) preg_replace('/\.(blade\.php|md)$/', '', $relative);
     }
 
     /**
-     * @return array<array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}>
+     * @param  ?callable(SplFileInfo): string  $keyResolver  keys each entry and doubles as its override key
+     * @return array<array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool, scoped?: array<int, array{paths: array<int, string>, body: string}>, tokens?: float}>
      */
-    protected function guidelinesDir(string $dirPath, bool $thirdParty = false): array
+    protected function guidelinesDir(string $dirPath, bool $thirdParty = false, ?callable $keyResolver = null): array
     {
         if (! is_dir($dirPath)) {
             $dirPath = str_replace('/', DIRECTORY_SEPARATOR, $this->getBoostAiPath().'/'.$dirPath);
@@ -269,13 +324,23 @@ class GuidelineComposer
             return [];
         }
 
+        if ($keyResolver === null) {
+            return collect($finder)
+                ->map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty))
+                ->all();
+        }
+
         return collect($finder)
-            ->map(fn (SplFileInfo $file): array => $this->guideline($file->getRealPath(), $thirdParty))
+            ->mapWithKeys(function (SplFileInfo $file) use ($thirdParty, $keyResolver): array {
+                $key = $keyResolver($file);
+
+                return [$key => $this->guideline($file->getRealPath(), $thirdParty, $key)];
+            })
             ->all();
     }
 
     /**
-     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool}
+     * @return array{content: string, name: string, description: string, path: ?string, custom: bool, third_party: bool, scoped?: array<int, array{paths: array<int, string>, body: string}>, tokens?: float}
      */
     protected function guideline(string $path, bool $thirdParty = false, ?string $overrideKey = null): array
     {
@@ -289,10 +354,12 @@ class GuidelineComposer
                 'path' => null,
                 'custom' => false,
                 'third_party' => $thirdParty,
+                'scoped' => [],
             ];
         }
 
-        $rendered = $this->renderBladeFile($path);
+        $result = $this->renderBladeFileWithScopedBlocks($path, [], $this->rulesExtractionEnabled());
+        $rendered = $result['content'];
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -309,13 +376,9 @@ class GuidelineComposer
             'path' => $path,
             'custom' => $this->isCustomGuideline($path),
             'third_party' => $thirdParty,
+            'scoped' => $result['blocks'],
             'tokens' => round(str_word_count($rendered) * 1.3),
         ];
-    }
-
-    protected function getGuidelineAssist(): GuidelineAssist
-    {
-        return new GuidelineAssist($this->roster, $this->config);
     }
 
     protected function prependPackageGuidelinePath(string $path): string
@@ -339,6 +402,16 @@ class GuidelineComposer
 
     protected function guidelinePath(string $path, ?string $overrideKey = null): ?string
     {
+        if ($overrideKey !== null) {
+            foreach (['.blade.php', '.md'] as $ext) {
+                $customPath = $this->prependUserGuidelinePath($overrideKey.$ext);
+
+                if (file_exists($customPath)) {
+                    return realpath($customPath);
+                }
+            }
+        }
+
         // Relative path, prepend our package path to it
         if (! file_exists($path)) {
             $path = $this->prependPackageGuidelinePath($path);
@@ -355,14 +428,6 @@ class GuidelineComposer
         }
 
         if ($overrideKey !== null) {
-            foreach (['.blade.php', '.md'] as $ext) {
-                $customPath = $this->prependUserGuidelinePath($overrideKey.$ext);
-
-                if (file_exists($customPath)) {
-                    return realpath($customPath);
-                }
-            }
-
             return $path;
         }
 
@@ -376,5 +441,10 @@ class GuidelineComposer
         $customPath = $this->prependUserGuidelinePath($relativePath);
 
         return file_exists($customPath) ? realpath($customPath) : $path;
+    }
+
+    protected function getGuidelineAssist(): GuidelineAssist
+    {
+        return new GuidelineAssist($this->project, $this->config);
     }
 }

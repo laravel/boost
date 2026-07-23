@@ -9,38 +9,34 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\Npm;
-use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 use function Pest\testDirectory;
 
 beforeEach(function (): void {
-    $this->roster = Mockery::mock(Roster::class);
-    $this->nodePackageManager = NodePackageManager::NPM;
-    $this->roster->shouldReceive('nodePackageManager')->andReturnUsing(
-        fn (): NodePackageManager => $this->nodePackageManager
-    );
-    $this->roster->shouldReceive('usesVersion')->andReturn(false)->byDefault();
+    $this->project = Mockery::mock(ProjectManager::class);
 
     $this->herd = Mockery::mock(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
 
-    $this->app->instance(Roster::class, $this->roster);
+    $this->app->instance(ProjectManager::class, $this->project);
 
-    $this->composer = new GuidelineComposer($this->roster, $this->herd);
+    $this->composer = new GuidelineComposer($this->project, $this->herd);
 });
 
 test('includes Inertia React conditional guidelines based on version', function (string $version): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', $version),
-        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', $version),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('@inertiajs/react', $version),
+        rosterPackage('inertiajs/inertia-laravel', $version),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -55,12 +51,14 @@ test('includes Inertia React conditional guidelines based on version', function 
 ]);
 
 test('includes package guidelines only for installed packages', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -69,12 +67,68 @@ test('includes package guidelines only for installed packages', function (): voi
         ->not->toContain('=== inertia-react/core rules ===');
 });
 
-test('excludes conditional guidelines when config is false', function (): void {
+test('excludes scoped block content from the composed blob when scoped guidelines are enabled', function (): void {
+    config(['boost.rules.scoped_guidelines' => true]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('livewire/livewire', '3.0.0')->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect(config('boost.rules.scoped_guidelines'))->toBeTrue()
+        ->and($guidelines)
+        ->not->toContain('=== pest/core rules ===')
+        ->not->toContain('=== livewire/core rules ===')
+        ->toContain('=== foundation rules ===');
+});
+
+test('inlines scoped block content by default since scoped guidelines are opt-in', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect(config('boost.rules.scoped_guidelines'))->toBeFalse()
+        ->and($guidelines)
+        ->toContain('=== laravel/core rules ===')
+        ->toContain('URL Generation')
+        ->toContain('Model Creation');
+});
+
+test('strips only the scoped portion of a partially-scoped guideline, keeping the rest inline', function (): void {
+    config(['boost.rules.scoped_guidelines' => true]);
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect(config('boost.rules.scoped_guidelines'))->toBeTrue()
+        ->and($guidelines)
+        ->toContain('=== laravel/core rules ===')
+        ->toContain('URL Generation')
+        ->not->toContain('APIs & Eloquent Resources')
+        ->not->toContain('Model Creation')
+        ->not->toContain('When creating new models, create useful factories');
+});
+
+test('excludes conditional guidelines when config is false', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
 
     $config = new GuidelineConfig;
     $config->laravelStyle = false;
@@ -95,10 +149,10 @@ test('excludes conditional guidelines when config is false', function (): void {
 
 test('includes Herd guidelines only when on .test domain and Herd is installed', function (string $appUrl, bool $herdInstalled, bool $shouldInclude): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
     $this->herd->shouldReceive('isInstalled')->andReturn($herdInstalled);
 
     config(['app.url' => $appUrl]);
@@ -119,10 +173,10 @@ test('includes Herd guidelines only when on .test domain and Herd is installed',
 
 test('excludes Herd guidelines when Sail is configured', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
     $this->herd->shouldReceive('isInstalled')->andReturn(true);
 
     config(['app.url' => 'http://myapp.test']);
@@ -142,10 +196,10 @@ test('excludes Herd guidelines when Sail is configured', function (): void {
 
 test('excludes Sail guidelines when Herd is configured', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
     $this->herd->shouldReceive('isInstalled')->andReturn(true);
 
     config(['app.url' => 'http://myapp.test']);
@@ -164,10 +218,10 @@ test('excludes Sail guidelines when Herd is configured', function (): void {
 
 test('composes guidelines with proper formatting', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -183,37 +237,17 @@ test('composes guidelines with proper formatting', function (): void {
 });
 
 test('handles multiple package versions correctly', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
-        new Package(Packages::INERTIA_VUE, 'inertiajs/inertia-vue', '2.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.0'),
+        rosterPackage('@inertiajs/vue3', '2.0.0'),
+        rosterPackage('pestphp/pest', '3.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
     // Mock all Inertia package version checks for this test too
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, '2.1.0', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, '2.1.0', '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, '2.1.0', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, '2.1.0', '>=')
-        ->andReturn(false);
-
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, '2.1.2', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, '2.1.2', '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, '2.1.2', '>=')
-        ->andReturn(false);
 
     $guidelines = $this->composer->compose();
 
@@ -225,10 +259,10 @@ test('handles multiple package versions correctly', function (): void {
 
 test('filters out empty guidelines', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -240,8 +274,8 @@ test('filters out empty guidelines', function (): void {
 test('includes the project rules pointer when rules are enabled and MCP is on', function (): void {
     config()->set('boost.rules.enabled', true);
 
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
     ]));
 
     $config = new GuidelineConfig;
@@ -259,8 +293,8 @@ test('includes the project rules pointer when rules are enabled and MCP is on', 
 test('omits the project rules pointer when rules are disabled', function (): void {
     config()->set('boost.rules.enabled', false);
 
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
     ]));
 
     $config = new GuidelineConfig;
@@ -274,12 +308,14 @@ test('omits the project rules pointer when rules are disabled', function (): voi
 });
 
 test('returns list of used guidelines', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.1', true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.1', true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $config = new GuidelineConfig;
     $config->laravelStyle = true;
@@ -302,12 +338,12 @@ test('returns list of used guidelines', function (): void {
 
 test('includes user custom guidelines from .ai/guidelines directory', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
@@ -323,14 +359,43 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
         ->toContain('.ai/project-specific');
 });
 
-test('non-empty custom guidelines override Boost guidelines', function (): void {
+test('a user override still applies for a package whose bundled core.blade.php no longer exists', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $customDir = testDirectory('Fixtures/.ai/pest-core-override-guidelines');
+    @mkdir($customDir.'/pest', 0755, true);
+    file_put_contents($customDir.'/pest/core.blade.php', "# Custom Pest Override\n\nAlways use this project's own Pest conventions.\n");
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $guidelines = $composer->guidelines();
+
+        expect($guidelines->get('pest/core')['content'] ?? null)
+            ->toContain('Custom Pest Override');
+    } finally {
+        @unlink($customDir.'/pest/core.blade.php');
+        @rmdir($customDir.'/pest');
+        @rmdir($customDir);
+    }
+});
+
+test('non-empty custom guidelines override Boost guidelines', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
@@ -350,14 +415,15 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
 });
 
 test('excludes PHPUnit guidelines when Pest is present due to package priority', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
-        new Package(Packages::PHPUNIT, 'phpunit/phpunit', '10.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('phpunit/phpunit', '10.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->with(Packages::PEST)->andReturn(true);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -368,47 +434,50 @@ test('excludes PHPUnit guidelines when Pest is present due to package priority',
 
 test('excludes laravel/mcp guidelines when indirectly required', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::MCP, 'laravel/mcp', '0.2.2'))->setDirect(false),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('laravel/mcp', '0.2.2'))->setDirect(false),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->with(Packages::LARAVEL)->andReturn(true);
-    $this->roster->shouldReceive('uses')->with(Packages::MCP)->andReturn(true);
+    mockProjectPackages($this->project, $packages);
 
     expect($this->composer->compose())->not->toContain('Mcp::web');
 });
 
 test('excludes livewire guidelines when indirectly required', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(false),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(false),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     expect($this->composer->compose())->not->toContain('=== livewire/core rules ===');
 });
 
 test('includes livewire guidelines when directly required', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     expect($this->composer->compose())->toContain('=== livewire/core rules ===');
 });
 
 test('includes PHPUnit guidelines when Pest is not present', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PHPUNIT, 'phpunit/phpunit', '10.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('phpunit/phpunit', '10.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('uses')->with(Packages::PEST)->andReturn(false);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -417,12 +486,11 @@ test('includes PHPUnit guidelines when Pest is not present', function (): void {
         ->not->toContain('=== pest/core rules ===');
 });
 
-test('includes correct package manager commands in guidelines based on lockfile', function (NodePackageManager $packageManager, string $expectedCommand): void {
+test('includes correct package manager commands in guidelines based on lockfile', function (JsPackageManager $packageManager, string $expectedCommand): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
-    $this->nodePackageManager = $packageManager;
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages, $packageManager);
 
     $guidelines = $this->composer->compose();
 
@@ -430,22 +498,22 @@ test('includes correct package manager commands in guidelines based on lockfile'
         ->toContain("{$expectedCommand} run build")
         ->toContain("{$expectedCommand} run dev");
 })->with([
-    'npm' => [NodePackageManager::NPM, 'npm'],
-    'pnpm' => [NodePackageManager::PNPM, 'pnpm'],
-    'yarn' => [NodePackageManager::YARN, 'yarn'],
-    'bun' => [NodePackageManager::BUN, 'bun'],
+    'npm' => [JsPackageManager::Npm, 'npm'],
+    'pnpm' => [JsPackageManager::Pnpm, 'pnpm'],
+    'yarn' => [JsPackageManager::Yarn, 'yarn'],
+    'bun' => [JsPackageManager::Bun, 'bun'],
 ]);
 
 test('renderContent handles blade and markdown files correctly', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::VOLT, 'laravel/volt', '1.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('livewire/volt', '1.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->nodePackageManager = NodePackageManager::NPM;
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    mockProjectPackages($this->project, $packages);
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
@@ -488,32 +556,16 @@ test('renderContent handles blade and markdown files correctly', function (): vo
 });
 
 test('includes wayfinder guidelines with inertia integration when both packages are present', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
-        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.2'),
-        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/wayfinder', '1.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.2'),
+        rosterPackage('inertiajs/inertia-laravel', '2.1.2'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(true);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(true);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(false);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(false);
-
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
-        ->andReturn(false);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -524,32 +576,16 @@ test('includes wayfinder guidelines with inertia integration when both packages 
 });
 
 test('includes wayfinder guidelines with inertia vue integration', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
-        new Package(Packages::INERTIA_VUE, 'inertiajs/inertia-vue', '2.1.2'),
-        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/wayfinder', '1.0.0'),
+        rosterPackage('@inertiajs/vue3', '2.1.2'),
+        rosterPackage('inertiajs/inertia-laravel', '2.1.2'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(true);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(false);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(true);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(false);
-
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
-        ->andReturn(false);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -560,32 +596,16 @@ test('includes wayfinder guidelines with inertia vue integration', function (): 
 });
 
 test('includes wayfinder guidelines with inertia svelte integration', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
-        new Package(Packages::INERTIA_SVELTE, 'inertiajs/inertia-svelte', '2.1.2'),
-        new Package(Packages::INERTIA_LARAVEL, 'inertiajs/inertia-laravel', '2.1.2'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/wayfinder', '1.0.0'),
+        rosterPackage('@inertiajs/svelte', '2.1.2'),
+        rosterPackage('inertiajs/inertia-laravel', '2.1.2'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(true);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(false);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(false);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(true);
-
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
-        ->andReturn(true);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
-        ->andReturn(true);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -596,30 +616,14 @@ test('includes wayfinder guidelines with inertia svelte integration', function (
 });
 
 test('includes wayfinder guidelines without inertia integration when inertia is not present', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::WAYFINDER, 'laravel/wayfinder', '1.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/wayfinder', '1.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_LARAVEL)->andReturn(false);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_REACT)->andReturn(false);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_VUE)->andReturn(false);
-    $this->roster->shouldReceive('uses')->with(Packages::INERTIA_SVELTE)->andReturn(false);
-
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_LARAVEL, Mockery::any(), '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_REACT, Mockery::any(), '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_VUE, Mockery::any(), '>=')
-        ->andReturn(false);
-    $this->roster->shouldReceive('usesVersion')
-        ->with(Packages::INERTIA_SVELTE, Mockery::any(), '>=')
-        ->andReturn(false);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->compose();
 
@@ -630,16 +634,18 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
 });
 
 test('the guidelines are in correct order', function (): void {
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    config(['boost.rules.enabled' => false]);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $config = new GuidelineConfig;
     $config->enforceTests = true;
@@ -688,14 +694,14 @@ test('composeGuidelines filters out empty guidelines', function (): void {
 });
 
 test('correctly converts package names to hyphens in guideline paths', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_REACT, 'inertiajs/inertia-react', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
-    $this->roster->shouldReceive('usesVersion')->andReturn(false);
-
+    mockProjectPackages($this->project, $packages);
     $guidelines = $this->composer->guidelines();
     $keys = $guidelines->keys()->toArray();
 
@@ -707,12 +713,14 @@ test('correctly converts package names to hyphens in guideline paths', function 
 });
 
 test('includes enabled conditional guidelines and orders them before packages', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
     $this->herd->shouldReceive('isInstalled')->andReturn(true);
     config(['app.url' => 'http://myapp.test']);
 
@@ -739,12 +747,12 @@ test('includes enabled conditional guidelines and orders them before packages', 
 
 test('user guidelines are sorted by filename for predictable ordering', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/sorted-guidelines')).'/'.ltrim((string) $path, '/'));
@@ -762,11 +770,11 @@ test('user guidelines are sorted by filename for predictable ordering', function
 
 test('excludes boost package from Roster discovery to prevent duplicate core guidelines', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::BOOST, 'laravel/boost', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/boost', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $guidelines = $this->composer->guidelines();
     $keys = $guidelines->keys();
@@ -777,10 +785,10 @@ test('excludes boost package from Roster discovery to prevent duplicate core gui
 
 test('excludes Skills Activation section when skills are disabled', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $config = new GuidelineConfig;
     $config->hasSkills = false;
@@ -796,10 +804,10 @@ test('excludes Skills Activation section when skills are disabled', function ():
 
 test('includes Skills Activation section when skills are enabled', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $config = new GuidelineConfig;
     $config->hasSkills = true;
@@ -815,10 +823,10 @@ test('includes Skills Activation section when skills are enabled', function (): 
 
 test('excludes guidelines listed in config exclude list', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
     $this->herd->shouldReceive('isInstalled')->andReturn(true);
 
     config(['app.url' => 'http://myapp.test']);
@@ -839,10 +847,10 @@ test('excludes guidelines listed in config exclude list', function (): void {
 
 test('excludes core guidelines when listed in exclude config', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.guidelines.exclude' => ['php']]);
 
@@ -855,12 +863,14 @@ test('excludes core guidelines when listed in exclude config', function (): void
 });
 
 test('excludes package guidelines when listed in exclude config', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.guidelines.exclude' => ['pest/core']]);
 
@@ -873,10 +883,10 @@ test('excludes package guidelines when listed in exclude config', function (): v
 
 test('excludes deployment guidelines when listed in exclude config', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.guidelines.exclude' => ['deployments']]);
 
@@ -890,10 +900,10 @@ test('excludes deployment guidelines when listed in exclude config', function ()
 
 test('excludes versioned package guidelines when listed in exclude config', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '12.0.0'),
+        rosterPackage('laravel/framework', '12.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.guidelines.exclude' => ['laravel/v12']]);
 
@@ -907,12 +917,12 @@ test('excludes versioned package guidelines when listed in exclude config', func
 
 test('does not exclude user guidelines via config', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
     $composer
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
@@ -925,10 +935,10 @@ test('does not exclude user guidelines via config', function (): void {
 
 test('ignores non-existent keys in guidelines exclude list', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.guidelines.exclude' => ['nonexistent']]);
 
@@ -941,12 +951,14 @@ test('ignores non-existent keys in guidelines exclude list', function (): void {
 });
 
 test('excludes guidelines from used() list', function (): void {
+    config(['boost.rules.enabled' => false]);
+
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.guidelines.exclude' => ['pest/core']]);
 
@@ -959,10 +971,10 @@ test('excludes guidelines from used() list', function (): void {
 
 test('excludes MCP Tools and Searching Documentation sections when hasMcp is false', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $config = new GuidelineConfig;
     $config->hasMcp = false;
@@ -981,10 +993,10 @@ test('excludes MCP Tools and Searching Documentation sections when hasMcp is fal
 
 test('includes MCP Tools and Searching Documentation sections when hasMcp is true', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $config = new GuidelineConfig;
     $config->hasMcp = true;
@@ -1003,19 +1015,19 @@ test('includes MCP Tools and Searching Documentation sections when hasMcp is tru
 
 test('loads vendor core guideline when available', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -1026,37 +1038,37 @@ test('loads vendor core guideline when available', function (): void {
 
 test('falls back to .ai/ when vendor guideline path does not exist', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $guidelines = $composer->compose();
 
-    expect($guidelines)->toContain('=== pest/core rules ===');
+    expect($guidelines)->toContain('=== laravel/core rules ===');
 });
 
 test('guideline key is unchanged regardless of vendor or .ai/ source', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
 
     $keys = $composer->used();
 
@@ -1065,20 +1077,20 @@ test('guideline key is unchanged regardless of vendor or .ai/ source', function 
 
 test('user override works with vendor-sourced guideline', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'laravel/framework' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'laravel/framework' ? $vendorFixture : null);
 
     $guidelines = $composer->guidelines();
     $laravelCore = $guidelines->get('laravel/core');
@@ -1105,19 +1117,19 @@ test('isFirstPartyPackage identifies scoped npm packages', function (): void {
 
 test('loads node_modules core guideline for npm first-party packages', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -1128,29 +1140,29 @@ test('loads node_modules core guideline for npm first-party packages', function 
 
 test('falls back to .ai/ when node_modules guideline path does not exist for npm package', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $guidelines = $composer->compose();
 
-    expect($guidelines)->toContain('=== inertia-react/core rules ===');
+    expect($guidelines)->toContain('=== laravel/core rules ===');
 });
 
 test('user override resolves .md files for vendor-sourced guidelines', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::PEST, 'pestphp/pest', '3.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
@@ -1158,11 +1170,11 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     @mkdir($mdOverrideDir.'/pest', 0755, true);
     file_put_contents($mdOverrideDir.'/pest/core.md', '# Pest Markdown Override');
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'pestphp/pest' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
     $composer->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
 
@@ -1180,10 +1192,10 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
 
 test('symlinked custom guidelines directory does not produce duplicates', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $realGuidelinesDir = realpath(testDirectory('Fixtures/.ai/guidelines'));
     $symlinkDir = testDirectory('Fixtures/.ai/symlinked-guidelines');
@@ -1192,7 +1204,7 @@ test('symlinked custom guidelines directory does not produce duplicates', functi
     symlink($realGuidelinesDir, $symlinkDir);
 
     try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
         $composer
             ->shouldReceive('customGuidelinePath')
             ->andReturnUsing(fn ($path = ''): string => $symlinkDir.'/'.ltrim((string) $path, '/'));
@@ -1208,10 +1220,10 @@ test('symlinked custom guidelines directory does not produce duplicates', functi
 
 test('symlinked custom guideline file does not produce duplicates', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $customDir = testDirectory('Fixtures/.ai/symlinked-file-guidelines');
     $externalFile = realpath(testDirectory('Fixtures/.ai/guidelines/laravel/core.blade.php'));
@@ -1222,7 +1234,7 @@ test('symlinked custom guideline file does not produce duplicates', function ():
     symlink($externalFile, $customDir.'/laravel/core.blade.php');
 
     try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->roster, $this->herd])->makePartial();
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
         $composer
             ->shouldReceive('customGuidelinePath')
             ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));

@@ -35,14 +35,15 @@ return [
     | Boost Project Rules
     |--------------------------------------------------------------------------
     |
-    | Project rules let agents record durable decisions, non-obvious traps, and
-    | standing constraints as committed markdown files in .ai/rules/, grouped
-    | by file area. Set this to false to remove the record-rule MCP tool.
+    | Project rules let agents record decisions, traps, and standing constraints
+    | as committed markdown in .ai/rules/. Enabling "scoped_guidelines" also
+    | moves path-scoped guidelines to .ai/rules/boost/; it stays opt-in.
     |
     */
 
     'rules' => [
-        'enabled' => env('BOOST_RULES_ENABLED', false),
+        'enabled' => env('BOOST_RULES_ENABLED', true),
+        'scoped_guidelines' => env('BOOST_RULES_SCOPED_GUIDELINES', false),
     ],
 
     /*
