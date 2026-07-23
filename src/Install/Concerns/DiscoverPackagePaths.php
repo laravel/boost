@@ -62,7 +62,17 @@ trait DiscoverPackagePaths
             }
         }
 
-        return $package->indirect() && in_array($package->package(), $this->mustBeDirect, true);
+        return $package->indirect()
+            && in_array($package->package(), $this->mustBeDirect, true)
+            && ! $this->isExplicitlyIncluded($package->rawName());
+    }
+
+    /**
+     * An indirect package opted into via `extra.laravel-boost` is treated as a direct requirement.
+     */
+    protected function isExplicitlyIncluded(string $composerName): bool
+    {
+        return in_array($composerName, Composer::extraPackageNames(), true);
     }
 
     /**
