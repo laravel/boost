@@ -48,6 +48,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Boost Skills
+    |--------------------------------------------------------------------------
+    |
+    | Here you may list the skills Boost ships to every project unconditionally,
+    | such as "infer-conventions", to opt out of having them installed. This
+    | is the only way to exclude a skill that Boost ships unconditionally.
+    |
+    */
+
+    'skills' => [
+        'exclude' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
