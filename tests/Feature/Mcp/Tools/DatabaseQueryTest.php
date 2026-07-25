@@ -111,6 +111,64 @@ it('allows queries starting with any allowed keyword even when identifiers look 
     }
 });
 
+it('blocks write operations disguised as read-only queries', function (): void {
+    DB::shouldReceive('select')->never();
+
+    $tool = new DatabaseQuery;
+
+    $queries = [
+        'WITH t AS (DELETE FROM users RETURNING *) SELECT * FROM t',
+        'WITH t AS (UPDATE users SET admin = 1 RETURNING *) SELECT * FROM t',
+        'WITH t AS (INSERT INTO logs VALUES (1) RETURNING *) SELECT * FROM t',
+        "WITH t AS (\n    -- a comment\n    DELETE FROM users RETURNING *\n) SELECT * FROM t",
+        'WITH t AS (/* a comment */ DELETE FROM users RETURNING *) SELECT * FROM t',
+        'EXPLAIN ANALYZE DELETE FROM users',
+        'EXPLAIN (ANALYZE, BUFFERS) UPDATE users SET admin = 1',
+        'EXPLAIN FORMAT=TREE DELETE FROM users',
+        'SELECT * INTO users_copy FROM users',
+        "SELECT id FROM users INTO OUTFILE '/tmp/users.csv'",
+        'SELECT 1; DELETE FROM users',
+        'SELECT /*!50000 1 */ FROM users',
+    ];
+
+    foreach ($queries as $query) {
+        $response = $tool->handle(new Request(['query' => $query]));
+
+        expect($response)->isToolResult()
+            ->toolHasError()
+            ->toolTextContains('Only read-only queries are allowed');
+    }
+});
+
+it('allows read-only queries containing write keyword look-alikes', function (): void {
+    DB::shouldReceive('connection')->andReturnSelf();
+    DB::shouldReceive('select')->andReturn([]);
+    DB::shouldReceive('getTablePrefix')->andReturn('');
+
+    $tool = new DatabaseQuery;
+
+    $queries = [
+        "SELECT REPLACE(name, 'a', 'b') FROM users",
+        "SELECT (REPLACE(name, 'a', 'b')) FROM users",
+        "SELECT INSERT('hello', 1, 2, 'x')",
+        "SELECT * FROM users WHERE action = 'DELETE FROM users'",
+        'SELECT `delete` FROM `updates`',
+        "SELECT * FROM users -- DELETE FROM users\nWHERE id = 1",
+        'SELECT * FROM users;',
+        'SHOW CREATE TABLE users',
+        'EXPLAIN ANALYZE SELECT * FROM users',
+        'EXPLAIN (ANALYZE) SELECT * FROM users',
+        'EXPLAIN users',
+    ];
+
+    foreach ($queries as $query) {
+        $response = $tool->handle(new Request(['query' => $query]));
+
+        expect($response)->isToolResult()
+            ->toolHasNoError();
+    }
+});
+
 it('adds table prefix to queries', function (): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('getTablePrefix')->andReturn('wp_');

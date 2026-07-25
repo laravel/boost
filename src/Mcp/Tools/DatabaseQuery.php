@@ -43,40 +43,12 @@ class DatabaseQuery extends Tool
     public function handle(Request $request): Response
     {
         $query = trim((string) $request->string('query'));
-        $token = strtok(ltrim($query), " \t\n\r");
 
-        if (! $token) {
+        if ($query === '') {
             return Response::error('Please pass a valid query');
         }
 
-        $firstWord = strtoupper($token);
-
-        // Allowed read-only commands.
-        $allowList = [
-            'SELECT',
-            'SHOW',
-            'EXPLAIN',
-            'DESCRIBE',
-            'DESC',
-            'WITH',        // SELECT must follow Common-table expressions
-            'VALUES',      // Returns literal values
-            'TABLE',       // PostgresSQL shorthand for SELECT *
-        ];
-
-        $isReadOnly = in_array($firstWord, $allowList, true);
-
-        // Additional validation for WITH … SELECT.
-        if ($firstWord === 'WITH') {
-            if (! preg_match('/\)\s*SELECT\b/i', $query)) {
-                $isReadOnly = false;
-            }
-
-            if (preg_match('/\)\s*(DELETE|UPDATE|INSERT|DROP|ALTER|TRUNCATE|REPLACE|RENAME|CREATE)\b/i', $query)) {
-                $isReadOnly = false;
-            }
-        }
-
-        if (! $isReadOnly) {
+        if (! $this->isReadOnlyQuery($query)) {
             return Response::error('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
         }
 
@@ -96,6 +68,90 @@ class DatabaseQuery extends Tool
         } catch (Throwable $throwable) {
             return Response::error('Query failed: '.$throwable->getMessage());
         }
+    }
+
+    /**
+     * Determine if the given query only reads data.
+     */
+    protected function isReadOnlyQuery(string $query): bool
+    {
+        // MySQL executes version-gated "/*! ... */" comments, so they cannot be treated as comments.
+        if (str_contains($query, '/*!')) {
+            return false;
+        }
+
+        $structure = $this->withoutLiteralsAndComments($query);
+
+        // Reject stacked statements, but allow a single trailing semicolon.
+        if (preg_match('/;\s*\S/', $structure)) {
+            return false;
+        }
+
+        $token = strtok($structure, " \t\n\r");
+
+        if ($token === false) {
+            return false;
+        }
+
+        $firstWord = strtoupper($token);
+
+        // Allowed read-only commands.
+        $allowList = [
+            'SELECT',
+            'SHOW',
+            'EXPLAIN',
+            'DESCRIBE',
+            'DESC',
+            'WITH',        // SELECT must follow Common-table expressions
+            'VALUES',      // Returns literal values
+            'TABLE',       // PostgresSQL shorthand for SELECT *
+        ];
+
+        if (! in_array($firstWord, $allowList, true)) {
+            return false;
+        }
+
+        // Additional validation for WITH … SELECT.
+        if ($firstWord === 'WITH' && ! preg_match('/\)\s*SELECT\b/i', $structure)) {
+            return false;
+        }
+
+        // Block write statements wherever a statement can start: at the beginning, after an
+        // opening parenthesis (data-modifying CTE bodies), after a closing parenthesis
+        // (statements following CTEs), or after a semicolon. INSERT and REPLACE also exist
+        // as string functions, so their function-call form remains allowed.
+        if (preg_match('/(^|[();])\s*(?:(?:DELETE|UPDATE|DROP|ALTER|TRUNCATE|RENAME|CREATE|MERGE)\b|(?:INSERT|REPLACE)\b(?!\s*\())/i', $structure)) {
+            return false;
+        }
+
+        // EXPLAIN ANALYZE executes the statement it explains, so EXPLAIN may only target reads.
+        if ($firstWord === 'EXPLAIN' && preg_match('/^\s*EXPLAIN\s+(?:\([^)]*\)\s*|(?:ANALYZE|VERBOSE|QUERY\s+PLAN|FORMAT\s*=?\s*\w+)\s+)*(?:DELETE|UPDATE|INSERT|REPLACE|MERGE|DROP|ALTER|TRUNCATE|RENAME|CREATE)\b/i', $structure)) {
+            return false;
+        }
+
+        // INTO always writes: SELECT … INTO, INTO OUTFILE, and INTO DUMPFILE.
+        if (preg_match('/\bINTO\b/i', $structure)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Strip string literals, quoted identifiers, and comments so keyword
+     * checks only run against the structural parts of the query.
+     */
+    protected function withoutLiteralsAndComments(string $query): string
+    {
+        $patterns = [
+            "/'(?:[^'\\\\]|\\\\.|'')*'/s",  // single-quoted strings
+            '/"(?:[^"\\\\]|\\\\.|"")*"/s',  // double-quoted strings and identifiers
+            '/`(?:[^`]|``)*`/s',            // backtick-quoted identifiers
+            '/--[^\n]*/',                   // line comments
+            '#/\*.*?\*/#s',                 // block comments
+        ];
+
+        return preg_replace($patterns, ' ', $query) ?? $query;
     }
 
     protected function addPrefixToQuery(string $query, string $prefix): string
