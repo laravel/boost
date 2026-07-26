@@ -4,31 +4,31 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install\Assists;
 
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Roster;
+use Laravel\Boost\Support\PackageRegistry;
+use Laravel\Roster\ProjectManager;
 
 class Inertia
 {
-    public function __construct(private Roster $roster)
+    public function __construct(private ProjectManager $project)
     {
         //
     }
 
     public function gte(string $version): bool
     {
-        if ($this->roster->usesVersion(Packages::INERTIA_LARAVEL, $version, '>=')) {
+        if ($this->project->php()->uses(PackageRegistry::INERTIA_LARAVEL, ">={$version}")) {
             return true;
         }
 
-        if ($this->roster->usesVersion(Packages::INERTIA_REACT, $version, '>=')) {
+        if ($this->project->js()->uses(PackageRegistry::INERTIA_REACT, ">={$version}")) {
             return true;
         }
 
-        if ($this->roster->usesVersion(Packages::INERTIA_SVELTE, $version, '>=')) {
+        if ($this->project->js()->uses(PackageRegistry::INERTIA_SVELTE, ">={$version}")) {
             return true;
         }
 
-        return $this->roster->usesVersion(Packages::INERTIA_VUE, $version, '>=');
+        return $this->project->js()->uses(PackageRegistry::INERTIA_VUE, ">={$version}");
     }
 
     public function hasFormComponent(): bool

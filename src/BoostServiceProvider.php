@@ -19,7 +19,7 @@ use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Services\BrowserLogger;
 use Laravel\Mcp\Facades\Mcp;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 class BoostServiceProvider extends ServiceProvider
 {
@@ -36,14 +36,14 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
 
-        $this->app->singleton(Roster::class, fn (): Roster => Roster::scan(base_path()));
+        $this->app->singleton(ProjectManager::class, fn (): ProjectManager => new ProjectManager);
 
         $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
 
         $this->app->singleton(RuleRepository::class, fn (): RuleRepository => new RuleRepository(base_path('.ai/rules')));
 
         $this->app->singleton(GuidelineAssist::class, fn ($app): GuidelineAssist => new GuidelineAssist(
-            $app->make(Roster::class),
+            $app->make(ProjectManager::class),
             $app->make(GuidelineConfig::class)
         ));
     }
