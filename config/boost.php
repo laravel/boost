@@ -35,9 +35,9 @@ return [
     | Boost Project Rules
     |--------------------------------------------------------------------------
     |
-    | Project rules let agents record decisions, traps, and standing constraints
-    | as committed markdown in .ai/rules/. Enabling "scoped_guidelines" also
-    | moves path-scoped guidelines to .ai/rules/boost/; it stays opt-in.
+    | Project rules let agents write decisions, traps and standing constraints
+    | as tracked Markdown in /.ai/rules/. Enabling "scoped_guidelines" also
+    | moves path-scoped guidelines to .ai/rules/boost/ - it stays opt-in.
     |
     */
 
