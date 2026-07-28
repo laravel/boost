@@ -9,26 +9,13 @@ return [
     | Boost Master Switch
     |--------------------------------------------------------------------------
     |
-    | This option may be used to disable all Boost functionality - which
-    | will prevent Boost's routes from being registered and will also
-    | disable Boost's browser logging functionality from operating.
+    | This option may be used to disable all Boost functionality which will
+    | prevent Boost's routes from being registered and will also disable
+    | Boost's browser logging functionality from reading or operating.
     |
     */
 
     'enabled' => env('BOOST_ENABLED', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Boost Browser Logs Watcher
-    |--------------------------------------------------------------------------
-    |
-    | The following option may be used to enable or disable the browser logs
-    | watcher feature within Laravel Boost. The log watcher will read any
-    | errors within the browser's console to give Boost better context.
-    |
-    */
-
-    'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -64,6 +51,19 @@ return [
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
         'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Boost Browser Logs Watcher
+    |--------------------------------------------------------------------------
+    |
+    | The following option may be used to enable or disable the browser logs
+    | watcher feature within Laravel Boost. The log watcher will read any
+    | errors within the browser's console to give Boost better context.
+    |
+    */
+
+    'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
     /*
     |--------------------------------------------------------------------------
