@@ -52,8 +52,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | These options allow you to specify custom paths for the executables that
-    | Boost uses. When configured, they take precedence over the automatic
-    | discovery mechanism. Leave empty to use defaults from your $PATH.
+    | Boost uses. While configured, they take precedence over the automatic
+    | discovery mechanism. When undefined, your system defaults are used.
     |
     */
 
@@ -70,9 +70,9 @@ return [
     | Browser Log Levels
     |--------------------------------------------------------------------------
     |
-    | This option controls which browser console log levels will be captured by
+    | This option defines which browser console log levels will be captured by
     | Boost's browser logger. You may trim this list down to ['error'] when
-    | warnings, info, and debug messages become too noisy to be helpful.
+    | warnings, info, and debug messages become too noisy to be relevant.
     |
     */
 
