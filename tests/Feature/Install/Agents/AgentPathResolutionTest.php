@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Install\Agents\Cursor;
+use Laravel\Boost\Install\Agents\HermesAgent;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
@@ -121,4 +122,15 @@ test('Pi uses AGENTS.md and .pi/skills defaults', function (): void {
         ->and($pi->getArtisanPath())->toBe('artisan')
         ->and($pi->guidelinesPath())->toBe('AGENTS.md')
         ->and($pi->skillsPath())->toBe('.pi/skills');
+});
+
+test('Hermes Agent uses HERMES.md and .hermes/skills defaults', function (): void {
+    config(['boost.executable_paths.php' => null]);
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $hermes = new HermesAgent($strategyFactory);
+
+    expect($hermes->getPhpPath())->toBe('php')
+        ->and($hermes->getArtisanPath())->toBe('artisan')
+        ->and($hermes->guidelinesPath())->toBe('HERMES.md')
+        ->and($hermes->skillsPath())->toBe('.hermes/skills');
 });
