@@ -23,14 +23,10 @@ class UpdateCommand extends Command
 
     public function handle(Config $config): int
     {
-        if (! $config->isValid() || empty($config->getAgents())) {
+        if (! $config->isValid()) {
             $this->error('Please set up Boost with [php artisan boost:install] first.');
 
             return self::FAILURE;
-        }
-
-        if (! $this->option('no-discover')) {
-            $this->discoverNewContent($config);
         }
 
         $guidelines = $config->getGuidelines();
@@ -38,6 +34,16 @@ class UpdateCommand extends Command
 
         if (! $guidelines && ! $hasSkills) {
             return self::SUCCESS;
+        }
+
+        if (empty($config->getAgents())) {
+            $this->error('Please set up Boost with [php artisan boost:install] first.');
+
+            return self::FAILURE;
+        }
+
+        if (! $this->option('no-discover')) {
+            $this->discoverNewContent($config);
         }
 
         $this->callSilently(InstallCommand::class, [

@@ -67,6 +67,15 @@ it('exits silently when no guidelines and no skills are configured', function ()
         ->assertSuccessful();
 });
 
+it('exits silently when only mcp is configured and no agents are stored', function (): void {
+    $config = new Config;
+    $config->setMcp(true);
+
+    $this->artisan('boost:update')
+        ->doesntExpectOutputToContain('Please set up Boost with [php artisan boost:install] first.')
+        ->assertSuccessful();
+});
+
 it('calls install command with a guidelines flag when guidelines are enabled', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
