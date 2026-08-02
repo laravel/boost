@@ -504,6 +504,10 @@ class InstallCommand extends Command
             $this->config->setPackages($this->selectedThirdPartyPackages->values()->toArray());
         }
 
+        if ($explicitMode && $this->selectedAgents->isNotEmpty()) {
+            $this->config->setAgents($this->selectedAgents->map(fn (Agent $agent): string => $agent->name())->values()->toArray());
+        }
+
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->config->setGuidelines(true);
         }
