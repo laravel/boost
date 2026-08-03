@@ -35,6 +35,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Excluded Guidelines
+    |--------------------------------------------------------------------------
+    |
+    | Any guidelines listed here will be excluded whenever Boost composes your
+    | AI guidelines during boost:install or boost:update. Entries match the
+    | names shown within the boost:install summary, e.g. "livewire/core".
+    |
+    */
+
+    'guidelines' => [
+        'exclude' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Excluded Skills
+    |--------------------------------------------------------------------------
+    |
+    | Any skills listed here will not be installed or synced to your agents
+    | by boost:install and boost:update, e.g. "fluxui-development". Your
+    | own skills within your .ai/skills directory are never excluded.
+    |
+    */
+
+    'skills' => [
+        'exclude' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
