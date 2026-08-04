@@ -276,6 +276,10 @@ class InstallCommand extends Command
             ],
         ])->filter(fn (array $integration): bool => $integration['available']);
 
+        if ($integrations->isEmpty()) {
+            return;
+        }
+
         $defaults = $integrations->filter(fn (array $integration): bool => $integration['default'])->keys()->all();
 
         if (! $this->input->isInteractive()) {
