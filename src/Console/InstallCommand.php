@@ -261,7 +261,7 @@ class InstallCommand extends Command
         $integrations = collect([
             'cloud' => [
                 'label' => 'Laravel Cloud',
-                'available' => true,
+                'available' => $this->selectedBoostFeatures->contains('skills'),
                 'default' => $this->config->getCloud(),
             ],
             'nightwatch' => [
@@ -275,6 +275,10 @@ class InstallCommand extends Command
                 'default' => $this->sail->isActive() || $this->config->getSail(),
             ],
         ])->filter(fn (array $integration): bool => $integration['available']);
+
+        if ($integrations->isEmpty()) {
+            return;
+        }
 
         $defaults = $integrations->filter(fn (array $integration): bool => $integration['default'])->keys()->all();
 
@@ -512,7 +516,9 @@ class InstallCommand extends Command
             $this->config->setSkills($this->installedSkillNames);
         }
 
-        $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));
+        if ($this->selectedBoostFeatures->contains('skills')) {
+            $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));
+        }
 
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->config->setMcp(true);
