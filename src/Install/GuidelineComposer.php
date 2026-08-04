@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\RenderFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
@@ -239,9 +240,18 @@ class GuidelineComposer
     {
         if ($vendorPath !== null) {
             foreach (['.blade.php', '.md'] as $ext) {
-                if (file_exists($vendorPath.$ext)) {
-                    return $this->guideline($vendorPath.$ext, false, $guidelineKey);
+                if (! file_exists($vendorPath.$ext)) {
+                    continue;
                 }
+
+                $guideline = $this->guideline($vendorPath.$ext, false, $guidelineKey);
+
+                // A vendor guideline written for an older Boost/Roster API fails to render; use ours instead.
+                if (! app(RenderFailures::class)->failedFor($guideline['path'] ?? $vendorPath.$ext)) {
+                    return $guideline;
+                }
+
+                break;
             }
         }
 
