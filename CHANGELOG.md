@@ -1,6 +1,28 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.4.13...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.5.0...main)
+
+## [v2.5.0](https://github.com/laravel/boost/compare/v2.4.13...v2.5.0) - 2026-08-04
+
+### What's Changed
+
+* [2.x] Update .gitattributes export ignore entries by [@jackbayliss](https://github.com/jackbayliss) in https://github.com/laravel/boost/pull/886
+* Make third-party guideline discovery the default in boost:update by [@paulinevos](https://github.com/paulinevos) in https://github.com/laravel/boost/pull/882
+* Bump actions/checkout from 7.0.0 to 7.0.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/890
+* Journal and Infer Conventions by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/891
+* Refactor scope methods to use #[Scope] attribute by [@mathcrln](https://github.com/mathcrln) in https://github.com/laravel/boost/pull/902
+* Only offer the Laravel Cloud integration when skills are being installed by [@ohnotnow](https://github.com/ohnotnow) in https://github.com/laravel/boost/pull/909
+* Skip vendor guidelines that fail to render instead of crashing by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/911
+
+### New Contributors
+
+* [@jackbayliss](https://github.com/jackbayliss) made their first contribution in https://github.com/laravel/boost/pull/886
+* [@paulinevos](https://github.com/paulinevos) made their first contribution in https://github.com/laravel/boost/pull/882
+* [@mathcrln](https://github.com/mathcrln) made their first contribution in https://github.com/laravel/boost/pull/902
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.4.13...v2.5.0
+
+**Upgrade guide:** : https://github.com/laravel/boost/blob/main/UPGRADE.md
 
 ## [v2.4.13](https://github.com/laravel/boost/compare/v2.4.12...v2.4.13) - 2026-07-17
 
@@ -432,11 +454,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -507,12 +531,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
