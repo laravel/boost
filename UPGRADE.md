@@ -8,7 +8,7 @@ PR Link: https://github.com/laravel/boost/pull/891
 
 Likelihood Of Impact: Low
 
-This only applies if you ship your own Blade guidelines or skills, either in your application's `.ai` directory or in a package's `resources/boost` directory.
+This applies if you write your own Blade guidelines or skills, either in your application's `.ai` directory or in a package's `resources/boost` directory. You can also run into it without writing any yourself, because installed packages ship their own guidelines and skills that Boost renders during `boost:install`. If a package has not been updated for this API yet, update the package once it has, and use the table below if you maintain it.
 
 Boost now runs on Laravel Roster 1.x, which removed the `Laravel\Roster\Enums\Packages` enum. Package names are now string constants on `Laravel\Boost\Support\PackageRegistry`, and `$assist->roster` has become `$assist->project`, a `Laravel\Roster\ProjectManager` that splits packages into `php()` and `js()`:
 
