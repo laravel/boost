@@ -22,23 +22,21 @@ use Laravel\Boost\Install\Agents\Zed;
 
 class BoostManager
 {
-    private bool $agentsListIsSorted = false;
-
     /** @var array<string, class-string<Agent>> */
     private array $agents = [
         'amp' => Amp::class,
-        'junie' => Junie::class,
-        'cursor' => Cursor::class,
+        'antigravity' => Antigravity::class,
         'claude_code' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
+        'cursor' => Cursor::class,
         'factory' => Factory::class,
+        'grok_build' => GrokBuild::class,
+        'junie' => Junie::class,
         'kiro' => Kiro::class,
         'opencode' => OpenCode::class,
-        'antigravity' => Antigravity::class,
-        'zed' => Zed::class,
         'pi' => Pi::class,
-        'grok_build' => GrokBuild::class,
+        'zed' => Zed::class,
     ];
 
     /**
@@ -51,8 +49,6 @@ class BoostManager
         }
 
         $this->agents[$key] = $className;
-
-        $this->sortAgentsAlphabetically();
     }
 
     /**
@@ -60,17 +56,9 @@ class BoostManager
      */
     public function getAgents(): array
     {
-        if ($this->agentsListIsSorted === false) {
-            $this->sortAgentsAlphabetically();
-        }
+        $agents = $this->agents;
+        ksort($agents);
 
-        return $this->agents;
-    }
-
-    private function sortAgentsAlphabetically(): void
-    {
-        ksort($this->agents);
-
-        $this->agentsListIsSorted = true;
+        return $agents;
     }
 }

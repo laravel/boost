@@ -38,19 +38,7 @@ it('returns collection of all registered agents', function (): void {
     expect($agents)->toBeInstanceOf(Collection::class)
         ->and($agents->count())->toBe(13)
         ->and($agents->keys()->toArray())->toBe([
-            'amp',
-            'antigravity',
-            'claude_code',
-            'codex',
-            'copilot',
-            'cursor',
-            'factory',
-            'grok_build',
-            'junie',
-            'kiro',
-            'opencode',
-            'pi',
-            'zed'
+            'amp', 'antigravity', 'claude_code', 'codex', 'copilot', 'cursor', 'factory', 'grok_build', 'junie', 'kiro', 'opencode', 'pi', 'zed',
         ]);
 
     $agents->each(function ($agent): void {
