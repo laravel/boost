@@ -6,7 +6,7 @@
 
 PR Link: https://github.com/laravel/boost/pull/891
 
-Likelihood Of Impact: High (only applies if you ship your own Blade guidelines or skills)
+Likelihood Of Impact: Low (only applies if you ship your own Blade guidelines or skills)
 
 Boost now runs on Laravel Roster 1.x, which removed the `Laravel\Roster\Enums\Packages` enum. Package names are now string constants on `Laravel\Boost\Support\PackageRegistry`, and `$assist->roster` has become `$assist->project`, a `Laravel\Roster\ProjectManager` that splits packages into `php()` and `js()`:
 
