@@ -9,6 +9,7 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\Npm;
+use Laravel\Boost\Support\RenderFailures;
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -1265,4 +1266,52 @@ test('php core guideline adapts enum naming guidance to the application enums', 
     'TitleCase keys' => [['App\Enums\FlashKey' => 'FlashKey.php'], 'Enums/FlashKey.php', 'Use TitleCase for Enum keys', 'Follow existing application Enum naming conventions'],
     'TitleCase keys with uppercase values' => [['App\Enums\Currency' => 'Currency.php'], 'Enums/Currency.php', 'Use TitleCase for Enum keys', 'Follow existing application Enum naming conventions'],
     'uppercase keys' => [['App\Enums\CountryCode' => 'CountryCode.php'], 'Enums/CountryCode.php', 'Follow existing application Enum naming conventions', 'Use TitleCase for Enum keys'],
+]);
+
+test('does not fail when a vendor guideline targets an API that no longer exists', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $vendorFixture = realpath(fixture('vendor-guidelines/incompatible'));
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $composer->shouldReceive('resolveFirstPartyBoostPath')
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+
+    $guidelines = $composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== pest/core rules ===')
+        ->not->toContain('Vendor Core Guideline');
+
+    expect(app(RenderFailures::class)->paths())->toBe([$vendorFixture.DIRECTORY_SEPARATOR.'core.blade.php']);
+});
+
+test('inertia core guideline matches the installed major version', function (string $version, string $expected, string $notExpected): void {
+    config(['boost.rules.enabled' => false]);
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('inertiajs/inertia-laravel', $version),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain($expected)
+        ->not->toContain($notExpected);
+})->with([
+    'v1' => ['1.3.0', '# Inertia v1', '# Inertia v2'],
+    'v2' => ['2.1.0', '# Inertia v2', '# Inertia v3'],
+    'v3' => ['3.1.1', '# Inertia v3', '# Inertia v2'],
 ]);

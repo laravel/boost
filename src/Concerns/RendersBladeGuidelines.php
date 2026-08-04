@@ -6,6 +6,7 @@ namespace Laravel\Boost\Concerns;
 
 use Illuminate\Support\Facades\Blade;
 use Laravel\Boost\Install\GuidelineAssist;
+use Laravel\Boost\Support\RenderFailures;
 
 trait RendersBladeGuidelines
 {
@@ -35,12 +36,22 @@ trait RendersBladeGuidelines
         ];
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
-        $rendered = Blade::render($content, [
-            'assist' => $this->getGuidelineAssist(),
-            ...$data,
-        ]);
 
-        $rendered = html_entity_decode((string) $rendered, ENT_QUOTES | ENT_HTML5);
+        $rendered = rescue(
+            fn (): string => Blade::render($content, [
+                'assist' => $this->getGuidelineAssist(),
+                ...$data,
+            ]),
+            report: false,
+        );
+
+        if ($rendered === null) {
+            app(RenderFailures::class)->record($path);
+
+            return '';
+        }
+
+        $rendered = html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }

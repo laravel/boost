@@ -31,6 +31,7 @@ use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
+use Laravel\Boost\Support\RenderFailures;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -94,6 +95,8 @@ class InstallCommand extends Command
         $this->collectInstallationPreferences();
         $this->performInstallation();
 
+        $this->reportRenderFailures();
+
         $this->noteInferConventions();
 
         $this->outro();
@@ -146,6 +149,29 @@ class InstallCommand extends Command
         }
 
         $this->storeConfig();
+    }
+
+    protected function reportRenderFailures(): void
+    {
+        $renderFailures = app(RenderFailures::class);
+
+        if ($renderFailures->isEmpty()) {
+            return;
+        }
+
+        $paths = $renderFailures->paths();
+        $packages = $renderFailures->packages();
+
+        $this->newLine();
+        $this->warn(sprintf('Skipped %d %s that could not be rendered:', count($paths), Str::plural('file', $paths)));
+
+        foreach ($paths as $path) {
+            $this->line('  - '.str_replace(base_path().DIRECTORY_SEPARATOR, '', $path));
+        }
+
+        if ($packages !== []) {
+            $this->warn('These ship Boost files built for an older Boost version, so Boost used its own where it had them. Update them with: composer update '.implode(' ', $packages));
+        }
     }
 
     protected function noteInferConventions(): void

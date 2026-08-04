@@ -18,6 +18,7 @@ use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Services\BrowserLogger;
+use Laravel\Boost\Support\RenderFailures;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\ProjectManager;
 
@@ -29,6 +30,8 @@ class BoostServiceProvider extends ServiceProvider
             __DIR__.'/../config/boost.php',
             'boost'
         );
+
+        $this->app->singleton(RenderFailures::class, fn (): RenderFailures => new RenderFailures);
 
         if (! $this->shouldRun()) {
             return;
