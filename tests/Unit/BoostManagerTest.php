@@ -39,6 +39,15 @@ it('returns default agents', function (): void {
     ]);
 });
 
+it('returns agents sorted alphabetically by key', function (): void {
+    $manager = new BoostManager;
+    $manager->registerAgent('boostbot', ExampleAgent::class);
+
+    expect(array_keys($manager->getAgents()))->toBe([
+        'amp', 'antigravity', 'boostbot', 'claude_code', 'codex', 'copilot', 'cursor', 'factory', 'grok_build', 'junie', 'kiro', 'opencode', 'pi', 'zed',
+    ]);
+});
+
 it('can register a single agent', function (): void {
     $manager = new BoostManager;
     $manager->registerAgent('example', ExampleAgent::class);
