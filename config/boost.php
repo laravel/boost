@@ -55,7 +55,7 @@ return [
     |
     | Any skills listed here will not be installed or synced to your agents
     | by boost:install and boost:update, e.g. "fluxui-development". Your
-    | own skills within your .ai/skills directory are never excluded.
+    | own skills within the ".ai/skills" directory are never excluded.
     |
     */
 
