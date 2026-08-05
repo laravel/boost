@@ -129,6 +129,8 @@ it('blocks write operations disguised as read-only queries', function (): void {
         "SELECT id FROM users INTO OUTFILE '/tmp/users.csv'",
         'SELECT 1; DELETE FROM users',
         'SELECT /*!50000 1 */ FROM users',
+        "SELECT 1 /* don't */; DELETE FROM users WHERE name = 'x'",
+        "SELECT 'a\\'; DELETE FROM users; --'",
     ];
 
     foreach ($queries as $query) {

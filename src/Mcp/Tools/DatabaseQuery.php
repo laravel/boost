@@ -17,6 +17,11 @@ use Throwable;
 class DatabaseQuery extends Tool
 {
     /**
+     * Statement-starting keywords that write data.
+     */
+    private const WRITE_KEYWORDS = 'DELETE|UPDATE|DROP|ALTER|TRUNCATE|RENAME|CREATE|MERGE';
+
+    /**
      * The tool's description.
      */
     protected string $description = 'Execute a read-only SQL query against the configured database.';
@@ -75,12 +80,12 @@ class DatabaseQuery extends Tool
      */
     protected function isReadOnlyQuery(string $query): bool
     {
+        ['structure' => $structure, 'hasVersionComment' => $hasVersionComment] = $this->withoutLiteralsAndComments($query);
+
         // MySQL executes version-gated "/*! ... */" comments, so they cannot be treated as comments.
-        if (str_contains($query, '/*!')) {
+        if ($hasVersionComment) {
             return false;
         }
-
-        $structure = $this->withoutLiteralsAndComments($query);
 
         // Reject stacked statements, but allow a single trailing semicolon.
         if (preg_match('/;\s*\S/', $structure)) {
@@ -116,16 +121,13 @@ class DatabaseQuery extends Tool
             return false;
         }
 
-        // Block write statements wherever a statement can start: at the beginning, after an
-        // opening parenthesis (data-modifying CTE bodies), after a closing parenthesis
-        // (statements following CTEs), or after a semicolon. INSERT and REPLACE also exist
-        // as string functions, so their function-call form remains allowed.
-        if (preg_match('/(^|[();])\s*(?:(?:DELETE|UPDATE|DROP|ALTER|TRUNCATE|RENAME|CREATE|MERGE)\b|(?:INSERT|REPLACE)\b(?!\s*\())/i', $structure)) {
+        // Blocks write keywords at every statement boundary (^, after (, ), or ;); REPLACE(...)/INSERT(...) function calls stay allowed.
+        if (preg_match('/(^|[();])\s*(?:(?:'.self::WRITE_KEYWORDS.')\b|(?:INSERT|REPLACE)\b(?!\s*\())/i', $structure)) {
             return false;
         }
 
         // EXPLAIN ANALYZE executes the statement it explains, so EXPLAIN may only target reads.
-        if ($firstWord === 'EXPLAIN' && preg_match('/^\s*EXPLAIN\s+(?:\([^)]*\)\s*|(?:ANALYZE|VERBOSE|QUERY\s+PLAN|FORMAT\s*=?\s*\w+)\s+)*(?:DELETE|UPDATE|INSERT|REPLACE|MERGE|DROP|ALTER|TRUNCATE|RENAME|CREATE)\b/i', $structure)) {
+        if ($firstWord === 'EXPLAIN' && preg_match('/^\s*EXPLAIN\s+(?:\([^)]*\)\s*|(?:ANALYZE|VERBOSE|QUERY\s+PLAN|FORMAT\s*=?\s*\w+)\s+)*(?:'.self::WRITE_KEYWORDS.'|INSERT|REPLACE)\b/i', $structure)) {
             return false;
         }
 
@@ -138,20 +140,72 @@ class DatabaseQuery extends Tool
     }
 
     /**
-     * Strip string literals, quoted identifiers, and comments so keyword
-     * checks only run against the structural parts of the query.
+     * @return array{structure: string, hasVersionComment: bool}
      */
-    protected function withoutLiteralsAndComments(string $query): string
+    protected function withoutLiteralsAndComments(string $query): array
     {
-        $patterns = [
-            "/'(?:[^'\\\\]|\\\\.|'')*'/s",  // single-quoted strings
-            '/"(?:[^"\\\\]|\\\\.|"")*"/s',  // double-quoted strings and identifiers
-            '/`(?:[^`]|``)*`/s',            // backtick-quoted identifiers
-            '/--[^\n]*/',                   // line comments
-            '#/\*.*?\*/#s',                 // block comments
-        ];
+        $structure = '';
+        $state = 'none';
+        $hasVersionComment = false;
+        $length = strlen($query);
 
-        return preg_replace($patterns, ' ', $query) ?? $query;
+        for ($i = 0; $i < $length; $i++) {
+            $char = $query[$i];
+            $next = $query[$i + 1] ?? '';
+
+            if ($state === 'none') {
+                if ($char === "'" || $char === '"' || $char === '`') {
+                    $state = match ($char) {
+                        "'" => 'single',
+                        '"' => 'double',
+                        default => 'backtick',
+                    };
+                    $structure .= ' ';
+                } elseif ($char === '-' && $next === '-') {
+                    $state = 'line_comment';
+                    $structure .= ' ';
+                    $i++;
+                } elseif ($char === '/' && $next === '*') {
+                    if (($query[$i + 2] ?? '') === '!') {
+                        // MySQL executes version-gated "/*! ... */" comments, so they cannot be treated as comments.
+                        $hasVersionComment = true;
+                        $structure .= $char;
+                    } else {
+                        $state = 'block_comment';
+                        $structure .= ' ';
+                        $i++;
+                    }
+                } else {
+                    $structure .= $char;
+                }
+            } elseif ($state === 'line_comment') {
+                if ($char === "\n") {
+                    $state = 'none';
+                    $structure .= $char;
+                }
+            } elseif ($state === 'block_comment') {
+                if ($char === '*' && $next === '/') {
+                    $state = 'none';
+                    $i++;
+                }
+            } else {
+                $quote = match ($state) {
+                    'single' => "'",
+                    'double' => '"',
+                    default => '`',
+                };
+
+                if ($char === $quote) {
+                    if ($next === $quote) {
+                        $i++; // doubled quote escapes itself; literal continues
+                    } else {
+                        $state = 'none';
+                    }
+                }
+            }
+        }
+
+        return ['structure' => $structure, 'hasVersionComment' => $hasVersionComment];
     }
 
     protected function addPrefixToQuery(string $query, string $prefix): string
