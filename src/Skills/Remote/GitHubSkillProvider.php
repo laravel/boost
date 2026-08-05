@@ -38,7 +38,7 @@ class GitHubSkillProvider
         $basePath = $this->repository->path;
 
         $skillMarkers = collect($tree['tree'])
-            ->filter(fn (array $item): bool => $item['type'] === 'blob' && in_array(basename((string) $item['path']), ['SKILL.md', 'SKILL.blade.php'], true));
+            ->filter(fn (array $item): bool => $item['type'] === 'blob' && basename((string) $item['path']) === 'SKILL.md');
 
         if ($basePath !== '') {
             $prefix = $basePath.'/';
@@ -73,11 +73,18 @@ class GitHubSkillProvider
             return false;
         }
 
+        $files = $skillFiles
+            ->filter(fn (array $item): bool => $item['type'] === 'blob')
+            ->reject(fn (array $item): bool => str_ends_with((string) $item['path'], '.blade.php'));
+
+        if (! $files->contains(fn (array $item): bool => basename((string) $item['path']) === 'SKILL.md')) {
+            return false;
+        }
+
         if (! $this->ensureDirectoryExists($targetPath)) {
             return false;
         }
 
-        $files = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'blob');
         $directories = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'tree');
 
         foreach ($directories as $dir) {

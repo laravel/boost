@@ -422,7 +422,7 @@ it('uses services.github.token for authentication when boost.github.token is not
     Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'Bearer gh-token-456'));
 });
 
-it('discovers skills with SKILL.blade.php marker', function (): void {
+it('only discovers Markdown skill markers from remote repositories', function (): void {
     Http::fake([
         ...fakeGitHubRepo(),
         ...fakeTreeResponse([
@@ -436,11 +436,48 @@ it('discovers skills with SKILL.blade.php marker', function (): void {
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
     $skills = $fetcher->discoverSkills();
 
-    expect($skills)->toHaveCount(2)
-        ->and($skills->has('skill-one'))->toBeTrue()
+    expect($skills)->toHaveCount(1)
+        ->and($skills->has('skill-one'))->toBeFalse()
         ->and($skills->has('skill-two'))->toBeTrue()
-        ->and($skills->get('skill-one')->name)->toBe('skill-one')
         ->and($skills->get('skill-two')->name)->toBe('skill-two');
+});
+
+it('does not download Blade templates from remote skills', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ['path' => 'skill-one/references', 'type' => 'tree', 'sha' => 'jkl'],
+            ['path' => 'skill-one/references/example.blade.php', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+        ]),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# SKILL Content'),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/references/example.blade.php' => Http::response('template'),
+    ]);
+
+    $skill = new RemoteSkill(
+        name: 'skill-one',
+        repo: 'owner/repo',
+        path: 'skill-one'
+    );
+
+    try {
+        $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+        $result = $fetcher->downloadSkill($skill, $targetDir);
+
+        expect($result)->toBeTrue()
+            ->and($targetDir.'/SKILL.md')->toBeFile()
+            ->and($targetDir.'/references/example.blade.php')->not->toBeFile();
+
+        Http::assertNotSent(fn ($request): bool => str_contains((string) $request->url(), '.blade.php'));
+    } finally {
+        @unlink($targetDir.'/references/example.blade.php');
+        @rmdir($targetDir.'/references');
+        @unlink($targetDir.'/SKILL.md');
+        @rmdir($targetDir);
+    }
 });
 
 it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
