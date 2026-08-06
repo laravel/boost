@@ -113,7 +113,15 @@ class SkillWriter
         $targetRoot = base_path($this->agent->skillsPath());
         $canonicalRoot = base_path('.ai'.DIRECTORY_SEPARATOR.'skills');
 
-        if ($fresh && ! $this->pathsMatch($targetRoot, $canonicalRoot)) {
+        if ($fresh && (
+            $this->pathsMatch($targetRoot, $canonicalRoot)
+            || $this->pathIsWithin($targetRoot, $canonicalRoot)
+            || $this->pathIsWithin($canonicalRoot, $targetRoot)
+        )) {
+            throw new RuntimeException('Fresh skill target overlaps the canonical .ai/skills directory.');
+        }
+
+        if ($fresh) {
             $this->deleteDirectory($targetRoot);
         }
 
@@ -295,10 +303,23 @@ class SkillWriter
 
     protected function pathsMatch(string $left, string $right): bool
     {
-        $resolvedLeft = realpath($left) ?: $left;
-        $resolvedRight = realpath($right) ?: $right;
+        return $this->normalizePath($left) === $this->normalizePath($right);
+    }
 
-        return rtrim($resolvedLeft, DIRECTORY_SEPARATOR) === rtrim($resolvedRight, DIRECTORY_SEPARATOR);
+    protected function pathIsWithin(string $path, string $directory): bool
+    {
+        return str_starts_with(
+            $this->normalizePath($path),
+            $this->normalizePath($directory).DIRECTORY_SEPARATOR,
+        );
+    }
+
+    protected function normalizePath(string $path): string
+    {
+        $resolvedPath = realpath($path) ?: $path;
+        $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $resolvedPath);
+
+        return rtrim($normalizedPath, DIRECTORY_SEPARATOR);
     }
 
     protected function relativePath(string $target, string $from): string

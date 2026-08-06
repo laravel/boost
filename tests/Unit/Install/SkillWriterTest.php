@@ -1207,29 +1207,31 @@ it('fresh sync preserves canonical skills behind symlinks', function (): void {
     cleanupSkillDirectory($canonicalSkillPath);
 });
 
-it('fresh sync preserves canonical custom skills when target is the canonical skills path', function (): void {
-    $skillName = 'test-skill-'.uniqid();
-    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
-
-    mkdir($canonicalSkillPath, 0755, true);
-    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
-
+it('fresh sync rejects targets that overlap the canonical skills directory', function (string $skillsPath): void {
     $agent = Mockery::mock(SupportsSkills::class);
-    $agent->shouldReceive('skillsPath')->andReturn('.ai/skills');
+    $agent->shouldReceive('skillsPath')->andReturn($skillsPath);
 
-    $skills = collect([
-        $skillName => new Skill($skillName, 'boost', $canonicalSkillPath, 'Custom skill', custom: true),
-    ]);
+    $writer = new class($agent) extends SkillWriter
+    {
+        /** @var array<int, string> */
+        public array $deletedPaths = [];
 
-    $writer = new SkillWriter($agent);
-    $result = $writer->sync($skills, [], fresh: true);
+        protected function deleteDirectory(string $path): bool
+        {
+            $this->deletedPaths[] = $path;
 
-    expect($result[$skillName])->toBe(SkillWriter::UPDATED)
-        ->and($canonicalSkillPath)->toBeDirectory()
-        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+            return true;
+        }
+    };
 
-    cleanupSkillDirectory($canonicalSkillPath);
-});
+    expect(fn (): array => $writer->sync(collect(), [], fresh: true))
+        ->toThrow(RuntimeException::class, 'Fresh skill target overlaps the canonical .ai/skills directory.')
+        ->and($writer->deletedPaths)->toBeEmpty();
+})->with([
+    'canonical directory' => '.ai/skills',
+    'canonical directory ancestor' => '.ai',
+    'canonical directory descendant' => '.ai/skills/generated-output',
+]);
 
 it('fresh sync works when the skills directory does not exist', function (): void {
     $sourceDir = fixture('skills/test-skill');
@@ -1250,6 +1252,24 @@ it('fresh sync works when the skills directory does not exist', function (): voi
         ->and($absoluteTarget.'/new-skill/SKILL.md')->toBeFile();
 
     cleanupSkillDirectory($absoluteTarget);
+});
+
+it('fresh sync leaves generated output empty when there are no skills to write', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $existingSkill = $absoluteTarget.'/existing-skill';
+
+    mkdir($existingSkill, 0755, true);
+    file_put_contents($existingSkill.'/SKILL.md', 'existing content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync(collect(), [], fresh: true);
+
+    expect($result)->toBe([])
+        ->and($absoluteTarget)->not->toBeDirectory();
 });
 
 it('writes skill files with a trailing newline', function (): void {

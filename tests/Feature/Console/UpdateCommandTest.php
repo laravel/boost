@@ -33,6 +33,50 @@ afterEach(function (): void {
     }
 });
 
+function makeTestUpdateCommand(): UpdateCommand
+{
+    return new class extends UpdateCommand
+    {
+        public ?string $calledCommand = null;
+
+        /** @var null|array<string, bool> */
+        public ?array $calledArguments = null;
+
+        public ?bool $confirmation = null;
+
+        public int $confirmationCalls = 0;
+
+        /** @var array<int, string> */
+        public array $packagesToDiscover = [];
+
+        public int $discoveryCalls = 0;
+
+        public function confirmToProceed($warning = 'Application In Production', $callback = null): bool
+        {
+            $this->confirmationCalls++;
+
+            return $this->confirmation ?? parent::confirmToProceed($warning, $callback);
+        }
+
+        public function callSilently($command, array $arguments = []): int
+        {
+            $this->calledCommand = $command;
+            $this->calledArguments = $arguments;
+
+            return self::SUCCESS;
+        }
+
+        protected function discoverNewContent(Config $config): void
+        {
+            $this->discoveryCalls++;
+
+            if ($this->packagesToDiscover !== []) {
+                $config->setPackages(array_merge($config->getPackages(), $this->packagesToDiscover));
+            }
+        }
+    };
+}
+
 it('it shows an error when boost.json does not exist', function (): void {
     $this->artisan('boost:update')
         ->expectsOutputToContain('Please set up Boost with [php artisan boost:install] first.')
@@ -501,36 +545,110 @@ it('exits silently when --ignore-skills flag is set and no guidelines are config
         ->assertSuccessful();
 });
 
-it('forwards the fresh flag to the install command', function (): void {
+it('confirms and forwards the fresh flag to the install command', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setGuidelines(true);
     $config->setSkills(['test-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('option')->with('fresh')->andReturn(true);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command = makeTestUpdateCommand();
+    $command->confirmation = true;
+
+    $input = new ArrayInput([
+        '--no-discover' => true,
+        '--fresh' => true,
+    ], $command->getDefinition());
+
+    $command->setLaravel($this->app);
+
+    expect($command->run($input, new BufferedOutput))->toBe(0)
+        ->and($command->confirmationCalls)->toBe(1)
+        ->and($command->calledCommand)->toBe(InstallCommand::class)
+        ->and($command->calledArguments)->toBe([
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => true,
             '--fresh' => true,
-        ])
-        ->andReturn(0);
-
-    $input = new ArrayInput([]);
-    $output = new OutputStyle($input, new BufferedOutput);
-
-    $command->setLaravel($this->app);
-    $command->setOutput($output);
-
-    expect($command->handle($config))->toBe(0);
+            '--force' => true,
+        ]);
 });
 
-it('enables skills when --fresh is set even with no skills configured', function (): void {
+it('cancels a fresh update when confirmation is declined', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setSkills(['test-skill']);
+
+    $command = makeTestUpdateCommand();
+    $command->confirmation = false;
+
+    $input = new ArrayInput([
+        '--no-discover' => true,
+        '--fresh' => true,
+    ], $command->getDefinition());
+
+    $command->setLaravel($this->app);
+
+    expect($command->run($input, new BufferedOutput))->toBe(UpdateCommand::FAILURE)
+        ->and($command->confirmationCalls)->toBe(1)
+        ->and($command->calledCommand)->toBeNull()
+        ->and($command->calledArguments)->toBeNull();
+});
+
+it('does not discover or persist packages when a fresh update is declined', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setSkills(['test-skill']);
+    $config->setPackages(['vendor/existing-package']);
+
+    $command = makeTestUpdateCommand();
+    $command->confirmation = false;
+    $command->packagesToDiscover = ['vendor/new-package'];
+
+    $input = new ArrayInput([
+        '--fresh' => true,
+    ], $command->getDefinition());
+
+    $command->setLaravel($this->app);
+
+    expect($command->run($input, new BufferedOutput))->toBe(UpdateCommand::FAILURE)
+        ->and($command->confirmationCalls)->toBe(1)
+        ->and($command->discoveryCalls)->toBe(0)
+        ->and($config->getPackages())->toBe(['vendor/existing-package'])
+        ->and($command->calledCommand)->toBeNull();
+});
+
+it('forces a fresh update without confirmation', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setSkills(['test-skill']);
+
+    $command = makeTestUpdateCommand();
+
+    $input = new ArrayInput([
+        '--no-discover' => true,
+        '--fresh' => true,
+        '--force' => true,
+    ], $command->getDefinition());
+    $input->setInteractive(false);
+
+    $command->setLaravel($this->app);
+
+    expect($command->run($input, new BufferedOutput))->toBe(UpdateCommand::SUCCESS)
+        ->and($command->confirmationCalls)->toBe(1)
+        ->and($command->calledCommand)->toBe(InstallCommand::class)
+        ->and($command->calledArguments)->toBe([
+            '--no-interaction' => true,
+            '--guidelines' => true,
+            '--skills' => true,
+            '--fresh' => true,
+            '--force' => true,
+        ]);
+});
+
+it('does not enable skills when --fresh is set with no skills configured', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setGuidelines(false);
@@ -540,15 +658,7 @@ it('enables skills when --fresh is set even with no skills configured', function
     $command->shouldReceive('option')->with('no-discover')->andReturn(true);
     $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
     $command->shouldReceive('option')->with('fresh')->andReturn(true);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-            '--fresh' => true,
-        ])
-        ->andReturn(0);
+    $command->shouldNotReceive('callSilently');
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -556,7 +666,34 @@ it('enables skills when --fresh is set even with no skills configured', function
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config))->toBe(UpdateCommand::SUCCESS);
+});
+
+it('updates only guidelines when --fresh is set on a guidelines-only project', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setSkills([]);
+
+    $command = makeTestUpdateCommand();
+
+    $input = new ArrayInput([
+        '--no-discover' => true,
+        '--fresh' => true,
+    ], $command->getDefinition());
+    $input->setInteractive(false);
+
+    $command->setLaravel($this->app);
+
+    expect($command->run($input, new BufferedOutput))->toBe(UpdateCommand::SUCCESS)
+        ->and($command->confirmationCalls)->toBe(0)
+        ->and($command->calledCommand)->toBe(InstallCommand::class)
+        ->and($command->calledArguments)->toBe([
+            '--no-interaction' => true,
+            '--guidelines' => true,
+            '--skills' => false,
+            '--fresh' => false,
+        ]);
 });
 
 it('skips new-package discovery prompt when running in non-interactive mode', function (): void {

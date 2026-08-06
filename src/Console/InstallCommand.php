@@ -6,6 +6,7 @@ namespace Laravel\Boost\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Console\ConfirmableTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
@@ -43,13 +44,15 @@ use function Laravel\Prompts\note;
 
 class InstallCommand extends Command
 {
+    use ConfirmableTrait;
     use DisplayHelper;
 
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
         {--mcp : Install MCP server configuration}
-        {--fresh : Delete each agent\'s generated skills directory before installing}';
+        {--fresh : Delete and rebuild each selected agent\'s skills directory from Boost and .ai/skills}
+        {--force : Run a fresh skill rebuild without confirmation}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -94,6 +97,16 @@ class InstallCommand extends Command
         $this->displayBoostHeader('Install', $this->projectName);
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
+
+        if ($this->selectedBoostFeatures->contains('skills')
+            && $this->option('fresh')
+            && ! $this->confirmToProceed(
+                "A fresh skill rebuild will recreate each selected agent's skills directory from scratch. Custom skills must be stored in [.ai/skills] as described in the documentation.",
+                true,
+            )) {
+            return self::FAILURE;
+        }
+
         $this->performInstallation();
 
         $this->reportRenderFailures();
