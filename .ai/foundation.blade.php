@@ -1,44 +1,38 @@
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Laravel Boost Guidelines
-
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
+# Laravel Boost & General Development Guidelines
 
 ## Foundational Context
-This application is a Laravel application running on PHP {{ PHP_MAJOR_VERSION }}.{{ PHP_MINOR_VERSION }}. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
-Before relying on a package's API, confirm its installed version:
-- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
-- JS packages: check `package.json` for the installed versions.
-
+- You're expert on Laravel running on PHP {{ PHP_MAJOR_VERSION }}.{{ PHP_MINOR_VERSION }}).
+- Verify exact dependency versions before relying on APIs (`composer show --direct`, `composer show <vendor/package>`, or `package.json`). Do not assume versions, API signatures or alter dependencies without approval.
 @if (! empty(config('boost.purpose')))
-Application purpose: {!! config('boost.purpose') !!}
-
+- Application purpose: {!! config('boost.purpose') !!}
 @endif
-
 @if($assist->hasSkillsEnabled())
-## Skills Activation
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
+- Skill files are located in `**/skills/**`. Read and follow the relevant skill file before starting work in that domain.
 @endif
 
-## Conventions
-- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
-- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
-- Check for existing components to reuse before writing a new one.
+## 1. Think & Plan First
+- **Expose Assumptions:** State core assumptions explicitly. If high-impact ambiguities exist (e.g., schema changes, destructive operations, or major architectural choices), propose multiple alternatives and seek approval before executing.
+- **Surface Tradeoffs:** Identify overcomplicated requests and suggest simpler alternatives upfront.
+- **Concise Communication:** Keep explanations focused strictly on key architectural decisions; omit self-evident implementation details.
 
-## Verification Scripts
-- Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
+## 2. Simplicity & Minimal Code
+- **Scope Control:** Write the minimum code required for the request. Avoid speculative features, unrequested configurability, or single-use abstractions.
+- **Documentation:** Do not create/update documentation files unless explicitly requested.
+- **Senior Engineer Standard:** Keep implementation simple, idiomatic, and readable. If a senior developer would flag a pattern as over-engineered, simplify it.
 
-## Application Structure & Architecture
-- Stick to existing directory structure; don't create new base folders without approval.
-- Do not change the application's dependencies without approval.
+## 3. Surgical Changes & Conventions
+- **Convention Alignment:** Follow existing codebase standards, Laravel idioms (e.g., Eloquent, Form Requests, Actions), and local naming patterns (`isRegisteredForDiscounts` over `discount()`). Inspect sibling files for style and context.
+- **Reuse First:** Prioritize existing components, helpers, and traits over creating new ones.
+- **Surgical Edits:** Modify only necessary lines. Preserve existing whitespace and formatting, and do not refactor adjacent, unbroken code.
+- **Orphan Cleanup:** Remove unused imports, variables, or functions introduced by *your* changes. Leave pre-existing dead code untouched unless requested.
+- **Directory Integrity:** Preserve the established directory layout; do not create top-level directories without approval.
 
-## Frontend Bundling
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `{{ $assist->nodePackageManagerCommand('run build') }}`, `{{ $assist->nodePackageManagerCommand('run dev') }}`, or `{{ $assist->composerCommand('run dev') }}`. Ask them.
-
-## Documentation Files
-- You must only create documentation files if explicitly requested by the user.
-
-## Replies
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
+## 4. Goal-Driven Execution & Verification
+- **Verifiable Success:** Define clear criteria for success (e.g., moving a failing test to passing) and iterate independently until verified.
+- **Automated Testing:** Prioritize unit and feature tests (Pest/PHPUnit) over throwaway script execution or manual Tinker calls.
+- **Frontend Asset Refresh:** If UI updates do not render, inform the user to run:
+  `{{ $assist->nodePackageManagerCommand('run build') }}`, `{{ $assist->nodePackageManagerCommand('run dev') }}`, or `{{ $assist->composerCommand('run dev') }}`.
