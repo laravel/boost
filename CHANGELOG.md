@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.5.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.5.1...main)
+
+## [v2.5.1](https://github.com/laravel/boost/compare/v2.5.0...v2.5.1) - 2026-08-05
+
+### What's Changed
+
+* Sort agent list alphabetically by [@michaelr0](https://github.com/michaelr0) in https://github.com/laravel/boost/pull/898
+* Fix read-only bypass in `DatabaseQuery` via CTE bodies, `EXPLAIN ANALYZE`, and `INTO` by [@ademola-emmanuel](https://github.com/ademola-emmanuel) in https://github.com/laravel/boost/pull/894
+* Correct the Inertia CSRF guidance in the best practices skill by [@lazerg](https://github.com/lazerg) in https://github.com/laravel/boost/pull/913
+* Add missing existing keys to config file by [@ohnotnow](https://github.com/ohnotnow) in https://github.com/laravel/boost/pull/910
+
+### New Contributors
+
+* [@michaelr0](https://github.com/michaelr0) made their first contribution in https://github.com/laravel/boost/pull/898
+* [@ademola-emmanuel](https://github.com/ademola-emmanuel) made their first contribution in https://github.com/laravel/boost/pull/894
+* [@lazerg](https://github.com/lazerg) made their first contribution in https://github.com/laravel/boost/pull/913
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.5.0...v2.5.1
 
 ## [v2.5.0](https://github.com/laravel/boost/compare/v2.4.13...v2.5.0) - 2026-08-04
 
@@ -455,11 +472,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -532,12 +551,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
