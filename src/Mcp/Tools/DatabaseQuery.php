@@ -17,6 +17,11 @@ use Throwable;
 class DatabaseQuery extends Tool
 {
     /**
+     * Statement-starting keywords that write data.
+     */
+    private const WRITE_KEYWORDS = 'DELETE|UPDATE|DROP|ALTER|TRUNCATE|RENAME|CREATE|MERGE';
+
+    /**
      * The tool's description.
      */
     protected string $description = 'Execute a read-only SQL query against the configured database.';
@@ -43,40 +48,12 @@ class DatabaseQuery extends Tool
     public function handle(Request $request): Response
     {
         $query = trim((string) $request->string('query'));
-        $token = strtok(ltrim($query), " \t\n\r");
 
-        if (! $token) {
+        if ($query === '') {
             return Response::error('Please pass a valid query');
         }
 
-        $firstWord = strtoupper($token);
-
-        // Allowed read-only commands.
-        $allowList = [
-            'SELECT',
-            'SHOW',
-            'EXPLAIN',
-            'DESCRIBE',
-            'DESC',
-            'WITH',        // SELECT must follow Common-table expressions
-            'VALUES',      // Returns literal values
-            'TABLE',       // PostgresSQL shorthand for SELECT *
-        ];
-
-        $isReadOnly = in_array($firstWord, $allowList, true);
-
-        // Additional validation for WITH … SELECT.
-        if ($firstWord === 'WITH') {
-            if (! preg_match('/\)\s*SELECT\b/i', $query)) {
-                $isReadOnly = false;
-            }
-
-            if (preg_match('/\)\s*(DELETE|UPDATE|INSERT|DROP|ALTER|TRUNCATE|REPLACE|RENAME|CREATE)\b/i', $query)) {
-                $isReadOnly = false;
-            }
-        }
-
-        if (! $isReadOnly) {
+        if (! $this->isReadOnlyQuery($query)) {
             return Response::error('Only read-only queries are allowed (SELECT, SHOW, EXPLAIN, DESCRIBE, DESC, WITH … SELECT).');
         }
 
@@ -98,23 +75,175 @@ class DatabaseQuery extends Tool
         }
     }
 
+    /**
+     * Determine if the given query only reads data.
+     */
+    protected function isReadOnlyQuery(string $query): bool
+    {
+        ['structure' => $structure, 'hasVersionComment' => $hasVersionComment] = $this->withoutLiteralsAndComments($query);
+
+        // MySQL executes version-gated "/*! ... */" comments, so they cannot be treated as comments.
+        if ($hasVersionComment) {
+            return false;
+        }
+
+        // Reject stacked statements, but allow a single trailing semicolon.
+        if (preg_match('/;\s*\S/', $structure)) {
+            return false;
+        }
+
+        $token = strtok($structure, " \t\n\r");
+
+        if ($token === false) {
+            return false;
+        }
+
+        $firstWord = strtoupper($token);
+
+        // Allowed read-only commands.
+        $allowList = [
+            'SELECT',
+            'SHOW',
+            'EXPLAIN',
+            'DESCRIBE',
+            'DESC',
+            'WITH',        // SELECT must follow Common-table expressions
+            'VALUES',      // Returns literal values
+            'TABLE',       // PostgresSQL shorthand for SELECT *
+        ];
+
+        if (! in_array($firstWord, $allowList, true)) {
+            return false;
+        }
+
+        // Additional validation for WITH … SELECT.
+        if ($firstWord === 'WITH' && ! preg_match('/\)\s*SELECT\b/i', $structure)) {
+            return false;
+        }
+
+        // Blocks write keywords at every statement boundary (^, after (, ), or ;); REPLACE(...)/INSERT(...) function calls stay allowed.
+        if (preg_match('/(^|[();])\s*(?:(?:'.self::WRITE_KEYWORDS.')\b|(?:INSERT|REPLACE)\b(?!\s*\())/i', $structure)) {
+            return false;
+        }
+
+        // EXPLAIN ANALYZE executes the statement it explains, so EXPLAIN may only target reads.
+        if ($firstWord === 'EXPLAIN' && preg_match('/^\s*EXPLAIN\s+(?:\([^)]*\)\s*|(?:ANALYZE|VERBOSE|QUERY\s+PLAN|FORMAT\s*=?\s*\w+)\s+)*(?:'.self::WRITE_KEYWORDS.'|INSERT|REPLACE)\b/i', $structure)) {
+            return false;
+        }
+
+        // INTO always writes: SELECT … INTO, INTO OUTFILE, and INTO DUMPFILE.
+        if (preg_match('/\bINTO\b/i', $structure)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @return array{structure: string, hasVersionComment: bool}
+     */
+    protected function withoutLiteralsAndComments(string $query): array
+    {
+        $structure = '';
+        $state = 'none';
+        $hasVersionComment = false;
+        $length = strlen($query);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $query[$i];
+            $next = $query[$i + 1] ?? '';
+
+            if ($state === 'none') {
+                if ($char === "'" || $char === '"' || $char === '`') {
+                    $state = match ($char) {
+                        "'" => 'single',
+                        '"' => 'double',
+                        default => 'backtick',
+                    };
+                    $structure .= ' ';
+                } elseif ($char === '-' && $next === '-') {
+                    $state = 'line_comment';
+                    $structure .= ' ';
+                    $i++;
+                } elseif ($char === '/' && $next === '*') {
+                    if (($query[$i + 2] ?? '') === '!') {
+                        // MySQL executes version-gated "/*! ... */" comments, so they cannot be treated as comments.
+                        $hasVersionComment = true;
+                        $structure .= $char;
+                    } else {
+                        $state = 'block_comment';
+                        $structure .= ' ';
+                        $i++;
+                    }
+                } else {
+                    $structure .= $char;
+                }
+            } elseif ($state === 'line_comment') {
+                if ($char === "\n") {
+                    $state = 'none';
+                    $structure .= $char;
+                }
+            } elseif ($state === 'block_comment') {
+                if ($char === '*' && $next === '/') {
+                    $state = 'none';
+                    $i++;
+                }
+            } else {
+                $quote = match ($state) {
+                    'single' => "'",
+                    'double' => '"',
+                    default => '`',
+                };
+
+                if ($char === $quote) {
+                    if ($next === $quote) {
+                        $i++; // doubled quote escapes itself; literal continues
+                    } else {
+                        $state = 'none';
+                    }
+                }
+            }
+        }
+
+        return ['structure' => $structure, 'hasVersionComment' => $hasVersionComment];
+    }
+
     protected function addPrefixToQuery(string $query, string $prefix): string
     {
         $cteNames = $this->extractCteNames($query);
 
-        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE|DESCRIBE|DESC)\s+([`"\']?)(\w+)\2/i';
+        // Anchored to the start so the `ORDER BY ... DESC` sort direction is never matched.
+        $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
 
-        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
-            $keyword = $matches[1];
-            $quote = $matches[2];
-            $tableName = $matches[3];
+        $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix, $cteNames): string {
+            [$full, $leading, $keyword, $qualifier, $quote, $tableName] = $matches;
 
-            if (str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true)) {
-                return $matches[0];
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+                return $full;
             }
 
-            return "{$keyword} {$quote}{$prefix}{$tableName}{$quote}";
+            return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
+
+        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
+
+        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
+            [$full, $keyword, $qualifier, $quote, $tableName] = $matches;
+
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+                return $full;
+            }
+
+            return "{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
+        }, $query) ?? $query;
+    }
+
+    /**
+     * @param  array<int, string>  $cteNames
+     */
+    protected function tableIsPrefixedOrCte(string $tableName, string $prefix, array $cteNames): bool
+    {
+        return str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true);
     }
 
     /**

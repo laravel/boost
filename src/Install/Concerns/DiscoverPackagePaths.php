@@ -7,9 +7,9 @@ namespace Laravel\Boost\Install\Concerns;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\Npm;
-use Laravel\Roster\Enums\Packages;
+use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Roster\Package;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 trait DiscoverPackagePaths
 {
@@ -17,25 +17,25 @@ trait DiscoverPackagePaths
      * Only include guidelines for these package names if they're a direct requirement.
      * This fixes every Boost user getting the MCP guidelines due to indirect import.
      *
-     * @var array<int, Packages>
+     * @var array<int, string>
      * */
     protected array $mustBeDirect = [
-        Packages::MCP,
-        Packages::LIVEWIRE,
+        PackageRegistry::MCP,
+        PackageRegistry::LIVEWIRE,
     ];
 
     /**
      * Packages excluded from Roster-based guideline discovery.
      * Boost is already loaded by getCoreGuidelines(); Sail requires explicit opt-in.
      *
-     * @var array<int, Packages>
+     * @var array<int, string>
      */
     protected array $excludedPackages = [
-        Packages::BOOST,
-        Packages::SAIL,
+        PackageRegistry::BOOST,
+        PackageRegistry::SAIL,
     ];
 
-    abstract protected function getRoster(): Roster;
+    abstract protected function getProject(): ProjectManager;
 
     /**
      * Package priority system to handle conflicts between packages.
@@ -44,25 +44,25 @@ trait DiscoverPackagePaths
     protected function getPackagePriorities(): array
     {
         return [
-            Packages::PEST->value => [Packages::PHPUNIT->value],
-            Packages::FLUXUI_PRO->value => [Packages::FLUXUI_FREE->value],
+            PackageRegistry::PEST => [PackageRegistry::PHPUNIT],
+            PackageRegistry::FLUXUI_PRO => [PackageRegistry::FLUXUI_FREE],
         ];
     }
 
     protected function shouldExcludePackage(Package $package): bool
     {
-        if (in_array($package->package(), $this->excludedPackages, true)) {
+        if (in_array($package->name(), $this->excludedPackages, true)) {
             return true;
         }
 
         foreach ($this->getPackagePriorities() as $priorityPackage => $excludedPackages) {
-            if (in_array($package->package()->value, $excludedPackages, true)
-                && $this->getRoster()->uses(Packages::from($priorityPackage))) {
+            if (in_array($package->name(), $excludedPackages, true)
+                && $this->usesPackage($priorityPackage)) {
                 return true;
             }
         }
 
-        return $package->indirect() && in_array($package->package(), $this->mustBeDirect, true);
+        return ! $package->isDirect() && in_array($package->name(), $this->mustBeDirect, true);
     }
 
     /**
@@ -70,7 +70,7 @@ trait DiscoverPackagePaths
      */
     protected function discoverPackagePaths(string $basePath): Collection
     {
-        $packages = $this->getRoster()->packages()
+        $packages = $this->packages()
             ->reject(fn (Package $package): bool => $this->shouldExcludePackage($package));
 
         /** @var Collection<int, array{path: string, name: string, version: string}> $result */
@@ -81,7 +81,7 @@ trait DiscoverPackagePaths
                 return [
                     'path' => $basePath.DIRECTORY_SEPARATOR.$name,
                     'name' => $name,
-                    'version' => $package->majorVersion(),
+                    'version' => (string) $package->major(),
                 ];
             })
             ->collect();
@@ -91,7 +91,22 @@ trait DiscoverPackagePaths
 
     protected function normalizePackageName(string $name): string
     {
-        return str_replace('_', '-', strtolower($name));
+        return PackageRegistry::guidelineName($name);
+    }
+
+    /** @return Collection<int, Package> */
+    protected function packages(): Collection
+    {
+        return $this->getProject()->php()->packages()->concat($this->getProject()->js()->packages());
+    }
+
+    protected function usesPackage(string $package, ?string $constraint = null): bool
+    {
+        if ($this->getProject()->php()->uses($package, $constraint)) {
+            return true;
+        }
+
+        return $this->getProject()->js()->uses($package, $constraint);
     }
 
     protected function getBoostAiPath(): string
@@ -101,7 +116,7 @@ trait DiscoverPackagePaths
 
     protected function resolveFirstPartyBoostPath(Package $package, string $subpath): ?string
     {
-        if (! Composer::isFirstPartyPackage($package->rawName()) && ! Npm::isFirstPartyPackage($package->rawName())) {
+        if (! Composer::isFirstPartyPackage($package->name()) && ! Npm::isFirstPartyPackage($package->name())) {
             return null;
         }
 

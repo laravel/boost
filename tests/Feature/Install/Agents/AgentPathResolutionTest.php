@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Junie;
+use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 
 test('Junie returns absolute PHP_BINARY path', function (): void {
@@ -109,4 +110,15 @@ test('Junie uses config when configured', function (): void {
     // Config takes precedence over useAbsolutePathForMcp
     expect($junie->getPhpPath(true))->toBe('/custom/php');
     expect($junie->getPhpPath(false))->toBe('/custom/php');
+});
+
+test('Pi uses AGENTS.md and .pi/skills defaults', function (): void {
+    config(['boost.executable_paths.php' => null]);
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $pi = new Pi($strategyFactory);
+
+    expect($pi->getPhpPath())->toBe('php')
+        ->and($pi->getArtisanPath())->toBe('artisan')
+        ->and($pi->guidelinesPath())->toBe('AGENTS.md')
+        ->and($pi->skillsPath())->toBe('.pi/skills');
 });

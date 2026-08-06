@@ -59,8 +59,8 @@ class InjectBoost
 
         $content = $response->getContent();
 
-        // Check if it's HTML
-        if (! str_contains($content, '<html') && ! str_contains($content, '<head')) {
+        // Check for an <html> or <head> tag without matching e.g. <header>
+        if (preg_match('/<(html|head)[\s>]/', $content) !== 1) {
             return false;
         }
 
