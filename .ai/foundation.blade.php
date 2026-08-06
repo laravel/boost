@@ -25,8 +25,8 @@
 - **Senior Engineer Standard:** Keep implementation simple, idiomatic, and readable. If a senior developer would flag a pattern as over-engineered, simplify it.
 
 ## 3. Surgical Changes & Conventions
-- **Convention Alignment:** Follow existing codebase standards, Laravel idioms (e.g., Eloquent, Form Requests, Actions), and local naming patterns (`isRegisteredForDiscounts` over `discount()`). Inspect sibling files for style and context.
-- **Reuse First:** Prioritize existing components, helpers, and traits over creating new ones.
+- **Convention Alignment:** Follow existing codebase standards, Laravel idioms (e.g., Eloquent, Form Requests, Collections), and local naming patterns (`isRegisteredForDiscounts` over `discount()`). Inspect sibling files for style and context.
+- **Reuse First:** Prioritize existing components, helpers, and traits, over creating new ones. Laravel comes with many helpers to avoid verbose code (e.g. array/string manipulation, deeply nested values, iterations, serial tasks)
 - **Surgical Edits:** Modify only necessary lines. Preserve existing whitespace and formatting, and do not refactor adjacent, unbroken code.
 - **Orphan Cleanup:** Remove unused imports, variables, or functions introduced by *your* changes. Leave pre-existing dead code untouched unless requested.
 - **Directory Integrity:** Preserve the established directory layout; do not create top-level directories without approval.
