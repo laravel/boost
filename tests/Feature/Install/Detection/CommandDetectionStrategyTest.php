@@ -77,3 +77,11 @@ test('works with different platforms parameter', function (): void {
 
     expect($result)->toBeTrue();
 });
+
+test('returns false when the process is signaled', function (): void {
+    $result = $this->strategy->detect([
+        'command' => 'php -r "posix_kill(posix_getpid(), 5);"',
+    ]);
+
+    expect($result)->toBeFalse();
+})->skipOnWindows();
