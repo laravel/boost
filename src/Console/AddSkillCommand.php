@@ -100,7 +100,7 @@ class AddSkillCommand extends Command
         }
 
         if ($this->availableSkills->isEmpty()) {
-            $this->error('No valid skills are found in the repository.');
+            $this->error('No valid skills are found in the repository. Remote skills must provide a SKILL.md; SKILL.blade.php is not supported.');
 
             return false;
         }
