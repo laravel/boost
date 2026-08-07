@@ -152,18 +152,21 @@ class DatabaseSchema extends Tool
     protected function getAllTableColumnTypes(?string $connection, string $filter = ''): array
     {
         $tables = [];
+        $allTables = $this->getAllTables($connection);
 
-        foreach ($this->getAllTables($connection) as $table) {
-            $tableName = is_object($table) ? $table->name : ($table['name'] ?? '');
+        DB::connection($connection)->withoutTablePrefix(function () use ($connection, $allTables, $filter, &$tables): void {
+            foreach ($allTables as $table) {
+                $tableName = is_object($table) ? $table->name : ($table['name'] ?? '');
 
-            if ($filter !== '' && ! str_contains(strtolower($tableName), strtolower($filter))) {
-                continue;
+                if ($filter !== '' && ! str_contains(strtolower($tableName), strtolower($filter))) {
+                    continue;
+                }
+
+                $tables[$tableName] = collect(Schema::connection($connection)->getColumns($tableName))
+                    ->pluck('type', 'name')
+                    ->all();
             }
-
-            $tables[$tableName] = collect(Schema::connection($connection)->getColumns($tableName))
-                ->pluck('type', 'name')
-                ->all();
-        }
+        });
 
         return $tables;
     }
@@ -181,9 +184,16 @@ class DatabaseSchema extends Tool
         $driver = SchemaDriverFactory::make($connection);
 
         try {
-            $columns = $this->getTableColumns($connection, $tableName, $includeColumnDetails);
-            $indexes = $this->getTableIndexes($connection, $tableName);
-            $foreignKeys = $this->getTableForeignKeys($connection, $tableName);
+            $columns = [];
+            $indexes = [];
+            $foreignKeys = [];
+
+            DB::connection($connection)->withoutTablePrefix(function () use ($connection, $tableName, $includeColumnDetails, &$columns, &$indexes, &$foreignKeys): void {
+                $columns = $this->getTableColumns($connection, $tableName, $includeColumnDetails);
+                $indexes = $this->getTableIndexes($connection, $tableName);
+                $foreignKeys = $this->getTableForeignKeys($connection, $tableName);
+            });
+
             $triggers = $driver->getTriggers($tableName);
             $checkConstraints = $driver->getCheckConstraints($tableName);
 

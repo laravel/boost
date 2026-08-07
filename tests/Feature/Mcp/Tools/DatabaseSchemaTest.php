@@ -207,3 +207,77 @@ test('it filters tables in summary mode', function (): void {
                 ->and($schemaArray['tables']['users']['email'])->toContain('varchar');
         });
 });
+
+test('it returns table details on a connection with a table prefix', function (): void {
+    config()->set('database.connections.testing.prefix', 'boost_');
+    DB::purge('testing');
+
+    Schema::create('teams', function (Blueprint $table): void {
+        $table->id();
+    });
+
+    Schema::create('users', function (Blueprint $table): void {
+        $table->id();
+        $table->string('email')->index();
+        $table->foreignId('team_id')->constrained('teams');
+    });
+
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['filter' => 'user']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray['tables'])->toHaveKey('boost_users');
+
+            $userTable = $schemaArray['tables']['boost_users'];
+            expect($userTable['columns'])->toHaveKeys(['id', 'email', 'team_id'])
+                ->and($userTable['columns']['email']['type'])->toContain('varchar')
+                ->and($userTable['indexes'])->not->toBeEmpty()
+                ->and($userTable['foreign_keys'])->not->toBeEmpty();
+        });
+});
+
+test('it returns column types on a connection with a table prefix in summary mode', function (): void {
+    config()->set('database.connections.testing.prefix', 'boost_');
+    DB::purge('testing');
+
+    Schema::create('users', function (Blueprint $table): void {
+        $table->id();
+        $table->string('email');
+    });
+
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['summary' => true, 'filter' => 'user']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray['tables'])->toHaveKey('boost_users')
+                ->and($schemaArray['tables']['boost_users'])->toHaveKeys(['id', 'email'])
+                ->and($schemaArray['tables']['boost_users']['email'])->toContain('varchar');
+        });
+});
+
+test('it returns table details for tables that do not carry the connection prefix', function (): void {
+    config()->set('database.connections.testing.prefix', 'boost_');
+    DB::purge('testing');
+
+    Schema::create('users', function (Blueprint $table): void {
+        $table->id();
+        $table->string('email');
+    });
+
+    DB::statement('create table users (legacy_column varchar(255))');
+
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['filter' => 'user']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray['tables']['users']['columns'])->toHaveKey('legacy_column')
+                ->and($schemaArray['tables']['users']['columns'])->not->toHaveKey('email')
+                ->and($schemaArray['tables']['boost_users']['columns'])->toHaveKeys(['id', 'email']);
+        });
+});
