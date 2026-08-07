@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Skills\Remote\GitHubRepository;
+use Laravel\Boost\Support\GitHubRepository;
 
 it('parses valid repository input', function (string $input, string $owner, string $repo, string $path): void {
     $result = GitHubRepository::fromInput($input);

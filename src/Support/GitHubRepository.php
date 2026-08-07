@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Laravel\Boost\Skills\Remote;
+namespace Laravel\Boost\Support;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;

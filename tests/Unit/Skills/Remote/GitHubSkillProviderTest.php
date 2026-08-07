@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
+use Laravel\Boost\Support\GitHubRepository;
 
 beforeEach(function (): void {
     Http::preventStrayRequests();
