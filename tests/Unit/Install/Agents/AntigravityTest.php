@@ -25,6 +25,20 @@ it('returns Antigravity display name', function (): void {
     expect($agent->displayName())->toBe('Antigravity');
 });
 
+it('returns default mcp config path', function (): void {
+    $agent = new Antigravity($this->strategyFactory);
+
+    expect($agent->mcpConfigPath())->toBe('.agents/mcp_config.json');
+});
+
+it('returns configured mcp config path', function (): void {
+    config()->set('boost.agents.antigravity.mcp_config_path', '.gemini/mcp.json');
+
+    $agent = new Antigravity($this->strategyFactory);
+
+    expect($agent->mcpConfigPath())->toBe('.gemini/mcp.json');
+});
+
 it('returns default guidelines path', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
@@ -53,12 +67,12 @@ it('returns configured skills path', function (): void {
     expect($agent->skillsPath())->toBe('.custom/skills');
 });
 
-it('projectDetectionConfig detects .agents path and GEMINI.md file', function (): void {
+it('projectDetectionConfig detects .agents path and mcp_config.json file', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
     expect($agent->projectDetectionConfig())->toBe([
         'paths' => ['.agents'],
-        'files' => ['GEMINI.md'],
+        'files' => ['.agents/mcp_config.json'],
     ]);
 });
 

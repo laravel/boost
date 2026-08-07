@@ -6,29 +6,25 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
-use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->roster = Mockery::mock(Roster::class);
-    $this->roster->shouldReceive('nodePackageManager')->andReturn(NodePackageManager::NPM);
-    $this->roster->shouldReceive('usesVersion')->andReturn(false);
+    $this->project = Mockery::mock(ProjectManager::class);
 
-    $this->app->instance(Roster::class, $this->roster);
+    $this->app->instance(ProjectManager::class, $this->project);
 });
 
 test('skills return a collection keyed by skill name', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $skills = (new SkillComposer($this->roster))->skills();
+    $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills)
         ->toBeInstanceOf(Collection::class)
@@ -37,38 +33,38 @@ test('skills return a collection keyed by skill name', function (): void {
 
 test('skills are discovered from Boost built-in .ai directory', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $skills = (new SkillComposer($this->roster))->skills();
+    $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills->has('livewire-development'))->toBeTrue();
 });
 
 test('skills only includes skills for installed packages', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $skills = (new SkillComposer($this->roster))->skills();
+    $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills->has('livewire-development'))->toBeFalse();
 });
 
 test('skill has name, description, path, and package', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $skill = (new SkillComposer($this->roster))->skills()->get('livewire-development');
+    $skill = (new SkillComposer($this->project))->skills()->get('livewire-development');
 
     expect($skill)
         ->name->toBe('livewire-development')
@@ -79,24 +75,24 @@ test('skill has name, description, path, and package', function (): void {
 
 test('skills result is cached', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = new SkillComposer($this->roster);
+    $composer = new SkillComposer($this->project);
 
     expect($composer->skills())->toBe($composer->skills());
 });
 
 test('config change clears skills cache', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = new SkillComposer($this->roster);
+    $composer = new SkillComposer($this->project);
     $first = $composer->skills();
 
     $composer->config(new GuidelineConfig);
@@ -106,76 +102,76 @@ test('config change clears skills cache', function (): void {
 
 test('excludes livewire skills when indirectly required', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(false),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(false),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $skills = (new SkillComposer($this->roster))->skills();
+    $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills->has('livewire-development'))->toBeFalse();
 });
 
 test('excludes skills listed in config exclude list', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.skills.exclude' => ['livewire-development']]);
 
-    $skills = (new SkillComposer($this->roster))->skills();
+    $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills->has('livewire-development'))->toBeFalse();
 });
 
 test('ignores non-existent skill names in exclude list', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     config(['boost.skills.exclude' => ['nonexistent']]);
 
-    $skills = (new SkillComposer($this->roster))->skills();
+    $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills->has('livewire-development'))->toBeTrue();
 });
 
 test('includes livewire skills when directly required', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $skills = (new SkillComposer($this->roster))->skills();
+    $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills->has('livewire-development'))->toBeTrue();
 });
 
 test('vendor skills override .ai/ skills with the same name', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
     expect($vendorFixture)->not->toBeFalse();
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+    $composer = Mockery::mock(SkillComposer::class, [$this->project])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === 'livewire/livewire' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'livewire/livewire' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 
@@ -185,13 +181,13 @@ test('vendor skills override .ai/ skills with the same name', function (): void 
 
 test('falls back to .ai/ skills when vendor has none', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        (new Package(Packages::LIVEWIRE, 'livewire/livewire', '3.0.0'))->setDirect(true),
+        rosterPackage('laravel/framework', '11.0.0'),
+        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+    $composer = Mockery::mock(SkillComposer::class, [$this->project])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
@@ -203,20 +199,20 @@ test('falls back to .ai/ skills when vendor has none', function (): void {
 
 test('node_modules skills override .ai/ skills for npm first-party packages', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
     expect($vendorFixture)->not->toBeFalse();
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+    $composer = Mockery::mock(SkillComposer::class, [$this->project])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->rawName() === '@inertiajs/react' ? $vendorFixture : null);
+        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 
@@ -226,13 +222,13 @@ test('node_modules skills override .ai/ skills for npm first-party packages', fu
 
 test('falls back to .ai/ skills when node_modules has none for npm package', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
-        new Package(Packages::INERTIA_REACT, '@inertiajs/react', '2.1.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('@inertiajs/react', '2.1.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->roster])
+    $composer = Mockery::mock(SkillComposer::class, [$this->project])
         ->makePartial()
         ->shouldAllowMockingProtectedMethods();
     $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
@@ -243,7 +239,7 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
 });
 
 test('returns all third-party skills when aiGuidelines is uninitialized', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
     @mkdir($skillDir, 0755, true);
@@ -251,7 +247,7 @@ test('returns all third-party skills when aiGuidelines is uninitialized', functi
     file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
 
     try {
-        $skills = (new SkillComposer($this->roster))->skills();
+        $skills = (new SkillComposer($this->project))->skills();
 
         expect($skills->has('third-party-skill'))->toBeTrue();
     } finally {
@@ -268,7 +264,7 @@ test('returns all third-party skills when aiGuidelines is uninitialized', functi
 });
 
 test('filters third-party skills to matching packages when aiGuidelines is set', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
     @mkdir($skillDir, 0755, true);
@@ -279,7 +275,7 @@ test('filters third-party skills to matching packages when aiGuidelines is set',
         $config = new GuidelineConfig;
         $config->aiGuidelines = ['some/third-party'];
 
-        $skills = (new SkillComposer($this->roster))->config($config)->skills();
+        $skills = (new SkillComposer($this->project))->config($config)->skills();
 
         expect($skills->has('third-party-skill'))->toBeTrue();
     } finally {
@@ -296,7 +292,7 @@ test('filters third-party skills to matching packages when aiGuidelines is set',
 });
 
 test('excludes third-party skills for packages not in aiGuidelines', function (): void {
-    $this->roster->shouldReceive('packages')->andReturn(new PackageCollection([]));
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
     @mkdir($skillDir, 0755, true);
@@ -307,7 +303,7 @@ test('excludes third-party skills for packages not in aiGuidelines', function ()
         $config = new GuidelineConfig;
         $config->aiGuidelines = ['other/package'];
 
-        $skills = (new SkillComposer($this->roster))->config($config)->skills();
+        $skills = (new SkillComposer($this->project))->config($config)->skills();
 
         expect($skills->has('third-party-skill'))->toBeFalse();
     } finally {
@@ -325,10 +321,10 @@ test('excludes third-party skills for packages not in aiGuidelines', function ()
 
 test('blade skills with code before frontmatter are parsed correctly', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
     $skillDir = base_path('.ai/skills/blade-frontmatter-test');
     @mkdir($skillDir, 0755, true);
@@ -348,7 +344,7 @@ test('blade skills with code before frontmatter are parsed correctly', function 
         BLADE);
 
     try {
-        $skills = (new SkillComposer($this->roster))->skills();
+        $skills = (new SkillComposer($this->project))->skills();
 
         expect($skills->has('blade-frontmatter-test'))->toBeTrue()
             ->and($skills->get('blade-frontmatter-test')->description)
@@ -361,12 +357,12 @@ test('blade skills with code before frontmatter are parsed correctly', function 
 
 test('frontmatter parsing ignores HTML comments injected by third-party packages', function (): void {
     $packages = new PackageCollection([
-        new Package(Packages::LARAVEL, 'laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $this->roster->shouldReceive('packages')->andReturn($packages);
+    mockProjectPackages($this->project, $packages);
 
-    $composer = new SkillComposer($this->roster);
+    $composer = new SkillComposer($this->project);
     $method = new ReflectionMethod($composer, 'parseSkillFrontmatter');
 
     $content = <<<'HTML'

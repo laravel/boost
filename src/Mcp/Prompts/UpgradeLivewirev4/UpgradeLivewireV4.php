@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Laravel\Boost\Mcp\Prompts\UpgradeLivewirev4;
 
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
+use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Prompt;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Roster;
+use Laravel\Roster\ProjectManager;
 
 class UpgradeLivewireV4 extends Prompt
 {
@@ -20,9 +20,9 @@ class UpgradeLivewireV4 extends Prompt
 
     protected string $description = 'Provides step-by-step guidance for upgrading from Livewire v3 to v4.';
 
-    public function shouldRegister(Roster $roster): bool
+    public function shouldRegister(ProjectManager $project): bool
     {
-        return $roster->uses(Packages::LIVEWIRE);
+        return $project->php()->uses(PackageRegistry::LIVEWIRE);
     }
 
     public function handle(): Response

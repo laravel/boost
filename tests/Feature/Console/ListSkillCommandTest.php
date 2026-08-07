@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     File::deleteDirectory(base_path('.ai/skills'));
+
+    config(['boost.skills.exclude' => ['infer-conventions']]);
 });
 
 afterEach(function (): void {

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Agents;
 
 use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Antigravity extends Agent implements SupportsGuidelines, SupportsSkills
+class Antigravity extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -36,8 +37,13 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsSkills
     {
         return [
             'paths' => ['.agents'],
-            'files' => ['GEMINI.md'],
+            'files' => ['.agents/mcp_config.json'],
         ];
+    }
+
+    public function mcpConfigPath(): string
+    {
+        return config('boost.agents.antigravity.mcp_config_path', '.agents/mcp_config.json');
     }
 
     public function guidelinesPath(): string
