@@ -33,8 +33,10 @@ use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
+use Laravel\Boost\Support\RenderFailures;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
+use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -100,6 +102,8 @@ class InstallCommand extends Command
         $this->collectInstallationPreferences();
         $this->performInstallation();
 
+        $this->reportRenderFailures();
+
         $this->noteInferConventions();
 
         $this->outro();
@@ -158,6 +162,29 @@ class InstallCommand extends Command
         $this->storeConfig();
     }
 
+    protected function reportRenderFailures(): void
+    {
+        $renderFailures = app(RenderFailures::class);
+
+        if ($renderFailures->isEmpty()) {
+            return;
+        }
+
+        $paths = $renderFailures->paths();
+        $packages = $renderFailures->packages();
+
+        $this->newLine();
+        $this->warn(sprintf('Skipped %d %s that could not be rendered:', count($paths), Str::plural('file', $paths)));
+
+        foreach ($paths as $path) {
+            $this->line('  - '.str_replace(base_path().DIRECTORY_SEPARATOR, '', $path));
+        }
+
+        if ($packages !== []) {
+            $this->warn('These ship Boost files built for an older Boost version, so Boost used its own where it had them. Update them with: composer update '.implode(' ', $packages));
+        }
+    }
+
     protected function noteInferConventions(): void
     {
         note('💡 Run the infer-conventions skill to record your app conventions and sharpen code generation.');
@@ -189,7 +216,12 @@ class InstallCommand extends Command
         }
 
         $process = new Process([PHP_BINARY, 'artisan', 'test', '--list-tests'], base_path());
-        $process->run();
+
+        try {
+            $process->run();
+        } catch (ProcessSignaledException) {
+            return false;
+        }
 
         return Str::of($process->getOutput())
             ->trim()
@@ -273,7 +305,7 @@ class InstallCommand extends Command
         $integrations = collect([
             'cloud' => [
                 'label' => 'Laravel Cloud',
-                'available' => true,
+                'available' => $this->selectedBoostFeatures->contains('skills'),
                 'default' => $this->config->getCloud(),
             ],
             'nightwatch' => [
@@ -287,6 +319,10 @@ class InstallCommand extends Command
                 'default' => $this->sail->isActive() || $this->config->getSail(),
             ],
         ])->filter(fn (array $integration): bool => $integration['available']);
+
+        if ($integrations->isEmpty()) {
+            return;
+        }
 
         $defaults = $integrations->filter(fn (array $integration): bool => $integration['default'])->keys()->all();
 
@@ -533,7 +569,9 @@ class InstallCommand extends Command
             $this->config->setSkills($this->installedSkillNames);
         }
 
-        $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));
+        if ($this->selectedBoostFeatures->contains('skills')) {
+            $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));
+        }
 
         if ($this->selectedBoostFeatures->contains('mcp')) {
             $this->config->setMcp(true);

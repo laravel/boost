@@ -38,7 +38,7 @@ it('returns collection of all registered agents', function (): void {
     expect($agents)->toBeInstanceOf(Collection::class)
         ->and($agents->count())->toBe(13)
         ->and($agents->keys()->toArray())->toBe([
-            'amp', 'junie', 'cursor', 'claude_code', 'codex', 'copilot', 'factory', 'kiro', 'opencode', 'antigravity', 'zed', 'pi', 'grok_build',
+            'amp', 'antigravity', 'claude_code', 'codex', 'copilot', 'cursor', 'factory', 'grok_build', 'junie', 'kiro', 'opencode', 'pi', 'zed',
         ]);
 
     $agents->each(function ($agent): void {
@@ -76,7 +76,7 @@ it('returns an array of detected agents names for system discovery', function ()
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledAgents();
 
-    expect($detected)->toBe(['junie', 'cursor']);
+    expect($detected)->toBe(['cursor', 'junie']);
 });
 
 it('returns an empty array when no agents are detected for system discovery', function (): void {
