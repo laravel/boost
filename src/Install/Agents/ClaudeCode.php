@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Agents;
 
 use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsLsp;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
-class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
+class ClaudeCode extends Agent implements SupportsGuidelines, SupportsLsp, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -60,5 +61,10 @@ class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, Suppo
     public function skillsPath(): string
     {
         return config('boost.agents.claude_code.skills_path', '.claude/skills');
+    }
+
+    public function lspConfigPath(): string
+    {
+        return $this->skillsPath().DIRECTORY_SEPARATOR.'laravel-lsp';
     }
 }
