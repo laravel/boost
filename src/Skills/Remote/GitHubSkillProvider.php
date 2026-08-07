@@ -38,7 +38,7 @@ class GitHubSkillProvider
         $basePath = $this->repository->path;
 
         $skillMarkers = collect($tree['tree'])
-            ->filter(fn (array $item): bool => $item['type'] === 'blob' && in_array(basename((string) $item['path']), ['SKILL.md', 'SKILL.blade.php'], true));
+            ->filter(fn (array $item): bool => $item['type'] === 'blob' && basename((string) $item['path']) === 'SKILL.md');
 
         if ($basePath !== '') {
             $prefix = $basePath.'/';
@@ -73,20 +73,16 @@ class GitHubSkillProvider
             return false;
         }
 
-        if (! $this->ensureDirectoryExists($targetPath)) {
+        $files = $skillFiles
+            ->filter(fn (array $item): bool => $item['type'] === 'blob')
+            ->reject(fn (array $item): bool => preg_match('/\.(php\d?|phar|phtml)$/i', (string) $item['path']) === 1);
+
+        if (! $files->contains(fn (array $item): bool => basename((string) $item['path']) === 'SKILL.md')) {
             return false;
         }
 
-        $files = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'blob');
-        $directories = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'tree');
-
-        foreach ($directories as $dir) {
-            $relativePath = $this->getRelativePath($dir['path'], $skill->path);
-            $localPath = $targetPath.'/'.$relativePath;
-
-            if (! $this->ensureDirectoryExists($localPath)) {
-                return false;
-            }
+        if (! $this->ensureDirectoryExists($targetPath)) {
+            return false;
         }
 
         return $this->downloadFiles($files->toArray(), $targetPath, $skill->path);
