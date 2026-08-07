@@ -480,6 +480,35 @@ it('does not download Blade templates from remote skills', function (): void {
     }
 });
 
+it('does not download PHP files whatever their casing', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ['path' => 'skill-one/SKILL.Blade.php', 'type' => 'blob', 'sha' => 'jkl', 'size' => 456],
+            ['path' => 'skill-one/payload.PHP', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+        ]),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# SKILL Content'),
+    ]);
+
+    $skill = new RemoteSkill(name: 'skill-one', repo: 'owner/repo', path: 'skill-one');
+
+    try {
+        $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+        expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
+            ->and($targetDir.'/SKILL.md')->toBeFile();
+
+        Http::assertNotSent(fn ($request): bool => str_contains(strtolower((string) $request->url()), '.php'));
+    } finally {
+        @unlink($targetDir.'/SKILL.md');
+        @rmdir($targetDir);
+    }
+});
+
 it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
     Http::fake([
         ...fakeGitHubRepo(),

@@ -75,7 +75,7 @@ class GitHubSkillProvider
 
         $files = $skillFiles
             ->filter(fn (array $item): bool => $item['type'] === 'blob')
-            ->reject(fn (array $item): bool => str_ends_with((string) $item['path'], '.blade.php'));
+            ->reject(fn (array $item): bool => preg_match('/\.(php\d?|phar|phtml)$/i', (string) $item['path']) === 1);
 
         if (! $files->contains(fn (array $item): bool => basename((string) $item['path']) === 'SKILL.md')) {
             return false;
@@ -83,17 +83,6 @@ class GitHubSkillProvider
 
         if (! $this->ensureDirectoryExists($targetPath)) {
             return false;
-        }
-
-        $directories = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'tree');
-
-        foreach ($directories as $dir) {
-            $relativePath = $this->getRelativePath($dir['path'], $skill->path);
-            $localPath = $targetPath.'/'.$relativePath;
-
-            if (! $this->ensureDirectoryExists($localPath)) {
-                return false;
-            }
         }
 
         return $this->downloadFiles($files->toArray(), $targetPath, $skill->path);
