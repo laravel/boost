@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Install\Cloud;
-use Laravel\Boost\Skills\Remote\GitHubRepository;
+use Laravel\Boost\Support\GitHubRepository;
 
 test('builds a GitHubRepository that points at the cloud cli skills directory', function (): void {
     $cloud = new Cloud;

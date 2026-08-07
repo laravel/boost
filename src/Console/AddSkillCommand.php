@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Skills\Remote\AuditResult;
-use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Skills\Remote\SkillAuditor;
+use Laravel\Boost\Support\GitHubRepository;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 

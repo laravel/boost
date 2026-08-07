@@ -1194,6 +1194,69 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     @rmdir($mdOverrideDir);
 });
 
+test('Markdown user guidelines override matching Blade-backed Boost guidelines', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $customDir = testDirectory('Fixtures/.ai/markdown-built-in-override');
+    @mkdir($customDir.'/laravel', 0755, true);
+    file_put_contents($customDir.'/laravel/core.md', '# Markdown Laravel Core Override');
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        $guidelines = $composer->guidelines();
+        $laravelCore = $guidelines->get('laravel/core');
+
+        expect($laravelCore)->not->toBeNull()
+            ->and($laravelCore['path'])->toBe(realpath($customDir.'/laravel/core.md'))
+            ->and($laravelCore['content'])->toContain('Markdown Laravel Core Override')
+            ->and($guidelines)->not->toHaveKey('.ai/laravel/core');
+    } finally {
+        @unlink($customDir.'/laravel/core.md');
+        @rmdir($customDir.'/laravel');
+        @rmdir($customDir);
+    }
+});
+
+test('nested user guidelines with matching filenames retain distinct composition keys', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $customDir = testDirectory('Fixtures/.ai/nested-custom-guidelines');
+    @mkdir($customDir.'/backend', 0755, true);
+    @mkdir($customDir.'/frontend', 0755, true);
+    file_put_contents($customDir.'/backend/core.md', '# Backend Project Rules');
+    file_put_contents($customDir.'/frontend/core.md', '# Frontend Project Rules');
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        expect($composer->used())
+            ->toContain('.ai/backend/core')
+            ->toContain('.ai/frontend/core')
+            ->and($composer->compose())
+            ->toContain('=== .ai/backend/core rules ===')
+            ->toContain('=== .ai/frontend/core rules ===');
+    } finally {
+        @unlink($customDir.'/backend/core.md');
+        @unlink($customDir.'/frontend/core.md');
+        @rmdir($customDir.'/backend');
+        @rmdir($customDir.'/frontend');
+        @rmdir($customDir);
+    }
+});
+
 test('symlinked custom guidelines directory does not produce duplicates', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),

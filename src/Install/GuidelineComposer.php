@@ -149,8 +149,12 @@ class GuidelineComposer
      */
     protected function getUserGuidelines(): Collection
     {
-        return collect($this->guidelinesDir($this->customGuidelinePath()))
-            ->mapWithKeys(fn ($guideline): array => ['.ai/'.$guideline['name'] => $guideline]);
+        $root = str_replace('\\', '/', realpath($this->customGuidelinePath()) ?: $this->customGuidelinePath());
+
+        return collect($this->guidelinesDir(
+            $this->customGuidelinePath(),
+            keyResolver: fn (SplFileInfo $file): string => '.ai/'.$this->relativeGuidelineKey($root, $file->getRealPath()),
+        ));
     }
 
     /**
@@ -448,9 +452,17 @@ class GuidelineComposer
             ->ltrim('/\\')
             ->toString();
 
-        $customPath = $this->prependUserGuidelinePath($relativePath);
+        $overrideKey = (string) preg_replace('/\.(blade\.php|md)$/', '', $relativePath);
 
-        return file_exists($customPath) ? realpath($customPath) : $path;
+        foreach (['.blade.php', '.md'] as $extension) {
+            $customPath = $this->prependUserGuidelinePath($overrideKey.$extension);
+
+            if (file_exists($customPath)) {
+                return realpath($customPath);
+            }
+        }
+
+        return $path;
     }
 
     protected function getGuidelineAssist(): GuidelineAssist
