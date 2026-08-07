@@ -59,7 +59,7 @@ class UpdateCommand extends Command
             return;
         }
 
-        if (! $this->input->isInteractive()) {
+        if (! $this->input->isInteractive() || $this->runningAsComposerScript()) {
             return;
         }
 
@@ -88,5 +88,14 @@ class UpdateCommand extends Command
 
         return ThirdPartyPackage::discover()
             ->filter(fn (ThirdPartyPackage $pkg, string $name): bool => ! in_array($name, $configuredPackages, true));
+    }
+
+    /**
+     * Composer sets COMPOSER_DEV_MODE for the entire install/update run, including
+     * post-update-cmd scripts, so prompting there would block an unattended `composer update`.
+     */
+    protected function runningAsComposerScript(): bool
+    {
+        return getenv('COMPOSER_DEV_MODE') !== false;
     }
 }

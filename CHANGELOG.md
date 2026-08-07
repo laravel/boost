@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.5.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.5.3...main)
+
+## [v2.5.3](https://github.com/laravel/boost/compare/v2.5.1...v2.5.3) - 2026-08-07
+
+### What's Changed
+
+* Skip package discovery prompt when run via composer script by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/921
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.5.2...v2.5.3
 
 ## [v2.5.1](https://github.com/laravel/boost/compare/v2.5.0...v2.5.1) - 2026-08-05
 
@@ -473,11 +481,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -552,12 +562,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
