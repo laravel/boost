@@ -54,6 +54,24 @@ it('shows error when no skills found', function (): void {
         ->expectsOutputToContain('No valid skills are found');
 });
 
+it('does not offer Blade-only skills from remote repositories', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'remote-skill', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'remote-skill/SKILL.blade.php', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => 'owner/repo', '--list' => true])
+        ->assertFailed()
+        ->expectsOutputToContain('No valid skills are found');
+});
+
 it('shows error when api request fails', function (): void {
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response(

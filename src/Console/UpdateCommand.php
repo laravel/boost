@@ -28,7 +28,7 @@ class UpdateCommand extends Command
 
     public function handle(Config $config): int
     {
-        if (! $config->isValid() || empty($config->getAgents())) {
+        if (! $config->isValid()) {
             $this->error('Please set up Boost with [php artisan boost:install] first.');
 
             return self::FAILURE;
@@ -36,6 +36,17 @@ class UpdateCommand extends Command
 
         $guidelines = $config->getGuidelines();
         $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(base_path('.ai/skills')));
+
+        if (! $guidelines && ! $hasSkills) {
+            return self::SUCCESS;
+        }
+
+        if (empty($config->getAgents())) {
+            $this->error('Please set up Boost with [php artisan boost:install] first.');
+
+            return self::FAILURE;
+        }
+
         $fresh = $hasSkills && (bool) $this->option('fresh');
 
         if ($fresh && ! $this->confirmToProceed(
@@ -47,10 +58,6 @@ class UpdateCommand extends Command
 
         if (! $this->option('no-discover')) {
             $this->discoverNewContent($config);
-        }
-
-        if (! $guidelines && ! $hasSkills) {
-            return self::SUCCESS;
         }
 
         $arguments = [
@@ -79,7 +86,7 @@ class UpdateCommand extends Command
             return;
         }
 
-        if (! $this->input->isInteractive()) {
+        if (! $this->input->isInteractive() || $this->runningAsComposerScript()) {
             return;
         }
 
@@ -108,5 +115,14 @@ class UpdateCommand extends Command
 
         return ThirdPartyPackage::discover()
             ->filter(fn (ThirdPartyPackage $pkg, string $name): bool => ! in_array($name, $configuredPackages, true));
+    }
+
+    /**
+     * Composer sets COMPOSER_DEV_MODE for the entire install/update run, including
+     * post-update-cmd scripts, so prompting there would block an unattended `composer update`.
+     */
+    protected function runningAsComposerScript(): bool
+    {
+        return getenv('COMPOSER_DEV_MODE') !== false;
     }
 }

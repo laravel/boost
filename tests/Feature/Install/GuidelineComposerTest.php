@@ -1011,7 +1011,10 @@ test('includes MCP Tools and Searching Documentation sections when hasMcp is tru
         ->toContain('database-query')
         ->toContain('database-schema')
         ->toContain('search-docs')
-        ->toContain('## Searching Documentation');
+        ->toContain('## Searching Documentation')
+        ->toContain('before changes that depend on Laravel ecosystem APIs')
+        ->toContain('Skip it for copy-only edits')
+        ->toContain('Reuse sufficient results already in context');
 });
 
 test('loads vendor core guideline when available', function (): void {
