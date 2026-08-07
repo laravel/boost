@@ -104,7 +104,7 @@ class AddGuidelineCommand extends Command
         }
 
         if ($this->availableGuidelines->isEmpty()) {
-            $this->error('No Markdown guidelines were found. Store guidelines beneath .ai/guidelines or provide a repository subpath containing them.');
+            $this->error('No Markdown guidelines were found. Remote guidelines must be stored beneath guidelines/ or an explicitly provided repository path.');
 
             return false;
         }

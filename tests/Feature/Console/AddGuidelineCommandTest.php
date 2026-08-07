@@ -66,8 +66,8 @@ it('throws an exception for an invalid repository format', function (): void {
 
 it('lists guidelines by their normalized relative paths', function (): void {
     Http::fake(fakeAddGuidelineTree([
-        ['path' => '.ai/guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
-        ['path' => '.ai/guidelines/testing.md', 'type' => 'blob', 'sha' => 'bbb'],
+        ['path' => 'guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+        ['path' => 'guidelines/testing.md', 'type' => 'blob', 'sha' => 'bbb'],
         ['path' => 'README.md', 'type' => 'blob', 'sha' => 'ccc'],
     ]));
 
@@ -83,7 +83,8 @@ it('reports an empty repository without treating unrelated Markdown as guideline
     Http::fake(fakeAddGuidelineTree([
         ['path' => 'README.md', 'type' => 'blob', 'sha' => 'aaa'],
         ['path' => 'docs/conventions.md', 'type' => 'blob', 'sha' => 'bbb'],
-        ['path' => '.ai/guidelines/template.blade.php', 'type' => 'blob', 'sha' => 'ccc'],
+        ['path' => 'guidelines/template.blade.php', 'type' => 'blob', 'sha' => 'ccc'],
+        ['path' => 'random/guidelines/not-default.md', 'type' => 'blob', 'sha' => 'ddd'],
     ]));
 
     $this->artisan('boost:add-guideline', ['repo' => 'owner/repo'])
@@ -146,12 +147,12 @@ it('installs all guidelines from an explicit repository subpath', function (): v
 it('installs only guidelines named by repeatable guideline options', function (): void {
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/backend/core.md', 'type' => 'blob', 'sha' => 'aaa'],
-            ['path' => '.ai/guidelines/frontend/core.md', 'type' => 'blob', 'sha' => 'bbb'],
-            ['path' => '.ai/guidelines/testing.md', 'type' => 'blob', 'sha' => 'ccc'],
+            ['path' => 'guidelines/backend/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/frontend/core.md', 'type' => 'blob', 'sha' => 'bbb'],
+            ['path' => 'guidelines/testing.md', 'type' => 'blob', 'sha' => 'ccc'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/backend/core.md' => Http::response('# Backend Core'),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/testing.md' => Http::response('# Testing'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/backend/core.md' => Http::response('# Backend Core'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/testing.md' => Http::response('# Testing'),
     ]);
 
     $this->artisan('boost:add-guideline', [
@@ -169,10 +170,10 @@ it('installs only guidelines named by repeatable guideline options', function ()
 it('prompts for a repository and an interactive guideline selection', function (): void {
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/first.md', 'type' => 'blob', 'sha' => 'aaa'],
-            ['path' => '.ai/guidelines/second.md', 'type' => 'blob', 'sha' => 'bbb'],
+            ['path' => 'guidelines/first.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/second.md', 'type' => 'blob', 'sha' => 'bbb'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/first.md' => Http::response('# First'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/first.md' => Http::response('# First'),
     ]);
 
     Prompt::fake([
@@ -210,7 +211,7 @@ it('skips existing guidelines in non-interactive mode', function (): void {
     File::put($this->tempBasePath.'/.ai/guidelines/team/core.md', '# Existing');
 
     Http::fake(fakeAddGuidelineTree([
-        ['path' => '.ai/guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+        ['path' => 'guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
     ]));
 
     $this->artisan('boost:add-guideline', [
@@ -232,9 +233,9 @@ it('overwrites an existing guideline when forced', function (): void {
 
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/team/core.md' => Http::response('# Updated'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/team/core.md' => Http::response('# Updated'),
     ]);
 
     $this->artisan('boost:add-guideline', [
@@ -252,9 +253,9 @@ it('overwrites an existing guideline when the interactive user confirms', functi
 
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/team/core.md' => Http::response('# Confirmed'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/team/core.md' => Http::response('# Confirmed'),
     ]);
 
     Prompt::fake([Key::ENTER]);
@@ -283,7 +284,7 @@ it('overwrites an existing guideline when the interactive user confirms', functi
 
 it('does not prompt or install without a selector in non-interactive mode', function (): void {
     Http::fake(fakeAddGuidelineTree([
-        ['path' => '.ai/guidelines/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+        ['path' => 'guidelines/core.md', 'type' => 'blob', 'sha' => 'aaa'],
     ]));
 
     $this->artisan('boost:add-guideline', [
@@ -301,9 +302,9 @@ it('does not prompt or install without a selector in non-interactive mode', func
 it('reports individual download failures without installing a file', function (): void {
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/team/core.md' => Http::response('Server error', 500),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/team/core.md' => Http::response('Server error', 500),
     ]);
 
     $this->artisan('boost:add-guideline', [
@@ -320,11 +321,11 @@ it('reports individual download failures without installing a file', function ()
 it('runs boost update exactly once after multiple successful installations', function (): void {
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/one.md', 'type' => 'blob', 'sha' => 'aaa'],
-            ['path' => '.ai/guidelines/two.md', 'type' => 'blob', 'sha' => 'bbb'],
+            ['path' => 'guidelines/one.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/two.md', 'type' => 'blob', 'sha' => 'bbb'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/one.md' => Http::response('# One'),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/two.md' => Http::response('# Two'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/one.md' => Http::response('# One'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/two.md' => Http::response('# Two'),
     ]);
 
     $updateCalls = 0;
@@ -346,9 +347,9 @@ it('runs boost update exactly once after multiple successful installations', fun
 it('does not run boost update when no download succeeds', function (): void {
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/core.md', 'type' => 'blob', 'sha' => 'aaa'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/core.md' => Http::response('Server error', 500),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/core.md' => Http::response('Server error', 500),
     ]);
 
     $updateCalls = 0;
@@ -370,9 +371,9 @@ it('does not run boost update when no download succeeds', function (): void {
 it('composes a downloaded Markdown guideline as a matching Boost override', function (): void {
     Http::fake([
         ...fakeAddGuidelineTree([
-            ['path' => '.ai/guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/laravel/core.md' => Http::response('# Downloaded Laravel Override'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/laravel/core.md' => Http::response('# Downloaded Laravel Override'),
     ]);
 
     $this->artisan('boost:add-guideline', [

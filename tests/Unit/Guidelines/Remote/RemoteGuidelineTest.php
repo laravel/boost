@@ -8,12 +8,12 @@ it('describes a remote guideline and its preserved relative path', function (): 
     $guideline = new RemoteGuideline(
         name: 'laravel/core',
         repo: 'owner/repo',
-        path: '.ai/guidelines/laravel/core.md',
+        path: 'guidelines/laravel/core.md',
         relativePath: 'laravel/core.md',
     );
 
     expect($guideline->name)->toBe('laravel/core')
         ->and($guideline->repo)->toBe('owner/repo')
-        ->and($guideline->path)->toBe('.ai/guidelines/laravel/core.md')
+        ->and($guideline->path)->toBe('guidelines/laravel/core.md')
         ->and($guideline->relativePath)->toBe('laravel/core.md');
 });

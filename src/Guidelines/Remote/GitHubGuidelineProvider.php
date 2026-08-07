@@ -12,7 +12,7 @@ class GitHubGuidelineProvider
 {
     use InteractsWithGitHub;
 
-    protected string $defaultGuidelinePath = '.ai/guidelines';
+    protected string $defaultGuidelinePath = 'guidelines';
 
     public function __construct(protected GitHubRepository $repository)
     {

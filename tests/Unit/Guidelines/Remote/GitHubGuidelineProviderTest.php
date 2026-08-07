@@ -27,19 +27,20 @@ function fakeGuidelineGitHubTree(array $tree, string $branch = 'main'): array
 
 it('discovers only Markdown files beneath the default guideline root', function (): void {
     Http::fake(fakeGuidelineGitHubTree([
-        ['path' => '.ai/guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
-        ['path' => '.ai/guidelines/team/testing.md', 'type' => 'blob', 'sha' => 'bbb'],
-        ['path' => '.ai/guidelines/executable.blade.php', 'type' => 'blob', 'sha' => 'ccc'],
-        ['path' => '.ai/guidelines/payload.php', 'type' => 'blob', 'sha' => 'ddd'],
-        ['path' => 'README.md', 'type' => 'blob', 'sha' => 'eee'],
-        ['path' => 'docs/conventions.md', 'type' => 'blob', 'sha' => 'fff'],
+        ['path' => 'guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+        ['path' => 'guidelines/team/testing.md', 'type' => 'blob', 'sha' => 'bbb'],
+        ['path' => 'guidelines/executable.blade.php', 'type' => 'blob', 'sha' => 'ccc'],
+        ['path' => 'guidelines/payload.php', 'type' => 'blob', 'sha' => 'ddd'],
+        ['path' => '.ai/guidelines/not-default.md', 'type' => 'blob', 'sha' => 'eee'],
+        ['path' => 'README.md', 'type' => 'blob', 'sha' => 'fff'],
+        ['path' => 'docs/conventions.md', 'type' => 'blob', 'sha' => 'ggg'],
     ]));
 
     $guidelines = (new GitHubGuidelineProvider(new GitHubRepository('owner', 'repo')))->discoverGuidelines();
 
     expect($guidelines->keys()->all())->toBe(['laravel/core', 'team/testing'])
         ->and($guidelines->get('laravel/core'))->toBeInstanceOf(RemoteGuideline::class)
-        ->and($guidelines->get('laravel/core')->path)->toBe('.ai/guidelines/laravel/core.md')
+        ->and($guidelines->get('laravel/core')->path)->toBe('guidelines/laravel/core.md')
         ->and($guidelines->get('laravel/core')->relativePath)->toBe('laravel/core.md');
 });
 
@@ -63,9 +64,9 @@ it('downloads a guideline while preserving its nested relative path and filename
 
     Http::fake([
         ...fakeGuidelineGitHubTree([
-            ['path' => '.ai/guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/laravel/core.md', 'type' => 'blob', 'sha' => 'aaa'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/laravel/core.md' => Http::response('# Team Laravel Core'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/laravel/core.md' => Http::response('# Team Laravel Core'),
     ]);
 
     try {
@@ -85,11 +86,11 @@ it('does not request or download remote PHP and Blade files', function (): void 
 
     Http::fake([
         ...fakeGuidelineGitHubTree([
-            ['path' => '.ai/guidelines/safe.md', 'type' => 'blob', 'sha' => 'aaa'],
-            ['path' => '.ai/guidelines/template.blade.php', 'type' => 'blob', 'sha' => 'bbb'],
-            ['path' => '.ai/guidelines/payload.PHP', 'type' => 'blob', 'sha' => 'ccc'],
+            ['path' => 'guidelines/safe.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/template.blade.php', 'type' => 'blob', 'sha' => 'bbb'],
+            ['path' => 'guidelines/payload.PHP', 'type' => 'blob', 'sha' => 'ccc'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/safe.md' => Http::response('# Safe'),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/safe.md' => Http::response('# Safe'),
     ]);
 
     try {
@@ -109,9 +110,9 @@ it('returns false without writing when a guideline download fails', function ():
 
     Http::fake([
         ...fakeGuidelineGitHubTree([
-            ['path' => '.ai/guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'guidelines/team/core.md', 'type' => 'blob', 'sha' => 'aaa'],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/.ai/guidelines/team/core.md' => Http::response('Server error', 500),
+        'raw.githubusercontent.com/owner/repo/main/guidelines/team/core.md' => Http::response('Server error', 500),
     ]);
 
     try {
@@ -129,7 +130,7 @@ it('reuses configured GitHub authentication', function (): void {
     config(['boost.github.token' => 'guideline-token']);
 
     Http::fake(fakeGuidelineGitHubTree([
-        ['path' => '.ai/guidelines/core.md', 'type' => 'blob', 'sha' => 'aaa'],
+        ['path' => 'guidelines/core.md', 'type' => 'blob', 'sha' => 'aaa'],
     ]));
 
     (new GitHubGuidelineProvider(new GitHubRepository('owner', 'repo')))->discoverGuidelines();
