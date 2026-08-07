@@ -37,9 +37,14 @@ function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null
 
     return new class($detector ?? app(AgentsDetector::class), Mockery::mock(Cloud::class), $config, $nightwatch, $sail, $terminal) extends InstallCommand
     {
+        public bool $performedInstallation = false;
+
         protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
 
-        protected function performInstallation(): void {}
+        protected function performInstallation(): void
+        {
+            $this->performedInstallation = true;
+        }
 
         protected function outro(): void {}
     };
@@ -75,4 +80,47 @@ it('silently drops stale agents no longer in the available list in non-interacti
     $command->setLaravel(app());
 
     expect($command->run($input, new NullOutput))->toBe(0);
+})->skipOnWindows();
+
+it('cancels a non-interactive fresh install without force', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['test-skill']);
+
+    $command = makeTestInstallCommand($config);
+
+    expect($command->getDefinition()->hasOption('force'))->toBeTrue();
+
+    $input = new ArrayInput([
+        '--skills' => true,
+        '--fresh' => true,
+    ], $command->getDefinition());
+    $input->setInteractive(false);
+
+    $command->setLaravel(app());
+
+    expect($command->run($input, new NullOutput))->toBe(InstallCommand::FAILURE)
+        ->and($command->performedInstallation)->toBeFalse();
+})->skipOnWindows();
+
+it('forces a non-interactive fresh install', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['test-skill']);
+
+    $command = makeTestInstallCommand($config);
+
+    expect($command->getDefinition()->hasOption('force'))->toBeTrue();
+
+    $input = new ArrayInput([
+        '--skills' => true,
+        '--fresh' => true,
+        '--force' => true,
+    ], $command->getDefinition());
+    $input->setInteractive(false);
+
+    $command->setLaravel(app());
+
+    expect($command->run($input, new NullOutput))->toBe(InstallCommand::SUCCESS)
+        ->and($command->performedInstallation)->toBeTrue();
 })->skipOnWindows();

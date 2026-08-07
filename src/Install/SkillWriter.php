@@ -108,8 +108,23 @@ class SkillWriter
      * @param  array<int, string>  $previouslyTrackedSkills
      * @return array<string, int>
      */
-    public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
+    public function sync(Collection $skills, array $previouslyTrackedSkills = [], bool $fresh = false): array
     {
+        $targetRoot = base_path($this->agent->skillsPath());
+        $canonicalRoot = base_path('.ai'.DIRECTORY_SEPARATOR.'skills');
+
+        if ($fresh && (
+            $this->pathsMatch($targetRoot, $canonicalRoot)
+            || $this->pathIsWithin($targetRoot, $canonicalRoot)
+            || $this->pathIsWithin($canonicalRoot, $targetRoot)
+        )) {
+            throw new RuntimeException('Fresh skill target overlaps the canonical .ai/skills directory.');
+        }
+
+        if ($fresh) {
+            $this->deleteDirectory($targetRoot);
+        }
+
         $written = $this->writeAll($skills);
 
         $newSkillNames = $skills->keys()->all();
@@ -154,17 +169,7 @@ class SkillWriter
     protected function deleteDirectory(string $path): bool
     {
         if (is_link($path)) {
-            if (@unlink($path)) {
-                return true;
-            }
-
-            // On Windows, directory symlinks can require rmdir instead of unlink,
-            // even when the symlink target no longer exists (dangling symlinks).
-            if (@rmdir($path)) {
-                return true;
-            }
-
-            return ! file_exists($path) && ! is_link($path);
+            return $this->deleteSymlink($path);
         }
 
         if (is_file($path)) {
@@ -182,11 +187,7 @@ class SkillWriter
 
         foreach ($files as $file) {
             if ($file->isLink()) {
-                $linkPath = $file->getPathname();
-
-                if (! @unlink($linkPath) && is_dir($linkPath)) {
-                    @rmdir($linkPath);
-                }
+                $this->deleteSymlink($file->getPathname());
 
                 continue;
             }
@@ -195,6 +196,21 @@ class SkillWriter
         }
 
         return @rmdir($path) || ! is_dir($path);
+    }
+
+    protected function deleteSymlink(string $path): bool
+    {
+        if (@unlink($path)) {
+            return true;
+        }
+
+        // On Windows, directory symlinks can require rmdir instead of unlink,
+        // even when the symlink target no longer exists (dangling symlinks).
+        if (@rmdir($path)) {
+            return true;
+        }
+
+        return ! file_exists($path) && ! is_link($path);
     }
 
     protected function copyDirectory(string $source, string $target): bool
@@ -287,10 +303,23 @@ class SkillWriter
 
     protected function pathsMatch(string $left, string $right): bool
     {
-        $resolvedLeft = realpath($left) ?: $left;
-        $resolvedRight = realpath($right) ?: $right;
+        return $this->normalizePath($left) === $this->normalizePath($right);
+    }
 
-        return rtrim($resolvedLeft, DIRECTORY_SEPARATOR) === rtrim($resolvedRight, DIRECTORY_SEPARATOR);
+    protected function pathIsWithin(string $path, string $directory): bool
+    {
+        return str_starts_with(
+            $this->normalizePath($path),
+            $this->normalizePath($directory).DIRECTORY_SEPARATOR,
+        );
+    }
+
+    protected function normalizePath(string $path): string
+    {
+        $resolvedPath = realpath($path) ?: $path;
+        $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $resolvedPath);
+
+        return rtrim($normalizedPath, DIRECTORY_SEPARATOR);
     }
 
     protected function relativePath(string $target, string $from): string

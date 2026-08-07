@@ -6,6 +6,7 @@ namespace Laravel\Boost\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Console\ConfirmableTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
@@ -44,12 +45,15 @@ use function Laravel\Prompts\note;
 
 class InstallCommand extends Command
 {
+    use ConfirmableTrait;
     use DisplayHelper;
 
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}';
+        {--mcp : Install MCP server configuration}
+        {--fresh : Delete and rebuild each selected agent\'s skills directory from Boost and .ai/skills}
+        {--force : Run a fresh skill rebuild without confirmation}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -94,6 +98,16 @@ class InstallCommand extends Command
         $this->displayBoostHeader('Install', $this->projectName);
         $this->discoverEnvironment();
         $this->collectInstallationPreferences();
+
+        if ($this->selectedBoostFeatures->contains('skills')
+            && $this->option('fresh')
+            && ! $this->confirmToProceed(
+                "A fresh skill rebuild will recreate each selected agent's skills directory from scratch. Custom skills must be stored in [.ai/skills] as described in the documentation.",
+                true,
+            )) {
+            return self::FAILURE;
+        }
+
         $this->performInstallation();
 
         $this->reportRenderFailures();
@@ -484,7 +498,7 @@ class InstallCommand extends Command
             emptyMessage: 'No agents are selected for skill installation.',
             headerMessage: sprintf('Syncing %d skills for skills-capable agents', $skills->count()),
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
-            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $this->config->getSkills()),
+            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $this->config->getSkills(), (bool) $this->option('fresh')),
             featureName: 'skills',
             beforeProcess: $skills->isNotEmpty()
                 ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())
