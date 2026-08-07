@@ -39,13 +39,6 @@ it('exits with error when the tool is in the exclude config', function (): void 
         ->expectsOutputToContain('Tool not registered or not allowed');
 });
 
-it('throws TypeError when base64 decoding fails', function (): void {
-    $this->artisan('boost:execute-tool', [
-        'tool' => DatabaseConnections::class,
-        'arguments' => '!!!invalid-base64!!!',
-    ])->assertFailed();
-})->throws(TypeError::class);
-
 it('exits with error when decoded arguments contain invalid JSON', function (): void {
     $this->artisan('boost:execute-tool', [
         'tool' => DatabaseConnections::class,

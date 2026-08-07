@@ -212,6 +212,21 @@ test('installShellMcp returns true when process fails but has already exists err
     expect($result)->toBe(true);
 });
 
+test('installShellMcp returns false when the process is signaled', function (): void {
+    $environment = Mockery::mock(TestAgent::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('shellMcpCommand')
+        ->andReturn('php -r "posix_kill(posix_getpid(), 5);"');
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::SHELL);
+
+    $result = $environment->installMcp('test-key', 'test-command');
+
+    expect($result)->toBe(false);
+})->skipOnWindows();
+
 test('installFileMcp returns false when mcpConfigPath is null', function (): void {
     $environment = new TestAgent($this->strategyFactory);
 

@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install\Detection;
 use Illuminate\Support\Facades\Process;
 use Laravel\Boost\Install\Contracts\DetectionStrategy;
 use Laravel\Boost\Install\Enums\Platform;
+use Symfony\Component\Process\Exception\ProcessSignaledException;
 
 class CommandDetectionStrategy implements DetectionStrategy
 {
@@ -16,6 +17,10 @@ class CommandDetectionStrategy implements DetectionStrategy
             return false;
         }
 
-        return Process::run($config['command'])->successful();
+        try {
+            return Process::run($config['command'])->successful();
+        } catch (ProcessSignaledException) {
+            return false;
+        }
     }
 }
