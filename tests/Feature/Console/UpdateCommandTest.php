@@ -410,6 +410,35 @@ it('adds selected new packages to config during discovery', function (): void {
         ->and($config->getPackages())->toContain('vendor/awesome-pkg');
 })->skipOnWindows();
 
+it('skips new-package discovery prompt when running as a composer script', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setPackages([]);
+
+    $newPackage = new ThirdPartyPackage('vendor/awesome-pkg', true, false);
+
+    Prompt::fake([]);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
+    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
+    $command->shouldReceive('resolveNewPackages')->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->shouldReceive('runningAsComposerScript')->andReturn(true);
+    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $output = new OutputStyle($input, new BufferedOutput);
+    $command->setInput($input);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0)
+        ->and($config->getPackages())->toBe([]);
+})->skipOnWindows();
+
 it('skips skills when --ignore-skills flag is set even if skills are configured', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
