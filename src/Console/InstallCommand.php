@@ -34,6 +34,7 @@ use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
+use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -205,7 +206,12 @@ class InstallCommand extends Command
         }
 
         $process = new Process([PHP_BINARY, 'artisan', 'test', '--list-tests'], base_path());
-        $process->run();
+
+        try {
+            $process->run();
+        } catch (ProcessSignaledException) {
+            return false;
+        }
 
         return Str::of($process->getOutput())
             ->trim()
