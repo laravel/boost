@@ -121,7 +121,7 @@ Route::post('/login', LoginController::class)->middleware('throttle:login');
 
 ## Validate File Uploads
 
-Validate extension, MIME type, and size. The `mimes` rule checks extensions; use `mimetypes` for actual MIME type validation. Never trust client-provided filenames.
+Validate MIME type and size. Both `mimes` and `mimetypes` read the file's contents to guess its MIME type; `mimes` just expresses the allow-list as extensions. The `extensions` rule checks only the client-supplied filename, so never rely on it alone. Never trust client-provided filenames.
 
 ```php
 public function rules(): array
