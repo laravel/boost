@@ -482,6 +482,98 @@ test('updates JSON5 file with only single-quoted strings', function (): void {
     expect($writtenContent)->toContain('"boost"', "'existing'");
 });
 
+test('injects a server that is only present as a comment', function (): void {
+    $writtenContent = '';
+    $commentedOutJson5 = <<<'JSON5'
+    {
+        "mcpServers": {
+            // "boost": { "command": "php", "args": ["artisan", "boost:mcp"] }
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $commentedOutJson5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toContain(
+        '"command": "php"', // New server added
+        '// "boost"' // Commented out server preserved
+    );
+});
+
+test('injects a server that is only present as a block comment', function (): void {
+    $writtenContent = '';
+    $commentedOutJson5 = <<<'JSON5'
+    {
+        "mcpServers": {
+            /* "boost": { "command": "php" } */
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $commentedOutJson5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toContain(
+        '"command": "php"', // New server added
+        '/* "boost"' // Commented out server preserved
+    )->not->toContain('*/,'); // No comma appended to the comment
+});
+
+test('does not duplicate an existing server whose config contains slashes', function (): void {
+    $json5 = <<<'JSON5'
+    {
+        "mcpServers": {
+            // Remote servers
+            "boost": { "url": "https://example.com/mcp" }
+        }
+    }
+    JSON5;
+
+    File::swap(Mockery::mock(Filesystem::class));
+
+    File::shouldReceive('ensureDirectoryExists')->once();
+    File::shouldReceive('exists')->andReturn(true);
+    File::shouldReceive('size')->andReturn(200);
+    File::shouldReceive('get')->andReturn($json5);
+    File::shouldReceive('put')->never(); // The URL slashes are not mistaken for a comment, so nothing is written
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+});
+
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
 
