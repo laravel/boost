@@ -381,3 +381,53 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
         ->toHaveKey('name', 'pest-testing')
         ->toHaveKey('description', 'Write and run tests with Pest');
 });
+
+test('returns third-party npm skills when aiGuidelines is uninitialized', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('node_modules/@some-scope/third-party/resources/boost/skills/npm-third-party-skill');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: npm-third-party-skill\ndescription: An npm vendor-provided skill\n---\n\n# Content\n");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@some-scope/third-party' => '^1.0']]));
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('npm-third-party-skill'))->toBeTrue();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+        @rmdir(base_path('node_modules/@some-scope/third-party/resources/boost/skills'));
+        @rmdir(base_path('node_modules/@some-scope/third-party/resources/boost'));
+        @rmdir(base_path('node_modules/@some-scope/third-party/resources'));
+        @rmdir(base_path('node_modules/@some-scope/third-party'));
+        @rmdir(base_path('node_modules/@some-scope'));
+        @rmdir(base_path('node_modules'));
+        @unlink(base_path('package.json'));
+    }
+});
+
+test('excludes first-party npm packages from third-party skill discovery', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('node_modules/@laravel/some-package/resources/boost/skills/laravel-skill');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: laravel-skill\ndescription: A first-party skill\n---\n\n# Content\n");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@laravel/some-package' => '^1.0']]));
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('laravel-skill'))->toBeFalse();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+        @rmdir(base_path('node_modules/@laravel/some-package/resources/boost/skills'));
+        @rmdir(base_path('node_modules/@laravel/some-package/resources/boost'));
+        @rmdir(base_path('node_modules/@laravel/some-package/resources'));
+        @rmdir(base_path('node_modules/@laravel/some-package'));
+        @rmdir(base_path('node_modules/@laravel'));
+        @rmdir(base_path('node_modules'));
+        @unlink(base_path('package.json'));
+    }
+});

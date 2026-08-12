@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\Npm;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
@@ -265,11 +266,14 @@ class GuidelineComposer
     {
         $guidelines = collect();
 
-        foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
-            if (Composer::isFirstPartyPackage($package)) {
-                continue;
-            }
+        $packageDirectories = collect(Composer::packagesDirectoriesWithBoostGuidelines())
+            ->reject(fn (string $path, string $package): bool => Composer::isFirstPartyPackage($package))
+            ->merge(
+                collect(Npm::packagesDirectoriesWithBoostGuidelines())
+                    ->reject(fn (string $path, string $package): bool => Npm::isFirstPartyPackage($package))
+            );
 
+        foreach ($packageDirectories as $package => $path) {
             $root = str_replace('\\', '/', (string) (realpath($path) ?: $path));
 
             $keyed = $this->guidelinesDir(

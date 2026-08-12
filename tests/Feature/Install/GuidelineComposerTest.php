@@ -1318,3 +1318,61 @@ test('inertia core guideline matches the installed major version', function (str
     'v2' => ['2.1.0', '# Inertia v2', '# Inertia v3'],
     'v3' => ['3.1.1', '# Inertia v3', '# Inertia v2'],
 ]);
+
+test('discovers third-party npm package guidelines', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $guidelineDir = base_path('node_modules/@some-scope/third-party/resources/boost/guidelines');
+    @mkdir($guidelineDir, 0755, true);
+    file_put_contents($guidelineDir.'/core.md', "# Third-Party NPM Guidelines\n\nThese are npm vendor guidelines.");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@some-scope/third-party' => '^1.0']]));
+
+    try {
+        $guidelines = $this->composer->guidelines();
+
+        expect($guidelines->has('@some-scope/third-party/core'))->toBeTrue()
+            ->and($guidelines->get('@some-scope/third-party/core')['content'])->toContain('Third-Party NPM Guidelines')
+            ->and($guidelines->get('@some-scope/third-party/core')['third_party'])->toBeTrue();
+    } finally {
+        @unlink($guidelineDir.'/core.md');
+        @rmdir($guidelineDir);
+        @rmdir(base_path('node_modules/@some-scope/third-party/resources/boost'));
+        @rmdir(base_path('node_modules/@some-scope/third-party/resources'));
+        @rmdir(base_path('node_modules/@some-scope/third-party'));
+        @rmdir(base_path('node_modules/@some-scope'));
+        @rmdir(base_path('node_modules'));
+        @unlink(base_path('package.json'));
+    }
+});
+
+test('excludes first-party npm packages from third-party guideline discovery', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $guidelineDir = base_path('node_modules/@laravel/some-package/resources/boost/guidelines');
+    @mkdir($guidelineDir, 0755, true);
+    file_put_contents($guidelineDir.'/core.md', "# First-Party NPM Guidelines\n\nThese should not appear as third-party.");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@laravel/some-package' => '^1.0']]));
+
+    try {
+        $guidelines = $this->composer->guidelines();
+
+        expect($guidelines->has('@laravel/some-package/core'))->toBeFalse();
+    } finally {
+        @unlink($guidelineDir.'/core.md');
+        @rmdir($guidelineDir);
+        @rmdir(base_path('node_modules/@laravel/some-package/resources/boost'));
+        @rmdir(base_path('node_modules/@laravel/some-package/resources'));
+        @rmdir(base_path('node_modules/@laravel/some-package'));
+        @rmdir(base_path('node_modules/@laravel'));
+        @rmdir(base_path('node_modules'));
+        @unlink(base_path('package.json'));
+    }
+});

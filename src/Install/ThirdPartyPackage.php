@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\Npm;
 
 class ThirdPartyPackage
 {
@@ -24,8 +25,14 @@ class ThirdPartyPackage
      */
     public static function discover(): Collection
     {
-        $withGuidelines = Composer::packagesDirectoriesWithBoostGuidelines();
-        $withSkills = Composer::packagesDirectoriesWithBoostSkills();
+        $withGuidelines = array_merge(
+            Composer::packagesDirectoriesWithBoostGuidelines(),
+            Npm::packagesDirectoriesWithBoostGuidelines()
+        );
+        $withSkills = array_merge(
+            Composer::packagesDirectoriesWithBoostSkills(),
+            Npm::packagesDirectoriesWithBoostSkills()
+        );
 
         $allPackageNames = array_unique(array_merge(
             array_keys($withGuidelines),
@@ -33,7 +40,7 @@ class ThirdPartyPackage
         ));
 
         return collect($allPackageNames)
-            ->reject(fn (string $name): bool => Composer::isFirstPartyPackage($name))
+            ->reject(fn (string $name): bool => Composer::isFirstPartyPackage($name) || Npm::isFirstPartyPackage($name))
             ->mapWithKeys(fn (string $name): array => [
                 $name => new self(
                     name: $name,

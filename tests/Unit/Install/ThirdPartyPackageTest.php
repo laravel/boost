@@ -71,3 +71,22 @@ it('excludes first-party packages from discover results', function (): void {
         );
     }
 });
+
+it('excludes first-party npm packages from discover results', function (): void {
+    $packages = ThirdPartyPackage::discover();
+
+    $firstPartyNpmNames = [
+        '@laravel/vite-plugin-wayfinder',
+        '@inertiajs/react',
+        '@inertiajs/vue3',
+        'laravel-echo',
+        'laravel-precognition',
+        'laravel-vite-plugin',
+    ];
+
+    foreach ($firstPartyNpmNames as $name) {
+        expect($packages->has($name))->toBeFalse(
+            "First-party npm package {$name} should be excluded from discover()"
+        );
+    }
+});
