@@ -90,7 +90,7 @@ Correct:
 
 ## CSRF Protection
 
-Include `@csrf` in all POST/PUT/DELETE Blade forms. Inertia doesn't use `@csrf`; its HTTP client sends the `XSRF-TOKEN` cookie back as the `X-XSRF-TOKEN` header, which Laravel accepts in place of the `_token` field.
+Include `@csrf` in all POST/PUT/PATCH/DELETE Blade forms. Inertia doesn't use `@csrf`; its HTTP client sends the `XSRF-TOKEN` cookie back as the `X-XSRF-TOKEN` header, which Laravel accepts in place of the `_token` field.
 
 Incorrect:
 ```blade
