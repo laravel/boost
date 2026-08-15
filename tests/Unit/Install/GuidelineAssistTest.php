@@ -260,3 +260,25 @@ test('appPath normalizes separators to forward slashes', function (): void {
     expect($assist->appPath('Http/Kernel.php'))->toBe('app/Http/Kernel.php');
     expect($assist->appPath('Console/Commands/'))->toBe('app/Console/Commands/');
 });
+
+test('blank executable path config is treated as unset', function (mixed $blank): void {
+    config([
+        'boost.executable_paths.php' => $blank,
+        'boost.executable_paths.composer' => $blank,
+        'boost.executable_paths.npm' => $blank,
+        'boost.executable_paths.vendor_bin' => $blank,
+    ]);
+    $this->config->usesSail = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->artisan())->toBe('php artisan');
+    expect($assist->composerCommand('require foo/bar'))->toBe('composer require foo/bar');
+    expect($assist->nodePackageManagerCommand('install'))->toBe('npm install');
+    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+})->with([
+    'empty string' => '',
+    'false' => false,
+]);

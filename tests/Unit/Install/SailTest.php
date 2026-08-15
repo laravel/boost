@@ -107,6 +107,15 @@ test('sail binary path defaults to vendor/bin/sail', function (): void {
     expect(Sail::binaryPath())->toBe('vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail');
 });
 
+test('blank sail binary path falls back to the default', function (mixed $blank): void {
+    config(['boost.executable_paths.sail' => $blank]);
+
+    expect(Sail::binaryPath())->toBe('vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail');
+})->with([
+    'empty string' => '',
+    'false' => false,
+]);
+
 test('isInstalled detects every Docker Compose filename supported by default', function (string $composeFile): void {
     global $sailTempDir;
 

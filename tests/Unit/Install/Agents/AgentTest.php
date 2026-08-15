@@ -345,6 +345,17 @@ test('getPhpPath maintains default behavior when forceAbsolutePath is false and 
     expect($environment->getPhpPath(false))->toBe('php');
 });
 
+test('getPhpPath treats a blank configured path as unset', function (mixed $blank): void {
+    config(['boost.executable_paths.php' => $blank]);
+
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(false))->toBe('php');
+    expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
+})->with([
+    'empty string' => '',
+    'false' => false,
+]);
+
 test('getPhpPath uses configured default_php_bin from config', function (): void {
     config(['boost.executable_paths.php' => '/usr/local/bin/php8.3']);
 
