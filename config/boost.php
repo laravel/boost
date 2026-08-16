@@ -19,6 +19,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Purpose
+    |--------------------------------------------------------------------------
+    |
+    | A short description of what your application does. When set, Boost adds
+    | it to the top of the guidelines it generates so agents know what they
+    | are working on before they read any of your application's code.
+    |
+    */
+
+    'purpose' => env('BOOST_PURPOSE'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Project Rules
     |--------------------------------------------------------------------------
     |
@@ -65,6 +78,67 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | GitHub Token
+    |--------------------------------------------------------------------------
+    |
+    | Boost sends this token when downloading remote skills with the
+    | boost:add-skill command, raising GitHub's rate limit and allowing
+    | private repositories to be read. Falls back to services.github.token.
+    |
+    */
+
+    'github' => [
+        'token' => env('BOOST_GITHUB_TOKEN'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enforce Tests
+    |--------------------------------------------------------------------------
+    |
+    | This option determines whether Boost includes its guideline instructing
+    | agents to write tests. When left null, Boost decides for you based on
+    | whether your application already has a working test suite set up.
+    |
+    */
+
+    'enforce_tests' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Boost MCP Server
+    |--------------------------------------------------------------------------
+    |
+    | Each MCP tool runs in its own subprocess and is stopped once the timeout
+    | below is reached. You may also drop any of Boost's bundled tools, or
+    | register tool classes of your own, using the two arrays below.
+    |
+    */
+
+    'mcp' => [
+        'tool_timeout' => 180,
+
+        'tools' => [
+            'include' => [],
+            'exclude' => [],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tinker Tool
+    |--------------------------------------------------------------------------
+    |
+    | The Tinker MCP tool lets agents execute arbitrary PHP within your
+    | application, so it is not registered unless you opt in here. Only
+    | enable it when you are comfortable with agents running code.
+    |
+    */
+
+    'tinker_tool_enabled' => env('BOOST_TINKER_TOOL_ENABLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Boost Executables Paths
     |--------------------------------------------------------------------------
     |
@@ -79,6 +153,7 @@ return [
         'composer' => env('BOOST_COMPOSER_EXECUTABLE_PATH'),
         'npm' => env('BOOST_NPM_EXECUTABLE_PATH'),
         'vendor_bin' => env('BOOST_VENDOR_BIN_EXECUTABLE_PATH'),
+        'sail' => env('BOOST_SAIL_EXECUTABLE_PATH'),
         'current_directory' => env('BOOST_CURRENT_DIRECTORY_EXECUTABLE_PATH'),
     ],
 
