@@ -46,8 +46,11 @@ Correct:
 ```php
 $response = Http::retry([100, 500, 1000])
     ->timeout(10)
+    ->withHeaders(['Idempotency-Key' => $idempotencyKey])
     ->post('https://api.stripe.com/v1/charges', $data);
 ```
+
+Retries resend the request unchanged, so a write can be applied twice if the first attempt succeeded but the response was lost. Send an idempotency key when the API supports one.
 
 Only retry on specific errors:
 
