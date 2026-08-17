@@ -574,6 +574,113 @@ test('does not duplicate an existing server whose config contains slashes', func
     expect($result)->toBeTrue();
 });
 
+test('injects into the real configKey when a comment also mentions it', function (): void {
+    $writtenContent = '';
+    $json5 = <<<'JSON5'
+    {
+        // see docs for "mcpServers": { ... } format
+        "mcpServers": {
+            "other": { "command": "node" }
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $json5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect(decodeWithoutCommentLines($writtenContent)?->mcpServers->boost->command)->toBe('php');
+});
+
+test('injects when the whole configKey object is commented out', function (): void {
+    $writtenContent = '';
+    $json5 = <<<'JSON5'
+    {
+        // "mcpServers": {
+        //     "boost": { "command": "php" }
+        // },
+        "otherSetting": true
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $json5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect(decodeWithoutCommentLines($writtenContent)?->mcpServers->boost->command)->toBe('php');
+    expect($writtenContent)->toContain('// "mcpServers": {'); // Original comment left untouched
+});
+
+test('finds the closing brace when a comment holds an unbalanced brace', function (): void {
+    $writtenContent = '';
+    $json5 = <<<'JSON5'
+    {
+        "mcpServers": {
+            // don't forget the closing } here
+            "other": { "command": "node" }
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $json5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect(decodeWithoutCommentLines($writtenContent)?->mcpServers->boost->command)->toBe('php');
+});
+
+test('does not add a trailing comma when only a comment follows the opening brace', function (): void {
+    $writtenContent = '';
+    $json5 = <<<'JSON5'
+    {
+        // just a note, no settings yet
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $json5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    // A dangling comma before the outer brace would make this fail to decode
+    expect(decodeWithoutCommentLines($writtenContent)?->mcpServers->boost->command)->toBe('php');
+});
+
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
 
@@ -581,6 +688,11 @@ test('detectIndentation works correctly with various patterns', function (string
 
     expect($result)->toBe($expected, $description);
 })->with(indentationDetectionCases());
+
+function decodeWithoutCommentLines(string $content): ?object
+{
+    return json_decode((string) preg_replace('/^\s*\/\/.*$/m', '', $content));
+}
 
 function mockFileOperations(bool $fileExists = false, string $content = '{}', bool $writeSuccess = true, ?string &$capturedPath = null, ?string &$capturedContent = null): void
 {
