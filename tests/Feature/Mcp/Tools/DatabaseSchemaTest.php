@@ -228,9 +228,9 @@ test('it returns table details on a connection with a table prefix', function ()
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function (array $schemaArray): void {
-            expect($schemaArray['tables'])->toHaveKey('boost_users');
+            expect($schemaArray['tables'])->toHaveKey('users');
 
-            $userTable = $schemaArray['tables']['boost_users'];
+            $userTable = $schemaArray['tables']['users'];
             expect($userTable['columns'])->toHaveKeys(['id', 'email', 'team_id'])
                 ->and($userTable['columns']['email']['type'])->toContain('varchar')
                 ->and($userTable['indexes'])->not->toBeEmpty()
@@ -253,10 +253,39 @@ test('it returns column types on a connection with a table prefix in summary mod
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function (array $schemaArray): void {
-            expect($schemaArray['tables'])->toHaveKey('boost_users')
-                ->and($schemaArray['tables']['boost_users'])->toHaveKeys(['id', 'email'])
-                ->and($schemaArray['tables']['boost_users']['email'])->toContain('varchar');
+            expect($schemaArray['tables'])->toHaveKey('users')
+                ->and($schemaArray['tables']['users'])->toHaveKeys(['id', 'email'])
+                ->and($schemaArray['tables']['users']['email'])->toContain('varchar');
         });
+});
+
+test('it restores the connection table prefix after reading the schema', function (): void {
+    config()->set('database.connections.testing.prefix', 'boost_');
+    DB::purge('testing');
+
+    Schema::create('users', function (Blueprint $table): void {
+        $table->id();
+    });
+
+    (new DatabaseSchema)->handle(new Request(['filter' => 'user']));
+
+    expect(DB::connection('testing')->getTablePrefix())->toBe('boost_');
+});
+
+test('it restores the connection table prefix when reading the schema fails', function (): void {
+    config()->set('database.connections.testing.prefix', 'boost_');
+    DB::purge('testing');
+
+    $tool = new class extends DatabaseSchema
+    {
+        protected function getAllTables(?string $connection): array
+        {
+            throw new RuntimeException('catalog unavailable');
+        }
+    };
+
+    expect(fn (): mixed => $tool->handle(new Request))->toThrow(RuntimeException::class)
+        ->and(DB::connection('testing')->getTablePrefix())->toBe('boost_');
 });
 
 test('it returns table details for tables that do not carry the connection prefix', function (): void {
@@ -268,16 +297,78 @@ test('it returns table details for tables that do not carry the connection prefi
         $table->string('email');
     });
 
-    DB::statement('create table users (legacy_column varchar(255))');
+    DB::statement('create table legacy_audit (legacy_column varchar(255))');
 
     $tool = new DatabaseSchema;
-    $response = $tool->handle(new Request(['filter' => 'user']));
+    $response = $tool->handle(new Request);
 
     expect($response)->isToolResult()
         ->toolHasNoError()
         ->toolJsonContent(function (array $schemaArray): void {
-            expect($schemaArray['tables']['users']['columns'])->toHaveKey('legacy_column')
-                ->and($schemaArray['tables']['users']['columns'])->not->toHaveKey('email')
-                ->and($schemaArray['tables']['boost_users']['columns'])->toHaveKeys(['id', 'email']);
+            expect($schemaArray['tables']['legacy_audit']['columns'])->toHaveKey('legacy_column')
+                ->and($schemaArray['tables']['users']['columns'])->toHaveKeys(['id', 'email']);
+        });
+});
+
+test('it strips the prefix from foreign key targets and view names', function (): void {
+    config()->set('database.connections.testing.prefix', 'boost_');
+    DB::purge('testing');
+
+    Schema::create('teams', function (Blueprint $table): void {
+        $table->id();
+    });
+
+    Schema::create('users', function (Blueprint $table): void {
+        $table->id();
+        $table->foreignId('team_id')->constrained('teams');
+    });
+
+    DB::statement('create view boost_active_users as select id from boost_users');
+
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request(['include_views' => true, 'filter' => 'user']));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray['tables']['users']['foreign_keys'][0]['foreign_table'])->toBe('teams')
+                ->and(collect($schemaArray['views'])->pluck('name'))->toContain('active_users');
+        });
+});
+
+test('it strips the prefix from view rows that name the view something other than "name"', function (): void {
+    config()->set('database.connections.testing.prefix', 'boost_');
+    DB::purge('testing');
+
+    $tool = new class extends DatabaseSchema
+    {
+        /** @return array<string, mixed> */
+        public function strip(array $result): array
+        {
+            return $this->stripTablePrefix('testing', $result);
+        }
+    };
+
+    $result = $tool->strip([
+        'tables' => [],
+        'views' => [
+            (object) ['schemaname' => 'public', 'viewname' => 'boost_active_users'],
+            ['name' => 'boost_archived_users'],
+        ],
+    ]);
+
+    expect($result['views'][0]->viewname)->toBe('active_users')
+        ->and($result['views'][1]['name'])->toBe('archived_users');
+});
+
+test('it leaves names untouched on a connection without a table prefix', function (): void {
+    $tool = new DatabaseSchema;
+    $response = $tool->handle(new Request);
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $schemaArray): void {
+            expect($schemaArray['tables'])->toHaveKey('examples')
+                ->and($schemaArray['tables']['examples']['columns'])->toHaveKeys(['id', 'name']);
         });
 });
