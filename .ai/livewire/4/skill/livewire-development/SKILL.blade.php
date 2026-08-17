@@ -126,7 +126,7 @@ These things changed in Livewire 4, but may not have been updated in this applic
 
 - Always use `wire:key` in loops
 - Use `wire:loading` for loading states
-- Use `wire:model.live` for instant updates (default is debounced)
+- Use `wire:model.live` for live updates; `wire:model` is deferred by default
 - Validate and authorize in actions (treat like HTTP requests)
 
 ## Configuration
