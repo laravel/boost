@@ -265,17 +265,17 @@ HTML;
      */
     private static function captureTypes(mixed $levels): array
     {
-        if (! is_array($levels) || $levels === []) {
+        $levels = is_array($levels)
+            ? array_filter($levels, fn (mixed $level): bool => is_string($level) && trim($level) !== '')
+            : [];
+
+        if ($levels === []) {
             return self::AllBrowserLogTypes;
         }
 
         $captureTypes = [];
 
         foreach ($levels as $level) {
-            if (! is_string($level)) {
-                continue;
-            }
-
             $level = strtolower(trim($level));
             $level = $level === 'warn' ? 'warning' : $level;
 

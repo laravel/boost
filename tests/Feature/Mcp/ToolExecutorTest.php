@@ -202,6 +202,22 @@ test('buildCommand preserves absolute paths with spaces', function (): void {
     expect($command[0])->toBe('/Applications/Some App/bin/php');
 });
 
+test('buildCommand falls back to PHP_BINARY when the configured path is blank', function (mixed $blank): void {
+    config(['boost.executable_paths.php' => $blank]);
+
+    $executor = new ToolExecutor;
+
+    $reflection = new ReflectionClass($executor);
+    $method = $reflection->getMethod('buildCommand');
+
+    $command = $method->invoke($executor, 'SomeTool', []);
+
+    expect($command[0])->toBe(PHP_BINARY);
+})->with([
+    'empty string' => '',
+    'false' => false,
+]);
+
 test('buildCommand splits multi-token wrapper commands', function (): void {
     config(['boost.executable_paths.php' => 'herd php']);
 
