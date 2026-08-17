@@ -122,9 +122,9 @@ class GuidelineAssist
 
     public function nodePackageManagerCommand(string $command): string
     {
-        $npmExecutable = config('boost.executable_paths.npm') ?: null;
+        $npmExecutable = config('boost.executable_paths.npm');
 
-        if ($npmExecutable !== null) {
+        if ($npmExecutable) {
             return "{$npmExecutable} {$command}";
         }
 
@@ -142,9 +142,9 @@ class GuidelineAssist
 
     public function composerCommand(string $command): string
     {
-        $composerExecutable = config('boost.executable_paths.composer') ?: null;
+        $composerExecutable = config('boost.executable_paths.composer');
 
-        if ($composerExecutable !== null) {
+        if ($composerExecutable) {
             return "{$composerExecutable} {$command}";
         }
 
@@ -157,9 +157,9 @@ class GuidelineAssist
 
     public function binCommand(string $command): string
     {
-        $vendorBinPrefix = config('boost.executable_paths.vendor_bin') ?: null;
+        $vendorBinPrefix = config('boost.executable_paths.vendor_bin');
 
-        if ($vendorBinPrefix !== null) {
+        if ($vendorBinPrefix) {
             return "{$vendorBinPrefix}{$command}";
         }
 
@@ -172,9 +172,9 @@ class GuidelineAssist
 
     public function artisan(): string
     {
-        $phpExecutable = config('boost.executable_paths.php') ?: null;
+        $phpExecutable = config('boost.executable_paths.php');
 
-        if ($phpExecutable !== null) {
+        if ($phpExecutable) {
             return "{$phpExecutable} artisan";
         }
 
