@@ -62,7 +62,7 @@ Correct:
 ```php
 Schema::create('orders', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('user_id')->constrained()->index();
+    $table->foreignId('user_id')->index()->constrained();
     $table->string('status')->index();
     $table->timestamp('shipped_at')->nullable()->index();
     $table->timestamps();
