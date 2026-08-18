@@ -226,6 +226,53 @@ it('normalizes an absolute path glob to the same area as its relative twin', fun
         ->not->toContain(base_path('app/Http/Controllers/**'));
 });
 
+it('keeps multi-byte characters in a title and note intact', function (): void {
+    // Every one of these characters contains the byte 0x85, which PCRE matches
+    // as NEL when a pattern using `\R` runs outside UTF-8 mode.
+    $title = 'Encoding check: х ゅ 🙅';
+    $note = 'These all contain 0x85: х (U+0445), ゅ (U+3085), 🙅 (U+1F645).';
+
+    $response = (new RecordRule($this->repository))->handle(new Request([
+        'glob' => 'app/Http/Controllers/**',
+        'title' => $title,
+        'note' => $note,
+    ]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+
+    $contents = File::get($this->rulesDir.'/controllers.md');
+
+    expect(mb_check_encoding($contents, 'UTF-8'))->toBeTrue();
+    expect($contents)
+        ->toContain('## '.$title)
+        ->toContain($note);
+});
+
+it('keeps multi-byte characters in earlier entries when a new glob is merged in', function (): void {
+    $tool = new RecordRule($this->repository);
+
+    $tool->handle(new Request([
+        'glob' => 'app/Models/**',
+        'title' => 'Encoding check: х ゅ 🙅',
+        'note' => 'Keep these bytes: х ゅ 🙅.',
+    ]));
+
+    // Merging a new glob into an existing area rewrites the whole file through
+    // the frontmatter parser.
+    $tool->handle(new Request([
+        'glob' => 'app/Models/*.php',
+        'title' => 'Second model note',
+        'note' => 'Watch the users table.',
+    ]));
+
+    $contents = File::get($this->rulesDir.'/models.md');
+
+    expect(mb_check_encoding($contents, 'UTF-8'))->toBeTrue();
+    expect($contents)
+        ->toContain('## Encoding check: х ゅ 🙅')
+        ->toContain('Keep these bytes: х ゅ 🙅.');
+});
+
 it('writes a placeholder index when no rule files have paths', function (): void {
     $this->repository->writeIndex();
 
