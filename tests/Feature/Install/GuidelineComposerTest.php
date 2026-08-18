@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -67,6 +68,50 @@ test('includes package guidelines only for installed packages', function (): voi
         ->toContain('=== pest/core rules ===')
         ->not->toContain('=== inertia-react/core rules ===');
 });
+
+test('includes Pest 5 TIA guidance only when locally enabled', function (string $version, ?string $configuration, bool $expected): void {
+    config(['boost.rules.enabled' => false]);
+
+    $originalBasePath = base_path();
+    $basePath = sys_get_temp_dir().'/boost-pest-tia-guideline-'.bin2hex(random_bytes(4));
+
+    File::ensureDirectoryExists($basePath.'/tests');
+    app()->setBasePath($basePath);
+
+    if ($configuration !== null) {
+        File::put($basePath.'/tests/Pest.php', "<?php\n\n{$configuration}\n");
+    }
+
+    try {
+        mockProjectPackages($this->project, new PackageCollection([
+            rosterPackage('laravel/framework', '11.0.0'),
+            rosterPackage('pestphp/pest', $version),
+        ]));
+
+        $guidelines = $this->composer->compose();
+
+        if ($expected) {
+            expect($guidelines)
+                ->toContain('=== pest/v5 rules ===')
+                ->toContain('Pest 5 Test Impact Analysis')
+                ->toContain('php artisan test --compact')
+                ->toContain('php ./vendor/bin/pest --compact --tia --fresh')
+                ->toContain('php ./vendor/bin/pest --compact --no-tia');
+        } else {
+            expect($guidelines)
+                ->not->toContain('=== pest/v5 rules ===')
+                ->not->toContain('Pest 5 Test Impact Analysis');
+        }
+    } finally {
+        app()->setBasePath($originalBasePath);
+        File::deleteDirectory($basePath);
+    }
+})->with([
+    'Pest 5 with local TIA' => ['5.0.0', 'pest()->tia()->locally();', true],
+    'Pest 5 without TIA configuration' => ['5.0.0', null, false],
+    'Pest 5 with always-on TIA' => ['5.0.0', 'pest()->tia()->always();', false],
+    'Pest 4 with local TIA syntax' => ['4.1.0', 'pest()->tia()->locally();', false],
+]);
 
 test('excludes scoped block content from the composed blob when scoped guidelines are enabled', function (): void {
     config(['boost.rules.scoped_guidelines' => true]);

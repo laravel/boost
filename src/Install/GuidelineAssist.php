@@ -110,6 +110,28 @@ class GuidelineAssist
         return $this->project->js()->uses($package);
     }
 
+    public function hasLocallyEnabledPestTia(): bool
+    {
+        $path = base_path('tests/Pest.php');
+
+        if (! is_file($path) || ($contents = file_get_contents($path)) === false) {
+            return false;
+        }
+
+        $code = collect(token_get_all($contents))
+            ->reject(fn (mixed $token): bool => is_array($token) && in_array($token[0], [
+                T_WHITESPACE,
+                T_COMMENT,
+                T_DOC_COMMENT,
+                T_CONSTANT_ENCAPSED_STRING,
+                T_ENCAPSED_AND_WHITESPACE,
+            ], true))
+            ->map(fn (mixed $token): string => is_array($token) ? $token[1] : $token)
+            ->join('');
+
+        return preg_match('/(?<![A-Z0-9_$>:\\\\])(?:\\\\pest|pest)\(\)->tia\(\)(?:(?!;).)*->locally\(\)/is', $code) === 1;
+    }
+
     public function nodePackageManager(): string
     {
         return ($this->project->js()->packageManager() ?? JsPackageManager::Npm)->value;
@@ -138,6 +160,21 @@ class GuidelineAssist
     public function artisanCommand(string $command): string
     {
         return "{$this->artisan()} {$command}";
+    }
+
+    public function phpCommand(string $command): string
+    {
+        $phpExecutable = config('boost.executable_paths.php');
+
+        if ($phpExecutable) {
+            return "{$phpExecutable} {$command}";
+        }
+
+        if ($this->config->usesSail) {
+            return Sail::command("php {$command}");
+        }
+
+        return "php {$command}";
     }
 
     public function composerCommand(string $command): string
