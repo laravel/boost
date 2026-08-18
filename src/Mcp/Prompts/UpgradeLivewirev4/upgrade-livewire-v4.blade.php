@@ -333,17 +333,17 @@ The `stream()` method parameter order has changed:
 $this->stream(to: '#container', content: 'Hello', replace: true);
 
 // After (v4)
-$this->stream(content: 'Hello', replace: true, el: '#container');
+$this->stream(content: 'Hello', replace: true, name: '#container');
 @endboostsnippet
 
-If you're using named parameters (as shown above), note that `to:` has been renamed to `el:`. If you're using positional parameters, you'll need to update to the following:
+If you're using named parameters (as shown above), note that `to:` has been renamed to `name:`. If you're using positional parameters, you'll need to update to the following:
 
 @boostsnippet('Stream Positional Parameters', 'php')
 // Before (v3) - positional parameters
 $this->stream('#container', 'Hello');
 
 // After (v4) - positional/named parameters
-$this->stream('Hello', el: '#container');
+$this->stream('Hello', name: '#container');
 @endboostsnippet
 
 [Learn more about streaming →](/docs/4.x/wire-stream)
