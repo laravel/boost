@@ -50,7 +50,8 @@ class InstallCommand extends Command
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
         {--mcp : Install MCP server configuration}
-        {--no-third-party : Skip guidelines & skills shipped by third-party packages}';
+        {--no-third-party : Skip guidelines & skills shipped by third-party packages}
+        {--packages= : Third-party packages to include, comma separated, or "all" or "none"}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -264,11 +265,15 @@ class InstallCommand extends Command
      */
     protected function selectThirdPartyPackages(): Collection
     {
+        $packages = ThirdPartyPackage::discover();
+
+        if ($this->option('packages') !== null) {
+            return $this->requestedThirdPartyPackages($packages);
+        }
+
         if ($this->option('no-third-party')) {
             return collect();
         }
-
-        $packages = ThirdPartyPackage::discover();
 
         if ($packages->isEmpty()) {
             return collect();
@@ -291,6 +296,37 @@ class InstallCommand extends Command
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
+    }
+
+    /**
+     * @param  Collection<string, ThirdPartyPackage>  $packages
+     * @return Collection<int, string>
+     *
+     * @throws Exception
+     */
+    protected function requestedThirdPartyPackages(Collection $packages): Collection
+    {
+        $requested = Str::of($this->option('packages'))
+            ->explode(',')
+            ->map(fn (string $name): string => trim($name))
+            ->filter()
+            ->values();
+
+        if ($requested->containsStrict('none')) {
+            return collect();
+        }
+
+        if ($requested->containsStrict('all')) {
+            return $packages->keys()->values();
+        }
+
+        $unknown = $requested->reject(fn (string $name): bool => $packages->has($name));
+
+        if ($unknown->isNotEmpty()) {
+            throw new Exception('Unknown third-party package(s) passed to --packages: '.$unknown->join(', ').'.');
+        }
+
+        return $requested;
     }
 
     /**

@@ -112,3 +112,68 @@ it('selects no third-party packages when --no-third-party is passed', function (
 
     expect($method->invoke($command)->all())->toBe([]);
 });
+
+it('selects exactly the packages named by --packages', function (): void {
+    $output = new BufferedOutput;
+    $command = makeThirdPartyInstallCommand(new Config, $output);
+
+    $packages = collect([
+        'vendor/one' => new ThirdPartyPackage('vendor/one', true, false),
+        'vendor/two' => new ThirdPartyPackage('vendor/two', false, true),
+    ]);
+
+    $method = new ReflectionMethod($command, 'requestedThirdPartyPackages');
+
+    $command->setInput(new ArrayInput(['--packages' => 'vendor/two'], $command->getDefinition()));
+
+    expect($method->invoke($command, $packages)->all())->toBe(['vendor/two']);
+});
+
+it('selects every discovered package for --packages=all and none for --packages=none', function (): void {
+    $output = new BufferedOutput;
+    $command = makeThirdPartyInstallCommand(new Config, $output);
+
+    $packages = collect([
+        'vendor/one' => new ThirdPartyPackage('vendor/one', true, false),
+        'vendor/two' => new ThirdPartyPackage('vendor/two', false, true),
+    ]);
+
+    $method = new ReflectionMethod($command, 'requestedThirdPartyPackages');
+
+    $command->setInput(new ArrayInput(['--packages' => 'all'], $command->getDefinition()));
+    expect($method->invoke($command, $packages)->all())->toBe(['vendor/one', 'vendor/two']);
+
+    $command->setInput(new ArrayInput(['--packages' => 'none'], $command->getDefinition()));
+    expect($method->invoke($command, $packages)->all())->toBe([]);
+});
+
+it('fails when --packages names a package that was not discovered', function (): void {
+    $output = new BufferedOutput;
+    $command = makeThirdPartyInstallCommand(new Config, $output);
+
+    $packages = collect(['vendor/one' => new ThirdPartyPackage('vendor/one', true, false)]);
+
+    $method = new ReflectionMethod($command, 'requestedThirdPartyPackages');
+
+    $command->setInput(new ArrayInput(['--packages' => 'vendor/one,vendor/typo'], $command->getDefinition()));
+
+    expect(fn () => $method->invoke($command, $packages))
+        ->toThrow(Exception::class, 'vendor/typo');
+});
+
+it('lets --packages override --no-third-party', function (): void {
+    $output = new BufferedOutput;
+    $command = makeThirdPartyInstallCommand(new Config, $output);
+
+    $input = new ArrayInput([
+        '--no-third-party' => true,
+        '--packages' => 'vendor/not-installed',
+    ], $command->getDefinition());
+    $input->setInteractive(false);
+    $command->setInput($input);
+
+    $method = new ReflectionMethod($command, 'selectThirdPartyPackages');
+
+    expect(fn () => $method->invoke($command))
+        ->toThrow(Exception::class, 'vendor/not-installed');
+});
