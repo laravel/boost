@@ -44,7 +44,7 @@ Search the codebase for patterns affected by v4 changes:
 
 **Medium Priority Searches:**
 - `wire:transition` with modifiers (`.opacity`, `.scale`, `.duration`) - Modifiers removed
-- `$this->stream(` - Parameter order changed
+- `$this->stream(` - Positional calls fail silently; named calls using `to:` are unchanged
 - Array property replacements from JavaScript - Hook behavior changed
 
 **Low Priority Searches:**
@@ -326,25 +326,29 @@ If you're extending Livewire's core functionality or using these methods directl
 
 **Streaming:**
 
-The `stream()` method parameter order has changed:
+The `stream()` method parameter order has changed, and the target is now split across three parameters. **Named-parameter calls need no changes at all** - `to:` is still valid in v4 and is what the v4 `wire:stream` documentation uses throughout:
 
 @boostsnippet('Stream Method Signature', 'php')
-// Before (v3)
-$this->stream(to: '#container', content: 'Hello', replace: true);
+// Valid in both v3 and v4 - leave this alone
+$this->stream(to: 'target', content: 'Hello', replace: true);
 
-// After (v4)
-$this->stream(content: 'Hello', replace: true, el: '#container');
+// Equivalent in v4 - `to:` is an alias for `name:`
+$this->stream(content: 'Hello', replace: true, name: 'target');
 @endboostsnippet
 
-If you're using named parameters (as shown above), note that `to:` has been renamed to `el:`. If you're using positional parameters, you'll need to update to the following:
+`name:` (and `to:`) match a `wire:stream="target"` directive, so the value is a directive name, never a CSS selector. v4 also accepts `el:` for a CSS selector and `ref:` for a `wire:ref`. Do not use `el:` to replace `to:` - it targets by selector instead of by directive name, so streaming silently stops working.
+
+Only positional calls break, and they break silently:
 
 @boostsnippet('Stream Positional Parameters', 'php')
-// Before (v3) - positional parameters
-$this->stream('#container', 'Hello');
+// Before (v3) - ('target', 'Hello') meant (target, content)
+$this->stream('target', 'Hello');
 
-// After (v4) - positional/named parameters
-$this->stream('Hello', el: '#container');
+// After (v4) - the first argument is now the content
+$this->stream('Hello', name: 'target');
 @endboostsnippet
+
+Left unchanged, the v3 positional form binds `'target'` to `content:` and `'Hello'` to `replace:`, leaves every target parameter null, and streams nothing at all. No error is raised.
 
 [Learn more about streaming →](/docs/4.x/wire-stream)
 
