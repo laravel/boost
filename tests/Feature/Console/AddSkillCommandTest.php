@@ -506,3 +506,27 @@ it('displays error when rate limit is exceeded', function (): void {
         ->assertFailed()
         ->expectsOutputToContain('GitHub API rate limit exceeded');
 });
+
+it('does not wipe installed skills when the repository has a root level SKILL.md', function (): void {
+    File::deleteDirectory(base_path('.ai/skills'));
+    File::ensureDirectoryExists(base_path('.ai/skills/existing-skill'));
+    File::put(base_path('.ai/skills/existing-skill/SKILL.md'), 'keep me');
+
+    Http::fake([
+        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'SKILL.md', 'type' => 'blob', 'sha' => 'def', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response('# Root skill'),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => 'owner/repo', '--all' => true, '--skip-audit' => true])->run();
+
+    expect(File::exists(base_path('.ai/skills/existing-skill/SKILL.md')))->toBeTrue();
+
+    File::deleteDirectory(base_path('.ai/skills'));
+});
