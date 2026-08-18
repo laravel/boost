@@ -44,7 +44,7 @@ Search the codebase for patterns affected by v4 changes:
 
 **Medium Priority Searches:**
 - `wire:transition` with modifiers (`.opacity`, `.scale`, `.duration`) - Modifiers removed
-- `$this->stream(` - Parameter order changed; positional calls now fail silently
+- `$this->stream(` - Positional calls fail silently; named calls using `to:` are unchanged
 - Array property replacements from JavaScript - Hook behavior changed
 
 **Low Priority Searches:**
@@ -326,29 +326,29 @@ If you're extending Livewire's core functionality or using these methods directl
 
 **Streaming:**
 
-The `stream()` method parameter order has changed, and the target is now split across three parameters:
+The `stream()` method parameter order has changed, and the target is now split across three parameters. **Named-parameter calls need no changes at all** - `to:` is still valid in v4 and is what the v4 `wire:stream` documentation uses throughout:
 
 @boostsnippet('Stream Method Signature', 'php')
-// Before (v3)
-$this->stream(to: 'status', content: 'Hello', replace: true);
+// Valid in both v3 and v4 - leave this alone
+$this->stream(to: 'target', content: 'Hello', replace: true);
 
-// After (v4) - `to:` still works as an alias for `name:`
-$this->stream(content: 'Hello', replace: true, name: 'status');
+// Equivalent in v4 - `to:` is an alias for `name:`
+$this->stream(content: 'Hello', replace: true, name: 'target');
 @endboostsnippet
 
-`name:` targets a `wire:stream="status"` directive, which is exactly what `to:` did in v3, so named-parameter calls keep working untouched. v4 adds `el:` for a CSS selector and `ref:` for a `wire:ref`. Do not use `el:` to replace `to:` - it targets a different thing and streaming will silently stop working.
+`name:` (and `to:`) match a `wire:stream="target"` directive, so the value is a directive name, never a CSS selector. v4 also accepts `el:` for a CSS selector and `ref:` for a `wire:ref`. Do not use `el:` to replace `to:` - it targets by selector instead of by directive name, so streaming silently stops working.
 
-Positional calls do break, and they break silently:
+Only positional calls break, and they break silently:
 
 @boostsnippet('Stream Positional Parameters', 'php')
-// Before (v3) - ('status', 'Hello') meant (target, content)
-$this->stream('status', 'Hello');
+// Before (v3) - ('target', 'Hello') meant (target, content)
+$this->stream('target', 'Hello');
 
 // After (v4) - the first argument is now the content
-$this->stream('Hello', name: 'status');
+$this->stream('Hello', name: 'target');
 @endboostsnippet
 
-Left unchanged, the v3 positional form streams the literal string `"status"` into the component root and treats `'Hello'` as `replace: true`. No error is raised.
+Left unchanged, the v3 positional form binds `'target'` to `content:` and `'Hello'` to `replace:`, leaves every target parameter null, and streams nothing at all. No error is raised.
 
 [Learn more about streaming →](/docs/4.x/wire-stream)
 
