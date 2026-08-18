@@ -1092,3 +1092,40 @@ it('writes skill files with a trailing newline', function (): void {
 
     cleanupSkillDirectory($absoluteTarget);
 });
+
+it('does not delete the skills directory when removing a skill named "."', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    mkdir($absoluteTarget.'/keep-me', 0755, true);
+    file_put_contents($absoluteTarget.'/keep-me/SKILL.md', 'keep me');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+
+    // "." resolves to the skills directory itself, so it must be rejected before any delete.
+    expect($writer->remove('.'))->toBeFalse()
+        ->and(is_dir($absoluteTarget.'/keep-me'))->toBeTrue()
+        ->and(file_get_contents($absoluteTarget.'/keep-me/SKILL.md'))->toBe('keep me');
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('does not delete the skills directory when a "." entry is stale in boost.json', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    mkdir($absoluteTarget.'/keep-me', 0755, true);
+    file_put_contents($absoluteTarget.'/keep-me/SKILL.md', 'keep me');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    (new SkillWriter($agent))->removeStale(['.']);
+
+    expect(is_dir($absoluteTarget.'/keep-me'))->toBeTrue();
+
+    cleanupSkillDirectory($absoluteTarget);
+});

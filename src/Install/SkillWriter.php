@@ -341,6 +341,7 @@ class SkillWriter
     {
         $hasPathTraversal = str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '\\');
 
-        return ! $hasPathTraversal && trim($name) !== '';
+        // "." resolves to the skills directory itself, so it must not be treated as a skill.
+        return ! $hasPathTraversal && ! in_array(trim($name), ['', '.'], true);
     }
 }
