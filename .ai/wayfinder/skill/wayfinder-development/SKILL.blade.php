@@ -55,7 +55,7 @@ destroy.delete(1)
 store.form() // { action: "/posts", method: "post" }
 
 // Query parameters...
-show(1, { query: { page: 1 } }) // "/posts/1?page=1"
+show(1, { query: { page: 1 } }) // { url: "/posts/1?page=1", method: "get" }
 @endboostsnippet
 
 @if($assist->project->php()->uses(\Laravel\Boost\Support\PackageRegistry::INERTIA_LARAVEL) || $assist->project->js()->uses([\Laravel\Boost\Support\PackageRegistry::INERTIA_REACT, \Laravel\Boost\Support\PackageRegistry::INERTIA_VUE, \Laravel\Boost\Support\PackageRegistry::INERTIA_SVELTE]))
