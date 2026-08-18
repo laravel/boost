@@ -65,7 +65,13 @@ class UpdateCommand extends Command
             return;
         }
 
-        if (! $this->input->isInteractive() || $this->runningAsComposerScript()) {
+        if ($this->runningAsComposerScript()) {
+            return;
+        }
+
+        if (! $this->input->isInteractive()) {
+            $this->addPackages($config, $newPackages->keys()->all());
+
             return;
         }
 
@@ -80,9 +86,21 @@ class UpdateCommand extends Command
             hint: 'Select packages to include their guidelines and skills',
         );
 
-        if ($selectedPackages !== []) {
-            $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
+        $this->addPackages($config, $selectedPackages);
+    }
+
+    /**
+     * @param  array<int, string>  $packages
+     */
+    protected function addPackages(Config $config, array $packages): void
+    {
+        if ($packages === []) {
+            return;
         }
+
+        $config->setPackages(array_merge($config->getPackages(), $packages));
+
+        $this->info('Added third-party guidelines/skills: '.implode(', ', $packages).'.');
     }
 
     /**

@@ -514,7 +514,7 @@ it('exits silently when --ignore-skills flag is set and no guidelines are config
         ->assertSuccessful();
 });
 
-it('skips new-package discovery prompt when running in non-interactive mode', function (): void {
+it('adds new packages without prompting when running in non-interactive mode', function (): void {
     $config = new Config;
     $config->setAgents(['claude_code']);
     $config->setGuidelines(true);
@@ -530,6 +530,7 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
     $command->shouldReceive('option')->with('no-discover')->andReturn(false);
     $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
     $command->shouldReceive('resolveNewPackages')->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->shouldReceive('runningAsComposerScript')->andReturn(false);
     $command->shouldReceive('callSilently')->andReturn(0);
 
     $nonInteractiveInput = new ArrayInput([]);
@@ -541,5 +542,30 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
 
     expect($command->handle($config))->toBe(0);
 
-    expect($config->getPackages())->toBe([]);
+    expect($config->getPackages())->toBe(['vendor/awesome-pkg']);
 })->skipOnWindows();
+
+it('leaves config untouched when non-interactive discovery finds nothing new', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+    $config->setPackages(['vendor/known-pkg']);
+
+    $command = Mockery::mock(UpdateCommand::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
+    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
+    $command->shouldReceive('runningAsComposerScript')->andReturn(false);
+    $command->shouldReceive('resolveNewPackages')->andReturn(collect());
+    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->setLaravel($this->app);
+
+    $input = new ArrayInput([]);
+    $input->setInteractive(false);
+    $command->setInput($input);
+    $command->setOutput(new OutputStyle($input, new BufferedOutput));
+
+    expect($command->handle($config))->toBe(0)
+        ->and($config->getPackages())->toBe(['vendor/known-pkg']);
+});

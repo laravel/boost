@@ -49,7 +49,8 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}';
+        {--mcp : Install MCP server configuration}
+        {--no-third-party : Skip guidelines & skills shipped by third-party packages}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -263,6 +264,10 @@ class InstallCommand extends Command
      */
     protected function selectThirdPartyPackages(): Collection
     {
+        if ($this->option('no-third-party')) {
+            return collect();
+        }
+
         $packages = ThirdPartyPackage::discover();
 
         if ($packages->isEmpty()) {
@@ -274,7 +279,7 @@ class InstallCommand extends Command
             ->values();
 
         if (! $this->input->isInteractive()) {
-            return $defaults;
+            return $this->thirdPartyPackagesWithoutPrompt($packages, $defaults);
         }
 
         return collect(multiselect(
@@ -286,6 +291,24 @@ class InstallCommand extends Command
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
+    }
+
+    /**
+     * A first install takes everything discovered; an existing config keeps its own answer.
+     *
+     * @param  Collection<string, ThirdPartyPackage>  $packages
+     * @param  Collection<int, string>  $defaults
+     * @return Collection<int, string>
+     */
+    protected function thirdPartyPackagesWithoutPrompt(Collection $packages, Collection $defaults): Collection
+    {
+        $selected = $this->config->isValid() ? $defaults : $packages->keys()->values();
+
+        if ($selected->isNotEmpty()) {
+            $this->line('Including third-party guidelines/skills: '.$selected->join(', ').'. Run [php artisan boost:install] interactively to change this.');
+        }
+
+        return $selected;
     }
 
     protected function selectIntegrations(): void
