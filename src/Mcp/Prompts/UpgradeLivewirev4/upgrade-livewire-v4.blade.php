@@ -44,7 +44,7 @@ Search the codebase for patterns affected by v4 changes:
 
 **Medium Priority Searches:**
 - `wire:transition` with modifiers (`.opacity`, `.scale`, `.duration`) - Modifiers removed
-- `$this->stream(` - Parameter order changed
+- `$this->stream(` - Parameter order changed; positional calls now fail silently
 - Array property replacements from JavaScript - Hook behavior changed
 
 **Low Priority Searches:**
@@ -326,25 +326,29 @@ If you're extending Livewire's core functionality or using these methods directl
 
 **Streaming:**
 
-The `stream()` method parameter order has changed:
+The `stream()` method parameter order has changed, and the target is now split across three parameters:
 
 @boostsnippet('Stream Method Signature', 'php')
 // Before (v3)
-$this->stream(to: '#container', content: 'Hello', replace: true);
+$this->stream(to: 'status', content: 'Hello', replace: true);
 
-// After (v4)
-$this->stream(content: 'Hello', replace: true, name: '#container');
+// After (v4) - `to:` still works as an alias for `name:`
+$this->stream(content: 'Hello', replace: true, name: 'status');
 @endboostsnippet
 
-If you're using named parameters (as shown above), note that `to:` has been renamed to `name:`. If you're using positional parameters, you'll need to update to the following:
+`name:` targets a `wire:stream="status"` directive, which is exactly what `to:` did in v3, so named-parameter calls keep working untouched. v4 adds `el:` for a CSS selector and `ref:` for a `wire:ref`. Do not use `el:` to replace `to:` - it targets a different thing and streaming will silently stop working.
+
+Positional calls do break, and they break silently:
 
 @boostsnippet('Stream Positional Parameters', 'php')
-// Before (v3) - positional parameters
-$this->stream('#container', 'Hello');
+// Before (v3) - ('status', 'Hello') meant (target, content)
+$this->stream('status', 'Hello');
 
-// After (v4) - positional/named parameters
-$this->stream('Hello', name: '#container');
+// After (v4) - the first argument is now the content
+$this->stream('Hello', name: 'status');
 @endboostsnippet
+
+Left unchanged, the v3 positional form streams the literal string `"status"` into the component root and treats `'Hello'` as `replace: true`. No error is raised.
 
 [Learn more about streaming →](/docs/4.x/wire-stream)
 
