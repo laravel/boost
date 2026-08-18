@@ -528,3 +528,46 @@ it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
         ->and($skills->has('my-skill'))->toBeTrue()
         ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
 });
+
+it('discovers a skill when the path points at the skill directory itself', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skills', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => 'skills/my-skill', 'type' => 'tree', 'sha' => 'bbb'],
+            ['path' => 'skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'ccc', 'size' => 123],
+            ['path' => 'skills/other-skill', 'type' => 'tree', 'sha' => 'ddd'],
+            ['path' => 'skills/other-skill/SKILL.md', 'type' => 'blob', 'sha' => 'eee', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo', 'skills/my-skill'));
+    $skills = $fetcher->discoverSkills();
+
+    expect($skills)->toHaveCount(1)
+        ->and($skills->has('my-skill'))->toBeTrue()
+        ->and($skills->get('my-skill')->path)->toBe('skills/my-skill');
+});
+
+it('downloads a skill whose path was given directly', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skills', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => 'skills/my-skill', 'type' => 'tree', 'sha' => 'bbb'],
+            ['path' => 'skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'ccc', 'size' => 123],
+        ]),
+        'raw.githubusercontent.com/owner/repo/main/skills/my-skill/SKILL.md' => Http::response('# Direct'),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo', 'skills/my-skill'));
+    $skill = $fetcher->discoverSkills()->get('my-skill');
+
+    expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
+        ->and(file_get_contents($targetDir.'/SKILL.md'))->toBe('# Direct');
+
+    array_map(unlink(...), glob($targetDir.'/*'));
+    rmdir($targetDir);
+});

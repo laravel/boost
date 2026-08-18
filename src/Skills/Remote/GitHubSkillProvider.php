@@ -43,8 +43,13 @@ class GitHubSkillProvider
         if ($basePath !== '') {
             $prefix = $basePath.'/';
 
-            $skillMarkers = $skillMarkers->filter(function (array $item) use ($prefix): bool {
+            $skillMarkers = $skillMarkers->filter(function (array $item) use ($basePath, $prefix): bool {
                 $skillDir = dirname((string) $item['path']);
+
+                // The path may point at a skill directory itself, not just a parent of one.
+                if ($skillDir === $basePath) {
+                    return true;
+                }
 
                 return str_starts_with($skillDir, $prefix) && ! str_contains(substr($skillDir, strlen($prefix)), '/');
             });
