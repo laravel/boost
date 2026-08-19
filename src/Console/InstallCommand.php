@@ -50,7 +50,6 @@ class InstallCommand extends Command
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
         {--mcp : Install MCP server configuration}
-        {--no-third-party : Skip guidelines & skills shipped by third-party packages}
         {--packages= : Third-party packages to include, comma separated, or "all" or "none"}';
 
     /** @var Collection<int, Agent> */
@@ -271,10 +270,6 @@ class InstallCommand extends Command
             return $this->requestedThirdPartyPackages($packages);
         }
 
-        if ($this->option('no-third-party')) {
-            return collect();
-        }
-
         if ($packages->isEmpty()) {
             return collect();
         }
@@ -284,7 +279,9 @@ class InstallCommand extends Command
             ->values();
 
         if (! $this->input->isInteractive()) {
-            return $this->thirdPartyPackagesWithoutPrompt($packages, $defaults);
+            $this->reportSkippedThirdPartyPackages($packages->keys()->diff($defaults));
+
+            return $defaults;
         }
 
         return collect(multiselect(
@@ -323,28 +320,25 @@ class InstallCommand extends Command
         $unknown = $requested->reject(fn (string $name): bool => $packages->has($name));
 
         if ($unknown->isNotEmpty()) {
-            throw new Exception('Unknown third-party package(s) passed to --packages: '.$unknown->join(', ').'.');
+            $this->fail('Unknown third-party package(s) passed to --packages: '.$unknown->join(', ').'.');
         }
 
         return $requested;
     }
 
     /**
-     * A first install takes everything discovered; an existing config keeps its own answer.
+     * Third-party guidelines are rendered into agent instructions, so they stay opt-in.
      *
-     * @param  Collection<string, ThirdPartyPackage>  $packages
-     * @param  Collection<int, string>  $defaults
-     * @return Collection<int, string>
+     * @param  Collection<int, string>  $skipped
      */
-    protected function thirdPartyPackagesWithoutPrompt(Collection $packages, Collection $defaults): Collection
+    protected function reportSkippedThirdPartyPackages(Collection $skipped): void
     {
-        $selected = $this->config->isValid() ? $defaults : $packages->keys()->values();
-
-        if ($selected->isNotEmpty()) {
-            $this->line('Including third-party guidelines/skills: '.$selected->join(', ').'. Run [php artisan boost:install] interactively to change this.');
+        if ($skipped->isEmpty()) {
+            return;
         }
 
-        return $selected;
+        $this->line('Skipped third-party guidelines/skills from: '.$skipped->join(', ').'.');
+        $this->line('Review and add them with [php artisan boost:install], or --packages='.$skipped->first().'.');
     }
 
     protected function selectIntegrations(): void

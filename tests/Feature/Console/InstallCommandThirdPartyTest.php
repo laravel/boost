@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Console\ManuallyFailedException;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Console\Enums\Theme;
@@ -25,7 +26,7 @@ afterEach(function (): void {
     Mockery::close();
 });
 
-function makeThirdPartyInstallCommand(Config $config, BufferedOutput $output): InstallCommand
+function makeThirdPartyInstallCommand(BufferedOutput $output): InstallCommand
 {
     $nightwatch = Mockery::mock(Nightwatch::class);
     $nightwatch->shouldReceive('isInstalled')->andReturn(false);
@@ -37,18 +38,8 @@ function makeThirdPartyInstallCommand(Config $config, BufferedOutput $output): I
     $terminal = Mockery::mock(Terminal::class);
     $terminal->shouldReceive('initDimensions');
 
-    $command = new class(app(AgentsDetector::class), Mockery::mock(Cloud::class), $config, $nightwatch, $sail, $terminal) extends InstallCommand
+    $command = new class(app(AgentsDetector::class), Mockery::mock(Cloud::class), new Config, $nightwatch, $sail, $terminal) extends InstallCommand
     {
-        /**
-         * @param  Collection<string, ThirdPartyPackage>  $packages
-         * @param  Collection<int, string>  $defaults
-         * @return Collection<int, string>
-         */
-        public function packagesWithoutPrompt($packages, $defaults)
-        {
-            return $this->thirdPartyPackagesWithoutPrompt($packages, $defaults);
-        }
-
         protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
     };
 
@@ -58,122 +49,63 @@ function makeThirdPartyInstallCommand(Config $config, BufferedOutput $output): I
     return $command;
 }
 
-it('selects every discovered package when installing non-interactively without an existing config', function (): void {
-    $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand(new Config, $output);
+function invokeThirdPartyMethod(InstallCommand $command, string $method, mixed ...$args): mixed
+{
+    return (new ReflectionMethod($command, $method))->invoke($command, ...$args);
+}
 
-    $packages = collect([
+function discoveredPackages(): Collection
+{
+    return collect([
         'vendor/one' => new ThirdPartyPackage('vendor/one', true, false),
         'vendor/two' => new ThirdPartyPackage('vendor/two', false, true),
     ]);
-
-    expect($command->packagesWithoutPrompt($packages, collect())->all())
-        ->toBe(['vendor/one', 'vendor/two'])
-        ->and($output->fetch())->toContain('vendor/one, vendor/two');
-});
-
-it('keeps the packages an existing config already recorded when installing non-interactively', function (): void {
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-    $config->setPackages(['vendor/one']);
-
-    $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand($config, $output);
-
-    $packages = collect([
-        'vendor/one' => new ThirdPartyPackage('vendor/one', true, false),
-        'vendor/two' => new ThirdPartyPackage('vendor/two', false, true),
-    ]);
-
-    expect($command->packagesWithoutPrompt($packages, collect(['vendor/one']))->all())
-        ->toBe(['vendor/one']);
-});
-
-it('stays silent when a non-interactive install selects no packages', function (): void {
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-
-    $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand($config, $output);
-
-    expect($command->packagesWithoutPrompt(collect(), collect())->all())->toBe([])
-        ->and($output->fetch())->toBe('');
-});
-
-it('selects no third-party packages when --no-third-party is passed', function (): void {
-    $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand(new Config, $output);
-
-    $input = new ArrayInput(['--no-third-party' => true], $command->getDefinition());
-    $input->setInteractive(false);
-    $command->setInput($input);
-
-    $method = new ReflectionMethod($command, 'selectThirdPartyPackages');
-
-    expect($method->invoke($command)->all())->toBe([]);
-});
+}
 
 it('selects exactly the packages named by --packages', function (): void {
-    $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand(new Config, $output);
-
-    $packages = collect([
-        'vendor/one' => new ThirdPartyPackage('vendor/one', true, false),
-        'vendor/two' => new ThirdPartyPackage('vendor/two', false, true),
-    ]);
-
-    $method = new ReflectionMethod($command, 'requestedThirdPartyPackages');
-
+    $command = makeThirdPartyInstallCommand(new BufferedOutput);
     $command->setInput(new ArrayInput(['--packages' => 'vendor/two'], $command->getDefinition()));
 
-    expect($method->invoke($command, $packages)->all())->toBe(['vendor/two']);
+    expect(invokeThirdPartyMethod($command, 'requestedThirdPartyPackages', discoveredPackages())->all())
+        ->toBe(['vendor/two']);
 });
 
 it('selects every discovered package for --packages=all and none for --packages=none', function (): void {
-    $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand(new Config, $output);
-
-    $packages = collect([
-        'vendor/one' => new ThirdPartyPackage('vendor/one', true, false),
-        'vendor/two' => new ThirdPartyPackage('vendor/two', false, true),
-    ]);
-
-    $method = new ReflectionMethod($command, 'requestedThirdPartyPackages');
+    $command = makeThirdPartyInstallCommand(new BufferedOutput);
 
     $command->setInput(new ArrayInput(['--packages' => 'all'], $command->getDefinition()));
-    expect($method->invoke($command, $packages)->all())->toBe(['vendor/one', 'vendor/two']);
+    expect(invokeThirdPartyMethod($command, 'requestedThirdPartyPackages', discoveredPackages())->all())
+        ->toBe(['vendor/one', 'vendor/two']);
 
     $command->setInput(new ArrayInput(['--packages' => 'none'], $command->getDefinition()));
-    expect($method->invoke($command, $packages)->all())->toBe([]);
+    expect(invokeThirdPartyMethod($command, 'requestedThirdPartyPackages', discoveredPackages())->all())
+        ->toBe([]);
 });
 
 it('fails when --packages names a package that was not discovered', function (): void {
-    $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand(new Config, $output);
-
-    $packages = collect(['vendor/one' => new ThirdPartyPackage('vendor/one', true, false)]);
-
-    $method = new ReflectionMethod($command, 'requestedThirdPartyPackages');
-
+    $command = makeThirdPartyInstallCommand(new BufferedOutput);
     $command->setInput(new ArrayInput(['--packages' => 'vendor/one,vendor/typo'], $command->getDefinition()));
 
-    expect(fn () => $method->invoke($command, $packages))
-        ->toThrow(Exception::class, 'vendor/typo');
+    expect(fn () => invokeThirdPartyMethod($command, 'requestedThirdPartyPackages', discoveredPackages()))
+        ->toThrow(ManuallyFailedException::class, 'vendor/typo');
 });
 
-it('lets --packages override --no-third-party', function (): void {
+it('reports the third-party packages a non-interactive install left out', function (): void {
     $output = new BufferedOutput;
-    $command = makeThirdPartyInstallCommand(new Config, $output);
+    $command = makeThirdPartyInstallCommand($output);
 
-    $input = new ArrayInput([
-        '--no-third-party' => true,
-        '--packages' => 'vendor/not-installed',
-    ], $command->getDefinition());
-    $input->setInteractive(false);
-    $command->setInput($input);
+    invokeThirdPartyMethod($command, 'reportSkippedThirdPartyPackages', collect(['vendor/one', 'vendor/two']));
 
-    $method = new ReflectionMethod($command, 'selectThirdPartyPackages');
+    expect($output->fetch())
+        ->toContain('Skipped third-party guidelines/skills from: vendor/one, vendor/two.')
+        ->toContain('--packages=vendor/one');
+});
 
-    expect(fn () => $method->invoke($command))
-        ->toThrow(Exception::class, 'vendor/not-installed');
+it('stays silent when a non-interactive install left nothing out', function (): void {
+    $output = new BufferedOutput;
+    $command = makeThirdPartyInstallCommand($output);
+
+    invokeThirdPartyMethod($command, 'reportSkippedThirdPartyPackages', collect());
+
+    expect($output->fetch())->toBe('');
 });

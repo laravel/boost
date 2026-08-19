@@ -65,12 +65,9 @@ class UpdateCommand extends Command
             return;
         }
 
-        if ($this->runningAsComposerScript()) {
-            return;
-        }
-
-        if (! $this->input->isInteractive()) {
-            $this->addPackages($config, $newPackages->keys()->all());
+        if (! $this->input->isInteractive() || $this->runningAsComposerScript()) {
+            $this->line('New packages with guidelines/skills available: '.$newPackages->keys()->join(', ').'.');
+            $this->line('Review and add them with [php artisan boost:update].');
 
             return;
         }
@@ -86,21 +83,9 @@ class UpdateCommand extends Command
             hint: 'Select packages to include their guidelines and skills',
         );
 
-        $this->addPackages($config, $selectedPackages);
-    }
-
-    /**
-     * @param  array<int, string>  $packages
-     */
-    protected function addPackages(Config $config, array $packages): void
-    {
-        if ($packages === []) {
-            return;
+        if ($selectedPackages !== []) {
+            $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
         }
-
-        $config->setPackages(array_merge($config->getPackages(), $packages));
-
-        $this->info('Added third-party guidelines/skills: '.implode(', ', $packages).'.');
     }
 
     /**
