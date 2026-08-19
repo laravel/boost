@@ -43,6 +43,8 @@ $double = computed(fn () => $this->count * 2);
 ### Class-Based Components
 
 @boostsnippet("Volt Class-based Component", "php")
+<?php
+
 use Livewire\Volt\Component;
 
 new class extends Component {
