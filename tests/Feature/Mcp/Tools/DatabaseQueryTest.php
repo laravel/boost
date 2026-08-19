@@ -10,6 +10,10 @@ it('executes allowed read-only queries', function (): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
     DB::shouldReceive('getTablePrefix')->andReturn('');
+    DB::shouldReceive('getDriverName')->andReturn('mysql');
+    DB::shouldReceive('beginTransaction');
+    DB::shouldReceive('statement')->andReturn(true);
+    DB::shouldReceive('rollBack');
 
     $tool = new DatabaseQuery;
 
@@ -87,6 +91,10 @@ it('allows queries starting with any allowed keyword even when identifiers look 
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
     DB::shouldReceive('getTablePrefix')->andReturn('');
+    DB::shouldReceive('getDriverName')->andReturn('mysql');
+    DB::shouldReceive('beginTransaction');
+    DB::shouldReceive('statement')->andReturn(true);
+    DB::shouldReceive('rollBack');
 
     $tool = new DatabaseQuery;
 
@@ -146,6 +154,10 @@ it('allows read-only queries containing write keyword look-alikes', function ():
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('select')->andReturn([]);
     DB::shouldReceive('getTablePrefix')->andReturn('');
+    DB::shouldReceive('getDriverName')->andReturn('mysql');
+    DB::shouldReceive('beginTransaction');
+    DB::shouldReceive('statement')->andReturn(true);
+    DB::shouldReceive('rollBack');
 
     $tool = new DatabaseQuery;
 
@@ -174,6 +186,10 @@ it('allows read-only queries containing write keyword look-alikes', function ():
 it('adds table prefix to queries', function (): void {
     DB::shouldReceive('connection')->andReturnSelf();
     DB::shouldReceive('getTablePrefix')->andReturn('wp_');
+    DB::shouldReceive('getDriverName')->andReturn('mysql');
+    DB::shouldReceive('beginTransaction');
+    DB::shouldReceive('statement')->andReturn(true);
+    DB::shouldReceive('rollBack');
 
     $testCases = [
         'SELECT * FROM users' => 'SELECT * FROM wp_users',
