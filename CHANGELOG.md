@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.5.4...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.5.5...main)
+
+## [v2.5.5](https://github.com/laravel/boost/compare/v2.5.4...v2.5.5) - 2026-08-19
+
+### What's Changed
+
+* Correct the Wayfinder query parameter return value by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/950
+* Add the missing PHP opening tag to the Volt class-based example by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/951
+* Point the Livewire 4 stream migration at the correct parameter by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/949
+* chore: allow guzzle v8 by [@joostdebruijn](https://github.com/joostdebruijn) in https://github.com/laravel/boost/pull/956
+* Fix newline normalization corrupting multi-byte UTF-8 in rule files by [@nixprosoft](https://github.com/nixprosoft) in https://github.com/laravel/boost/pull/947
+
+### New Contributors
+
+* [@joostdebruijn](https://github.com/joostdebruijn) made their first contribution in https://github.com/laravel/boost/pull/956
+* [@nixprosoft](https://github.com/nixprosoft) made their first contribution in https://github.com/laravel/boost/pull/947
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.5.4...v2.5.5
 
 ## [v2.5.4](https://github.com/laravel/boost/compare/v2.5.3...v2.5.4) - 2026-08-18
 
@@ -514,11 +531,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -597,12 +616,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
