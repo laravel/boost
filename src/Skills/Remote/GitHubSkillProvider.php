@@ -9,6 +9,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Laravel\Boost\Install\SkillWriter;
 use RuntimeException;
 use Throwable;
 
@@ -41,7 +42,7 @@ class GitHubSkillProvider
             ->filter(fn (array $item): bool => $item['type'] === 'blob'
                 && basename((string) $item['path']) === 'SKILL.md'
                 // A skill is named after its directory, so a repository-root SKILL.md has no name to take.
-                && dirname((string) $item['path']) !== '.');
+                && SkillWriter::isValidSkillName(basename(dirname((string) $item['path']))));
 
         if ($basePath !== '') {
             $prefix = $basePath.'/';

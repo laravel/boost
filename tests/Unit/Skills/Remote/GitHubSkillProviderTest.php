@@ -544,6 +544,25 @@ it('ignores a SKILL.md at the repository root', function (): void {
     expect($fetcher->discoverSkills())->toBeEmpty();
 });
 
+it('ignores a skill directory whose name cannot be a skill name', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => '... ', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => '... /SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ['path' => '..\\..\\evil', 'type' => 'tree', 'sha' => 'eee'],
+            ['path' => '..\\..\\evil/SKILL.md', 'type' => 'blob', 'sha' => 'fff', 'size' => 789],
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'ccc'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ddd', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+    // "... " names the skills directory itself on Windows, and a backslash component escapes it entirely.
+    expect($fetcher->discoverSkills()->keys()->all())->toBe(['skill-one']);
+});
+
 it('still finds nested skills when the repository root also has a SKILL.md', function (): void {
     Http::fake([
         ...fakeGitHubRepo(),
