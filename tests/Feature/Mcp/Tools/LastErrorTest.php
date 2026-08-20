@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
+use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\LastError;
 use Laravel\Mcp\Request;
 
@@ -240,4 +241,8 @@ LOG;
         ->toolHasNoError()
         ->toolTextContains('ERROR', 'This is the actual error')
         ->toolTextDoesNotContain('This is an info message', 'This is a warning message');
+});
+
+it('points at the registered browser logs tool name', function (): void {
+    expect((new LastError)->description())->toContain((new BrowserLogs)->name());
 });

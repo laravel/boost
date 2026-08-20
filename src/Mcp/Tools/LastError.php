@@ -46,7 +46,7 @@ class LastError extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Get details of the last error/exception created in this application on the backend. Use browser-log tool for browser errors.';
+    protected string $description = 'Get details of the last error/exception created in this application on the backend. Use browser-logs tool for browser errors.';
 
     /**
      * Handle the tool request.

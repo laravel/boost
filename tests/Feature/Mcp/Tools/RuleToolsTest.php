@@ -7,6 +7,17 @@ use Laravel\Boost\Mcp\Tools\RecordRule;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Mcp\Request;
 
+/**
+ * @return array<int, string>
+ */
+function ruleFiles(string $directory): array
+{
+    return array_values(array_filter(
+        glob($directory.'/*.md') ?: [],
+        fn (string $file): bool => basename($file) !== 'index.md',
+    ));
+}
+
 beforeEach(function (): void {
     $this->originalBasePath = base_path();
     $this->rulesBasePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost-rules-test-'.uniqid();
@@ -26,9 +37,7 @@ afterEach(function (): void {
 });
 
 it('writes a rule into an area file with frontmatter and an entry', function (): void {
-    $tool = new RecordRule($this->repository);
-
-    $response = $tool->handle(new Request([
+    $response = (new RecordRule($this->repository))->handle(new Request([
         'glob' => 'app/Http/Controllers/**',
         'title' => 'Extend BaseController for tenant scoping',
         'note' => 'New controllers must extend App\Http\Controllers\BaseController.',
@@ -37,11 +46,7 @@ it('writes a rule into an area file with frontmatter and an entry', function ():
     expect($response)->isToolResult()->toolHasNoError()
         ->toolTextContains('controllers.md', 'Extend BaseController for tenant scoping');
 
-    $file = $this->rulesDir.'/controllers.md';
-    expect(File::exists($file))->toBeTrue();
-
-    $contents = File::get($file);
-    expect($contents)
+    expect(File::get($this->rulesDir.'/controllers.md'))
         ->toContain('paths:')
         ->toContain('app/Http/Controllers/**')
         ->toContain('# Controllers')
@@ -51,22 +56,14 @@ it('writes a rule into an area file with frontmatter and an entry', function ():
 it('groups a second rule for the same glob into the same file', function (): void {
     $tool = new RecordRule($this->repository);
 
-    $tool->handle(new Request([
-        'glob' => 'app/Http/Controllers/**',
-        'title' => 'First',
-        'note' => 'One.',
-    ]));
-
+    $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'First', 'note' => 'One.']));
     $tool->handle(new Request([
         'glob' => 'app/Http/Controllers/**',
         'title' => 'Form Requests over inline validation',
         'note' => 'Validate in Form Request classes.',
     ]));
 
-    $files = glob($this->rulesDir.'/*.md');
-    $files = array_filter($files, fn (string $f): bool => basename($f) !== 'index.md');
-
-    expect($files)->toHaveCount(1);
+    expect(ruleFiles($this->rulesDir))->toHaveCount(1);
     expect(File::get($this->rulesDir.'/controllers.md'))
         ->toContain('## First')
         ->toContain('## Form Requests over inline validation');
@@ -88,13 +85,8 @@ it('merges a new glob into an existing area file without losing entries', functi
         'note' => 'Watch the users table.',
     ]));
 
-    $files = glob($this->rulesDir.'/*.md');
-    $files = array_filter($files, fn (string $f): bool => basename($f) !== 'index.md');
-
-    expect($files)->toHaveCount(1);
-
-    $contents = File::get($this->rulesDir.'/models.md');
-    expect($contents)
+    expect(ruleFiles($this->rulesDir))->toHaveCount(1);
+    expect(File::get($this->rulesDir.'/models.md'))
         ->toContain('app/Models/**')
         ->toContain('app/Models/*.php')
         ->toContain('## First model note')
@@ -103,28 +95,13 @@ it('merges a new glob into an existing area file without losing entries', functi
         ->toContain('Watch the users table.');
 });
 
-it('routes different globs to their own area files', function (): void {
-    $tool = new RecordRule($this->repository);
-
-    $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'A', 'note' => 'a']));
-    $tool->handle(new Request(['glob' => 'app/Models/*.php', 'title' => 'B', 'note' => 'b']));
-
-    expect(File::exists($this->rulesDir.'/controllers.md'))->toBeTrue();
-    expect(File::exists($this->rulesDir.'/models.md'))->toBeTrue();
-});
-
 it('keeps distinct areas that share a last path segment in separate files', function (): void {
     $tool = new RecordRule($this->repository);
 
     $tool->handle(new Request(['glob' => 'app/Admin/Controllers/**', 'title' => 'Admin rule', 'note' => 'Admin only.']));
     $tool->handle(new Request(['glob' => 'app/Api/Controllers/**', 'title' => 'Api rule', 'note' => 'Api only.']));
 
-    $files = glob($this->rulesDir.'/*.md');
-    $files = array_filter($files, fn (string $f): bool => basename($f) !== 'index.md');
-
-    expect($files)->toHaveCount(2);
-    expect(File::exists($this->rulesDir.'/controllers.md'))->toBeTrue();
-    expect(File::exists($this->rulesDir.'/api-controllers.md'))->toBeTrue();
+    expect(ruleFiles($this->rulesDir))->toHaveCount(2);
 
     expect(File::get($this->rulesDir.'/controllers.md'))
         ->toContain('app/Admin/Controllers/**')
@@ -139,13 +116,29 @@ it('keeps distinct areas that share a last path segment in separate files', func
         ->not->toContain('## Admin rule');
 });
 
+it('normalizes an absolute path glob to the same area as its relative twin', function (): void {
+    $tool = new RecordRule($this->repository);
+
+    $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'Relative', 'note' => 'a']));
+    $tool->handle(new Request([
+        'glob' => base_path('app/Http/Controllers/**'),
+        'title' => 'Absolute',
+        'note' => 'b',
+    ]));
+
+    expect(ruleFiles($this->rulesDir))->toHaveCount(1);
+    expect(File::get($this->rulesDir.'/controllers.md'))
+        ->toContain('## Relative')
+        ->toContain('## Absolute')
+        ->not->toContain(base_path('app/Http/Controllers/**'));
+});
+
 it('does not record a rule into the reserved index file', function (): void {
     $located = $this->repository->write('index/**', 'Index area rule', 'This must survive.');
 
     expect(basename((string) $located))->not->toBe('index.md');
 
-    $index = File::get($this->rulesDir.'/index.md');
-    expect($index)
+    expect(File::get($this->rulesDir.'/index.md'))
         ->toContain('# Project Rules Index')
         ->toContain('index/**')
         ->not->toContain('This must survive.');
@@ -155,17 +148,15 @@ it('does not record a rule into the reserved index file', function (): void {
         ->toContain('This must survive.');
 });
 
-it('rejects a rule with a missing glob, title, or note', function (): void {
-    $response = (new RecordRule($this->repository))->handle(new Request([
-        'glob' => 'app/**',
-        'title' => '',
-        'note' => 'y',
-    ]));
+it('rejects a rule with a missing glob, title, or note', function (string $missing): void {
+    $arguments = ['glob' => 'app/**', 'title' => 'A title', 'note' => 'A note'];
+    $arguments[$missing] = '';
+
+    $response = (new RecordRule($this->repository))->handle(new Request($arguments));
 
     expect($response)->isToolResult()->toolHasError()
-        ->toolTextContains('non-empty glob, title, and note')
-        ->toolTextContains('Missing or empty: title');
-});
+        ->toolTextContains('non-empty glob, title, and note', 'Missing or empty: '.$missing.'.');
+})->with(['glob', 'title', 'note']);
 
 it('is gated by the rules enabled config flag', function (): void {
     config()->set('boost.rules.enabled', false);
@@ -181,9 +172,8 @@ it('regenerates index.md mapping globs to rule files on every write', function (
     $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'A', 'note' => 'a']));
     $tool->handle(new Request(['glob' => 'app/Models/*.php', 'title' => 'B', 'note' => 'b']));
 
-    $index = $this->rulesDir.'/index.md';
-    expect(File::exists($index))->toBeTrue();
-    expect(File::get($index))
+    expect(ruleFiles($this->rulesDir))->toHaveCount(2);
+    expect(File::get($this->rulesDir.'/index.md'))
         ->toContain('app/Http/Controllers/**')
         ->toContain('.ai/rules/controllers.md')
         ->toContain('app/Models/*.php')
@@ -206,26 +196,6 @@ it('excludes a rule file with no paths frontmatter from the index', function ():
         ->not->toContain('entire project');
 });
 
-it('normalizes an absolute path glob to the same area as its relative twin', function (): void {
-    $tool = new RecordRule($this->repository);
-
-    $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'Relative', 'note' => 'a']));
-    $tool->handle(new Request([
-        'glob' => base_path('app/Http/Controllers/**'),
-        'title' => 'Absolute',
-        'note' => 'b',
-    ]));
-
-    $files = glob($this->rulesDir.'/*.md');
-    $files = array_filter($files, fn (string $f): bool => basename($f) !== 'index.md');
-
-    expect($files)->toHaveCount(1);
-    expect(File::get($this->rulesDir.'/controllers.md'))
-        ->toContain('## Relative')
-        ->toContain('## Absolute')
-        ->not->toContain(base_path('app/Http/Controllers/**'));
-});
-
 it('writes a placeholder index when no rule files have paths', function (): void {
     $this->repository->writeIndex();
 
@@ -233,4 +203,32 @@ it('writes a placeholder index when no rule files have paths', function (): void
         ->toContain('# Project Rules Index')
         ->toContain('No rules recorded yet.')
         ->not->toContain('| Applies to |');
+});
+
+it('keeps multi-byte characters intact when writing and when merging a new glob', function (): void {
+    $title = 'Encoding check: х ゅ 🙅 ✅';
+    $note = 'These all contain 0x85: х (U+0445), ゅ (U+3085), 🙅 (U+1F645), ✅ (U+2705).';
+
+    $tool = new RecordRule($this->repository);
+    $file = $this->rulesDir.'/models.md';
+
+    $response = $tool->handle(new Request([
+        'glob' => 'app/Models/**',
+        'title' => $title,
+        'note' => $note,
+    ]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+    expect(mb_check_encoding(File::get($file), 'UTF-8'))->toBeTrue();
+
+    $tool->handle(new Request([
+        'glob' => 'app/Models/*.php',
+        'title' => 'Second model note',
+        'note' => 'Watch the users table.',
+    ]));
+
+    expect(mb_check_encoding(File::get($file), 'UTF-8'))->toBeTrue();
+    expect(File::get($file))
+        ->toContain('## '.$title)
+        ->toContain($note);
 });
