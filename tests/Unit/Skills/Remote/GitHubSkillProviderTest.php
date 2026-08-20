@@ -529,6 +529,38 @@ it('discovers skills in wildcard paths like .ai/*/skills', function (): void {
         ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
 });
 
+it('ignores a SKILL.md at the repository root', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'SKILL.md', 'type' => 'blob', 'sha' => 'aaa', 'size' => 123],
+            ['path' => 'README.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+    // A root SKILL.md would otherwise be named "." and resolve to the skills directory itself.
+    expect($fetcher->discoverSkills())->toBeEmpty();
+});
+
+it('still finds nested skills when the repository root also has a SKILL.md', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'SKILL.md', 'type' => 'blob', 'sha' => 'aaa', 'size' => 123],
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'bbb'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ccc', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $skills = $fetcher->discoverSkills();
+
+    expect($skills)->toHaveCount(1)
+        ->and($skills->keys()->all())->toBe(['skill-one']);
+});
+
 it('discovers a skill when the path points at the skill directory itself', function (): void {
     Http::fake([
         ...fakeGitHubRepo(),

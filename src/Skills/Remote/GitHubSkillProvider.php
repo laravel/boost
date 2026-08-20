@@ -38,7 +38,10 @@ class GitHubSkillProvider
         $basePath = $this->repository->path;
 
         $skillMarkers = collect($tree['tree'])
-            ->filter(fn (array $item): bool => $item['type'] === 'blob' && basename((string) $item['path']) === 'SKILL.md');
+            ->filter(fn (array $item): bool => $item['type'] === 'blob'
+                && basename((string) $item['path']) === 'SKILL.md'
+                // A skill is named after its directory, so a repository-root SKILL.md has no name to take.
+                && dirname((string) $item['path']) !== '.');
 
         if ($basePath !== '') {
             $prefix = $basePath.'/';
