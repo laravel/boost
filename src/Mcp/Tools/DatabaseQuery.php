@@ -68,10 +68,47 @@ class DatabaseQuery extends Tool
             }
 
             return Response::json(
-                $connection->select($query)
+                $this->runSelectViaReadOnlyTransaction($connection, $query)
             );
         } catch (Throwable $throwable) {
             return Response::error('Query failed: '.$throwable->getMessage());
+        }
+    }
+
+    /**
+     * Run the query inside a database-enforced read-only transaction.
+     *
+     * The keyword filter above is a fast-fail guard, not the source of truth: SQL dialects have
+     * too many shapes (data-modifying CTEs, INTO OUTFILE, vendor extensions) for lexical parsing
+     * to ever be exhaustive. This wraps execution in a transaction the engine itself is asked to
+     * treat as read-only, and always rolls it back so nothing persists even if that request is
+     * ignored by the driver.
+     */
+    protected function runSelectViaReadOnlyTransaction($connection, string $query): array
+    {
+        $driver = $connection->getDriverName();
+
+        // MySQL/MariaDB only honor READ ONLY when set before the transaction starts.
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
+            $connection->statement('SET TRANSACTION READ ONLY');
+        }
+
+        $connection->beginTransaction();
+
+        try {
+            if ($driver === 'pgsql') {
+                $connection->statement('SET TRANSACTION READ ONLY');
+            } elseif ($driver === 'sqlite') {
+                $connection->statement('PRAGMA query_only = ON');
+            }
+
+            return $connection->select($query);
+        } finally {
+            $connection->rollBack();
+
+            if ($driver === 'sqlite') {
+                $connection->statement('PRAGMA query_only = OFF');
+            }
         }
     }
 

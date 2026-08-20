@@ -14,7 +14,7 @@ class RuleFrontmatter
      */
     public static function parse(string $content): array
     {
-        $content = (string) preg_replace('/\R/', "\n", $content);
+        $content = str_replace(["\r\n", "\r"], "\n", $content);
 
         if (preg_match('/^\s*---\s*\n(.*?)\n---\s*\n?/s', $content, $matches) !== 1) {
             return ['paths' => [], 'body' => $content];
