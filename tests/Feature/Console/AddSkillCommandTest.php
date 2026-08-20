@@ -508,7 +508,6 @@ it('displays error when rate limit is exceeded', function (): void {
 });
 
 it('does not wipe installed skills when the repository has a root level SKILL.md', function (): void {
-    File::deleteDirectory(base_path('.ai/skills'));
     File::ensureDirectoryExists(base_path('.ai/skills/existing-skill'));
     File::put(base_path('.ai/skills/existing-skill/SKILL.md'), 'keep me');
 
@@ -521,12 +520,9 @@ it('does not wipe installed skills when the repository has a root level SKILL.md
             ],
             'truncated' => false,
         ]),
-        'raw.githubusercontent.com/*' => Http::response('# Root skill'),
     ]);
 
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo', '--all' => true, '--skip-audit' => true])->run();
 
     expect(File::exists(base_path('.ai/skills/existing-skill/SKILL.md')))->toBeTrue();
-
-    File::deleteDirectory(base_path('.ai/skills'));
 });
