@@ -116,7 +116,7 @@ class RuleRepository
     public function write(string $glob, string $title, string $note): string
     {
         $glob = trim($glob);
-        $title = trim((string) preg_replace('/\R/', ' ', $title));
+        $title = trim(str_replace(["\r\n", "\r", "\n"], ' ', $title));
         $note = trim($note);
 
         $target = $this->resolveTargetFile($glob);
@@ -287,7 +287,7 @@ class RuleRepository
             try {
                 $parsed = $this->parse($path);
             } catch (Throwable) {
-                $raw = (string) preg_replace('/\R/', "\n", (string) File::get($path));
+                $raw = str_replace(["\r\n", "\r"], "\n", (string) File::get($path));
                 $parsed = ['paths' => [], 'body' => $raw];
             }
         }

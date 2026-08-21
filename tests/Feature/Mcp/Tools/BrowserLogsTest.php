@@ -112,6 +112,9 @@ test('browser logger script captures the configured log levels', function (?arra
     'warn alias' => [['warn'], ['warning', 'error']],
     'missing configuration' => [null, ['log', 'debug', 'info', 'warning', 'error', 'table']],
     'empty configuration' => [[], ['log', 'debug', 'info', 'warning', 'error', 'table']],
+    'blank env var' => [[''], ['log', 'debug', 'info', 'warning', 'error', 'table']],
+    'whitespace only' => [['   '], ['log', 'debug', 'info', 'warning', 'error', 'table']],
+    'blank entries alongside a level' => [['', 'error'], ['error']],
 ]);
 
 test('browser logs endpoint processes logs correctly', function (): void {
