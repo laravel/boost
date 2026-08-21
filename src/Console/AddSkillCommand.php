@@ -9,6 +9,7 @@ use const DIRECTORY_SEPARATOR;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Skills\Remote\AuditResult;
@@ -348,9 +349,13 @@ class AddSkillCommand extends Command
         $auditor = new SkillAuditor;
         $results = [];
 
+        $parentOf = fn (RemoteSkill $skill): string => Str::contains($skill->path, '/')
+            ? Str::beforeLast($skill->path, '/')
+            : '';
+
         // The audit service resolves a skill as source + '/' + name, so each skill has to be sent under its own parent.
-        foreach ($skills->groupBy(fn (RemoteSkill $skill): string => dirname($skill->path)) as $parent => $group) {
-            $source = $this->repository->fullName().($parent === '.' ? '' : '/'.$parent);
+        foreach ($skills->groupBy($parentOf) as $parent => $group) {
+            $source = $this->repository->fullName().($parent === '' ? '' : '/'.$parent);
             $names = $group->map(fn (RemoteSkill $skill): string => $skill->name)->all();
 
             $results = [...$results, ...$auditor->audit($source, $names)];
