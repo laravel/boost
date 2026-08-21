@@ -14,13 +14,27 @@ class MarkdownFormatter
         // Normalize line endings (CRLF → LF, CR → LF)
         $content = str_replace(["\r\n", "\r"], "\n", $content);
 
+        $fences = [];
+
+        // A "# " line inside a fence is code, not a heading, so hide fences while spacing headings.
+        $masked = preg_replace_callback('/(?<fence>`{3,}|~{3,}).*?\k<fence>/s', function (array $matches) use (&$fences): string {
+            $placeholder = '___MARKDOWN_FENCE_'.count($fences).'___';
+            $fences[$placeholder] = $matches[0];
+
+            return $placeholder;
+        }, $content);
+
+        if ($masked === null) {
+            return $content;
+        }
+
         // Ensure blank line before and after markdown headings
-        $content = preg_replace('/(?<!\n)\n(#{1,4} )/m', "\n\n$1", $content);
-        $content = preg_replace('/(#{1,4} .+)\n(?!\n)/m', "$1\n\n", (string) $content);
+        $masked = preg_replace('/(?<!\n)\n(#{1,4} )/m', "\n\n$1", $masked);
+        $masked = preg_replace('/^(#{1,4} .+)\n(?!\n)/m', "$1\n\n", (string) $masked);
 
         // Collapse multiple consecutive empty lines into a single empty line
-        $content = preg_replace('/\n{3,}/', "\n\n", (string) $content);
+        $masked = preg_replace('/\n{3,}/', "\n\n", (string) $masked);
 
-        return $content;
+        return str_replace(array_keys($fences), array_values($fences), (string) $masked);
     }
 }
