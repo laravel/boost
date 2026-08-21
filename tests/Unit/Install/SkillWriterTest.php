@@ -9,7 +9,7 @@ use Laravel\Boost\Install\SkillWriter;
 function cleanupSkillDirectory(string $path): void
 {
     if (is_link($path)) {
-        @unlink($path);
+        @unlink($path) || @rmdir($path);
 
         return;
     }
@@ -25,7 +25,7 @@ function cleanupSkillDirectory(string $path): void
 
     foreach ($files as $file) {
         if ($file->isLink()) {
-            @unlink($file->getPathname());
+            @unlink($file->getPathname()) || @rmdir($file->getPathname());
 
             continue;
         }
@@ -618,6 +618,46 @@ it('removes directory containing nested symlinks', function (): void {
     cleanupSkillDirectory($linkTargetDir);
 });
 
+it('removes directory containing nested dangling symlinks', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillDir = $absoluteTarget.'/symlink-skill';
+    $nestedDir = $skillDir.'/references';
+    $linkTargetDir = base_path('.boost-link-target-'.uniqid());
+
+    mkdir($nestedDir, 0755, true);
+    mkdir($linkTargetDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', 'test');
+
+    $symlinkPath = $nestedDir.'/linked-dir';
+
+    if (! @symlink($linkTargetDir, $symlinkPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        cleanupSkillDirectory($linkTargetDir);
+        $this->markTestSkipped('Symlinks not supported in this environment');
+    }
+
+    cleanupSkillDirectory($linkTargetDir);
+
+    if (! is_link($symlinkPath)) {
+        cleanupSkillDirectory($absoluteTarget);
+        $this->markTestSkipped('Dangling symlink not detectable in this environment');
+    }
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->remove('symlink-skill');
+
+    expect($result)->toBeTrue()
+        ->and($skillDir)->not->toBeDirectory()
+        ->and(is_link($symlinkPath))->toBeFalse()
+        ->and($linkTargetDir)->not->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
 it('creates canonical directory and symlinks custom skill when canonical does not exist', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
@@ -1067,6 +1107,169 @@ it('creates relative symlink when skills path is outside the project root', func
 
     cleanupSkillDirectory($outsideDir);
     cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('fresh sync removes untracked entries before rewriting skills', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $orphanedDir = $absoluteTarget.'/orphaned-skill';
+    mkdir($orphanedDir, 0755, true);
+    file_put_contents($orphanedDir.'/SKILL.md', 'orphaned content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        'new-skill' => new Skill('new-skill', 'boost', $sourceDir, 'New skill'),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync($skills, [], fresh: true);
+
+    expect($result['new-skill'])->toBe(SkillWriter::SUCCESS)
+        ->and($absoluteTarget.'/new-skill/SKILL.md')->toBeFile()
+        ->and($orphanedDir)->not->toBeDirectory();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('fresh sync removes dangling symlinks', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $danglingTarget = base_path('.boost-dangling-'.uniqid());
+    $danglingLink = $absoluteTarget.'/deleted-custom-skill';
+
+    mkdir($danglingTarget, 0755, true);
+    mkdir($absoluteTarget, 0755, true);
+
+    if (! @symlink($danglingTarget, $danglingLink)) {
+        cleanupSkillDirectory($danglingTarget);
+        cleanupSkillDirectory($absoluteTarget);
+        $this->markTestSkipped('Symlinks not supported in this environment');
+    }
+
+    cleanupSkillDirectory($danglingTarget);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        'new-skill' => new Skill('new-skill', 'boost', $sourceDir, 'New skill'),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync($skills, [], fresh: true);
+
+    expect($result['new-skill'])->toBe(SkillWriter::SUCCESS)
+        ->and(is_link($danglingLink))->toBeFalse()
+        ->and($absoluteTarget.'/new-skill/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('fresh sync preserves canonical skills behind symlinks', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    mkdir($canonicalSkillPath, 0755, true);
+    copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        $skillName => new Skill($skillName, 'boost', $canonicalSkillPath, 'Custom skill', custom: true),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $writer->sync($skills);
+
+    $result = $writer->sync($skills, [], fresh: true);
+
+    expect($result[$skillName])->toBe(SkillWriter::SUCCESS)
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    $linkedPath = $absoluteTarget.'/'.$skillName;
+
+    if (is_link($linkedPath)) {
+        expect(realpath($linkedPath))->toBe(realpath($canonicalSkillPath));
+    } else {
+        expect($linkedPath)->toBeDirectory();
+    }
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('fresh sync rejects targets that overlap the canonical skills directory', function (string $skillsPath): void {
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($skillsPath);
+
+    $writer = new class($agent) extends SkillWriter
+    {
+        /** @var array<int, string> */
+        public array $deletedPaths = [];
+
+        protected function deleteDirectory(string $path): bool
+        {
+            $this->deletedPaths[] = $path;
+
+            return true;
+        }
+    };
+
+    expect(fn (): array => $writer->sync(collect(), [], fresh: true))
+        ->toThrow(RuntimeException::class, 'Fresh skill target overlaps the canonical .ai/skills directory.')
+        ->and($writer->deletedPaths)->toBeEmpty();
+})->with([
+    'canonical directory' => '.ai/skills',
+    'canonical directory ancestor' => '.ai',
+    'canonical directory descendant' => '.ai/skills/generated-output',
+]);
+
+it('fresh sync works when the skills directory does not exist', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        'new-skill' => new Skill('new-skill', 'boost', $sourceDir, 'New skill'),
+    ]);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync($skills, [], fresh: true);
+
+    expect($result['new-skill'])->toBe(SkillWriter::SUCCESS)
+        ->and($absoluteTarget.'/new-skill/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('fresh sync leaves generated output empty when there are no skills to write', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $existingSkill = $absoluteTarget.'/existing-skill';
+
+    mkdir($existingSkill, 0755, true);
+    file_put_contents($existingSkill.'/SKILL.md', 'existing content');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->sync(collect(), [], fresh: true);
+
+    expect($result)->toBe([])
+        ->and($absoluteTarget)->not->toBeDirectory();
 });
 
 it('writes skill files with a trailing newline', function (): void {
