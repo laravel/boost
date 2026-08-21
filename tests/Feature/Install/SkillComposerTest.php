@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
@@ -14,6 +15,13 @@ beforeEach(function (): void {
     $this->project = Mockery::mock(ProjectManager::class);
 
     $this->app->instance(ProjectManager::class, $this->project);
+});
+
+afterEach(function (): void {
+    File::deleteDirectory(base_path('node_modules'));
+    File::deleteDirectory(base_path('vendor'));
+    @unlink(base_path('package.json'));
+    @unlink(base_path('composer.json'));
 });
 
 test('skills return a collection keyed by skill name', function (): void {
@@ -380,4 +388,26 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
     expect($result)
         ->toHaveKey('name', 'pest-testing')
         ->toHaveKey('description', 'Write and run tests with Pest');
+});
+
+test('returns third-party npm skills when aiGuidelines is uninitialized', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('node_modules/@some-scope/third-party/resources/boost/skills/npm-third-party-skill');
+    File::ensureDirectoryExists($skillDir);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: npm-third-party-skill\ndescription: An npm vendor-provided skill\n---\n\n# Content\n");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@some-scope/third-party' => '^1.0']]));
+
+    expect((new SkillComposer($this->project))->skills()->has('npm-third-party-skill'))->toBeTrue();
+});
+
+test('excludes first-party npm packages from third-party skill discovery', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('node_modules/@laravel/some-package/resources/boost/skills/laravel-skill');
+    File::ensureDirectoryExists($skillDir);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: laravel-skill\ndescription: A first-party skill\n---\n\n# Content\n");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@laravel/some-package' => '^1.0']]));
+
+    expect((new SkillComposer($this->project))->skills()->has('laravel-skill'))->toBeFalse();
 });

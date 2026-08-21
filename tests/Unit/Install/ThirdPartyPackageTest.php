@@ -2,7 +2,15 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\ThirdPartyPackage;
+
+afterEach(function (): void {
+    File::deleteDirectory(base_path('node_modules'));
+    File::deleteDirectory(base_path('vendor'));
+    @unlink(base_path('package.json'));
+    @unlink(base_path('composer.json'));
+});
 
 it('creates a package with all properties', function (): void {
     $package = new ThirdPartyPackage(
@@ -45,29 +53,33 @@ it('returns correct display label', function (bool $hasGuidelines, bool $hasSkil
     'skills only' => [false, true, 'vendor/package (skills)'],
 ]);
 
-it('excludes first-party packages from discover results', function (): void {
+it('excludes first-party packages and includes third-party ones from both ecosystems', function (): void {
+    foreach ([
+        'vendor/laravel/folio',
+        'vendor/acme/toolkit',
+        'node_modules/@laravel/some-package',
+        'node_modules/@acme/ui',
+    ] as $package) {
+        File::ensureDirectoryExists(base_path($package.'/resources/boost/guidelines'));
+    }
+
+    File::ensureDirectoryExists(base_path('vendor/acme/toolkit/resources/boost/skills'));
+
+    file_put_contents(base_path('composer.json'), json_encode([
+        'require' => ['laravel/folio' => '^1.0', 'acme/toolkit' => '^1.0'],
+    ]));
+    file_put_contents(base_path('package.json'), json_encode([
+        'dependencies' => ['@laravel/some-package' => '^1.0', '@acme/ui' => '^1.0'],
+    ]));
+
     $packages = ThirdPartyPackage::discover();
 
-    $firstPartyNames = [
-        'laravel/framework',
-        'livewire/livewire',
-        'pestphp/pest',
-        'phpunit/phpunit',
-        'laravel/folio',
-        'laravel/mcp',
-        'laravel/pennant',
-        'laravel/pint',
-        'laravel/sail',
-        'laravel/wayfinder',
-        'livewire/flux',
-        'livewire/flux-pro',
-        'livewire/volt',
-        'inertiajs/inertia-laravel',
-    ];
-
-    foreach ($firstPartyNames as $name) {
-        expect($packages->has($name))->toBeFalse(
-            "First-party package {$name} should be excluded from discover()"
-        );
-    }
+    expect($packages)
+        ->not->toHaveKey('laravel/folio')
+        ->not->toHaveKey('@laravel/some-package')
+        ->toHaveKey('acme/toolkit')
+        ->toHaveKey('@acme/ui')
+        ->and($packages->get('acme/toolkit')->hasSkills)->toBeTrue()
+        ->and($packages->get('@acme/ui')->hasGuidelines)->toBeTrue()
+        ->and($packages->get('@acme/ui')->hasSkills)->toBeFalse();
 });
