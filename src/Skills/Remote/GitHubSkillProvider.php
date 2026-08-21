@@ -85,9 +85,11 @@ class GitHubSkillProvider
 
         $files = $skillFiles
             ->filter(fn (array $item): bool => $item['type'] === 'blob')
-            ->reject(fn (array $item): bool => preg_match('/\.(php\d?|phar|phtml)$/i', (string) $item['path']) === 1);
+            ->reject(fn (array $item): bool => preg_match('/\.(php\d?|phar|phtml)$/i', (string) $item['path']) === 1)
+            // A backslash is an ordinary character in a repository path but a separator on Windows, where it would write outside the skill directory.
+            ->reject(fn (array $item): bool => str_contains((string) $item['path'], '\\'));
 
-        if (! $files->contains(fn (array $item): bool => basename((string) $item['path']) === 'SKILL.md')) {
+        if (! $files->contains(fn (array $item): bool => Str::afterLast((string) $item['path'], '/') === 'SKILL.md')) {
             return false;
         }
 
