@@ -68,10 +68,11 @@ class SearchDocs extends Tool
             return $rawQueries;
         }
 
-        $queries = array_filter(
+        // Re-key so a dropped query cannot turn the list into a JSON object.
+        $queries = array_values(array_filter(
             array_map(trim(...), $rawQueries),
             fn (string $query): bool => $query !== '' && $query !== '*'
-        );
+        ));
 
         try {
             $packagesCollection = $this->project->php()->packages()->concat($this->project->js()->packages());
