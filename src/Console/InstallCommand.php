@@ -49,7 +49,8 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}';
+        {--mcp : Install MCP server configuration}
+        {--packages= : Third-party packages to include, comma separated, or "all" or "none"}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -265,6 +266,10 @@ class InstallCommand extends Command
     {
         $packages = ThirdPartyPackage::discover();
 
+        if ($this->option('packages') !== null) {
+            return $this->requestedThirdPartyPackages($packages);
+        }
+
         if ($packages->isEmpty()) {
             return collect();
         }
@@ -274,6 +279,8 @@ class InstallCommand extends Command
             ->values();
 
         if (! $this->input->isInteractive()) {
+            $this->reportSkippedThirdPartyPackages($packages->keys()->diff($defaults));
+
             return $defaults;
         }
 
@@ -286,6 +293,52 @@ class InstallCommand extends Command
             scroll: 10,
             hint: 'You can add or remove them later by running this command again',
         ));
+    }
+
+    /**
+     * @param  Collection<string, ThirdPartyPackage>  $packages
+     * @return Collection<int, string>
+     *
+     * @throws Exception
+     */
+    protected function requestedThirdPartyPackages(Collection $packages): Collection
+    {
+        $requested = Str::of($this->option('packages'))
+            ->explode(',')
+            ->map(fn (string $name): string => trim($name))
+            ->filter()
+            ->values();
+
+        if ($requested->containsStrict('none')) {
+            return collect();
+        }
+
+        if ($requested->containsStrict('all')) {
+            return $packages->keys()->values();
+        }
+
+        $unknown = $requested->reject(fn (string $name): bool => $packages->has($name));
+
+        if ($unknown->isNotEmpty()) {
+            $this->fail('Unknown third-party package(s) passed to --packages: '.$unknown->join(', ').'.');
+        }
+
+        return $requested;
+    }
+
+    /**
+     * Third-party guidelines are rendered into agent instructions, so they stay opt-in.
+     *
+     * @param  Collection<int, string>  $skipped
+     */
+    protected function reportSkippedThirdPartyPackages(Collection $skipped): void
+    {
+        if ($skipped->isEmpty()) {
+            return;
+        }
+
+        $this->line('Skipped third-party guidelines/skills from: '.$skipped->join(', ').'.');
+        $this->line('Review and add them with [php artisan boost:install], or --packages='.$skipped->first().'.');
     }
 
     protected function selectIntegrations(): void

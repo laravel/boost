@@ -66,6 +66,9 @@ class UpdateCommand extends Command
         }
 
         if (! $this->input->isInteractive() || $this->runningAsComposerScript()) {
+            $this->line('New packages with guidelines/skills available: '.$newPackages->keys()->join(', ').'.');
+            $this->line('Review and add them with [php artisan boost:update].');
+
             return;
         }
 
