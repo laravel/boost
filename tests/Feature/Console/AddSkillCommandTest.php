@@ -449,6 +449,33 @@ it('sends correct source and skills to audit api before download', function (): 
     });
 });
 
+it('audits a skill under its own parent whatever depth the given path is', function (string $repo): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => '.ai/claude/skills/my-skill', 'type' => 'tree', 'sha' => 'aaa'],
+                ['path' => '.ai/claude/skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response('# Content'),
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([]),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => $repo, '--all' => true])->assertSuccessful();
+
+    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'skills.laravel.cloud/api/v1/skills/audit')
+        && str_contains((string) $request->url(), 'source=owner%2Frepo%2F.ai%2Fclaude%2Fskills')
+        && str_contains((string) $request->url(), 'skills=my-skill'));
+})->with([
+    'whole repository' => ['owner/repo'],
+    'a distant parent' => ['owner/repo/.ai'],
+    'the direct parent' => ['owner/repo/.ai/claude/skills'],
+    'the skill directory itself' => ['owner/repo/.ai/claude/skills/my-skill'],
+]);
+
 it('audits only skills that will be installed', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
     File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
