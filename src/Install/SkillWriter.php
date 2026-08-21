@@ -31,7 +31,7 @@ class SkillWriter
 
     public function write(Skill $skill): int
     {
-        if (! $this->isValidSkillName($skill->name)) {
+        if (! self::isValidSkillName($skill->name)) {
             throw new RuntimeException("Invalid skill name: {$skill->name}");
         }
 
@@ -98,9 +98,15 @@ class SkillWriter
      */
     public function writeAll(Collection $skills): array
     {
-        return $skills
-            ->mapWithKeys(fn (Skill $skill): array => [$skill->name => $this->write($skill)])
-            ->all();
+        [$valid, $invalid] = $skills->partition(fn (Skill $skill): bool => self::isValidSkillName($skill->name));
+
+        $written = $valid->mapWithKeys(fn (Skill $skill): array => [$skill->name => $this->write($skill)])->all();
+
+        if ($invalid->isNotEmpty()) {
+            throw new RuntimeException('Invalid skill name: '.$invalid->implode('name', ', '));
+        }
+
+        return $written;
     }
 
     /**
@@ -110,20 +116,14 @@ class SkillWriter
      */
     public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
     {
-        $written = $this->writeAll($skills);
+        $this->removeStale(array_values(array_diff($previouslyTrackedSkills, $skills->keys()->all())));
 
-        $newSkillNames = $skills->keys()->all();
-
-        $staleSkillNames = array_values(array_diff($previouslyTrackedSkills, $newSkillNames));
-
-        $this->removeStale($staleSkillNames);
-
-        return $written;
+        return $this->writeAll($skills);
     }
 
     public function remove(string $skillName): bool
     {
-        if (! $this->isValidSkillName($skillName)) {
+        if (! self::isValidSkillName($skillName)) {
             return false;
         }
 
@@ -337,10 +337,13 @@ class SkillWriter
         return false;
     }
 
-    protected function isValidSkillName(string $name): bool
+    public static function isValidSkillName(string $name): bool
     {
-        $hasPathTraversal = str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '\\');
+        if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '\\') || str_contains($name, "\0")) {
+            return false;
+        }
 
-        return ! $hasPathTraversal && trim($name) !== '';
+        // A name of only dots and whitespace resolves to the skills directory itself.
+        return trim($name, ". \t\n\r\0\x0B") !== '';
     }
 }

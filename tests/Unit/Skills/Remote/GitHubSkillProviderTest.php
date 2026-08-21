@@ -597,9 +597,107 @@ it('downloads a skill whose path was given directly', function (): void {
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo', 'skills/my-skill'));
     $skill = $fetcher->discoverSkills()->get('my-skill');
 
-    expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
-        ->and(file_get_contents($targetDir.'/SKILL.md'))->toBe('# Direct');
+    try {
+        expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
+            ->and(file_get_contents($targetDir.'/SKILL.md'))->toBe('# Direct');
+    } finally {
+        array_map(unlink(...), glob($targetDir.'/*'));
+        rmdir($targetDir);
+    }
+});
 
-    array_map(unlink(...), glob($targetDir.'/*'));
-    rmdir($targetDir);
+it('ignores a skill directory whose name cannot be a skill name', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => '... ', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => '... /SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ['path' => '..\\..\\evil', 'type' => 'tree', 'sha' => 'eee'],
+            ['path' => '..\\..\\evil/SKILL.md', 'type' => 'blob', 'sha' => 'fff', 'size' => 789],
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'ccc'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ddd', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+    expect($fetcher->discoverSkills()->keys()->all())->toBe(['skill-one']);
+});
+
+it('discovers skills at any depth below the given path', function (string $path): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => '.ai', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => '.ai/claude', 'type' => 'tree', 'sha' => 'bbb'],
+            ['path' => '.ai/claude/skills', 'type' => 'tree', 'sha' => 'ccc'],
+            ['path' => '.ai/claude/skills/my-skill', 'type' => 'tree', 'sha' => 'ddd'],
+            ['path' => '.ai/claude/skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'eee', 'size' => 123],
+        ]),
+    ]);
+
+    $skills = (new GitHubSkillProvider(new GitHubRepository('owner', 'repo', $path)))->discoverSkills();
+
+    expect($skills->keys()->all())->toBe(['my-skill'])
+        ->and($skills->get('my-skill')->path)->toBe('.ai/claude/skills/my-skill');
+})->with([
+    'whole repository' => [''],
+    'a distant parent' => ['.ai'],
+    'an intermediate parent' => ['.ai/claude'],
+    'the direct parent' => ['.ai/claude/skills'],
+    'the skill directory itself' => ['.ai/claude/skills/my-skill'],
+    'the skill directory with a trailing slash' => ['.ai/claude/skills/my-skill/'],
+    'the SKILL.md file itself' => ['.ai/claude/skills/my-skill/SKILL.md'],
+]);
+
+it('keeps skills apart when one path is a prefix of another', function (): void {
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skills/my-skill', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => 'skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ['path' => 'skills/my-skill-extra', 'type' => 'tree', 'sha' => 'ccc'],
+            ['path' => 'skills/my-skill-extra/SKILL.md', 'type' => 'blob', 'sha' => 'ddd', 'size' => 456],
+        ]),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo', 'skills/my-skill'));
+
+    expect($fetcher->discoverSkills()->keys()->all())->toBe(['my-skill']);
+});
+
+it('reads the branch named in the repository instead of asking for the default', function (): void {
+    Http::fake(fakeTreeResponse([
+        ['path' => 'my-skill', 'type' => 'tree', 'sha' => 'aaa'],
+        ['path' => 'my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+    ], 'develop'));
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo', 'my-skill', 'develop'));
+
+    expect($fetcher->discoverSkills()->keys()->all())->toBe(['my-skill']);
+
+    Http::assertNotSent(fn ($request): bool => (string) $request->url() === 'https://api.github.com/repos/owner/repo');
+});
+
+it('downloads a skill from the branch named in the repository', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeTreeResponse([
+            ['path' => 'my-skill', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => 'my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+        ], 'develop'),
+        'raw.githubusercontent.com/owner/repo/develop/my-skill/SKILL.md' => Http::response('# Develop'),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo', 'my-skill', 'develop'));
+    $skill = $fetcher->discoverSkills()->get('my-skill');
+
+    try {
+        expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
+            ->and(file_get_contents($targetDir.'/SKILL.md'))->toBe('# Develop');
+    } finally {
+        array_map(unlink(...), glob($targetDir.'/*'));
+        rmdir($targetDir);
+    }
 });

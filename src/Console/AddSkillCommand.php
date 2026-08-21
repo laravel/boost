@@ -322,10 +322,7 @@ class AddSkillCommand extends Command
 
         /** @var array<string, array<int, AuditResult>> $auditResults */
         $auditResults = spin(
-            callback: fn (): array => (new SkillAuditor)->audit(
-                $this->repository->source(),
-                $skillNames,
-            ),
+            callback: fn (): array => $this->auditSkills($selectedSkills),
             message: 'Running security audit...',
         );
 
@@ -340,6 +337,26 @@ class AddSkillCommand extends Command
         }
 
         return confirm('Do you want to install these skills?');
+    }
+
+    /**
+     * @param  Collection<string, RemoteSkill>  $skills
+     * @return array<string, array<int, AuditResult>>
+     */
+    protected function auditSkills(Collection $skills): array
+    {
+        $auditor = new SkillAuditor;
+        $results = [];
+
+        // The audit service resolves a skill as source + '/' + name, so each skill has to be sent under its own parent.
+        foreach ($skills->groupBy(fn (RemoteSkill $skill): string => dirname($skill->path)) as $parent => $group) {
+            $source = $this->repository->fullName().($parent === '.' ? '' : '/'.$parent);
+            $names = $group->map(fn (RemoteSkill $skill): string => $skill->name)->all();
+
+            $results = [...$results, ...$auditor->audit($source, $names)];
+        }
+
+        return $results;
     }
 
     /**
