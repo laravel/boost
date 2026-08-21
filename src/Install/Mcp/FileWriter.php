@@ -175,10 +175,26 @@ class FileWriter
 
     protected function serverExistsInContent(string $content, string $serverKey): bool
     {
+        $content = $this->maskUnquotedComments($content);
+
         $quotedPattern = '/["\']'.preg_quote($serverKey, '/').'["\']\\s*:/';
         $unquotedPattern = '/(?<=^|\\s|,|{)'.preg_quote($serverKey, '/').'\\s*:/m';
 
         return preg_match($quotedPattern, $content) || preg_match($unquotedPattern, $content);
+    }
+
+    protected function maskUnquotedComments(string $content): string
+    {
+        // Match quoted strings (keep) or line and block comments (blank out, keeping length and line breaks)
+        $pattern = '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\//';
+
+        return preg_replace_callback(
+            $pattern,
+            fn (array $matches): string => Str::startsWith($matches[0], ['//', '/*'])
+                ? (string) preg_replace('/[^\n]/', ' ', $matches[0])
+                : $matches[0],
+            $content
+        ) ?? $content;
     }
 
     protected function injectNewConfigKey(string $content): bool
@@ -240,6 +256,7 @@ class FileWriter
 
     protected function findMatchingClosingBrace(string $content, int $openBracePos): int|false
     {
+        $content = $this->maskUnquotedComments($content);
         $braceCount = 1;
         $length = strlen($content);
         $stringQuote = null;
@@ -276,7 +293,7 @@ class FileWriter
         $innerContent = substr($content, $openBracePos + 1, $closeBracePos - $openBracePos - 1);
 
         // Skip whitespace and comments to find last meaningful character
-        $trimmed = preg_replace('/\s+|\/\/.*$/m', '', $innerContent);
+        $trimmed = preg_replace('/\s+/', '', $this->maskUnquotedComments($innerContent));
 
         // If empty or ends with opening brace, no comma needed
         if (blank($trimmed) || Str::endsWith($trimmed, '{')) {
@@ -289,21 +306,15 @@ class FileWriter
 
     protected function findCommaInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
     {
+        // Comments are blanked out so they are skipped as whitespace below
+        $content = $this->maskUnquotedComments($content);
+
         // Work backwards from closing brace to find last meaningful character
         for ($i = $closeBracePos - 1; $i > $openBracePos; $i--) {
             $char = $content[$i];
 
             // Skip whitespace and newlines
             if (in_array($char, [' ', "\t", "\n", "\r"], true)) {
-                continue;
-            }
-
-            // Skip comments (simple approach - if we hit //, skip to start of line)
-            if ($i > 0 && $content[$i - 1] === '/' && $char === '/') {
-                // Find start of this line
-                $lineStart = strrpos($content, "\n", $i - strlen($content)) ?: 0;
-                $i = $lineStart;
-
                 continue;
             }
 
