@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Concerns\ReportsSkillParseFailures;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
@@ -45,6 +46,7 @@ use function Laravel\Prompts\note;
 class InstallCommand extends Command
 {
     use DisplayHelper;
+    use ReportsSkillParseFailures;
 
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
@@ -97,6 +99,7 @@ class InstallCommand extends Command
         $this->performInstallation();
 
         $this->reportRenderFailures();
+        $this->reportSkillParseFailures();
 
         $this->noteInferConventions();
 

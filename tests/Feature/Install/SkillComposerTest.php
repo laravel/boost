@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
@@ -380,4 +381,61 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
     expect($result)
         ->toHaveKey('name', 'pest-testing')
         ->toHaveKey('description', 'Write and run tests with Pest');
+});
+
+test('a user skill with invalid YAML frontmatter is kept instead of silently dropped', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('.ai/skills/broken-frontmatter');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: broken-frontmatter\ndescription: Does a thing. Covers: the important bit.\n---\n\n# Content\n");
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('broken-frontmatter'))->toBeTrue()
+            ->and($skills->get('broken-frontmatter')->custom)->toBeTrue()
+            ->and($skills->get('broken-frontmatter')->path)->toBe($skillDir);
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+    }
+});
+
+test('an invalid YAML frontmatter records a parse failure naming the file', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('.ai/skills/broken-frontmatter');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: broken-frontmatter\ndescription: Does a thing. Covers: the important bit.\n---\n\n# Content\n");
+
+    try {
+        (new SkillComposer($this->project))->skills();
+
+        $failures = app(SkillParseFailures::class);
+
+        expect($failures->isEmpty())->toBeFalse()
+            ->and($failures->all())->toHaveKey($skillDir.DIRECTORY_SEPARATOR.'SKILL.md');
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+    }
+});
+
+test('a skill file without any frontmatter is still treated as absent', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('.ai/skills/no-frontmatter');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "# Just a heading\n\nNo frontmatter here.\n");
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('no-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+    }
 });

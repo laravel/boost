@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Exception;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillComposer
@@ -212,7 +213,22 @@ class SkillComposer
             return null;
         }
 
-        $frontmatter = $this->parseSkillFrontmatter($content);
+        try {
+            $frontmatter = $this->parseSkillFrontmatter($content);
+        } catch (ParseException $parseException) {
+            // A skill whose frontmatter fails to parse must not be treated as absent,
+            // otherwise the next sync unregisters it and deletes its agent symlinks.
+            // Keep it registered under its directory name and report the failure.
+            app(SkillParseFailures::class)->record($skillFile, $parseException->getMessage());
+
+            return new Skill(
+                name: basename($skillPath),
+                package: $package ?: $this->determinePackageFromPath($skillPath),
+                path: $skillPath,
+                description: '',
+                custom: $custom,
+            );
+        }
 
         if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
             return null;
@@ -242,6 +258,8 @@ class SkillComposer
 
     /**
      * @return array<string, mixed>
+     *
+     * @throws ParseException
      */
     protected function parseSkillFrontmatter(string $content): array
     {
@@ -251,11 +269,7 @@ class SkillComposer
             return [];
         }
 
-        try {
-            return Yaml::parse($matches[1]) ?? [];
-        } catch (Exception) {
-            return [];
-        }
+        return Yaml::parse($matches[1]) ?? [];
     }
 
     protected function determinePackageFromPath(string $skillPath): string
