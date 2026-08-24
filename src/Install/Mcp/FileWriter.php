@@ -150,8 +150,15 @@ class FileWriter
         $commaPosition = $this->findCommaInsertionPoint($content, $openBracePos, $closeBracePos);
 
         if ($commaPosition !== -1) {
-            $newContent = substr_replace($content, ',', $commaPosition, 0);
-            $newContent = substr_replace($newContent, $serversJson, $commaPosition + 1, 0);
+            if (trim(substr($content, $commaPosition, $closeBracePos - $commaPosition)) === '') {
+                $newContent = substr_replace($content, ',', $commaPosition, 0);
+                $newContent = substr_replace($newContent, $serversJson, $commaPosition + 1, 0);
+            } else {
+                // A trailing comment sits between the last entry and the closing
+                // brace: keep it in place by adding the servers after it.
+                $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
+                $newContent = substr_replace($newContent, ',', $commaPosition, 0);
+            }
         } else {
             $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
         }
@@ -289,21 +296,22 @@ class FileWriter
 
     protected function findCommaInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
     {
+        // Blank out comments (string-aware, offsets preserved) so the backwards
+        // scan cannot place the comma inside a trailing comment.
+        $masked = preg_replace_callback(
+            '/"(?:\\\\.|[^"\\\\])*"|(\/\/[^\r\n]*)|(\/\*[\s\S]*?\*\/)/',
+            fn (array $match): string => ($match[1] ?? '') !== '' || ($match[2] ?? '') !== ''
+                ? str_repeat(' ', strlen($match[0]))
+                : $match[0],
+            $content
+        ) ?? $content;
+
         // Work backwards from closing brace to find last meaningful character
         for ($i = $closeBracePos - 1; $i > $openBracePos; $i--) {
-            $char = $content[$i];
+            $char = $masked[$i];
 
             // Skip whitespace and newlines
             if (in_array($char, [' ', "\t", "\n", "\r"], true)) {
-                continue;
-            }
-
-            // Skip comments (simple approach - if we hit //, skip to start of line)
-            if ($i > 0 && $content[$i - 1] === '/' && $char === '/') {
-                // Find start of this line
-                $lineStart = strrpos($content, "\n", $i - strlen($content)) ?: 0;
-                $i = $lineStart;
-
                 continue;
             }
 

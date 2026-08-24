@@ -451,6 +451,47 @@ test('preserves trailing commas when injecting into existing servers', function 
         );
 });
 
+test('adds the comma outside a trailing comment in the servers object', function (): void {
+    $writtenContent = '';
+
+    $contentWithTrailingComment = <<<'JSON5'
+    {
+      "mcpServers": {
+        "context7": {
+          "command": "npx"
+        } // docs lookup
+      }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $contentWithTrailingComment,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    // The separating comma must not be swallowed by the comment, or every
+    // server in the file stops parsing.
+    $withoutComments = preg_replace('/\/\/[^\n]*/', '', $writtenContent);
+
+    expect($result)->toBeTrue()
+        ->and(json_decode((string) $withoutComments, true))->not->toBeNull()
+        ->and($writtenContent)->toContain(
+            '"boost"', // New server added
+            '"context7"', // Existing server preserved
+            '// docs lookup' // Comment preserved
+        );
+});
+
 test('updates JSON5 file with only single-quoted strings', function (): void {
     $writtenContent = '';
     $singleQuotedJson5 = <<<'JSON5'
