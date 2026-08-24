@@ -1,7 +1,6 @@
-@php
-/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
-@endphp
 # Test Enforcement
 
-- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
-- Run the minimum number of tests needed to ensure code quality and speed. Use `{{ $assist->artisanCommand('test --compact') }}` with a specific filename or filter.
+- Test each change in the code. Write a new test, or update a test that exists.
+- Run the tests that the change affects. The tests must pass.
+- Test the behavior of the change and the failure modes that are important. Then stop.
+- Use the test tools that the project installs. Add a new test dependency, plugin, or browser only after the user asks for it.
