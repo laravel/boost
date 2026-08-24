@@ -35,8 +35,9 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsMcp, Supp
 
     public function projectDetectionConfig(): array
     {
+        // The bare .agents directory is not Antigravity-specific: Boost itself
+        // creates it when installing skills for Amp, Codex, OpenCode, or Zed.
         return [
-            'paths' => ['.agents'],
             'files' => ['.agents/mcp_config.json'],
         ];
     }
