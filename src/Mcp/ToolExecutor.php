@@ -67,9 +67,9 @@ class ToolExecutor
 
     protected function getTimeout(array $arguments): int
     {
-        $timeout = (int) ($arguments['timeout'] ?? 180);
+        $timeout = (int) ($arguments['timeout'] ?? config('boost.mcp.tool_timeout') ?? 180);
 
-        return max(1, min(600, $timeout));
+        return max(1, $timeout);
     }
 
     /**
@@ -125,7 +125,7 @@ class ToolExecutor
      */
     protected function buildCommand(string $toolClass, array $arguments): array
     {
-        $phpBinary = config('boost.executable_paths.php') ?? PHP_BINARY;
+        $phpBinary = config('boost.executable_paths.php') ?: PHP_BINARY;
         $normalized = CommandNormalizer::normalize($phpBinary);
 
         return [

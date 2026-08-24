@@ -31,13 +31,21 @@ class ExecuteToolCommand extends Command
             return 1;
         }
 
+        $decoded = base64_decode($argumentsEncoded, true);
+
+        if ($decoded === false) {
+            $this->error('Invalid arguments encoding.');
+
+            return 1;
+        }
+
         // Decode arguments
-        $arguments = json_decode(base64_decode($argumentsEncoded, true), true);
+        $arguments = json_decode($decoded, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->error('Invalid arguments format: '.json_last_error_msg());
 
-            return 1;
+            return static::FAILURE;
         }
 
         /** @var Tool $tool */

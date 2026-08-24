@@ -54,6 +54,24 @@ it('shows error when no skills found', function (): void {
         ->expectsOutputToContain('No valid skills are found');
 });
 
+it('does not offer Blade-only skills from remote repositories', function (): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'remote-skill', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'remote-skill/SKILL.blade.php', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => 'owner/repo', '--list' => true])
+        ->assertFailed()
+        ->expectsOutputToContain('No valid skills are found');
+});
+
 it('shows error when api request fails', function (): void {
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response(
@@ -143,6 +161,7 @@ it('skips existing skills without --force flag', function (): void {
     $this->artisan('boost:add-skill', [
         'repo' => 'owner/repo',
         '--all' => true,
+        '--no-interaction' => true,
     ])->assertSuccessful();
 
     $this->assertFileContains(['existing content'], '.ai/skills/skill-one/SKILL.md');
@@ -289,6 +308,7 @@ it('displays audit results before installing skills when risk is medium or highe
     $this->artisan('boost:add-skill', [
         'repo' => 'owner/repo',
         '--all' => true,
+        '--no-interaction' => true,
     ])
         ->expectsOutputToContain('Security Audit')
         ->expectsOutputToContain('Skills installed')
@@ -429,6 +449,33 @@ it('sends correct source and skills to audit api before download', function (): 
     });
 });
 
+it('audits a skill under its own parent whatever depth the given path is', function (string $repo): void {
+    Http::fake([
+        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => '.ai/claude/skills/my-skill', 'type' => 'tree', 'sha' => 'aaa'],
+                ['path' => '.ai/claude/skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response('# Content'),
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([]),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => $repo, '--all' => true])->assertSuccessful();
+
+    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'skills.laravel.cloud/api/v1/skills/audit')
+        && str_contains((string) $request->url(), 'source=owner%2Frepo%2F.ai%2Fclaude%2Fskills')
+        && str_contains((string) $request->url(), 'skills=my-skill'));
+})->with([
+    'whole repository' => ['owner/repo'],
+    'a distant parent' => ['owner/repo/.ai'],
+    'the direct parent' => ['owner/repo/.ai/claude/skills'],
+    'the skill directory itself' => ['owner/repo/.ai/claude/skills/my-skill'],
+]);
+
 it('audits only skills that will be installed', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
     File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
@@ -457,6 +504,7 @@ it('audits only skills that will be installed', function (): void {
     $this->artisan('boost:add-skill', [
         'repo' => 'owner/repo',
         '--all' => true,
+        '--no-interaction' => true,
     ])->assertSuccessful();
 
     Http::assertSent(function ($request): bool {
@@ -484,4 +532,24 @@ it('displays error when rate limit is exceeded', function (): void {
     $this->artisan('boost:add-skill', ['repo' => 'owner/repo'])
         ->assertFailed()
         ->expectsOutputToContain('GitHub API rate limit exceeded');
+});
+
+it('does not wipe installed skills when the repository has a root level SKILL.md', function (): void {
+    File::ensureDirectoryExists(base_path('.ai/skills/existing-skill'));
+    File::put(base_path('.ai/skills/existing-skill/SKILL.md'), 'keep me');
+
+    Http::fake([
+        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'SKILL.md', 'type' => 'blob', 'sha' => 'def', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+    ]);
+
+    $this->artisan('boost:add-skill', ['repo' => 'owner/repo', '--all' => true, '--skip-audit' => true])->run();
+
+    expect(File::exists(base_path('.ai/skills/existing-skill/SKILL.md')))->toBeTrue();
 });

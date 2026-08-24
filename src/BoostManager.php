@@ -7,26 +7,36 @@ namespace Laravel\Boost;
 use InvalidArgumentException;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\Agents\Amp;
+use Laravel\Boost\Install\Agents\Antigravity;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Agents\Codex;
 use Laravel\Boost\Install\Agents\Copilot;
 use Laravel\Boost\Install\Agents\Cursor;
-use Laravel\Boost\Install\Agents\Gemini;
+use Laravel\Boost\Install\Agents\Factory;
+use Laravel\Boost\Install\Agents\GrokBuild;
 use Laravel\Boost\Install\Agents\Junie;
+use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
+use Laravel\Boost\Install\Agents\Pi;
+use Laravel\Boost\Install\Agents\Zed;
 
 class BoostManager
 {
     /** @var array<string, class-string<Agent>> */
     private array $agents = [
         'amp' => Amp::class,
-        'junie' => Junie::class,
-        'cursor' => Cursor::class,
+        'antigravity' => Antigravity::class,
         'claude_code' => ClaudeCode::class,
         'codex' => Codex::class,
         'copilot' => Copilot::class,
+        'cursor' => Cursor::class,
+        'factory' => Factory::class,
+        'grok_build' => GrokBuild::class,
+        'junie' => Junie::class,
+        'kiro' => Kiro::class,
         'opencode' => OpenCode::class,
-        'gemini' => Gemini::class,
+        'pi' => Pi::class,
+        'zed' => Zed::class,
     ];
 
     /**
@@ -46,6 +56,9 @@ class BoostManager
      */
     public function getAgents(): array
     {
-        return $this->agents;
+        $agents = $this->agents;
+        ksort($agents);
+
+        return $agents;
     }
 }

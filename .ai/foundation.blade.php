@@ -6,26 +6,20 @@
 The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
 
 ## Foundational Context
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+This application is a Laravel application running on PHP {{ PHP_MAJOR_VERSION }}.{{ PHP_MINOR_VERSION }}. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
-- php - {{ PHP_MAJOR_VERSION }}.{{ PHP_MINOR_VERSION }}
-@foreach (app(\Laravel\Roster\Roster::class)->packages()->unique(fn ($package) => $package->rawName()) as $package)
-- {{ $package->rawName() }} ({{ $package->name() }}) - v{{ $package->majorVersion() }}
-@endforeach
+Before relying on a package's API, confirm its installed version:
+- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
+- JS packages: check `package.json` for the installed versions.
 
 @if (! empty(config('boost.purpose')))
 Application purpose: {!! config('boost.purpose') !!}
 
 @endif
 
-@if($assist->hasSkillsEnabled() && $assist->skills()->isNotEmpty())
+@if($assist->hasSkillsEnabled())
 ## Skills Activation
-
-This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
-@foreach($assist->skills() as $skill)
-- `{{ $skill->name }}` — {{ $skill->description }}
-@endforeach
+This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 @endif
 
 ## Conventions

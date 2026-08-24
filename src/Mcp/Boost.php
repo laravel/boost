@@ -17,7 +17,10 @@ use Laravel\Boost\Mcp\Tools\DatabaseSchema;
 use Laravel\Boost\Mcp\Tools\GetAbsoluteUrl;
 use Laravel\Boost\Mcp\Tools\LastError;
 use Laravel\Boost\Mcp\Tools\ReadLogEntries;
+use Laravel\Boost\Mcp\Tools\RecordRule;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
+use Laravel\Boost\Mcp\Tools\Tinker;
+use Laravel\Mcp\Schema\Icon;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Resource;
@@ -38,7 +41,21 @@ class Boost extends Server
     /**
      * The MCP server's instructions for the LLM.
      */
-    protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, error logs, semantic documentation search and more. Boost helps with code generation.';
+    protected string $instructions = 'Laravel ecosystem MCP server offering database schema access, error logs, semantic documentation search, and more. Boost helps with code generation.';
+
+    /**
+     * The icons exposed to MCP clients.
+     *
+     * @return list<Icon>
+     */
+    protected function icons(): array
+    {
+        $svg = (string) file_get_contents(__DIR__.'/../../resources/icons/boost.svg');
+
+        return [
+            Icon::from('data:image/svg+xml;base64,'.base64_encode($svg), 'image/svg+xml', ['40x40']),
+        ];
+    }
 
     /**
      * The default pagination length for resources that support pagination.
@@ -90,7 +107,9 @@ class Boost extends Server
             GetAbsoluteUrl::class,
             LastError::class,
             ReadLogEntries::class,
+            RecordRule::class,
             SearchDocs::class,
+            Tinker::class,
         ], 'tools');
     }
 

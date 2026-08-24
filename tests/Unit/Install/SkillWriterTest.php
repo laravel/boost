@@ -304,6 +304,10 @@ it('throws an exception for path traversal in skill name', function (string $mal
     'skill/with/slash',
     'skill\\with\\backslash',
     '../parent',
+    '',
+    '.',
+    '. .',
+    "with\0null",
 ]);
 
 it('renders blade templates to markdown', function (): void {
@@ -408,7 +412,9 @@ it('returns false when removing skill with invalid name', function (): void {
     $writer = new SkillWriter($agent);
 
     expect($writer->remove('../malicious'))->toBeFalse()
-        ->and($writer->remove('skill/with/slash'))->toBeFalse();
+        ->and($writer->remove('skill/with/slash'))->toBeFalse()
+        ->and($writer->remove('.'))->toBeFalse()
+        ->and($writer->remove('. .'))->toBeFalse();
 });
 
 it('removes multiple stale skills', function (): void {
@@ -1067,4 +1073,80 @@ it('creates relative symlink when skills path is outside the project root', func
 
     cleanupSkillDirectory($outsideDir);
     cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('writes skill files with a trailing newline', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'test-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Test skill',
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and(file_get_contents($absoluteTarget.'/test-skill/SKILL.md'))->toEndWith("\n");
+
+    cleanupSkillDirectory($absoluteTarget);
+});
+
+it('never deletes a skills directory when a skill is named "."', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $canonicalTarget = base_path('.ai'.DIRECTORY_SEPARATOR.'skills');
+
+    mkdir($absoluteTarget.'/keep-me', 0755, true);
+    file_put_contents($absoluteTarget.'/keep-me/SKILL.md', 'keep me');
+    mkdir($canonicalTarget.'/keep-me-too', 0755, true);
+    file_put_contents($canonicalTarget.'/keep-me-too/SKILL.md', 'keep me too');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $writer = new SkillWriter($agent);
+    $skill = new Skill(name: '.', package: 'boost', path: fixture('skills/test-skill'), description: 'Malicious skill');
+
+    try {
+        expect(fn (): int => $writer->write($skill))->toThrow(RuntimeException::class, 'Invalid skill name')
+            ->and(file_get_contents($absoluteTarget.'/keep-me/SKILL.md'))->toBe('keep me')
+            ->and(file_get_contents($canonicalTarget.'/keep-me-too/SKILL.md'))->toBe('keep me too')
+            ->and($writer->removeStale(['.']))->toBe(['.' => false]);
+    } finally {
+        cleanupSkillDirectory($absoluteTarget);
+        cleanupSkillDirectory($canonicalTarget.'/keep-me-too');
+    }
+});
+
+it('still syncs the valid skills when one skill name is invalid', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+
+    mkdir($absoluteTarget.'/stale-skill', 0755, true);
+    file_put_contents($absoluteTarget.'/stale-skill/SKILL.md', 'stale');
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skills = collect([
+        '.' => new Skill(name: '.', package: 'boost', path: fixture('skills/test-skill'), description: 'Malicious skill'),
+        'test-skill' => new Skill(name: 'test-skill', package: 'boost', path: fixture('skills/test-skill'), description: 'Test skill'),
+    ]);
+
+    try {
+        expect(fn (): array => (new SkillWriter($agent))->sync($skills, ['stale-skill']))
+            ->toThrow(RuntimeException::class, 'Invalid skill name: .')
+            ->and($absoluteTarget.'/test-skill/SKILL.md')->toBeFile()
+            ->and($absoluteTarget.'/stale-skill')->not->toBeDirectory();
+    } finally {
+        cleanupSkillDirectory($absoluteTarget);
+    }
 });

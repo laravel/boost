@@ -78,6 +78,11 @@ it('does not inject when conditions are not met', function ($scenario, $response
             ->withHeaders(['content-type' => 'text/html']),
         fn ($result): Expectation => expect($result->getContent())->toContain('browser-logger-active'),
     ],
+    'partial html fragment with header tag' => [
+        'scenario',
+        fn () => (new Response('<header></header>'))->withHeaders(['content-type' => 'text/html']),
+        fn ($result): Expectation => expect($result->getContent())->toBe('<header></header>'),
+    ],
 ]);
 
 it('injects script in html responses', function ($html): void {
@@ -90,6 +95,7 @@ it('injects script in html responses', function ($html): void {
 })->with([
     'with head and body tags' => '<html><head><title>Test</title></head><body></body></html>',
     'without head/body tags' => '<html>Test</html>',
+    'with head tag only' => '<head><title>Test</title></head>',
 ]);
 
 it('handles CSP nonce attribute correctly', function ($nonce, $assertions): void {

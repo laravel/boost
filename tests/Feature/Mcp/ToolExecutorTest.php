@@ -149,6 +149,21 @@ test('respects custom timeout parameter', function (): void {
     expect($response->isError())->toBeFalse();
 });
 
+test('resolves timeout from argument, then config, then default', function (): void {
+    config(['boost.mcp.tool_timeout' => 300]);
+
+    $executor = new ToolExecutor;
+
+    $method = (new ReflectionClass($executor))->getMethod('getTimeout');
+
+    expect($method->invoke($executor, ['timeout' => 60]))->toBe(60)
+        ->and($method->invoke($executor, []))->toBe(300);
+
+    config(['boost.mcp.tool_timeout' => null]);
+
+    expect($method->invoke($executor, []))->toBe(180);
+});
+
 test('output buffering discards stray stdout during tool execution', function (): void {
     $executor = Mockery::mock(ToolExecutor::class)->makePartial()
         ->shouldAllowMockingProtectedMethods();
@@ -186,6 +201,22 @@ test('buildCommand preserves absolute paths with spaces', function (): void {
 
     expect($command[0])->toBe('/Applications/Some App/bin/php');
 });
+
+test('buildCommand falls back to PHP_BINARY when the configured path is blank', function (mixed $blank): void {
+    config(['boost.executable_paths.php' => $blank]);
+
+    $executor = new ToolExecutor;
+
+    $reflection = new ReflectionClass($executor);
+    $method = $reflection->getMethod('buildCommand');
+
+    $command = $method->invoke($executor, 'SomeTool', []);
+
+    expect($command[0])->toBe(PHP_BINARY);
+})->with([
+    'empty string' => '',
+    'false' => false,
+]);
 
 test('buildCommand splits multi-token wrapper commands', function (): void {
     config(['boost.executable_paths.php' => 'herd php']);
@@ -229,7 +260,8 @@ test('clamps timeout values correctly', function (): void {
 
     // Test minimum clamp
     expect($method->invoke($executor, ['timeout' => 0]))->toBe(1);
+    expect($method->invoke($executor, ['timeout' => -5]))->toBe(1);
 
-    // Test maximum clamp
-    expect($method->invoke($executor, ['timeout' => 1000]))->toBe(600);
+    // High values are not capped so long-running tools can opt into longer timeouts
+    expect($method->invoke($executor, ['timeout' => 1000]))->toBe(1000);
 });

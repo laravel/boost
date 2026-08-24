@@ -3,18 +3,18 @@
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
+use Laravel\Mcp\Exceptions\JsonRpcException;
 use Laravel\Mcp\Response;
-use Laravel\Mcp\Server\Exceptions\JsonRpcException;
+use Laravel\Mcp\Schema\Implementation;
 use Laravel\Mcp\Server\ServerContext;
-use Laravel\Mcp\Server\Transport\JsonRpcRequest;
+use Laravel\Mcp\Transport\JsonRpcRequest;
 
 function createServerContext(array $tools = []): ServerContext
 {
     return new ServerContext(
         supportedProtocolVersions: ['2025-01-01'],
         serverCapabilities: [],
-        serverName: 'test-server',
-        serverVersion: '1.0.0',
+        implementation: new Implementation('test-server', '1.0.0'),
         instructions: 'Test instructions',
         maxPaginationLength: 100,
         defaultPaginationLength: 50,

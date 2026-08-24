@@ -212,6 +212,21 @@ test('installShellMcp returns true when process fails but has already exists err
     expect($result)->toBe(true);
 });
 
+test('installShellMcp returns false when the process is signaled', function (): void {
+    $environment = Mockery::mock(TestAgent::class)->makePartial();
+    $environment->shouldAllowMockingProtectedMethods();
+
+    $environment->shouldReceive('shellMcpCommand')
+        ->andReturn('php -r "posix_kill(posix_getpid(), 5);"');
+
+    $environment->shouldReceive('mcpInstallationStrategy')
+        ->andReturn(McpInstallationStrategy::SHELL);
+
+    $result = $environment->installMcp('test-key', 'test-command');
+
+    expect($result)->toBe(false);
+})->skipOnWindows();
+
 test('installFileMcp returns false when mcpConfigPath is null', function (): void {
     $environment = new TestAgent($this->strategyFactory);
 
@@ -329,6 +344,17 @@ test('getPhpPath maintains default behavior when forceAbsolutePath is false and 
     $environment = new TestAgent($this->strategyFactory);
     expect($environment->getPhpPath(false))->toBe('php');
 });
+
+test('getPhpPath treats a blank configured path as unset', function (mixed $blank): void {
+    config(['boost.executable_paths.php' => $blank]);
+
+    $environment = new TestAgent($this->strategyFactory);
+    expect($environment->getPhpPath(false))->toBe('php');
+    expect($environment->getPhpPath(true))->toBe(PHP_BINARY);
+})->with([
+    'empty string' => '',
+    'false' => false,
+]);
 
 test('getPhpPath uses configured default_php_bin from config', function (): void {
     config(['boost.executable_paths.php' => '/usr/local/bin/php8.3']);

@@ -1,5 +1,50 @@
 # Upgrade Guide
 
+## Upgrading To 2.5 From 2.4
+
+### Guideline And Skill Authoring API
+
+PR Link: https://github.com/laravel/boost/pull/891
+
+Likelihood Of Impact: Low
+
+`boost:install` renders every Blade guideline and skill, whether you wrote it in your application's `.ai` directory or a package ships it in `resources/boost`. So you can hit this even if you never wrote one. Use the table below for files you maintain, and update any package that has not migrated yet.
+
+Boost now runs on Laravel Roster 1.x, which removed the `Laravel\Roster\Enums\Packages` enum. Package names are now string constants on `Laravel\Boost\Support\PackageRegistry`, and `$assist->roster` has become `$assist->project`, a `Laravel\Roster\ProjectManager` that splits packages into `php()` and `js()`:
+
+| Before                                                    | After                                                       |
+|-----------------------------------------------------------|-------------------------------------------------------------|
+| `\Laravel\Roster\Enums\Packages::INERTIA_REACT`           | `\Laravel\Boost\Support\PackageRegistry::INERTIA_REACT`     |
+| `$assist->roster`                                         | `$assist->project`                                          |
+| `$assist->roster->uses(Packages::X)`                      | `$assist->project->php()->uses(PackageRegistry::X)`         |
+| `$assist->roster->usesVersion(Packages::X, '1.0.0', '>=')` | `$assist->project->php()->uses(PackageRegistry::X, '>=1.0.0')` |
+| `$assist->roster->nodePackageManager()`                   | `$assist->project->js()->packageManager()`                  |
+| `NodePackageManager::NPM`                                 | `JsPackageManager::Npm`                                     |
+
+Before:
+
+```blade
+@if($assist->hasPackage(\Laravel\Roster\Enums\Packages::INERTIA_REACT))
+@if($assist->roster->uses(\Laravel\Roster\Enums\Packages::INERTIA_LARAVEL))
+```
+
+After:
+
+```blade
+@if($assist->hasPackage(\Laravel\Boost\Support\PackageRegistry::INERTIA_REACT))
+@if($assist->project->php()->uses(\Laravel\Boost\Support\PackageRegistry::INERTIA_LARAVEL))
+```
+
+`hasPackage()` still checks both PHP and JS packages, so reach for it when you do not care which side a package came from. `js()->uses()` also accepts an array to test several packages at once.
+
+Guidelines and skills that still use the old API will fail to render. Boost skips those files, falls back to its own bundled copy of the guideline when it has one, and lists the packages to update once `boost:install` finishes, so a stale package no longer aborts the install. If your package needs to support both, constrain it in your `composer.json`:
+
+```json
+"conflict": {
+    "laravel/boost": "<2.5.0"
+}
+```
+
 ## Upgrading To 2.x From 1.x
 
 > Note: If you are not using custom agents or overriding Boost in any way, you should experience minimal issues while upgrading. Simply run `php artisan boost:install` after upgrading to Boost 2.x and the migration will be handled automatically.

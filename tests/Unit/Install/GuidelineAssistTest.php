@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Sail;
-use Laravel\Roster\Roster;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->roster = Mockery::mock(Roster::class);
-    $this->roster->shouldReceive('nodePackageManager')->andReturn(null);
-    $this->roster->shouldReceive('usesVersion')->andReturn(false);
+    $this->project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($this->project, new PackageCollection([]));
 
     $this->config = new GuidelineConfig;
 });
@@ -19,7 +19,7 @@ test('php executable falls back to Sail when no config is set', function (): voi
     config(['boost.executable_paths.php' => null]);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -30,7 +30,7 @@ test('php executable config takes precedence over Sail', function (): void {
     config(['boost.executable_paths.php' => '/usr/local/bin/php8.3']);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -41,7 +41,7 @@ test('composer executable falls back to Sail when no config is set', function ()
     config(['boost.executable_paths.composer' => null]);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -54,7 +54,7 @@ test('composer executable config takes precedence over Sail', function (): void 
     config(['boost.executable_paths.composer' => '/usr/local/bin/composer2']);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -65,7 +65,7 @@ test('npm executable falls back to Sail when no config is set', function (): voi
     config(['boost.executable_paths.npm' => null]);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -78,7 +78,7 @@ test('npm executable config takes precedence over Sail', function (): void {
     config(['boost.executable_paths.npm' => '/usr/local/bin/yarn']);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -89,7 +89,7 @@ test('npm executable falls back to npm when no config and no Sail', function ():
     config(['boost.executable_paths.npm' => null]);
     $this->config->usesSail = false;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -100,7 +100,7 @@ test('vendor bin prefix falls back to Sail when no config is set', function (): 
     config(['boost.executable_paths.vendor_bin' => null]);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -113,7 +113,7 @@ test('vendor bin prefix config takes precedence over Sail', function (): void {
     config(['boost.executable_paths.vendor_bin' => '/custom/path/']);
     $this->config->usesSail = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -124,7 +124,7 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
     config(['boost.executable_paths.vendor_bin' => null]);
     $this->config->usesSail = false;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -144,30 +144,58 @@ test('hasSkills property can be set to true', function (): void {
     expect($config->hasSkills)->toBeTrue();
 });
 
-test('shouldEnforceStrictTypes returns false when app directory does not exist', function (): void {
-    $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
-
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
-    $assist->shouldAllowMockingProtectedMethods();
-    $assist->shouldReceive('discover')->andReturn($sentinel);
-
-    expect($assist->shouldEnforceStrictTypes())->toBeFalse();
-});
-
 test('enumContents returns empty string when app directory does not exist', function (): void {
     $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn($sentinel);
 
     expect($assist->enumContents())->toBe('');
 });
 
+test('enumContents includes all discovered enum files in stable order', function (): void {
+    $assist = new class($this->project, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+                'App\Enums\CountryCode' => fixture('Enums/CountryCode.php'),
+            ];
+        }
+    };
+
+    $contents = $assist->enumContents();
+
+    expect($contents)
+        ->toContain("case USA = 'USA';")
+        ->toContain("case Success = 'success';")
+        ->and(strpos($contents, 'enum CountryCode'))
+        ->toBeLessThan(strpos($contents, 'enum FlashKey'));
+});
+
+test('enumContents skips enum paths that are not files', function (): void {
+    $assist = new class($this->project, $this->config) extends GuidelineAssist
+    {
+        protected function discover(): array
+        {
+            return [
+                'App\Enums\Deleted' => fixture('Enums'),
+                'App\Enums\FlashKey' => fixture('Enums/FlashKey.php'),
+            ];
+        }
+    };
+
+    expect($assist->enumContents())
+        ->toStartWith('<?php')
+        ->toContain('enum FlashKey');
+});
+
 test('hasSkillsEnabled returns false when skills are disabled', function (): void {
     $this->config->hasSkills = false;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -177,7 +205,7 @@ test('hasSkillsEnabled returns false when skills are disabled', function (): voi
 test('hasSkillsEnabled returns true when skills are enabled', function (): void {
     $this->config->hasSkills = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -187,7 +215,7 @@ test('hasSkillsEnabled returns true when skills are enabled', function (): void 
 test('hasMcpEnabled returns false when MCP is disabled', function (): void {
     $this->config->hasMcp = false;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -197,7 +225,7 @@ test('hasMcpEnabled returns false when MCP is disabled', function (): void {
 test('hasMcpEnabled returns true when MCP is enabled', function (): void {
     $this->config->hasMcp = true;
 
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
@@ -205,21 +233,52 @@ test('hasMcpEnabled returns true when MCP is enabled', function (): void {
 });
 
 test('appPath returns default app path', function (): void {
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
     expect($assist->appPath())->toBe('app');
-    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('app'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+    expect($assist->appPath('path/to/file.php'))->toBe('app/path/to/file.php');
 });
 
 test('appPath returns customized path', function (): void {
-    $assist = Mockery::mock(GuidelineAssist::class, [$this->roster, $this->config])->makePartial();
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
     $assist->shouldAllowMockingProtectedMethods();
     $assist->shouldReceive('discover')->andReturn([]);
 
     app()->useAppPath('src');
 
     expect($assist->appPath())->toBe('src');
-    expect($assist->appPath('path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php'))->toBe('src'.DIRECTORY_SEPARATOR.'path'.DIRECTORY_SEPARATOR.'to'.DIRECTORY_SEPARATOR.'file.php');
+    expect($assist->appPath('path/to/file.php'))->toBe('src/path/to/file.php');
 })->after(fn () => app()->useAppPath('app'));
+
+test('appPath normalizes separators to forward slashes', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->appPath('Http/Kernel.php'))->toBe('app/Http/Kernel.php');
+    expect($assist->appPath('Console/Commands/'))->toBe('app/Console/Commands/');
+});
+
+test('blank executable path config is treated as unset', function (mixed $blank): void {
+    config([
+        'boost.executable_paths.php' => $blank,
+        'boost.executable_paths.composer' => $blank,
+        'boost.executable_paths.npm' => $blank,
+        'boost.executable_paths.vendor_bin' => $blank,
+    ]);
+    $this->config->usesSail = false;
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->artisan())->toBe('php artisan');
+    expect($assist->composerCommand('require foo/bar'))->toBe('composer require foo/bar');
+    expect($assist->nodePackageManagerCommand('install'))->toBe('npm install');
+    expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
+})->with([
+    'empty string' => '',
+    'false' => false,
+]);

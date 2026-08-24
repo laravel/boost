@@ -293,6 +293,48 @@ test('it preserves user content after guidelines when replacing', function (): v
     unlink($tempFile);
 });
 
+test('it preserves dollar-sign literals in guidelines when replacing existing block', function (): void {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+    $initialContent = "# My Project\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n";
+    file_put_contents($tempFile, $initialContent);
+
+    $agent = Mockery::mock(SupportsGuidelines::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+
+    $writer = new GuidelineWriter($agent);
+    $writer->write('Apple Developer Program renewal ($99/yr) before the anniversary');
+
+    $content = file_get_contents($tempFile);
+    expect($content)->toContain('($99/yr)');
+
+    unlink($tempFile);
+});
+
+test('it preserves backslash and dollar patterns in guidelines when replacing existing block', function (): void {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+    $initialContent = "# My Project\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>\n";
+    file_put_contents($tempFile, $initialContent);
+
+    $agent = Mockery::mock(SupportsGuidelines::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+
+    $writer = new GuidelineWriter($agent);
+    $writer->write('Use $1 and $2 capture groups, cost $99, path C:\\Users\\dev');
+
+    $content = file_get_contents($tempFile);
+    expect($content)
+        ->toContain('$1')
+        ->toContain('$2')
+        ->toContain('$99')
+        ->toContain('C:\\Users\\dev');
+
+    unlink($tempFile);
+});
+
 test('it retries file locking on contention', function (): void {
     expect(true)->toBeTrue(); // Mark as passing for now
 })->todo();

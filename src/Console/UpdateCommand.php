@@ -17,19 +17,16 @@ class UpdateCommand extends Command
 {
     /** @var string */
     protected $signature = 'boost:update
-        {--discover : Discover and prompt for newly available guidelines and skills}
+        {--discover : Discover and prompt for newly available guidelines and skills (default)}
+        {--no-discover : Skip discovering and prompting for newly available guidelines and skills}
         {--ignore-skills : Skip updating the skills directory}';
 
     public function handle(Config $config): int
     {
-        if (! $config->isValid() || empty($config->getAgents())) {
+        if (! $config->isValid()) {
             $this->error('Please set up Boost with [php artisan boost:install] first.');
 
             return self::FAILURE;
-        }
-
-        if ($this->option('discover')) {
-            $this->discoverNewContent($config);
         }
 
         $guidelines = $config->getGuidelines();
@@ -37,6 +34,16 @@ class UpdateCommand extends Command
 
         if (! $guidelines && ! $hasSkills) {
             return self::SUCCESS;
+        }
+
+        if (empty($config->getAgents())) {
+            $this->error('Please set up Boost with [php artisan boost:install] first.');
+
+            return self::FAILURE;
+        }
+
+        if (! $this->option('no-discover')) {
+            $this->discoverNewContent($config);
         }
 
         $this->callSilently(InstallCommand::class, [
@@ -54,21 +61,27 @@ class UpdateCommand extends Command
     {
         $newPackages = $this->resolveNewPackages($config);
 
-        if ($newPackages->isNotEmpty()) {
-            /** @var array<int, string> $selectedPackages */
-            $selectedPackages = multiselect(
-                label: 'New packages with guidelines/skills discovered! Which would you like to add?',
-                options: $newPackages
-                    ->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [$name => $pkg->displayLabel()])
-                    ->toArray(),
-                scroll: 10,
-                required: false,
-                hint: 'Select packages to include their guidelines and skills',
-            );
+        if ($newPackages->isEmpty()) {
+            return;
+        }
 
-            if ($selectedPackages !== []) {
-                $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
-            }
+        if (! $this->input->isInteractive() || $this->runningAsComposerScript()) {
+            return;
+        }
+
+        /** @var array<int, string> $selectedPackages */
+        $selectedPackages = multiselect(
+            label: 'New packages with guidelines/skills discovered! Which would you like to add?',
+            options: $newPackages
+                ->mapWithKeys(fn (ThirdPartyPackage $pkg, string $name): array => [$name => $pkg->displayLabel()])
+                ->toArray(),
+            scroll: 10,
+            required: false,
+            hint: 'Select packages to include their guidelines and skills',
+        );
+
+        if ($selectedPackages !== []) {
+            $config->setPackages(array_merge($config->getPackages(), $selectedPackages));
         }
     }
 
@@ -81,5 +94,14 @@ class UpdateCommand extends Command
 
         return ThirdPartyPackage::discover()
             ->filter(fn (ThirdPartyPackage $pkg, string $name): bool => ! in_array($name, $configuredPackages, true));
+    }
+
+    /**
+     * Composer sets COMPOSER_DEV_MODE for the entire install/update run, including
+     * post-update-cmd scripts, so prompting there would block an unattended `composer update`.
+     */
+    protected function runningAsComposerScript(): bool
+    {
+        return getenv('COMPOSER_DEV_MODE') !== false;
     }
 }

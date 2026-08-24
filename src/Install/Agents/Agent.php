@@ -12,6 +12,7 @@ use Laravel\Boost\Install\Enums\Platform;
 use Laravel\Boost\Install\Mcp\FileWriter;
 use Laravel\Boost\Install\Mcp\TomlFileWriter;
 use Laravel\Boost\Support\CommandNormalizer;
+use Symfony\Component\Process\Exception\ProcessSignaledException;
 
 abstract class Agent
 {
@@ -31,7 +32,7 @@ abstract class Agent
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
-        $phpBinaryPath = config('boost.executable_paths.php') ?? 'php';
+        $phpBinaryPath = config('boost.executable_paths.php') ?: 'php';
 
         if ($phpBinaryPath === 'php' && ($this->useAbsolutePathForMcp() || $forceAbsolutePath)) {
             return PHP_BINARY;
@@ -225,7 +226,11 @@ abstract class Agent
             trim($envString),
         ], $shellCommand);
 
-        $result = Process::run($command);
+        try {
+            $result = Process::run($command);
+        } catch (ProcessSignaledException) {
+            return false;
+        }
 
         if ($result->successful()) {
             return true;

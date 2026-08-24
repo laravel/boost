@@ -4,52 +4,23 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
-use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Roster;
-use ReflectionClass;
+use Laravel\Boost\Support\PackageRegistry;
+use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Finder\Finder;
-use Throwable;
 
 class GuidelineAssist
 {
     /** @var array<string, string> */
-    protected array $modelPaths = [];
-
-    /** @var array<string, string> */
-    protected array $controllerPaths = [];
-
-    /** @var array<string, string> */
     protected array $enumPaths = [];
 
-    protected static array $classes = [];
-
-    public function __construct(public Roster $roster, public GuidelineConfig $config, public ?Collection $skills = null)
+    public function __construct(public ProjectManager $project, public GuidelineConfig $config, public ?Collection $skills = null)
     {
         $this->skills ??= collect();
-        $this->modelPaths = $this->discover(fn ($reflection): bool => ($reflection->isSubclassOf(Model::class) && ! $reflection->isAbstract()));
-        $this->controllerPaths = $this->discover(fn (ReflectionClass $reflection): bool => (stripos($reflection->getName(), 'controller') !== false || stripos($reflection->getNamespaceName(), 'controller') !== false));
-        $this->enumPaths = $this->discover(fn ($reflection) => $reflection->isEnum());
-    }
-
-    /**
-     * @return array<string, string> - className, absolutePath
-     */
-    public function models(): array
-    {
-        return $this->modelPaths;
-    }
-
-    /**
-     * @return array<string, string> - className, absolutePath
-     */
-    public function controllers(): array
-    {
-        return $this->controllerPaths;
+        $this->enumPaths = $this->discover();
     }
 
     /**
@@ -61,145 +32,87 @@ class GuidelineAssist
     }
 
     /**
-     * Discover all Eloquent models in the application.
+     * Discover all enum files in the application directory.
      *
      * @return array<string, string>
      */
-    protected function discover(callable $cb): array
+    protected function discover(): array
     {
-        $classes = [];
         $appPath = app_path();
 
         if (! is_dir($appPath)) {
-            return ['app-path-isnt-a-directory' => $appPath];
+            return [];
         }
 
-        if (self::$classes === []) {
-            $finder = Finder::create()
-                ->in($appPath)
-                ->files()
-                ->name('/[A-Z].*\.php$/');
+        $enums = [];
 
-            foreach ($finder as $file) {
-                $relativePath = $file->getRelativePathname();
-                $namespace = app()->getNamespace();
-                $className = $namespace.str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    $relativePath
-                );
+        $finder = Finder::create()
+            ->in($appPath)
+            ->files()
+            ->name('/[A-Z].*\.php$/');
 
-                try {
-                    $path = $appPath.DIRECTORY_SEPARATOR.$relativePath;
+        foreach ($finder as $file) {
+            $path = $file->getRealPath();
+            $code = file_get_contents($path);
 
-                    if (! $this->fileHasClassLike($path)) {
-                        continue;
-                    }
+            if ($code === false) {
+                continue;
+            }
 
-                    if (class_exists($className, false)) {
-                        self::$classes[$className] = $path;
-                    }
-                } catch (Throwable) {
-                    // Ignore exceptions and errors from class loading/reflection
+            if (stripos($code, 'enum') === false) {
+                continue;
+            }
+
+            $tokens = token_get_all($code);
+
+            foreach ($tokens as $token) {
+                if (is_array($token) && $token[0] === T_ENUM) {
+                    $className = app()->getNamespace().str_replace(
+                        ['/', '.php'],
+                        ['\\', ''],
+                        $file->getRelativePathname()
+                    );
+                    $enums[$className] = $path;
+
+                    break;
                 }
             }
         }
 
-        foreach (self::$classes as $className => $path) {
-            if ($cb(new ReflectionClass($className))) {
-                $classes[$className] = $path;
-            }
-        }
-
-        return $classes;
-    }
-
-    public function fileHasClassLike(string $path): bool
-    {
-        static $cache = [];
-
-        if (isset($cache[$path])) {
-            return $cache[$path];
-        }
-
-        $code = file_get_contents($path);
-
-        if ($code === false) {
-            return $cache[$path] = false;
-        }
-
-        $containsClassKeyword = stripos($code, 'class') !== false
-            || stripos($code, 'interface') !== false
-            || stripos($code, 'trait') !== false
-            || stripos($code, 'enum') !== false;
-
-        if (! $containsClassKeyword) {
-            return $cache[$path] = false;
-        }
-
-        $tokens = token_get_all($code);
-
-        foreach ($tokens as $token) {
-            if (is_array($token) && in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM], true)) {
-                return $cache[$path] = true;
-            }
-        }
-
-        return $cache[$path] = false;
-    }
-
-    public function shouldEnforceStrictTypes(): bool
-    {
-        if ($this->modelPaths === []) {
-            return false;
-        }
-
-        $path = current($this->modelPaths);
-
-        if (! is_file($path)) {
-            return false;
-        }
-
-        $code = file_get_contents($path);
-
-        return $code !== false && str_contains($code, 'strict_types=1');
+        return $enums;
     }
 
     public function enumContents(): string
     {
-        if ($this->enumPaths === []) {
-            return '';
-        }
-
-        $path = current($this->enumPaths);
-
-        if (! is_file($path)) {
-            return '';
-        }
-
-        return file_get_contents($path) ?: '';
+        return collect($this->enumPaths)
+            ->sortKeys()
+            ->map(fn (string $path): string => is_file($path) ? (file_get_contents($path) ?: '') : '')
+            ->filter()
+            ->join(PHP_EOL);
     }
 
     public function inertia(): Inertia
     {
-        return new Inertia($this->roster);
+        return new Inertia($this->project);
     }
 
     public function supportsPintAgentFormatter(): bool
     {
-        return $this->roster->usesVersion(Packages::PINT, '1.27.0', '>=');
+        return $this->project->php()->uses(PackageRegistry::PINT, '>=1.27.0');
     }
 
-    public function hasPackage(Packages $package): bool
+    public function hasPackage(string $package): bool
     {
-        return $this->roster->packages()->contains(
-            fn ($pkg): bool => $pkg->package() === $package
-        );
+        if ($this->project->php()->uses($package)) {
+            return true;
+        }
+
+        return $this->project->js()->uses($package);
     }
 
     public function nodePackageManager(): string
     {
-        return ($this->roster->nodePackageManager() ?? NodePackageManager::NPM)->value;
+        return ($this->project->js()->packageManager() ?? JsPackageManager::Npm)->value;
     }
 
     protected function detectedNodePackageManager(): string
@@ -211,7 +124,7 @@ class GuidelineAssist
     {
         $npmExecutable = config('boost.executable_paths.npm');
 
-        if ($npmExecutable !== null) {
+        if ($npmExecutable) {
             return "{$npmExecutable} {$command}";
         }
 
@@ -231,7 +144,7 @@ class GuidelineAssist
     {
         $composerExecutable = config('boost.executable_paths.composer');
 
-        if ($composerExecutable !== null) {
+        if ($composerExecutable) {
             return "{$composerExecutable} {$command}";
         }
 
@@ -246,7 +159,7 @@ class GuidelineAssist
     {
         $vendorBinPrefix = config('boost.executable_paths.vendor_bin');
 
-        if ($vendorBinPrefix !== null) {
+        if ($vendorBinPrefix) {
             return "{$vendorBinPrefix}{$command}";
         }
 
@@ -261,7 +174,7 @@ class GuidelineAssist
     {
         $phpExecutable = config('boost.executable_paths.php');
 
-        if ($phpExecutable !== null) {
+        if ($phpExecutable) {
             return "{$phpExecutable} artisan";
         }
 
@@ -277,15 +190,9 @@ class GuidelineAssist
 
     public function appPath(string $path = ''): string
     {
-        return ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
-    }
+        $relativePath = ltrim(Str::after(app_path($path), base_path()), DIRECTORY_SEPARATOR);
 
-    /**
-     * @return Collection<string, Skill>
-     */
-    public function skills(): Collection
-    {
-        return $this->skills;
+        return str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
     }
 
     public function hasSkillsEnabled(): bool

@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Skills\Remote;
 
+use GuzzleHttp\Promise\EachPromise;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Laravel\Boost\Install\SkillWriter;
 use RuntimeException;
+use Throwable;
 
 class GitHubSkillProvider
 {
@@ -34,28 +37,36 @@ class GitHubSkillProvider
             return collect();
         }
 
-        $basePath = $this->repository->path;
+        $prefix = $this->repository->path === '' ? '' : $this->repository->path.'/';
 
-        $skillMarkers = collect($tree['tree'])
-            ->filter(fn (array $item): bool => $item['type'] === 'blob' && in_array(basename((string) $item['path']), ['SKILL.md', 'SKILL.blade.php'], true));
+        return collect($tree['tree'])
+            ->filter(function (array $item) use ($prefix): bool {
+                $path = (string) $item['path'];
 
-        if ($basePath !== '') {
-            $prefix = $basePath.'/';
-
-            $skillMarkers = $skillMarkers->filter(function (array $item) use ($prefix): bool {
-                $skillDir = dirname((string) $item['path']);
-
-                return str_starts_with($skillDir, $prefix) && ! str_contains(substr($skillDir, strlen($prefix)), '/');
-            });
-        }
-
-        return $skillMarkers
+                // Matching the marker rather than its directory accepts a path that is itself a skill directory.
+                return $item['type'] === 'blob'
+                    && Str::afterLast($path, '/') === 'SKILL.md'
+                    && str_starts_with($path, $prefix)
+                    // A skill is named after its directory, so that directory has to be a usable name.
+                    && SkillWriter::isValidSkillName(self::skillName($path));
+            })
             ->map(fn (array $item): RemoteSkill => new RemoteSkill(
-                name: basename(dirname((string) $item['path'])),
+                name: self::skillName((string) $item['path']),
                 repo: $this->repository->fullName(),
-                path: dirname((string) $item['path']),
+                path: self::skillDirectory((string) $item['path']),
             ))
             ->keyBy(fn (RemoteSkill $skill): string => $skill->name);
+    }
+
+    protected static function skillName(string $markerPath): string
+    {
+        return Str::afterLast(self::skillDirectory($markerPath), '/');
+    }
+
+    // Repository paths are always slash-delimited, so basename() and dirname() would split on a backslash under Windows.
+    protected static function skillDirectory(string $markerPath): string
+    {
+        return Str::contains($markerPath, '/') ? Str::beforeLast($markerPath, '/') : '';
     }
 
     public function downloadSkill(RemoteSkill $skill, string $targetPath): bool
@@ -72,20 +83,16 @@ class GitHubSkillProvider
             return false;
         }
 
-        if (! $this->ensureDirectoryExists($targetPath)) {
+        $files = $skillFiles
+            ->filter(fn (array $item): bool => $item['type'] === 'blob')
+            ->reject(fn (array $item): bool => preg_match('/\.(php\d?|phar|phtml)$/i', (string) $item['path']) === 1);
+
+        if (! $files->contains(fn (array $item): bool => basename((string) $item['path']) === 'SKILL.md')) {
             return false;
         }
 
-        $files = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'blob');
-        $directories = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'tree');
-
-        foreach ($directories as $dir) {
-            $relativePath = $this->getRelativePath($dir['path'], $skill->path);
-            $localPath = $targetPath.'/'.$relativePath;
-
-            if (! $this->ensureDirectoryExists($localPath)) {
-                return false;
-            }
+        if (! $this->ensureDirectoryExists($targetPath)) {
+            return false;
         }
 
         return $this->downloadFiles($files->toArray(), $targetPath, $skill->path);
@@ -106,7 +113,7 @@ class GitHubSkillProvider
             'https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1',
             $this->repository->owner,
             $this->repository->repo,
-            urlencode($this->resolveDefaultBranch())
+            urlencode($this->resolveBranch())
         );
 
         $response = $this->client()->get($url);
@@ -177,17 +184,28 @@ class GitHubSkillProvider
             $item['path'] => $this->buildRawFileUrl($item['path']),
         ]);
 
-        $responses = Http::pool(fn (Pool $pool) => $fileUrls->map(
-            fn (string $url, string $path) => $pool->as($path)
-                ->withHeaders(['User-Agent' => 'Laravel-Boost'])
-                ->timeout(30)
-                ->get($url)
-        )->all());
+        $responses = [];
+
+        $generator = (function () use ($fileUrls) {
+            foreach ($fileUrls as $path => $url) {
+                yield $path => $this->client(60)->async()->get($url);
+            }
+        })();
+
+        (new EachPromise($generator, [
+            'concurrency' => 25,
+            'fulfilled' => static function ($response, $path) use (&$responses): void {
+                $responses[$path] = $response;
+            },
+            'rejected' => static function ($reason, $path) use (&$responses): void {
+                $responses[$path] = $reason;
+            },
+        ]))->promise()->wait();
 
         foreach ($files as $item) {
             $response = $responses[$item['path']] ?? null;
 
-            if ($response === null || $response->failed()) {
+            if ($response instanceof Throwable || $response === null || $response->failed()) {
                 return false;
             }
 
@@ -212,7 +230,7 @@ class GitHubSkillProvider
             'https://raw.githubusercontent.com/%s/%s/%s/%s',
             $this->repository->owner,
             $this->repository->repo,
-            $this->resolveDefaultBranch(),
+            $this->resolveBranch(),
             ltrim($path, '/')
         );
     }
@@ -247,8 +265,12 @@ class GitHubSkillProvider
         return Http::withHeaders($headers)->timeout($timeout);
     }
 
-    protected function resolveDefaultBranch(): string
+    protected function resolveBranch(): string
     {
+        if ($this->repository->branch !== '') {
+            return $this->repository->branch;
+        }
+
         if ($this->defaultBranch !== null) {
             return $this->defaultBranch;
         }
