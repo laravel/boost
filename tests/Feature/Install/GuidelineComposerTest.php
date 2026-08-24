@@ -28,6 +28,21 @@ beforeEach(function (): void {
     $this->composer = new GuidelineComposer($this->project, $this->herd);
 });
 
+test('versionless packages do not emit a duplicate versioned guideline', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', ''),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $keys = $this->composer->guidelines()->keys()->all();
+
+    expect($keys)->toContain('laravel/core')
+        ->not->toContain('laravel/v');
+});
+
 test('includes Inertia React conditional guidelines based on version', function (string $version): void {
     config(['boost.rules.enabled' => false]);
 
