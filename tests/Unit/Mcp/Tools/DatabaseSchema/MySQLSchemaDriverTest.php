@@ -26,3 +26,27 @@ test('getTables quotes the table type as a string literal', function (): void {
     expect($sql)->toContain("'BASE TABLE'")
         ->and($sql)->not->toContain('"BASE TABLE"');
 });
+
+test('getCheckConstraints maps the table through TABLE_CONSTRAINTS', function (): void {
+    $sql = null;
+    $bindings = null;
+
+    $connection = Mockery::mock(Connection::class);
+    $connection->shouldReceive('select')
+        ->once()
+        ->andReturnUsing(function (string $query, array $queryBindings) use (&$sql, &$bindings): array {
+            $sql = $query;
+            $bindings = $queryBindings;
+
+            return [];
+        });
+
+    DB::shouldReceive('connection')->with('mysql_test')->andReturn($connection);
+
+    (new MySQLSchemaDriver('mysql_test'))->getCheckConstraints('orders');
+
+    expect($sql)->toContain('JOIN information_schema.TABLE_CONSTRAINTS')
+        ->and($sql)->toContain('tc.TABLE_NAME = ?')
+        ->and($sql)->not->toMatch('/AND\s+TABLE_NAME\s*=/')
+        ->and($bindings)->toBe(['orders', 'CHECK']);
+});
