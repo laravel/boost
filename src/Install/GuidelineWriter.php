@@ -76,8 +76,21 @@ class GuidelineWriter
                 $newContent = $frontMatter.$existingContent.$separatingNewlines.$replacement;
             }
 
-            // Normalize multiple blank lines to single blank lines
-            $newContent = preg_replace("/\n{3,}/", "\n\n", (string) $newContent);
+            // Normalize multiple blank lines to single blank lines, leaving
+            // fenced code blocks alone since blank lines are significant there.
+            $fences = [];
+
+            $masked = preg_replace_callback('/(?<fence>`{3,}|~{3,}).*?\k<fence>/s', function (array $matches) use (&$fences): string {
+                $placeholder = '___GUIDELINE_FENCE_'.count($fences).'___';
+                $fences[$placeholder] = $matches[0];
+
+                return $placeholder;
+            }, (string) $newContent);
+
+            if ($masked !== null) {
+                $masked = preg_replace("/\n{3,}/", "\n\n", $masked);
+                $newContent = str_replace(array_keys($fences), array_values($fences), (string) $masked);
+            }
 
             // Ensure file content ends with a newline
             if (! str_ends_with((string) $newContent, "\n")) {
