@@ -56,12 +56,18 @@ class MySQLSchemaDriver extends DatabaseSchemaDriver
     public function getCheckConstraints(string $table): array
     {
         try {
+            // MySQL's CHECK_CONSTRAINTS table has no TABLE_NAME column (MariaDB's does),
+            // so the table mapping must come from TABLE_CONSTRAINTS on both engines.
             return DB::connection($this->connection)->select('
-                SELECT CONSTRAINT_NAME, CHECK_CLAUSE
-                FROM information_schema.CHECK_CONSTRAINTS
-                WHERE CONSTRAINT_SCHEMA = DATABASE()
-                AND TABLE_NAME = ?
-            ', [$table]);
+                SELECT cc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
+                FROM information_schema.CHECK_CONSTRAINTS cc
+                JOIN information_schema.TABLE_CONSTRAINTS tc
+                    ON tc.CONSTRAINT_SCHEMA = cc.CONSTRAINT_SCHEMA
+                    AND tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+                WHERE cc.CONSTRAINT_SCHEMA = DATABASE()
+                AND tc.TABLE_NAME = ?
+                AND tc.CONSTRAINT_TYPE = ?
+            ', [$table, 'CHECK']);
         } catch (Exception) {
             return [];
         }
