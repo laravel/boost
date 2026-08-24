@@ -7,15 +7,13 @@ $pest = $assist->hasPackage('pestphp/pest');
 ## Each Test Makes Its Own Data
 
 @if($pest)
-Make the data that a test changes inside that test. Do not make a record in a `beforeEach()` at the top of the file, because a reader of the test then cannot see the setup, two tests can then change the same record, and you cannot then give one test a different factory state.
+Create mutable records inside the test that uses them. This keeps the setup visible. This also lets each test select its factory state.
 
-Use `beforeEach()` only for a configuration that applies to every test in the file, such as a feature flag or the configuration of a service.
+Use `beforeEach()` for configuration that applies to every test in the file.
 @else
-Make the data that a test changes inside that test. Do not make a record in `setUp()`, because a reader of the test then cannot see the setup, two tests can then change the same record, and you cannot then give one test a different factory state.
+Create mutable records inside each test or through a private helper that the test calls. This keeps the setup visible. This also lets each test select its factory state.
 
-Write a private method that makes the record, and call the method from each test that needs it. `setUp()` runs for every test in the class, and the objects that it makes stay in memory until the suite ends. A local variable in a private method is released after the test.
-
-Use `setUp()` only for a configuration that applies to every test in the class, such as a feature flag or the configuration of a service.
+Use `setUp()` for configuration that applies to every test in the class.
 @endif
 
 ## The Construction of a Record
@@ -41,7 +39,7 @@ $organizations = Organization::factory()
     ->create();
 ```
 
-Make only the records that the test asserts on. A nested call to `create()` that makes an extra record adds time to every run of the suite.
+Create only the records required to arrange the behavior or support an assertion.
 
 @if($pest)
 ## The Datasets

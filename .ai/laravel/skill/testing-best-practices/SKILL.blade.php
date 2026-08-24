@@ -1,6 +1,6 @@
 ---
 name: testing-best-practices
-description: "Use this skill to design tests in Laravel, in any test framework. Trigger when you decide what to test, when you select the coverage for an endpoint or a class, when you name or structure a test, when you review a test suite, or when you judge if a suite has too many or too few tests. Covers: what to leave untested, the names and the layout of the test files, arrange-act-assert, the correct assertion for each subject, the coverage of authentication and authorization and validation, the isolation of a tenant, the factories and the data providers, the fakes and the mocks, the control of time and of randomness, the security tests, and a review checklist. Do not use this skill for the syntax of Pest or of PHPUnit, because the framework skill and search-docs give the syntax."
+description: "Laravel test design and review. Use when selecting coverage, naming or structuring tests, choosing assertions or test data, isolating dependencies, testing HTTP or security boundaries, improving suite performance, or reviewing test value. Use framework guidance or search-docs for Pest and PHPUnit syntax."
 license: MIT
 metadata:
   author: laravel
@@ -17,30 +17,30 @@ This project uses {{ $pest ? 'Pest' : 'PHPUnit' }}. Each rule in this skill give
 
 ## Consistency First
 
-Read the tests that exist before you apply a rule. Use the pattern that these tests use. A pattern that is not the best is better than two different patterns.
+Read nearby tests before you choose syntax and organization.
 
-Read the test files in the same directory, and find the convention for each item that follows:
+Follow established conventions when they preserve the behavior required by this skill.
+
+Use the project convention for each item that follows:
 
 @if($pest)
-- the test function, `it()` or `test()`
+- the use of `it()` or `test()`
 @else
-- the name of the test method, and the use of the `#[Test]` attribute
+- the test method name and the use of `#[Test]`
 @endif
 - the construction of a factory
 - the setup of the authentication
 - the layout of the files
 
-Apply the convention that you find. Apply the rules in this skill only if no convention exists.
-
 ## What to Test
 
 Read this section before you write a test.
 
-- Test the behavior of the code. Do not test the implementation. A test must pass after a change to the implementation if the behavior stays the same.
-- Test the code that makes a decision. A decision is a branch, a validation, a calculation, or an authorization.
-- Do not test the code that only declares a value. Examples are a configuration array, a route definition, `$fillable`, and Blade markup. A test of such code fails only after a change to the declaration, and tells you nothing.
-- Do not test the framework. Laravel tests Eloquent and the router.
-- Make the number of tests equal to the size of the change. Cover the behavior and the failure modes that are important. Then stop.
+- Test observable behavior and application contracts. A test must pass after an implementation change if the behavior stays the same.
+- Cover every changed decision and each applicable high-value failure mode. A decision is a branch, a validation, a calculation, or an authorization.
+- Exercise declarations through behavior instead of repeating their text.
+- Leave framework behavior to the framework tests.
+- Keep each test only when it can detect a distinct defect.
 - Write a feature test first. Write a unit test only for logic that does not use the framework.
 @if($pest && $assist->hasPackage('pestphp/pest-plugin-browser'))
 - Write a browser test only for behavior in JavaScript that a feature test cannot reach. Put a browser test in `tests/Browser`, and call `assertNoJavaScriptErrors()` in it.
@@ -53,11 +53,11 @@ Read this section before you write a test.
 
 ## How to Apply
 
-1. Read the code under test. Read the tests in the same directory. Identify each decision in the code.
-2. Find each decision in the rule index. Read each rule file that the index gives.
-3. Report each defect in the code before you write a test. Examples are a method with no body, a policy that no action calls, and a write action with no validation. Test the actual behavior, and report the defect to the user.
+1. Read the code under test. Read the tests in the same directory. Identify every decision in the code.
+2. Select every applicable branch in the rule index. Read every selected rule file.
+3. Report each defect in the code before you write a test. Examples are a method with no body, a policy that no action calls, and a write action with no validation. Test the actual behavior. Report the defect to the user.
 4. Write the tests. Run the smallest set of tests that covers the change. The tests must pass.
-5. Read your changes again. Compare the changes with each rule file that you read, and with `rules/review.md`.
+5. Check every applicable item in `rules/review.md` and every selected rule file. Resolve every mismatch before completion.
 
 ## Rule Index
 

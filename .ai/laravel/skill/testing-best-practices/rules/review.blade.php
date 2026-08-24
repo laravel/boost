@@ -8,11 +8,13 @@ Check every item in this file. A test that passes can have no value. For each te
 
 ## The Value of the Test
 
-- [ ] Each test covers a decision in the code, and not a declaration such as a configuration array, a route, `$fillable`, or markup.
+- [ ] Each test covers observable behavior or an application contract.
+- [ ] Any tested declaration is exercised through behavior instead of repeated as text.
 - [ ] Each test passes after a change to the implementation that keeps the behavior.
 - [ ] No test asserts the behavior of the framework.
 - [ ] No test repeats the coverage of a different test.
-- [ ] The number of tests is equal to the size of the change.
+- [ ] Each test can detect a distinct defect.
+- [ ] Every changed decision and each applicable high-value failure mode has coverage.
 
 ## The Names and the Structure
 
@@ -20,7 +22,7 @@ Check every item in this file. A test that passes can have no value. For each te
 - [ ] Each name gives a result and the condition that causes the result.
 - [ ] Each name of a test for an API error gives the status code.
 @if($pest)
-- [ ] Each file uses one test function, `it()` or `test()`.
+- [ ] Each Pest file uses one declaration style consistently.
 - [ ] Each `describe()` group holds separate behavior.
 @else
 - [ ] Each test method has the prefix `test_` or the `#[Test]` attribute, and the file uses one of the two conventions.
@@ -37,14 +39,14 @@ Check every item in this file. A test that passes can have no value. For each te
 
 ## The Data and the Determinism
 
-- [ ] Each test makes the data that it uses.
+- [ ] Each test creates its mutable records directly or through a helper that it calls.
 @if($pest)
 - [ ] Each `beforeEach()` holds a configuration only.
 @else
-- [ ] `setUp()` holds a configuration only, and a private method makes each record.
+- [ ] `setUp()` holds a configuration only.
 @endif
 - [ ] Each factory state and each relationship gives the meaning of the data.
-- [ ] No test makes a record that no assertion uses.
+- [ ] Every created record is required to arrange the behavior or support an assertion.
 - [ ] Each call to `make()` is in a test that does not need the database.
 - [ ] The time, the randomness, the sleep, and the outbound HTTP are under control.
 - [ ] Each test passes alone, and passes in the complete suite in any order.

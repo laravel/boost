@@ -20,7 +20,7 @@ Use the test function that the other files in the same directory use. If no file
 - Use `it()` for the behavior of the code, and write the name as a verb phrase.
 - Use `test()` for a declarative fact, such as a grant in a policy, the labels of an enum, or the shape of a serialized model.
 
-Use one test function in one file.
+Use one Pest declaration style in each file. Use either `it()` or `test()` consistently.
 
 ## The Names of the Tests
 

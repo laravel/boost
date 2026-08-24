@@ -18,7 +18,7 @@ A test that uses the real time, the real randomness, a real sleep, or a real net
 - Write one assertion for each fake. The assertion states that the code dispatches the item, or that the code does not dispatch the item.
 - Use the fake implementation of the project instead of a mock of the service contract, if such a fake exists.
 
-Call `Event::fake()` after you make the records with a factory. A factory uses the model events, such as a `creating` hook that makes a UUID. A call to `Event::fake()` before the factory stops these events and makes an incorrect model.
+Create prerequisite factory records before you call `Event::fake()`. Call the fake first when factory events are the behavior under test.
 
 ```php
 $user = User::factory()->create();
