@@ -36,7 +36,9 @@ class InjectBoost
 
     protected function shouldInject(Request $request, Response $response): bool
     {
-        if ($request->headers->get('x-livewire-navigate') === '1') {
+        // Livewire 3 sends the header with an empty value; Livewire 4 sends '1'.
+        // Only the header's presence marks a navigate request.
+        if ($request->headers->has('x-livewire-navigate')) {
             return false;
         }
 
