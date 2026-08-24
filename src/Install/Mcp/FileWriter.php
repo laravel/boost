@@ -297,9 +297,10 @@ class FileWriter
     protected function findCommaInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
     {
         // Blank out comments (string-aware, offsets preserved) so the backwards
-        // scan cannot place the comma inside a trailing comment.
+        // scan cannot place the comma inside a trailing comment. Both quote
+        // styles are skipped, or a // inside a JSON5 string reads as a comment.
         $masked = preg_replace_callback(
-            '/"(?:\\\\.|[^"\\\\])*"|(\/\/[^\r\n]*)|(\/\*[\s\S]*?\*\/)/',
+            '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|(\/\/[^\r\n]*)|(\/\*[\s\S]*?\*\/)/',
             fn (array $match): string => ($match[1] ?? '') !== '' || ($match[2] ?? '') !== ''
                 ? str_repeat(' ', strlen($match[0]))
                 : $match[0],

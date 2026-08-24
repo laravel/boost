@@ -492,6 +492,39 @@ test('adds the comma outside a trailing comment in the servers object', function
         );
 });
 
+test('does not read a // inside a single-quoted string as a comment', function (): void {
+    $writtenContent = '';
+
+    $singleQuotedUrl = <<<'JSON5'
+    {
+      'mcpServers': {
+        'remote': { 'url': 'https://example.test/sse' }
+      }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $singleQuotedUrl,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain(
+            "'url': 'https://example.test/sse'", // URL survives untouched
+            '"boost"' // New server added
+        );
+});
+
 test('updates JSON5 file with only single-quoted strings', function (): void {
     $writtenContent = '';
     $singleQuotedJson5 = <<<'JSON5'
