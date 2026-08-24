@@ -63,6 +63,12 @@ trait RendersBladeGuidelines
             $lang = empty($matches['lang']) ? 'html' : $matches['lang'];
             $snippetContent = trim($matches['content']);
 
+            // Snippet bodies never reach Blade, so collapse Blade's escape
+            // sequences here the way Blade would: @@directive -> @directive,
+            // @{{ -> {{. Otherwise the escapes leak into the rendered output.
+            $snippetContent = preg_replace('/(?<!\w)@@(?=\w)/', '@', $snippetContent) ?? $snippetContent;
+            $snippetContent = str_replace('@{{', '{{', $snippetContent);
+
             $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
 
             $this->storedSnippets[$placeholder] = '<!-- '.$name.' -->'."\n".'```'.$lang."\n".$snippetContent."\n".'```'."\n\n";
