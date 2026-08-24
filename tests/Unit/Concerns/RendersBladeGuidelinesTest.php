@@ -47,6 +47,27 @@ test('boostsnippet directive extracts name and content into fenced code block', 
         ->toContain('```');
 });
 
+test('boostsnippet collapses Blade escape sequences in the stored body', function (): void {
+    $content = <<<'BLADE'
+    @boostsnippet('Volt Example', 'php')
+    @@volt
+    <h1>Count: @{{ $count }}</h1>
+    @@endvolt
+    @endboostsnippet
+    BLADE;
+
+    $this->renderer->processSnippets($content);
+
+    $snippet = $this->renderer->getStoredSnippets()['___BOOST_SNIPPET_0___'];
+
+    expect($snippet)
+        ->toContain('@volt')
+        ->toContain('@endvolt')
+        ->toContain('Count: {{ $count }}')
+        ->not->toContain('@@volt')
+        ->not->toContain('@{{');
+});
+
 test('boostsnippet supports double quotes for name parameter', function (): void {
     $content = '@boostsnippet("Double Quoted")code@endboostsnippet';
 
