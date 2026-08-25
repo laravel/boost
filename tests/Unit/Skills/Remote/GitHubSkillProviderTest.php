@@ -729,6 +729,35 @@ it('does not write a skill file whose repository path contains a backslash', fun
     }
 });
 
+it('does not write a skill file whose repository path walks out of the skill directory', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ['path' => 'skill-one/../../escaped.txt', 'type' => 'blob', 'sha' => 'ccc', 'size' => 456],
+        ]),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# Skill'),
+        '*' => Http::response('escaped'),
+    ]);
+
+    $skill = new RemoteSkill(name: 'skill-one', repo: 'owner/repo', path: 'skill-one');
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+    try {
+        expect($fetcher->downloadSkill($skill, $targetDir.'/nested/skill-one'))->toBeTrue()
+            ->and(file_exists($targetDir.'/escaped.txt'))->toBeFalse()
+            ->and(array_values(array_diff(scandir($targetDir.'/nested/skill-one'), ['.', '..'])))->toBe(['SKILL.md']);
+    } finally {
+        array_map(unlink(...), glob($targetDir.'/nested/skill-one/*') ?: []);
+        rmdir($targetDir.'/nested/skill-one');
+        rmdir($targetDir.'/nested');
+        rmdir($targetDir);
+    }
+});
+
 it('does not accept a backslash path as the required SKILL.md', function (): void {
     $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
 
