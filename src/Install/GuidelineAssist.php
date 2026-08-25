@@ -101,13 +101,13 @@ class GuidelineAssist
         return $this->project->php()->uses(PackageRegistry::PINT, '>=1.27.0');
     }
 
-    public function hasPackage(string $package): bool
+    public function hasPackage(string $package, ?string $constraint = null): bool
     {
-        if ($this->project->php()->uses($package)) {
+        if ($this->project->php()->uses($package, $constraint)) {
             return true;
         }
 
-        return $this->project->js()->uses($package);
+        return $this->project->js()->uses($package, $constraint);
     }
 
     public function nodePackageManager(): string
