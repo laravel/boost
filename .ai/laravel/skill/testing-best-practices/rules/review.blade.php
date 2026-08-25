@@ -8,45 +8,38 @@ Check every item in this file. A test that passes can have no value. For each te
 
 ## The Value of the Test
 
-- [ ] Each test covers observable behavior or an application contract.
-- [ ] Any tested declaration is exercised through behavior instead of repeated as text.
-- [ ] Each test passes after a change to the implementation that keeps the behavior.
-- [ ] No test asserts the behavior of the framework.
-- [ ] No test repeats the coverage of a different test.
-- [ ] Each test can detect a distinct defect.
+- [ ] Each test covers observable behavior or an application contract, and passes after a change to the implementation that keeps the behavior.
+- [ ] Each tested declaration is exercised through behavior, and no test asserts the behavior of the framework.
+- [ ] Each test detects a distinct defect that no other test covers.
 - [ ] Every changed decision and each applicable high-value failure mode has coverage.
 
 ## The Names and the Structure
 
 - [ ] Each file has the name `{ClassName}Test.php` and the relative path of the class under test.
-- [ ] Each name gives a result and the condition that causes the result.
-- [ ] Each name of a test for an API error gives the status code.
+- [ ] Each name gives a result and the condition that causes it, and gives the status code for an API error.
 @if($pest)
-- [ ] Each Pest file uses one declaration style consistently.
-- [ ] Each `describe()` group holds separate behavior.
+- [ ] Each file uses one declaration style consistently, and each `describe()` group holds separate behavior.
 @else
-- [ ] Each test method has the prefix `test_` or the `#[Test]` attribute, and the file uses one of the two conventions.
-- [ ] Each test class extends the base `TestCase` of the project.
+- [ ] Each test class extends the base `TestCase` of the project, and each file uses either the prefix `test_` or the `#[Test]` attribute consistently.
 @endif
 
 ## The Coverage
 
 - [ ] The HTTP tests cover the authentication, the authorization, the role, the scope, and the validation, if the case applies.
-- [ ] A request for a record of a different tenant gets `404`.
+- [ ] A request for a record of a different tenant gets a status code that does not confirm that the record exists.
 - [ ] The complete matrix of the permissions is in the tests of the policy, and not in the tests of the controller.
 - [ ] Each rule of the validation has one test, and the test asserts the message that the user gets.
 - [ ] The output of a user and each dynamic part of a query have a security test.
 
 ## The Data and the Determinism
 
-- [ ] Each test creates its mutable records directly or through a helper that it calls.
+- [ ] Each test creates its mutable records directly or through a helper that it calls, and every created record arranges the behavior or supports an assertion.
 @if($pest)
 - [ ] Each `beforeEach()` holds a configuration only.
 @else
 - [ ] `setUp()` holds a configuration only.
 @endif
 - [ ] Each factory state and each relationship gives the meaning of the data.
-- [ ] Every created record is required to arrange the behavior or support an assertion.
 - [ ] Each call to `make()` is in a test that does not need the database.
 - [ ] The time, the randomness, the sleep, and the outbound HTTP are under control.
 - [ ] Each test passes alone, and passes in the complete suite in any order.
@@ -55,8 +48,7 @@ Check every item in this file. A test that passes can have no value. For each te
 
 - [ ] Each expected value is a known value, and the test does not calculate the value with the logic of the implementation.
 - [ ] Each test of a write operation asserts the response, the state in the database, and the side effects.
-- [ ] Each fake has one assertion.
-- [ ] Each fake gives the class names, or the test asserts the complete result.
+- [ ] Each fake has one assertion, and gives the class names unless the test asserts the complete result.
 @if($pest)
 - [ ] Each `expect()` chain stays on one subject.
 @else
@@ -65,7 +57,7 @@ Check every item in this file. A test that passes can have no value. For each te
 
 ## The Defects to Report
 
-A review can find a defect in the code and not in the tests. Report each defect that follows to the user. Do not write a test that makes the defect correct behavior.
+A review can find a defect in the code and not in the tests. Report each defect that follows, and do not write a test that makes the defect correct behavior.
 
 - [ ] A method with no body.
 - [ ] A policy that exists, but that no action calls.

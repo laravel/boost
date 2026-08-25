@@ -66,7 +66,7 @@ Most changes need more than one rule file.
 | Subject | Rule file |
 | --- | --- |
 | A feature of the test framework that can already do the work | [`rules/finding-features.md`](rules/finding-features.md) |
-| The layout of the files, the names of the tests, the groups, and the order | [`rules/naming.md`](rules/naming.md) |
+| The layout of the files, the names of the tests, and the groups | [`rules/naming.md`](rules/naming.md) |
 | Arrange-act-assert, and the correct assertion for each subject | [`rules/assertions.md`](rules/assertions.md) |
 | The coverage of an endpoint, the authentication, the authorization, the isolation of a tenant, and the validation | [`rules/http-tests.md`](rules/http-tests.md) |
 | The factories, the owner of the test data, and the repeated input values | [`rules/test-data.md`](rules/test-data.md) |

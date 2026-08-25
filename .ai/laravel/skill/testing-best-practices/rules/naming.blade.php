@@ -8,9 +8,8 @@ $pest = $assist->hasPackage('pestphp/pest');
 
 - Give each test file the name `{ClassName}Test.php`.
 - Put each test file at the same relative path as the class under test. The class `app/Actions/DeleteTeam.php` gets the test `tests/Unit/Actions/DeleteTeamTest.php`.
-- Put each fixture file in `tests/Fixtures/`, and load the fixture by its path.
+- Follow the convention of the project for the fixture files. Put each fixture file in `tests/Fixtures/` if the project has no convention, and load the fixture by its path.
 - Keep a large literal value out of the test body. Put the value in a fixture file.
-- Use the convention of the project for `declare(strict_types=1);`.
 
 @if($pest)
 ## The Test Function
@@ -24,11 +23,9 @@ Use one Pest declaration style in each file. Use either `it()` or `test()` consi
 
 ## The Names of the Tests
 
-The name of a test is a specification. Write the name in plain English. Give the result that the user can see, and give the condition that causes the result.
+The name of a test is a specification. Give the result that the user can see, and give the condition that causes it.
 
-- Name the behavior. Do not name the method under test.
-- Do not repeat the name of the class under test. The file name gives the class.
-- Give the condition if the result does not make the condition clear.
+- Name the behavior, and not the method under test. The file name already gives the class.
 - Give the exact status code in the name of a test for an API error.
 - Do not write `Given`, `When`, or `Then` in the name.
 
@@ -45,11 +42,9 @@ it('falls back to the default region when none is configured', function () { ...
 
 ## The Names of the Tests
 
-The name of a test method is a specification. Write the name in words that are separated by an underscore. Give the result that the user can see, and give the condition that causes the result.
+The name of a test method is a specification. Write the words separated by an underscore. Give the result that the user can see, and give the condition that causes it.
 
-- Name the behavior. Do not name the method under test.
-- Do not repeat the name of the class under test. The file name gives the class.
-- Give the condition if the result does not make the condition clear.
+- Name the behavior, and not the method under test. The file name already gives the class.
 - Give the exact status code in the name of a test for an API error.
 - Do not write `given`, `when`, or `then` in the name.
 
@@ -60,12 +55,12 @@ public function test_valid_payload_creates_record_and_returns_201(): void { ... 
 ```
 @endif
 
-Use a verb that gives a result: `returns`, `renders`, `requires`, `creates`, `updates`, `deletes`, `dispatches`, `sends`, `queues`, `validates`, `forbids`, `rejects`, `ignores`, `prevents`, `falls back`, `handles`, or `does not`.
+Use a verb that gives a result, such as `returns`, `renders`, `creates`, `dispatches`, `rejects`, `forbids`, `falls back`, or `does not`.
 
 @if($pest)
-The name `it('works correctly')` gives no result. The name `it('returns data')` gives no result. The name `it('handleMethod creates record')` gives a method and not a behavior. Do not write a name of these three types.
+Do not write `it('works correctly')` or `it('returns data')`, because neither gives a result. Do not write `it('handleMethod creates record')`, because it gives a method and not a behavior.
 @else
-The name `test_store()` gives no result. The name `test_it_works()` gives no result. The name `test_validation()` gives no result. Do not write a name of these three types.
+Do not write `test_store()`, `test_it_works()`, or `test_validation()`, because none of them gives a result.
 @endif
 
 ## The Groups
@@ -83,21 +78,3 @@ Write one test class for each class under test. Write a separate test class if o
 
 Use the `#[Group]` attribute to mark the tests that a run must select or must skip. Do not use a group to give structure to a file, because a class gives the structure.
 @endif
-
-## The Order of the Tests
-
-Put the tests for an HTTP endpoint in this order. A failure then shows the first check that is not correct.
-
-1. The authentication
-2. The authorization of the resource or of the tenant
-3. The restrictions of the role and of the permission
-4. The constraints of the route and of the scope
-5. The failures of the validation
-6. The correct results
-7. The edge cases and the negative results
-
-Put the tests for a unit or for a feature that does not use HTTP in this order:
-
-1. The correct results
-2. The error results
-3. The boundary values

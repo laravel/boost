@@ -7,6 +7,15 @@ $pest5 = $assist->hasPackage('pestphp/pest', '>=5.0');
 
 These settings apply to the project and to the CI. They are not a change to one test. Read `rules/isolation.md` for the choices inside a test.
 
+@if($pest)
+Fetch `https://pestphp.com/docs/optimizing-tests` for the options of Pest that make a run faster.
+@else
+Fetch `https://docs.phpunit.de/en/13.3/` for the options of PHPUnit that make a run faster.
+@endif
+Confirm a flag in the documentation before you put it in the CI.
+
+Measure before you change a setting. Find the slow test first, and apply a setting of the project only after you know the work that costs the time.
+
 ## The Environment
 
 - Set `BCRYPT_ROUNDS=4` in `.env.testing` or in `phpunit.xml`. The default value is 12, and the hash then takes most of the time of each test that signs a user in.
@@ -26,6 +35,20 @@ Put these three calls in the `setUp()` of the base `TestCase` of the project:
 - `Http::preventStrayRequests()`, because one slow request that reaches the network adds time to every test. This call catches a request that goes through the HTTP client of Laravel. Check each direct use of Guzzle or of cURL separately.
 - `Sleep::fake(syncWithCarbon: true)`, so a retry and a backoff do not sleep.
 - `Exceptions::fake()`, so the suite does not report an exception to an external service.
+
+## How to Run the Suite in Parallel
+
+@if($pest)
+Run `{{ $assist->binCommand('pest --parallel') }}` to spread the tests across the cores of the machine. Add `--processes=N` if the default count is not correct for the machine or for the CI.
+@else
+Run `{{ $assist->artisanCommand('test --parallel') }}`, which uses ParaTest, to spread the tests across the cores of the machine. Add `--processes=N` if the default count is not correct for the machine or for the CI.
+@endif
+
+A parallel run gives each process a separate database. A test must then meet the three conditions that follow, and a test that fails only in a parallel run breaks one of them:
+
+- The test creates each record that it reads. It does not read a record that another test creates.
+- The test does not depend on the order of the run.
+- The test does not share a file, a cache key, or a queue with another test. Give each process a separate name for such a resource.
 
 @if($pest5)
 ## How to Run Fewer Tests

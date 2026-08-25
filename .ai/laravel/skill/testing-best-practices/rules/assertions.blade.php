@@ -7,13 +7,20 @@ $pest5 = $assist->hasPackage('pestphp/pest', '>=5.0');
 
 ## Arrange, Act, Assert
 
-Write each test with three parts. Put the setup first, then the one action under test, then the assertions. Put one blank line between the parts. A reader must find each part without a comment.
+Write each test in three parts: the setup, the one action under test, then the assertions. Put one blank line between the parts, so a reader finds each part without a comment.
 
 Keep each test complete. Do not use a value that another test makes.
 
-## The Correct Assertion for Each Subject
+## How to Find the Correct Assertion
 
-Use the assertion in this table for each subject. The assertion in the table gives the clearest message when the test fails.
+Name the subject of the check first, then find the assertion for that subject. An assertion that knows the subject names the value that is not correct when the test fails.
+
+1. Search the assertions of Laravel for a part of the framework, such as a response, the database, a session, a model, or a fake of a queue, of an event, of a mail, or of a notification.
+2. Fetch {{ $pest ? '`https://pestphp.com/docs/expectations.md` for the expectations of Pest' : '`https://docs.phpunit.de/en/13.3/assertions.html` for the assertions of PHPUnit' }} for a plain value, a type, a format, or a shape.
+3. Build the check by hand only if no assertion exists for the subject.
+4. Confirm the name in the documentation before you use it. Do not write an assertion that you did not confirm.
+
+Use the assertion in this table for each subject.
 
 @if($pest)
 | Subject | Assertion to use |
@@ -23,7 +30,7 @@ Use the assertion in this table for each subject. The assertion in the table giv
 | The state in the database | a Laravel database assertion |
 | The existence of a model | `assertModelExists($model)`, and not `assertDatabaseHas('users', ['id' => $user->id])` |
 
-Use a PHPUnit assertion only if no Pest assertion and no Laravel assertion exists for the subject.
+Use a PHPUnit assertion only if no Pest expectation and no Laravel assertion exists for the subject.
 @else
 | Subject | Assertion to use |
 | --- | --- |
@@ -39,15 +46,7 @@ Assert one fact one time. Do not assert a status of 200 before `assertSee`, beca
 
 ## The Assertion with a Name for a Response
 
-Use the response assertion that has a name. Do not use a raw status code. A failure then gives the contract that is not correct.
-
-| Assertion to use | Assertion to replace |
-| --- | --- |
-| `assertSuccessful()` | `assertStatus(200)` |
-| `assertNotFound()` | `assertStatus(404)` |
-| `assertForbidden()` | `assertStatus(403)` |
-| `assertUnauthorized()` | `assertStatus(401)` |
-| `assertUnprocessable()` | `assertStatus(422)` |
+Use the response assertion that has a name, such as `assertNotFound()` and not `assertStatus(404)`. A failure then gives the contract that is not correct. Laravel has a named assertion for each status code that a test asserts often.
 
 @if($pest)
 Keep one `expect()` chain on one subject. Start a new chain when the subject changes, or when the chain is difficult to read.
@@ -58,9 +57,7 @@ Group the assertions for one subject together. Start a new group when the subjec
 @if($pest5)
 ## The Expectation for a Format
 
-Use the expectation that Pest gives for a format. Do not write a regular expression for a format that has an expectation, because the expectation gives a clearer message when the test fails.
-
-Pest gives an expectation for an email address, a ULID, an IP address, a MAC address, a hostname, a domain, a Base64 value, and a hexadecimal value. Each one accepts `not` for the negative case. Search for the exact name before you use it.
+Use the expectation that Pest gives for a format, and not a regular expression, because the expectation gives a clearer message when the test fails. Pest covers an email address, a URL, a UUID, an IP address, and other common formats, and each expectation accepts `not` for the negative case.
 
 @endif
 ## Assert a Known Value
@@ -98,6 +95,4 @@ A status code is not the complete result of a write operation. Assert each item 
 - the jobs and the events that the operation dispatches
 - the notifications and the mail that the operation sends
 
-Assert on the failure path that the operation does not make these changes.
-
-A test that asserts only `assertOk()` passes when the application saves no record.
+Assert on the failure path that the operation does not make these changes. A test that asserts only `assertOk()` passes when the application saves no record.
