@@ -100,6 +100,37 @@ it('names the missing package when the project installs no browser tool the fram
     'phpunit with the pest plugin, which needs pest' => [false, ['pestphp/pest-plugin-browser'], 'laravel/dusk'],
 ]);
 
+it('puts a convention of the project above its own rules, and never deletes a test without approval', function (bool $pest): void {
+    expect(renderTestingSkill($pest))
+        ->toContain('a convention of the project outranks each rule in this skill')
+        ->toContain('Do not delete it, and do not rewrite it.')
+        ->toContain('do not delete a test and do not rewrite a test without approval of the user');
+})->with([
+    'pest' => true,
+    'phpunit' => false,
+]);
+
+it('keeps one case at the endpoint when a unit test owns the matrix', function (bool $pest): void {
+    expect(renderTestingSkill($pest))
+        ->toContain('### Which Layer Owns Which Case')
+        ->toContain('Never remove the last case')
+        ->toContain('shrinks to one case, and it is not deleted')
+        ->toContain('trim the test at the higher layer to one case')
+        ->toContain('A test of what this project configures is not a test of the framework.');
+})->with([
+    'pest' => true,
+    'phpunit' => false,
+]);
+
+it('exempts an architecture test from the value rules, which only Pest can write', function (): void {
+    expect(renderTestingSkill(pest: true))
+        ->toContain('Judge an architecture test by the convention that it protects')
+        ->toContain('the items that follow do not apply to it');
+
+    expect(renderTestingSkill(pest: false))
+        ->not->toContain('architecture test');
+});
+
 it('teaches a Pest 5 command only to a project that installs Pest 5', function (): void {
     expect(renderTestingSkill(pest: true, version: '5.0.0'))
         ->toContain('pest --parallel --tia')

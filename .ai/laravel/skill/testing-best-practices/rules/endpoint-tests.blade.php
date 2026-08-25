@@ -84,3 +84,9 @@ The plugin runs a browser test as a normal Pest test, so a browser test needs no
 @endif
 
 Send an input value that is not valid through the application, and assert the error. Do not assert that an array of rules contains a string, because that assertion tests the declaration and not the behavior. Use such an assertion only for a rule that no request can reach, and write the reason in the test.
+
+### Which Layer Owns Which Case
+
+The test of a rule class owns the matrix of the values that pass and that fail. The test of the endpoint owns the proof that the endpoint applies the rule, and that the user gets the message.
+
+Move the matrix to the test of the rule class when both tests hold it, and keep one case in the test of the endpoint. Never remove the last case, because the test of the rule class passes while the request forgets the rule. The same split applies to a policy, to a scope, and to any other class that a request calls.

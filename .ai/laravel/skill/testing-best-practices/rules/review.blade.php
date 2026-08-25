@@ -6,11 +6,17 @@ $pest = $assist->hasPackage('pestphp/pest');
 
 Check every item in this file. A test that passes can have no value. For each test, state the defect that the test finds.
 
+A review reports. Report each item that you find, and do not delete a test and do not rewrite a test without approval of the user. An item that the project repeats throughout the suite is a convention, and the report names the pattern once instead of each file that follows it.
+
 ## The Value of the Test
 
+@if($pest)
+Apply this section to a test of behavior. An architecture test states a convention for a directory, and the items that follow do not apply to it.
+
+@endif
 - [ ] Each test covers observable behavior or an application contract, and passes after a change to the implementation that keeps the behavior.
-- [ ] Each tested declaration is exercised through behavior, and no test asserts the behavior of the framework.
-- [ ] Each test detects a distinct defect that no other test covers.
+- [ ] Each tested declaration is exercised through behavior, and no test asserts the behavior of the framework. A test of what this project configures, such as a relation with a constraint, a cast, or a scope, belongs to this project.
+- [ ] Each test detects a distinct defect that no other test covers. A duplicate shrinks at the higher layer to the one case that proves the wiring.
 - [ ] Every changed decision and each applicable high-value failure mode has coverage.
 
 ## The Names and the Structure
@@ -28,7 +34,7 @@ Check every item in this file. A test that passes can have no value. For each te
 - [ ] The HTTP tests cover the authentication, the authorization, the role, the scope, and the validation, if the case applies.
 - [ ] A request for a record of a different tenant gets a status code that does not confirm that the record exists.
 - [ ] The complete matrix of the permissions is in the tests of the policy, and not in the tests of the controller.
-- [ ] Each rule of the validation has one test, and the test asserts the message that the user gets.
+- [ ] Each rule of the validation has one test, and the test asserts the message that the user gets. A duplicate of a matrix that a unit test owns shrinks to one case, and it is not deleted.
 - [ ] The output of a user and each dynamic part of a query have a security test.
 
 ## The Data and the Determinism

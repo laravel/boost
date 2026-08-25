@@ -19,7 +19,9 @@ This project uses {{ $pest ? 'Pest' : 'PHPUnit' }}. Each rule in this skill give
 
 Read nearby tests before you choose syntax and organization.
 
-Follow established conventions when they preserve the behavior required by this skill.
+A pattern that the project repeats is a convention, and a convention of the project outranks each rule in this skill. Follow it, and write the new test in the same shape.
+
+The rules in this skill govern the test that you write now. A test that exists and follows a convention is not a defect of that test. Do not delete it, and do not rewrite it. Tell the user what the convention costs, if it costs something, and let the user decide.
 
 Use the project convention for each item that follows:
 
@@ -39,8 +41,8 @@ Read this section before you write a test.
 - Test observable behavior and application contracts. A test must pass after an implementation change if the behavior stays the same.
 - Cover every changed decision and each applicable high-value failure mode. A decision is a branch, a validation, a calculation, or an authorization.
 - Exercise declarations through behavior instead of repeating their text.
-- Leave framework behavior to the framework tests.
-- Keep each test only when it can detect a distinct defect.
+- Leave framework behavior to the framework tests. A test of what this project configures is not a test of the framework. A relation that adds a constraint, a cast, a scope, and a rule of the validation each belong to this project.
+- Keep each test that can detect a distinct defect. When two tests find the same defect, trim the test at the higher layer to one case, and report the duplicate to the user. Do not delete a test.
 - Write a feature test first. Write a unit test only for logic that does not use the framework.
 @if($pest && $assist->hasPackage('pestphp/pest-plugin-browser'))
 - Write a browser test only for behavior in JavaScript that a feature test cannot reach. Put a browser test in `tests/Browser`, and call `assertNoJavaScriptErrors()` in it.
@@ -48,6 +50,9 @@ Read this section before you write a test.
 - Write a Dusk test only for behavior in JavaScript that a feature test cannot reach. Put a Dusk test in `tests/Browser`.
 @else
 - Write a feature test for each behavior that a request can reach. A test in a real browser needs {{ $pest ? '`pestphp/pest-plugin-browser`' : '`laravel/dusk`' }} and a browser download, and this project installs neither of them. Tell the user about the package only if the user asks for a test in a real browser.
+@endif
+@if($pest)
+- Judge an architecture test by the convention that it protects, and not by the rules above. An `arch()` test states a rule for a complete directory, such as the parent of each model, the classes that may use an enum, or the methods that each factory declares. It is a declaration check by design, and it fails when one new file breaks the convention.
 @endif
 - Use the test tools that the project installs. Add a new test dependency, plugin, or browser only after the user asks for it.
 
