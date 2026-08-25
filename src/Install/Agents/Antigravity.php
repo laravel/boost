@@ -35,8 +35,8 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsMcp, Supp
 
     public function projectDetectionConfig(): array
     {
-        // The bare .agents directory proves nothing: Boost creates it when installing skills for other agents.
         return [
+            'paths' => ['.gemini'],
             'files' => ['.agents/mcp_config.json'],
         ];
     }

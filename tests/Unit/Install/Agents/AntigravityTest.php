@@ -67,15 +67,16 @@ it('returns configured skills path', function (): void {
     expect($agent->skillsPath())->toBe('.custom/skills');
 });
 
-it('projectDetectionConfig only uses the Antigravity-specific mcp_config.json', function (): void {
+it('only uses the antigravity specific mcp_config.json', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
     expect($agent->projectDetectionConfig())->toBe([
+        'paths' => ['.gemini'],
         'files' => ['.agents/mcp_config.json'],
     ]);
 });
 
-it('detectInProject returns false when only .agents/skills exists', function (): void {
+it('returns false when only .agents/skills exists', function (): void {
     $agent = new Antigravity(new DetectionStrategyFactory(app()));
     $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_antigravity_'.uniqid();
     mkdir($tempDir.DIRECTORY_SEPARATOR.'.agents'.DIRECTORY_SEPARATOR.'skills', 0755, true);
@@ -84,21 +85,6 @@ it('detectInProject returns false when only .agents/skills exists', function ():
         expect($agent->detectInProject($tempDir))->toBeFalse();
     } finally {
         rmdir($tempDir.DIRECTORY_SEPARATOR.'.agents'.DIRECTORY_SEPARATOR.'skills');
-        rmdir($tempDir.DIRECTORY_SEPARATOR.'.agents');
-        rmdir($tempDir);
-    }
-});
-
-it('detectInProject returns true when .agents/mcp_config.json exists', function (): void {
-    $agent = new Antigravity(new DetectionStrategyFactory(app()));
-    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_antigravity_'.uniqid();
-    mkdir($tempDir.DIRECTORY_SEPARATOR.'.agents', 0755, true);
-    touch($tempDir.DIRECTORY_SEPARATOR.'.agents'.DIRECTORY_SEPARATOR.'mcp_config.json');
-
-    try {
-        expect($agent->detectInProject($tempDir))->toBeTrue();
-    } finally {
-        unlink($tempDir.DIRECTORY_SEPARATOR.'.agents'.DIRECTORY_SEPARATOR.'mcp_config.json');
         rmdir($tempDir.DIRECTORY_SEPARATOR.'.agents');
         rmdir($tempDir);
     }
