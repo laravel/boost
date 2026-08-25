@@ -1,6 +1,7 @@
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 $pest = $assist->hasPackage('pestphp/pest');
+$pest5 = $assist->hasPackage('pestphp/pest', '>=5.0');
 @endphp
 # How to Find a Feature of the Test Framework
 
@@ -21,9 +22,12 @@ Search for a feature in this table before you write the code by hand.
 | Apply a convention to the complete codebase | architecture testing |
 | Measure if the suite finds a defect | mutation testing |
 | Find code with no types | type coverage |
-| Reduce the time of a slow suite | parallel, sharding, profiling |
+| Reduce the time of a slow suite | parallel, profiling |
+@if($pest5)
+| Split the suite across the jobs of the CI | sharding, `--update-shards` |
 | Run only the tests that a change affects | Test Impact Analysis, `--tia` |
 | Assert that a value has a known format | validation expectations |
+@endif
 | Run one test while you debug | filtering, `--bail`, `--dirty` |
 @else
 PHPUnit and Laravel give a feature for most of the work that a test needs. This skill does not repeat the documentation. Find the feature that does the work before you write the code by hand.

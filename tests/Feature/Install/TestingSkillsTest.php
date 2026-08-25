@@ -20,12 +20,15 @@ function bootProject(array $packages): ProjectManager
     return $project;
 }
 
-function renderTestingSkill(bool $pest, array $extraPackages = []): string
+/**
+ * @param  array<int, Package>  $extraPackages
+ */
+function renderTestingSkill(bool $pest, array $extraPackages = [], string $version = '4.0.0'): string
 {
     bootProject(array_merge([
         rosterPackage('laravel/framework', '12.0.0'),
         $pest
-            ? rosterPackage('pestphp/pest', '4.0.0', true)
+            ? rosterPackage('pestphp/pest', $version, true)
             : rosterPackage('phpunit/phpunit', '11.0.0', true),
     ], $extraPackages));
 
@@ -85,6 +88,34 @@ it('teaches browser testing only when the browser package is installed', functio
     'phpunit' => [false, 'laravel/dusk'],
 ]);
 
+it('teaches a Pest 5 command only to a project that installs Pest 5', function (): void {
+    expect(renderTestingSkill(pest: true, version: '5.0.0'))
+        ->toContain('pest --parallel --tia')
+        ->toContain('tests/.pest/shards.json')
+        ->toContain('The Expectation for a Format');
+
+    expect(renderTestingSkill(pest: true, version: '4.1.0'))
+        ->not->toContain('--tia')
+        ->not->toContain('shards.json')
+        ->not->toContain('The Expectation for a Format');
+});
+
+it('ships one testing skill to every project, whichever test framework and major it installs', function (array $package): void {
+    $project = bootProject([
+        rosterPackage('laravel/framework', '12.0.0'),
+        rosterPackage(...$package),
+    ]);
+
+    expect((new SkillComposer($project))->skills()->keys())
+        ->toContain('testing-best-practices')
+        ->not->toContain('pest-testing');
+})->with([
+    'pest 3' => [['pestphp/pest', '3.8.0', true]],
+    'pest 5' => [['pestphp/pest', '5.0.0', true]],
+    'pest 6' => [['pestphp/pest', '6.0.0', true]],
+    'phpunit' => [['phpunit/phpunit', '11.0.0', true]],
+]);
+
 it('resolves every rule file a skill index points at, and references every rule file on disk', function (string $skill, string $extension): void {
     $skillDir = __DIR__.'/../../../.ai/laravel/skill/'.$skill;
     $index = (string) file_get_contents($skillDir.'/SKILL.'.$extension);
@@ -104,22 +135,6 @@ it('resolves every rule file a skill index points at, and references every rule 
     'laravel-best-practices' => ['laravel-best-practices', 'md'],
 ]);
 
-it('ships one testing skill to every Laravel project, whichever test framework it uses', function (bool $pest): void {
-    $project = bootProject([
-        rosterPackage('laravel/framework', '12.0.0'),
-        $pest
-            ? rosterPackage('pestphp/pest', '4.0.0', true)
-            : rosterPackage('phpunit/phpunit', '11.0.0', true),
-    ]);
-
-    expect((new SkillComposer($project))->skills()->keys())
-        ->toContain('testing-best-practices')
-        ->not->toContain('pest-testing');
-})->with([
-    'pest' => true,
-    'phpunit' => false,
-]);
-
 it('names a skill that exists when one guideline points a reader at another', function (): void {
     $aiPath = __DIR__.'/../../../.ai';
 
@@ -137,55 +152,4 @@ it('names a skill that exists when one guideline points a reader at another', fu
 
     expect($pointers)->toContain('testing-best-practices')
         ->and($pointers->diff($names)->all())->toBe([]);
-});
-
-it('keeps working on a future Pest major, which the versioned skill directories could not', function (string $version): void {
-    $project = bootProject([
-        rosterPackage('laravel/framework', '12.0.0'),
-        rosterPackage('pestphp/pest', $version, true),
-    ]);
-
-    expect((new SkillComposer($project))->skills()->keys())
-        ->toContain('testing-best-practices');
-
-    expect(renderTestingSkill(pest: true))
-        ->toContain('This project uses Pest.');
-})->with([
-    'pest 3' => '3.8.0',
-    'pest 4' => '4.1.0',
-    'pest 5' => '5.0.0',
-    'pest 6' => '6.0.0',
-]);
-
-it('teaches a Pest 5 command only to a project that installs Pest 5', function (): void {
-    $renderForVersion = function (string $version): string {
-        bootProject([
-            rosterPackage('laravel/framework', '12.0.0'),
-            rosterPackage('pestphp/pest', $version, true),
-        ]);
-
-        $renderer = new class
-        {
-            use RendersBladeGuidelines;
-
-            public function render(string $path): string
-            {
-                return $this->renderBladeFile($path);
-            }
-        };
-
-        $dir = __DIR__.'/../../../.ai/laravel/skill/testing-best-practices/rules/';
-
-        return $renderer->render($dir.'performance.blade.php').$renderer->render($dir.'assertions.blade.php');
-    };
-
-    expect($renderForVersion('5.0.0'))
-        ->toContain('pest --parallel --tia')
-        ->toContain('tests/.pest/shards.json')
-        ->toContain('The Expectation for a Format');
-
-    expect($renderForVersion('4.1.0'))
-        ->not->toContain('--tia')
-        ->not->toContain('shards.json')
-        ->not->toContain('The Expectation for a Format');
 });
