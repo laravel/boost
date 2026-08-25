@@ -44,7 +44,7 @@ Read this section before you write a test.
 - Write a feature test first. Write a unit test only for logic that does not use the framework.
 @if($pest && $assist->hasPackage('pestphp/pest-plugin-browser'))
 - Write a browser test only for behavior in JavaScript that a feature test cannot reach. Put a browser test in `tests/Browser`, and call `assertNoJavaScriptErrors()` in it.
-@elseif(! $pest && $assist->hasPackage('laravel/dusk'))
+@elseif($assist->hasPackage('laravel/dusk'))
 - Write a Dusk test only for behavior in JavaScript that a feature test cannot reach. Put a Dusk test in `tests/Browser`.
 @else
 - Write a feature test for each behavior that a request can reach. A test in a real browser needs {{ $pest ? '`pestphp/pest-plugin-browser`' : '`laravel/dusk`' }} and a browser download, and this project installs neither of them. Tell the user about the package only if the user asks for a test in a real browser.
@@ -68,7 +68,7 @@ Most changes need more than one rule file.
 | A feature of the test framework that can already do the work | [`rules/finding-features.md`](rules/finding-features.md) |
 | The layout of the files, the names of the tests, and the groups | [`rules/naming.md`](rules/naming.md) |
 | Arrange-act-assert, and the correct assertion for each subject | [`rules/assertions.md`](rules/assertions.md) |
-| The coverage of an endpoint, the authentication, the authorization, the isolation of a tenant, and the validation | [`rules/http-tests.md`](rules/http-tests.md) |
+| The coverage of an endpoint, the authentication, the authorization, the isolation of a tenant, the validation, and the tests in a browser | [`rules/endpoint-tests.md`](rules/endpoint-tests.md) |
 | The factories, the owner of the test data, and the repeated input values | [`rules/test-data.md`](rules/test-data.md) |
 | The fakes, the mocks, the outbound HTTP, the time, the randomness, and the database | [`rules/isolation.md`](rules/isolation.md) |
 | The escaping, the injection, the access across tenants, and the checks of privilege | [`rules/security.md`](rules/security.md) |

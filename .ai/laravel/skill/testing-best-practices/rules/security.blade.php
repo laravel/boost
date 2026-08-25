@@ -8,7 +8,7 @@ Write a test for the security boundary where an input value from a user reaches 
 
 Write a test for each case that follows:
 
-- **The access across tenants.** Request a record of a different tenant, team, or organization. Read `rules/http-tests.md` for the reason to assert `404` and not `403`.
+- **The access across tenants.** Request a record of a different tenant, team, or organization. Read `rules/endpoint-tests.md` for the reason to assert `404` and not `403`.
 @if($pest)
 - **Each role without the privilege.** Use a dataset over the roles that the endpoint must refuse.
 @else

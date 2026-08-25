@@ -74,18 +74,30 @@ it('teaches PHPUnit syntax to a PHPUnit project and never Pest syntax', function
         ->not->toContain('pestphp.com');
 });
 
-it('teaches browser testing only when the browser package is installed', function (bool $pest, string $package): void {
+it('teaches browser testing when the project installs a browser tool the framework can run', function (bool $pest, string $package, string $docs): void {
     expect(renderTestingSkill($pest, [rosterPackage($package, '1.0.0', true)]))
         ->toContain('tests/Browser')
+        ->toContain('## The Browser Tests')
+        ->toContain($docs)
         ->not->toContain('installs neither of them');
-
-    expect(renderTestingSkill($pest))
-        ->toContain('installs neither of them')
-        ->toContain($package)
-        ->not->toContain('tests/Browser');
 })->with([
-    'pest' => [true, 'pestphp/pest-plugin-browser'],
-    'phpunit' => [false, 'laravel/dusk'],
+    'pest with the plugin' => [true, 'pestphp/pest-plugin-browser', 'https://pestphp.com/docs/browser-testing'],
+    'pest with dusk' => [true, 'laravel/dusk', 'https://laravel.com/framework/docs/dusk'],
+    'phpunit with dusk' => [false, 'laravel/dusk', 'https://laravel.com/framework/docs/dusk'],
+]);
+
+it('names the missing package when the project installs no browser tool the framework can run', function (bool $pest, array $packages, string $missing): void {
+    $installed = array_map(fn (string $package): Package => rosterPackage($package, '1.0.0', true), $packages);
+
+    expect(renderTestingSkill($pest, $installed))
+        ->toContain('installs neither of them')
+        ->toContain($missing)
+        ->not->toContain('tests/Browser')
+        ->not->toContain('## The Browser Tests');
+})->with([
+    'pest' => [true, [], 'pestphp/pest-plugin-browser'],
+    'phpunit' => [false, [], 'laravel/dusk'],
+    'phpunit with the pest plugin, which needs pest' => [false, ['pestphp/pest-plugin-browser'], 'laravel/dusk'],
 ]);
 
 it('teaches a Pest 5 command only to a project that installs Pest 5', function (): void {

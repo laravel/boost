@@ -1,8 +1,10 @@
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 $pest = $assist->hasPackage('pestphp/pest');
+$browserPlugin = $pest && $assist->hasPackage('pestphp/pest-plugin-browser');
+$dusk = $assist->hasPackage('laravel/dusk');
 @endphp
-# HTTP and Authorization Tests
+# Endpoint Tests
 
 ## How to Write the Test
 
@@ -34,6 +36,40 @@ An HTTP test shows that the endpoint calls the authorization. It cannot show whi
 - Assert the complete matrix of the permissions against the policy or the gate. A failure then names the rule that is not correct.
 - Write one HTTP test for one refused role, which shows that the endpoint calls the authorization.
 - Use the helper of the project that asserts the ability and the arguments of the gate, if such a helper exists.
+
+@if($browserPlugin || $dusk)
+## The Browser Tests
+
+Write a browser test only for behavior in JavaScript that an HTTP test cannot reach, such as a modal, a drag, a live search, or a validation that runs in the client. A browser test is slower than an HTTP test, and it fails for reasons that are not in the code under test.
+
+- Assert the state that the user can see, and assert the state in the database that the interaction saves.
+- Wait for the state that the test needs. Do not wait for a number of seconds, because the wait then fails on a slower machine.
+@if($browserPlugin)
+- Call `assertNoJavaScriptErrors()` in each browser test. An error in the console is a defect.
+
+### Where a Browser Test Lives and How to Run It
+
+The plugin runs a browser test as a normal Pest test, so a browser test needs no separate suite. Put each browser test in `tests/Browser`, which keeps the slow tests apart from the fast tests and lets one run cover a directory.
+
+- Run a browser test with `{{ $assist->binCommand('pest tests/Browser') }}`, and add `--parallel` for the complete suite.
+- Run `{{ $assist->binCommand('pest --debug') }}` to open the window of the browser and to pause at a failure. Use `--headed` to watch a run that passes.
+- Add `--browser firefox` or `--browser safari` to run the test in a different browser. The default browser is Chrome.
+- The run needs a browser on the machine. Install it with `npm install playwright@latest && npx playwright install`, and use `npx playwright install --with-deps` in the CI.
+- Fetch `https://pestphp.com/docs/browser-testing` for the interactions, the assertions, and the devices that the plugin gives.
+
+### The Gotchas of a Browser Test
+
+- The plugin waits five seconds for an element. Raise the value with `pest()->browser()->timeout(10000)` in `Pest.php` for a page that is slower, and do not add a wait for a number of seconds to the test.
+- Apply `RefreshDatabase` to the browser tests in `Pest.php`. A browser test hits the application through a real request, and the records that it leaves break the next test.
+- Add `tests/Browser/Screenshots` to `.gitignore`. A failure writes a screenshot, and the file is not part of the repository.
+- Give `withKeyDown()` a key code, such as `KeyA`. A letter such as `'a'` gives the lowercase character, whatever modifier the test holds.
+- Interact inside the callback of `withinFrame()`. An interaction outside the callback does not reach the frame.
+@else
+- Put each browser test in `tests/Browser`, which is the suite that Dusk runs.
+- Run the browser tests with `{{ $assist->artisanCommand('dusk') }}`. The run needs a ChromeDriver, and `{{ $assist->artisanCommand('dusk:install') }}` downloads it.
+- Fetch `https://laravel.com/framework/docs/dusk` for the selectors, the interactions, and the assertions of Dusk.
+@endif
+@endif
 
 ## The Validation
 
