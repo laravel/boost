@@ -479,8 +479,6 @@ test('adds the comma outside a trailing comment in the servers object', function
         ])
         ->save();
 
-    // The separating comma must not be swallowed by the comment, or every
-    // server in the file stops parsing.
     $withoutComments = preg_replace('/\/\/[^\n]*/', '', $writtenContent);
 
     expect($result)->toBeTrue()

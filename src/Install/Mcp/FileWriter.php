@@ -150,12 +150,11 @@ class FileWriter
         $commaPosition = $this->findCommaInsertionPoint($content, $openBracePos, $closeBracePos);
 
         if ($commaPosition !== -1) {
+            // Anything non-blank before the brace is a trailing comment: comma goes ahead of it, servers after it.
             if (trim(substr($content, $commaPosition, $closeBracePos - $commaPosition)) === '') {
                 $newContent = substr_replace($content, ',', $commaPosition, 0);
                 $newContent = substr_replace($newContent, $serversJson, $commaPosition + 1, 0);
             } else {
-                // A trailing comment sits between the last entry and the closing
-                // brace: keep it in place by adding the servers after it.
                 $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
                 $newContent = substr_replace($newContent, ',', $commaPosition, 0);
             }
@@ -296,9 +295,7 @@ class FileWriter
 
     protected function findCommaInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
     {
-        // Blank out comments (string-aware, offsets preserved) so the backwards
-        // scan cannot place the comma inside a trailing comment. Both quote
-        // styles are skipped, or a // inside a JSON5 string reads as a comment.
+        // Strings are matched only to skip them; comments become equal-length spaces so offsets still line up.
         $masked = preg_replace_callback(
             '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|(\/\/[^\r\n]*)|(\/\*[\s\S]*?\*\/)/',
             fn (array $match): string => ($match[1] ?? '') !== '' || ($match[2] ?? '') !== ''
