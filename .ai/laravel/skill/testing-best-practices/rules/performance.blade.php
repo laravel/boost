@@ -10,7 +10,6 @@ These settings apply to the project and to the CI. They are not a change to one 
 ## The Environment
 
 - Set `BCRYPT_ROUNDS=4` in `.env.testing` or in `phpunit.xml`. The default value is 12, and the hash then takes most of the time of each test that signs a user in.
-- Set `APP_DEBUG=false` in the test environment, so the framework does not collect debug information.
 - Disable XDebug. Disable pcov also, unless the run needs the coverage.
 - Disable each package that does work on every request in the test environment. Examples are Pulse, Telescope, and Nightwatch.
 - Use the `WithCachedConfig` and `WithCachedRoutes` traits, so the run does not parse the configuration and the routes for every test.

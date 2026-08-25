@@ -14,7 +14,7 @@ Write a test for each case that follows:
 @else
 - **Each role without the privilege.** Use a data provider over the roles that the endpoint must refuse.
 @endif
-- **The escaping of the content of a user.** Test the escaping in HTML and in mail. Assert the expected escaped value. Assert that the raw value is absent.
+- **The escaping of the content of a user.** Test the escaping in HTML and in mail. Include a name and each free-text field that a template renders. Assert the escaped form of the dangerous characters, and assert that the raw value is absent. Do not assert an exact entity for a quote, because the markdown and the CSS inliner of a mail decode it.
 - **The injection into a dynamic part of a query.** Examples are a column to sort by, a field to filter by, and a direction of the order.
 - **A key that you do not expect** in a payload or in a configuration array. A merge that accepts every key can set an attribute that the user must not control.
 
@@ -28,7 +28,7 @@ it('escapes dangerous content in the notification', function () {
     $content = (new QuotaApproaching($organization, 80))->toMail()->render();
 
     expect($content)
-        ->toContain('O&#039;Reilly &lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;')
+        ->toContain('&lt;script&gt;')
         ->not->toContain("<script>alert('xss')</script>");
 });
 ```
@@ -42,10 +42,7 @@ public function test_escapes_dangerous_content_in_the_notification(): void
 
     $content = (new QuotaApproaching($organization, 80))->toMail()->render();
 
-    $this->assertStringContainsString(
-        'O&#039;Reilly &lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;',
-        $content,
-    );
+    $this->assertStringContainsString('&lt;script&gt;', $content);
     $this->assertStringNotContainsString("<script>alert('xss')</script>", $content);
 }
 ```
