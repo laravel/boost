@@ -26,6 +26,8 @@ Incorrect: `Cache::remember('users', 300, fn () => User::all());`
 
 Correct: `Cache::flexible('users', [300, 600], fn () => User::all());` — fresh for 5 min, stale-but-served up to 10 min, refreshes via deferred function.
 
+Cache::flexible does not prevent stampedes on a cold cache or when the stale period expires.
+
 ## Use `Cache::memo()` to Avoid Redundant Hits Within a Request
 
 If the same cache key is read multiple times per request (e.g., a service called from multiple places), `memo()` stores the resolved value in memory.
