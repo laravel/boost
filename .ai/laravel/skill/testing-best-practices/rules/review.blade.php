@@ -2,16 +2,16 @@
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 $pest = $assist->hasPackage('pestphp/pest');
 @endphp
-# The Review of the Tests
+# Reviewing Tests
 
-Check every item in this file. A test that passes can have no value. For each test, state the defect that the test finds.
+Check every item in this file. A passing test may still provide no value. For each test, identify the defect it would catch.
 
-A review reports. Report each item that you find, and do not delete a test and do not rewrite a test without approval of the user. An item that the project repeats throughout the suite is a convention, and the report names the pattern once instead of each file that follows it.
+Report each finding. Do not delete or rewrite a test without the user's approval. When an issue appears throughout the suite as a convention, report the pattern once rather than every affected file.
 
 ## The Value of the Test
 
 @if($pest)
-Apply this section to a test of behavior. An architecture test states a convention for a directory, and the items that follow do not apply to it.
+Apply this section to behavioral tests. An architecture test states a convention for a directory, so these items do not apply to it.
 
 @endif
 - [ ] Each test covers observable behavior or an application contract, and passes after a change to the implementation that keeps the behavior.
@@ -19,10 +19,10 @@ Apply this section to a test of behavior. An architecture test states a conventi
 - [ ] Each test detects a distinct defect that no other test covers. A duplicate shrinks at the higher layer to the one case that proves the wiring.
 - [ ] Every changed decision and each applicable high-value failure mode has coverage.
 
-## The Names and the Structure
+## Names and Structure
 
 - [ ] Each file has the name `{ClassName}Test.php` and the relative path of the class under test.
-- [ ] Each name gives a result and the condition that causes it, and gives the status code for an API error.
+- [ ] Each name states a result, the condition that causes it, and the status code for an API error.
 @if($pest)
 - [ ] Each file uses one declaration style consistently, and each `describe()` group holds separate behavior.
 @else
@@ -31,23 +31,23 @@ Apply this section to a test of behavior. An architecture test states a conventi
 
 ## The Coverage
 
-- [ ] The HTTP tests cover the authentication, the authorization, the role, the scope, and the validation, if the case applies.
+- [ ] HTTP tests cover authentication, authorization, role, scope, and validation when applicable.
 - [ ] A request for a record of a different tenant gets a status code that does not confirm that the record exists.
-- [ ] The complete matrix of the permissions is in the tests of the policy, and not in the tests of the controller.
-- [ ] Each rule of the validation has one test, and the test asserts the message that the user gets. A duplicate of a matrix that a unit test owns shrinks to one case, and it is not deleted.
-- [ ] The output of a user and each dynamic part of a query have a security test.
+- [ ] The complete permission matrix belongs in policy tests, not controller tests.
+- [ ] Each validation rule has one test that asserts the user-visible message. When a unit test owns a matrix, reduce duplicate higher-level coverage to one case rather than deleting it.
+- [ ] Rendered user input and each dynamic part of a query have a security test.
 
 ## The Data and the Determinism
 
 - [ ] Each test creates its mutable records directly or through a helper that it calls, and every created record arranges the behavior or supports an assertion.
 @if($pest)
-- [ ] Each `beforeEach()` holds a configuration only.
+- [ ] Each `beforeEach()` holds configuration only.
 @else
-- [ ] `setUp()` holds a configuration only.
+- [ ] `setUp()` holds configuration only.
 @endif
 - [ ] Each factory state and each relationship gives the meaning of the data.
 - [ ] Each call to `make()` is in a test that does not need the database.
-- [ ] The time, the randomness, the sleep, and the outbound HTTP are under control.
+- [ ] Time, randomness, sleep, and outbound HTTP are controlled.
 - [ ] Each test passes alone, and passes in the complete suite in any order.
 
 ## The Assertions
@@ -63,7 +63,7 @@ Apply this section to a test of behavior. An architecture test states a conventi
 
 ## The Defects to Report
 
-A review can find a defect in the code and not in the tests. Report each defect that follows, and do not write a test that makes the defect correct behavior.
+A review can find defects in the code rather than the tests. Report each defect below, and do not write a test that codifies it as correct behavior.
 
 - [ ] A method with no body.
 - [ ] A policy that exists, but that no action calls.

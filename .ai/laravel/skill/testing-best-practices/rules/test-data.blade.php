@@ -7,20 +7,20 @@ $pest = $assist->hasPackage('pestphp/pest');
 ## Each Test Makes Its Own Data
 
 @if($pest)
-Create mutable records inside the test that uses them. This keeps the setup visible. This also lets each test select its factory state.
+Create mutable records inside the test that uses them. This keeps setup visible and lets each test select its factory state.
 
-Use `beforeEach()` for a configuration that applies to every test in the file only. Do not make a record in it.
+Use `beforeEach()` only for configuration that applies to every test in the file. Do not create records in it.
 @else
-Create mutable records inside each test or through a private helper that the test calls. This keeps the setup visible. This also lets each test select its factory state.
+Create mutable records inside each test or through a private helper that the test calls. This keeps setup visible and lets each test select its factory state.
 
-Use `setUp()` for a configuration that applies to every test in the class only. Do not make a record in it, because the objects that it makes stay in memory until the suite ends.
+Use `setUp()` only for configuration that applies to every test in the class. Do not create records in it, because its objects remain in memory until the suite ends.
 @endif
 
-## The Construction of a Record
+## Record Construction
 
 - Use `create()` if the test needs the record in the database.
-- Use `make()` only if the test does not need the database. Examples are the render of a notification and the behavior of a value object.
-- Use a factory state with a name instead of a raw attribute. The call `User::factory()->unverified()->create()` gives the meaning of the state. The call `create(['email_verified_at' => null])` gives only the value.
+- Use `make()` only if the test does not need the database. Examples include rendering a notification and testing a value object's behavior.
+- Use a named factory state instead of a raw attribute. `User::factory()->unverified()->create()` gives the state meaning; `create(['email_verified_at' => null])` gives only its value.
 - Use `for()` or the relationship helper of the project to declare the owner of a record.
 - Use `recycle()` if several records must share one parent record.
 - Use `sequence()` if several records need different attributes.
@@ -44,7 +44,7 @@ Create only the records required to arrange the behavior or support an assertion
 @if($pest)
 ## The Datasets
 
-Use a dataset if the body, the setup, and the assertions are the same for each input value, and only the input value changes.
+Use a dataset when the setup, test body, and assertions remain the same across input values.
 
 ```php
 it('forbids roles other than admin', function (Role $role) {
@@ -56,7 +56,7 @@ it('forbids roles other than admin', function (Role $role) {
 @else
 ## The Data Providers
 
-Use a data provider if the body, the setup, and the assertions are the same for each input value, and only the input value changes.
+Use a data provider when the setup, test body, and assertions remain the same across input values.
 
 ```php
 public static function nonAdminRoles(): array
@@ -79,7 +79,7 @@ public function test_forbids_roles_other_than_admin(Role $role): void
 Declare each data provider method as `public static`.
 @endif
 
-Use this method for these input values:
+Use parameterized tests for:
 
 - the cases of an enum
 - the roles and the plans
@@ -90,7 +90,7 @@ Use this method for these input values:
 Write separate tests if the cases need a different setup, a different behavior, or different assertions. One test function with a branch in the body is two tests in one function.
 
 @if($pest)
-Give each case in the dataset a name that states the difference. A failure then names the case, and you do not count the positions.
+Give each dataset case a name that states the difference. A failure then identifies the case without requiring you to count positions.
 @else
-Give each case in the data provider a key that states the difference. A failure then names the case, and you do not count the positions.
+Give each data-provider case a key that states the difference. A failure then identifies the case without requiring you to count positions.
 @endif

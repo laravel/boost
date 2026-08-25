@@ -4,19 +4,19 @@ $pest = $assist->hasPackage('pestphp/pest');
 @endphp
 # Security Tests
 
-Write a test for the security boundary where an input value from a user reaches the authorization, the rendered output, or the construction of a query. A defect at such a boundary is difficult to find, because the feature continues to work.
+Test each security boundary where user input affects authorization, rendered output, or query construction. A defect at such a boundary can be difficult to detect because the feature may continue to work.
 
-Write a test for each case that follows:
+Write a test for each of these cases:
 
-- **The access across tenants.** Request a record of a different tenant, team, or organization. Read `rules/endpoint-tests.md` for the reason to assert `404` and not `403`.
+- **Cross-tenant access.** Request a record of a different tenant, team, or organization. Read `rules/endpoint-tests.md` for why the response should be `404` rather than `403`.
 @if($pest)
-- **Each role without the privilege.** Use a dataset over the roles that the endpoint must refuse.
+- **Each unprivileged role.** Use a dataset over the roles that the endpoint must refuse.
 @else
-- **Each role without the privilege.** Use a data provider over the roles that the endpoint must refuse.
+- **Each unprivileged role.** Use a data provider over the roles that the endpoint must refuse.
 @endif
-- **The escaping of the content of a user.** Test the escaping in HTML and in mail. Include a name and each free-text field that a template renders. Assert the escaped form of the dangerous characters, and assert that the raw value is absent. Do not assert an exact entity for a quote, because the markdown and the CSS inliner of a mail decode it.
-- **The injection into a dynamic part of a query.** Examples are a column to sort by, a field to filter by, and a direction of the order.
-- **A key that you do not expect** in a payload or in a configuration array. A merge that accepts every key can set an attribute that the user must not control.
+- **Escaping user-provided content.** Test escaping in HTML and mail. Include names and every free-text field a template renders. Assert that dangerous characters are escaped and the raw value is absent. Do not assert an exact entity for a quote, because Markdown and mail CSS inliners may decode it.
+- **Injection into dynamic query components.** Examples include sort columns, filter fields, and sort directions.
+- **An unexpected key** in a payload or configuration array. A merge that accepts every key can set an attribute the user must not control.
 
 @if($pest)
 ```php
@@ -48,4 +48,4 @@ public function test_escapes_dangerous_content_in_the_notification(): void
 ```
 @endif
 
-Laravel gives a defense for mass assignment, for authorization, and for escaping. Test that this application uses the defense, because the application must select the defense for each attribute, each route, and each template.
+Laravel provides defenses against mass assignment, unauthorized access, and unescaped output. Test that the application applies the appropriate defense to each attribute, route, and template.

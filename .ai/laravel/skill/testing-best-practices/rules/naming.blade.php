@@ -4,17 +4,17 @@ $pest = $assist->hasPackage('pestphp/pest');
 @endphp
 # Naming and Structure
 
-## The Layout of the Files
+## File Layout
 
-- Give each test file the name `{ClassName}Test.php`.
-- Put each test file at the same relative path as the class under test. The class `app/Actions/DeleteTeam.php` gets the test `tests/Unit/Actions/DeleteTeamTest.php`.
-- Follow the convention of the project for the fixture files. Put each fixture file in `tests/Fixtures/` if the project has no convention, and load the fixture by its path.
-- Keep a large literal value out of the test body. Put the value in a fixture file.
+- Name each test file `{ClassName}Test.php`.
+- Place each test file at the same relative path as the class under test. The class `app/Actions/DeleteTeam.php` gets the test `tests/Unit/Actions/DeleteTeamTest.php`.
+- Follow the project's convention for fixture files. If none exists, put fixtures in `tests/Fixtures/` and load them by path.
+- Move large literal values out of the test body and into fixture files.
 
 @if($pest)
 ## The Test Function
 
-Use the test function that the other files in the same directory use. If no file exists, apply the two rules that follow:
+Use the test function used by other files in the same directory. If no neighboring test files exist:
 
 - Use `it()` for the behavior of the code, and write the name as a verb phrase.
 - Use `test()` for a declarative fact, such as a grant in a policy, the labels of an enum, or the shape of a serialized model.
@@ -23,7 +23,7 @@ Use one Pest declaration style in each file. Use either `it()` or `test()` consi
 
 ## The Names of the Tests
 
-The name of a test is a specification. Give the result that the user can see, and give the condition that causes it.
+The name of a test is a specification. State the user-visible result and the condition that causes it.
 
 - Name the behavior, and not the method under test. The file name already gives the class.
 - Give the exact status code in the name of a test for an API error.
@@ -42,7 +42,7 @@ it('falls back to the default region when none is configured', function () { ...
 
 ## The Names of the Tests
 
-The name of a test method is a specification. Write the words separated by an underscore. Give the result that the user can see, and give the condition that causes it.
+The name of a test method is a specification. Separate the words with underscores. State the user-visible result and the condition that causes it.
 
 - Name the behavior, and not the method under test. The file name already gives the class.
 - Give the exact status code in the name of a test for an API error.
@@ -55,20 +55,20 @@ public function test_valid_payload_creates_record_and_returns_201(): void { ... 
 ```
 @endif
 
-Use a verb that gives a result, such as `returns`, `renders`, `creates`, `dispatches`, `rejects`, `forbids`, `falls back`, or `does not`.
+Use a verb that describes a result, such as `returns`, `renders`, `creates`, `dispatches`, `rejects`, `forbids`, `falls back`, or `does not`.
 
 @if($pest)
-Do not write `it('works correctly')` or `it('returns data')`, because neither gives a result. Do not write `it('handleMethod creates record')`, because it gives a method and not a behavior.
+Do not write `it('works correctly')` or `it('returns data')`, because neither specifies a meaningful result. Do not write `it('handleMethod creates record')`, because it names a method rather than behavior.
 @else
 Do not write `test_store()`, `test_it_works()`, or `test_validation()`, because none of them gives a result.
 @endif
 
-## The Groups
+## Grouping
 
 @if($pest)
 Use `describe()` if one file covers separate actions in a lifecycle. An example is a controller with the actions `index`, `show`, `store`, `update`, and `destroy`.
 
-Do not use `describe()` in these three conditions:
+Do not use `describe()` in these cases:
 
 - The file covers one action or one flow.
 - The tests are different only in the input value. Use a dataset instead.

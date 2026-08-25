@@ -1,6 +1,6 @@
 # Test Enforcement
 
-- Test each change in the code. Write a new test, or update a test that exists.
-- Run the tests that the change affects. The tests must pass.
-- Test the behavior of the change and the failure modes that are important. Then stop.
-- Read the `testing-best-practices` skill before you write the test.
+- Test every code change by adding or updating a test.
+- Run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.

@@ -79,7 +79,7 @@ it('teaches browser testing when the project installs a browser tool the framewo
         ->toContain('tests/Browser')
         ->toContain('## The Browser Tests')
         ->toContain($docs)
-        ->not->toContain('installs neither of them');
+        ->not->toContain('neither of which this project installs');
 })->with([
     'pest with the plugin' => [true, 'pestphp/pest-plugin-browser', 'https://pestphp.com/docs/browser-testing'],
     'pest with dusk' => [true, 'laravel/dusk', 'https://laravel.com/framework/docs/dusk'],
@@ -90,7 +90,7 @@ it('names the missing package when the project installs no browser tool the fram
     $installed = array_map(fn (string $package): Package => rosterPackage($package, '1.0.0', true), $packages);
 
     expect(renderTestingSkill($pest, $installed))
-        ->toContain('installs neither of them')
+        ->toContain('neither of which this project installs')
         ->toContain($missing)
         ->not->toContain('tests/Browser')
         ->not->toContain('## The Browser Tests');
@@ -102,9 +102,9 @@ it('names the missing package when the project installs no browser tool the fram
 
 it('puts a convention of the project above its own rules, and never deletes a test without approval', function (bool $pest): void {
     expect(renderTestingSkill($pest))
-        ->toContain('a convention of the project outranks each rule in this skill')
-        ->toContain('Do not delete it, and do not rewrite it.')
-        ->toContain('do not delete a test and do not rewrite a test without approval of the user');
+        ->toContain('project conventions take precedence over this skill')
+        ->toContain('Do not delete or rewrite it.')
+        ->toContain("Do not delete or rewrite a test without the user's approval");
 })->with([
     'pest' => true,
     'phpunit' => false,
@@ -114,9 +114,9 @@ it('keeps one case at the endpoint when a unit test owns the matrix', function (
     expect(renderTestingSkill($pest))
         ->toContain('### Which Layer Owns Which Case')
         ->toContain('Never remove the last case')
-        ->toContain('shrinks to one case, and it is not deleted')
-        ->toContain('trim the test at the higher layer to one case')
-        ->toContain('A test of what this project configures is not a test of the framework.');
+        ->toContain('reduce duplicate higher-level coverage to one case rather than deleting it')
+        ->toContain('trim the higher-layer test to one case')
+        ->toContain('Testing project configuration is not testing the framework.');
 })->with([
     'pest' => true,
     'phpunit' => false,
@@ -124,8 +124,8 @@ it('keeps one case at the endpoint when a unit test owns the matrix', function (
 
 it('exempts an architecture test from the value rules, which only Pest can write', function (): void {
     expect(renderTestingSkill(pest: true))
-        ->toContain('Judge an architecture test by the convention that it protects')
-        ->toContain('the items that follow do not apply to it');
+        ->toContain('Judge an architecture test by the convention it protects')
+        ->toContain('these items do not apply to it');
 
     expect(renderTestingSkill(pest: false))
         ->not->toContain('architecture test');

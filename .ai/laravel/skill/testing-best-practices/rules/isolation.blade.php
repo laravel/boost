@@ -4,33 +4,33 @@ $pest = $assist->hasPackage('pestphp/pest');
 @endphp
 # Fakes, Mocks, and Determinism
 
-A test that uses the real time, the real randomness, a real sleep, or a real network call can fail for a reason that is not in the code under test. Control each of these four items.
+Tests that depend on actual time, randomness, sleeping, or network calls can fail for reasons unrelated to the code under test. Control all four.
 
 ## How to Isolate a Dependency
 
-Fetch `https://laravel.com/framework/docs/mocking` for the fakes, the facade doubles, and the assertions that each fake gives. Confirm the name before you use it.
+Fetch `https://laravel.com/framework/docs/mocking` for Laravel's fakes, facade doubles, and fake assertions. Confirm each name before using it.
 
-Name the dependency, then take the first option that fits it. A fake of the framework keeps the real code path, and a mock replaces it.
+Identify the dependency, then choose the first applicable option. A framework fake preserves the real code path, while a mock replaces the dependency.
 
-1. Use the fake of the framework for a facade, such as the events, the queue, the mail, the notifications, the storage, the HTTP client, the time, and the sleep.
+1. Use framework fakes for facades such as events, queues, mail, notifications, storage, the HTTP client, time, and sleep.
 2. Use the fake implementation of the project for a service of the project, if such a fake exists.
-3. Use a mock for a contract that the container resolves, and only when the real implementation leaves the process or is not deterministic.
-4. Use the real implementation for everything else, and for the database.
+3. Use a mock for a container-resolved contract only when the real implementation leaves the process or is nondeterministic.
+4. Use the real implementation for everything else, including the database.
 
 ## The Fakes
 
 @if($pest)
-- Make each fake inside the test that needs the fake. Do not make a fake in a `beforeEach()` at the top of the file.
+- Create each fake inside the test that needs it. Do not create fakes in a file-level `beforeEach()`.
 @else
-- Make each fake inside the test method that needs the fake. Do not make a fake in `setUp()`.
+- Create each fake inside the test method that needs it. Do not create fakes in `setUp()`.
 @endif
-- Give the class names to `Event::fake()` and to `Queue::fake()` if you know the classes that the code dispatches. A fake with no class names hides a dispatch that you do not expect.
-- Use a fake with no class names only if the test asserts the complete result, and includes `assertNothingPushed()`.
+- Pass class names to `Event::fake()` and `Queue::fake()` when you know which classes the code dispatches. A fake without class names can hide an unexpected dispatch.
+- Use a fake without class names only when the test asserts the complete result, including a call to `assertNothingPushed()`.
 - Write one assertion for each fake. The assertion states that the code dispatches the item, or that the code does not dispatch the item.
 - Assert the data of a job or of an event if that data is part of the behavior.
 - Use `Exceptions::fake()` to assert that the application reports the correct exception. Do not use `withoutExceptionHandling()`, because it changes the response under test.
 
-Create the prerequisite factory records before you call `Event::fake()`. A factory uses the model events, such as a `creating` hook that makes a UUID, and a fake with no class names stops these events and makes an incorrect model. Call the fake first only when a factory event is the behavior under test, and give it the class names of that event.
+Create prerequisite factory records before calling `Event::fake()`. Factories use model events, such as a `creating` hook that generates a UUID, and a fake without class names suppresses those events and can produce an invalid model. Call the fake first only when a factory event is under test, and pass that event's class name.
 
 ## The Mocks
 
@@ -44,9 +44,9 @@ Use `$this->mock(Contract::class)` to put a mock in the container. Do not build 
 
 ## The Outbound HTTP
 
-Call `Http::preventStrayRequests()`. A request that has no fake then fails, and does not reach the network.
+Call `Http::preventStrayRequests()`. Any request without a matching fake then fails without reaching the network.
 
-Fake the exact endpoint that each test uses. Do not call `Http::fake()` with no endpoint, because it accepts a request that the test does not expect, and a defect can make such a request.
+Fake the exact endpoint used by each test. Do not call `Http::fake()` without an endpoint because it accepts unexpected requests and can hide defects.
 
 ## The Time and the Randomness
 
@@ -64,5 +64,5 @@ Fake the exact endpoint that each test uses. Do not call `Http::fake()` with no 
 
 - Run the real query against the real records in the test database. Do not mock the query builder, because the test then asserts the mock.
 - Assert the exact keys of `toArray()` if the shape of the serialized model is a contract. The test then fails when the model exposes a new attribute.
-- Test the effect of the schema on the application, such as a cascade that deletes the dependent records. Do not test that the cascade of the database works.
+- Test application behavior caused by the schema, such as deleting dependent records through a cascade. Do not test the database engine's cascade implementation.
 - Use `LazilyRefreshDatabase` instead of `RefreshDatabase`. A test that does not use the database then does not run the migrations.

@@ -3,14 +3,14 @@
 $pest = $assist->hasPackage('pestphp/pest');
 $pest5 = $assist->hasPackage('pestphp/pest', '>=5.0');
 @endphp
-# How to Find a Feature of the Test Framework
+# How to Find Test Framework Features
 
 @if($pest)
-Pest adds a feature faster than this skill can list it. This skill does not repeat the documentation. Find the feature that does the work before you write the code by hand.
+Pest adds features faster than this skill can list them. Find an existing feature before implementing the behavior by hand.
 
-- Give `search-docs` the name of the capability that you need, and not the name of a function that you remember. `search-docs` gives the features of the version that the project installs.
-- Fetch `https://pestphp.com/llms.txt` with a web request for the complete list of the features and for the new features of each release.
-- Tell the user that a feature does not exist in the installed version, if a search gives no result. Do not write an API that you did not confirm.
+- Give `search-docs` the capability you need rather than the name of a function you remember. It returns features available in the installed version.
+- Fetch `https://pestphp.com/llms.txt` for the complete feature list and additions in each release.
+- If a search returns no results, tell the user that the installed version does not provide the feature. Do not write an API that you have not confirmed.
 
 Search for a feature in this table before you write the code by hand.
 
@@ -30,11 +30,11 @@ Search for a feature in this table before you write the code by hand.
 @endif
 | Run one test while you debug | filtering, `--bail`, `--dirty` |
 @else
-PHPUnit and Laravel give a feature for most of the work that a test needs. This skill does not repeat the documentation. Find the feature that does the work before you write the code by hand.
+PHPUnit and Laravel provide features for most testing needs. Find an existing feature before implementing the behavior by hand.
 
-- Give `search-docs` the name of the capability that you need, and not the name of a method that you remember. `search-docs` gives the testing documentation of Laravel for the version that the project installs.
-- Fetch `https://phpunit.de/documentation.html` with a web request for the attributes, the assertions, and the options of the command line of PHPUnit specific versions.
-- Tell the user that a feature does not exist in the installed version, if a search gives no result. Do not write an API that you did not confirm.
+- Give `search-docs` the capability you need rather than the name of a method you remember. It returns Laravel testing documentation for the installed version.
+- Fetch `https://phpunit.de/documentation.html` for version-specific PHPUnit attributes, assertions, and command-line options.
+- If a search returns no results, tell the user that the installed version does not provide the feature. Do not write an API that you have not confirmed.
 
 Search for a feature in this table before you write the code by hand.
 
@@ -51,9 +51,9 @@ Search for a feature in this table before you write the code by hand.
 
 ## The Assertions of Laravel
 
-Laravel adds an assertion for each part of the framework. Fetch `https://laravel.com/framework/docs/testing` for the complete list, and search for the assertion before you build a check by hand. Examples are `assertDatabaseHas()`, `assertModelExists()`, `assertSoftDeleted()`, the response assertions such as `assertRedirectToRoute()` and `assertJsonPath()`, and the fake assertions such as `Queue::assertPushed()` and `Notification::assertSentTo()`.
+Laravel provides assertions for each part of the framework. Fetch `https://laravel.com/framework/docs/testing` for the complete list, and search for an assertion before building a check by hand. Examples include `assertDatabaseHas()`, `assertModelExists()`, `assertSoftDeleted()`, response assertions such as `assertRedirectToRoute()` and `assertJsonPath()`, and fake assertions such as `Queue::assertPushed()` and `Notification::assertSentTo()`.
 
-A check that you build by hand fails with `false is not true`, and that message names nothing. The assertion of the framework names the table, the value, or the response that is not correct, so the failure tells you what to fix.
+A hand-built check fails with `false is not true`, which identifies nothing. A framework assertion names the incorrect table, value, or response, so the failure indicates what to fix.
 
 ```php
 // The failure says that false is not true.
