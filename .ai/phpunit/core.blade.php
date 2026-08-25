@@ -4,19 +4,15 @@
 @scoped(['tests/**'])
 # PHPUnit
 
-- This project uses PHPUnit for each test. Write each test as a PHPUnit class.
-- Create a test with `{{ $assist->artisanCommand('make:test --phpunit {name}') }}`.
-- Convert a test to PHPUnit if you find a test that uses Pest.
-- Use `LazilyRefreshDatabase` instead of `RefreshDatabase`. A test that does not use the database then does not run the migrations.
-- Read the `testing-best-practices` skill to decide what to test, how to name a test, what to cover, and how to make a fake.
+- This project uses PHPUnit for each test. Create a test with `{{ $assist->artisanCommand('make:test --phpunit {name}') }}`.
+- Do not put the directory of the test suite in `{name}`. Write `SomeFeatureTest`, and not `Feature/SomeFeatureTest`.
+- Read the `testing-best-practices` skill to decide what to test, how to name a test, what to cover, how to isolate a dependency, and how to review a test.
 - Do NOT delete a test or a test file without approval. A test is part of the application.
 
 ## Running Tests
 
-- Run the narrowest set of tests that covers the change. Use an appropriate filter.
-- Run one test after each change to that test.
-- Run the complete suite with `{{ $assist->artisanCommand('test --compact') }}`.
-- Run the tests in one file with `{{ $assist->artisanCommand('test --compact tests/Feature/ExampleTest.php') }}`.
-- Run one test by name with `{{ $assist->artisanCommand('test --compact --filter=testName') }}`.
-- Ask the user to run the complete suite after the tests for the feature pass.
+- Run the narrowest set of tests that covers the change. Add a file path, or `--filter=testName`, to `{{ $assist->artisanCommand('test --compact') }}`.
+- Run one test again after each change to that test.
+- Run `{{ $assist->binCommand('phpunit') }}` to call the test runner directly. It takes the same file path and the same `--filter=testName`.
+- Ask the user to run the complete suite with `{{ $assist->artisanCommand('test --compact') }}` after the tests for the feature pass.
 @endscoped

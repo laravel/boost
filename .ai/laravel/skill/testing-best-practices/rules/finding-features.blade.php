@@ -47,7 +47,7 @@ Search for a feature in this table before you write the code by hand.
 
 ## The Assertions of Laravel
 
-Laravel adds an assertion for each part of the framework. Search for the assertion before you build a check by hand. Examples are `assertDatabaseHas()`, `assertModelExists()`, `assertSoftDeleted()`, the response assertions such as `assertRedirectToRoute()` and `assertJsonPath()`, and the fake assertions such as `Queue::assertPushed()` and `Notification::assertSentTo()`.
+Laravel adds an assertion for each part of the framework. Fetch `https://laravel.com/framework/docs/testing` for the complete list, and search for the assertion before you build a check by hand. Examples are `assertDatabaseHas()`, `assertModelExists()`, `assertSoftDeleted()`, the response assertions such as `assertRedirectToRoute()` and `assertJsonPath()`, and the fake assertions such as `Queue::assertPushed()` and `Notification::assertSentTo()`.
 
 A check that you build by hand fails with `false is not true`, and that message names nothing. The assertion of the framework names the table, the value, or the response that is not correct, so the failure tells you what to fix.
 
