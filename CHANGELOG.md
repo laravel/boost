@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.5.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.6.0...main)
+
+## [v2.6.0](https://github.com/laravel/boost/compare/v2.5.5...v2.6.0) - 2026-08-25
+
+* Run `DatabaseQuery` under a guaranteed database enforced read-only transaction by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/boost/pull/957
+* Quote the MySQL table type as a string literal so schema reads work under ANSI_QUOTES by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/958
+* Point the last-error tool description at the correct browser-logs tool name by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/959
+* Ignore a repository-root SKILL.md so add-skill cannot delete the whole skills directory by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/954
+* Accept any skill path shape in boost:add-skill, and keep the audit gate correct by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/960
+* Keep the separating comma out of trailing comments when injecting MCP servers by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/977
+* Stop detecting Antigravity from the shared .agents directory that Boost itself creates for other agents' skills by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/981
+* Re-key the search-docs query list after filtering by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/962
+* Testing Best Practices Skill by [@nexxai](https://github.com/nexxai) in https://github.com/laravel/boost/pull/769
 
 ## [v2.5.5](https://github.com/laravel/boost/compare/v2.5.4...v2.5.5) - 2026-08-19
 
@@ -532,11 +544,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -617,12 +631,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
