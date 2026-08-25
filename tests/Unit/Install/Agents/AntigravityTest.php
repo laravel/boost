@@ -67,13 +67,27 @@ it('returns configured skills path', function (): void {
     expect($agent->skillsPath())->toBe('.custom/skills');
 });
 
-it('projectDetectionConfig detects .agents path and mcp_config.json file', function (): void {
+it('only uses the antigravity specific mcp_config.json', function (): void {
     $agent = new Antigravity($this->strategyFactory);
 
     expect($agent->projectDetectionConfig())->toBe([
-        'paths' => ['.agents'],
+        'paths' => ['.gemini'],
         'files' => ['.agents/mcp_config.json'],
     ]);
+});
+
+it('returns false when only .agents/skills exists', function (): void {
+    $agent = new Antigravity(new DetectionStrategyFactory(app()));
+    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost_antigravity_'.uniqid();
+    mkdir($tempDir.DIRECTORY_SEPARATOR.'.agents'.DIRECTORY_SEPARATOR.'skills', 0755, true);
+
+    try {
+        expect($agent->detectInProject($tempDir))->toBeFalse();
+    } finally {
+        rmdir($tempDir.DIRECTORY_SEPARATOR.'.agents'.DIRECTORY_SEPARATOR.'skills');
+        rmdir($tempDir.DIRECTORY_SEPARATOR.'.agents');
+        rmdir($tempDir);
+    }
 });
 
 it('system detection uses command -v on Darwin', function (): void {
