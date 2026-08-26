@@ -77,7 +77,7 @@ it('teaches PHPUnit syntax to a PHPUnit project and never Pest syntax', function
 it('teaches browser testing when the project installs a browser tool the framework can run', function (bool $pest, string $package, string $docs): void {
     expect(renderTestingSkill($pest, [rosterPackage($package, '1.0.0', true)]))
         ->toContain('tests/Browser')
-        ->toContain('## The Browser Tests')
+        ->toContain('## Browser Tests')
         ->toContain($docs)
         ->not->toContain('neither of which this project installs');
 })->with([
@@ -93,7 +93,7 @@ it('names the missing package when the project installs no browser tool the fram
         ->toContain('neither of which this project installs')
         ->toContain($missing)
         ->not->toContain('tests/Browser')
-        ->not->toContain('## The Browser Tests');
+        ->not->toContain('## Browser Tests');
 })->with([
     'pest' => [true, [], 'pestphp/pest-plugin-browser'],
     'phpunit' => [false, [], 'laravel/dusk'],
@@ -135,12 +135,12 @@ it('teaches a Pest 5 command only to a project that installs Pest 5', function (
     expect(renderTestingSkill(pest: true, version: '5.0.0'))
         ->toContain('pest --parallel --tia')
         ->toContain('tests/.pest/shards.json')
-        ->toContain('The Expectation for a Format');
+        ->toContain('Format Expectations');
 
     expect(renderTestingSkill(pest: true, version: '4.1.0'))
         ->not->toContain('--tia')
         ->not->toContain('shards.json')
-        ->not->toContain('The Expectation for a Format');
+        ->not->toContain('Format Expectations');
 });
 
 it('ships one testing skill to every project, whichever test framework and major it installs', function (array $package): void {
