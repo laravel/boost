@@ -50,6 +50,28 @@ class GitHubRepository
     {
         $isUrl = Str::startsWith($input, ['http://', 'https://']);
 
+        $isSshUrl = Str::startsWith($input, 'ssh://');
+        $isScpUrl = preg_match('~^[^@/:]+@[^:]+:.+$~', $input) === 1;
+
+        if ($isSshUrl || $isScpUrl) {
+            if ($isScpUrl) {
+                preg_match('~^(?:[^@/:]+@)?(?<host>[^:]+):(?<path>.+)$~', $input, $matches);
+                $host = $matches['host'] ?? '';
+                $path = $matches['path'] ?? '';
+            } else {
+                $parsed = parse_url($input);
+                $host = $parsed['host'] ?? '';
+                $path = ltrim($parsed['path'] ?? '', '/');
+            }
+            $isGitHubHost = $host === 'github.com' || Str::endsWith($host, '.github.com');
+
+            if (! $isGitHubHost) {
+                throw new InvalidArgumentException('Only GitHub URLs are supported.');
+            }
+
+            return [Str::replaceEnd('.git', '', $path), ''];
+        }
+
         if (! $isUrl) {
             return [$input, ''];
         }
