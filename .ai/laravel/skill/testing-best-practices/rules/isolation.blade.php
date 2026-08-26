@@ -12,12 +12,12 @@ Fetch `https://laravel.com/framework/docs/mocking` for Laravel's fakes, facade d
 
 Identify the dependency, then choose the first applicable option. A framework fake preserves the real code path, while a mock replaces the dependency.
 
-1. Use framework fakes for facades such as events, queues, mail, notifications, storage, the HTTP client, time, and sleep.
-2. Use the fake implementation of the project for a service of the project, if such a fake exists.
+1. Always use framework fakes for facades such as events, queues, mail, notifications, storage, the HTTP client, time, and sleep.
+2. Use a developer-defined fake implementation of a service if the application provides one.
 3. Use a mock for a container-resolved contract only when the real implementation leaves the process or is nondeterministic.
 4. Use the real implementation for everything else, including the database.
 
-## The Fakes
+## Framework Fakes
 
 @if($pest)
 - Create each fake inside the test that needs it. Do not create fakes in a file-level `beforeEach()`.
@@ -32,7 +32,7 @@ Identify the dependency, then choose the first applicable option. A framework fa
 
 Create prerequisite factory records before calling `Event::fake()`. Factories use model events, such as a `creating` hook that generates a UUID, and a fake without class names suppresses those events and can produce an invalid model. Call the fake first only when a factory event is under test, and pass that event's class name.
 
-## The Mocks
+## Mocking
 
 Use `shouldReceive()` before the action to declare an expectation. Use `shouldHaveReceived()` after the action for a spy. Use `Mockery::on()` or `withArgs()` if an equality check cannot state the expected argument, such as a check of one field of a value object.
 
@@ -42,13 +42,13 @@ Import the mock function before you use it: `use function Pest\Laravel\mock;`.
 Use `$this->mock(Contract::class)` to put a mock in the container. Do not build a PHPUnit mock for a class that Mockery can double, because the project uses Mockery.
 @endif
 
-## The Outbound HTTP
+## Outbound HTTP Testing
 
 Call `Http::preventStrayRequests()`. Any request without a matching fake then fails without reaching the network.
 
 Fake the exact endpoint used by each test. Do not call `Http::fake()` without an endpoint because it accepts unexpected requests and can hide defects.
 
-## The Time and the Randomness
+## Time and Randomness
 
 - Freeze the time or move the time in each test that depends on a date, a period, or a timestamp.
 @if($pest)
@@ -60,9 +60,9 @@ Fake the exact endpoint used by each test. Do not call `Http::fake()` without an
 - Use `Sleep::fake()` instead of a real sleep, and assert the sleeps that the code requests.
 - Restore the time and the randomness after each test, if the suite does not restore them for every test.
 
-## The Database
+## Database
 
-- Run the real query against the real records in the test database. Do not mock the query builder, because the test then asserts the mock.
+- Run real queries against the real records in the test database. Do not mock the query builder, because the test then asserts the mock.
 - Assert the exact keys of `toArray()` if the shape of the serialized model is a contract. The test then fails when the model exposes a new attribute.
 - Test application behavior caused by the schema, such as deleting dependent records through a cascade. Do not test the database engine's cascade implementation.
 - Use `LazilyRefreshDatabase` instead of `RefreshDatabase`. A test that does not use the database then does not run the migrations.

@@ -8,7 +8,7 @@ Check every item in this file. A passing test may still provide no value. For ea
 
 Report each finding. Do not delete or rewrite a test without the user's approval. When an issue appears throughout the suite as a convention, report the pattern once rather than every affected file.
 
-## The Value of the Test
+## Test Value
 
 @if($pest)
 Apply this section to behavioral tests. An architecture test states a convention for a directory, so these items do not apply to it.
@@ -29,7 +29,7 @@ Apply this section to behavioral tests. An architecture test states a convention
 - [ ] Each test class extends the base `TestCase` of the project, and each file uses either the prefix `test_` or the `#[Test]` attribute consistently.
 @endif
 
-## The Coverage
+## Coverage
 
 - [ ] HTTP tests cover authentication, authorization, role, scope, and validation when applicable.
 - [ ] A request for a record of a different tenant gets a status code that does not confirm that the record exists.
@@ -37,7 +37,7 @@ Apply this section to behavioral tests. An architecture test states a convention
 - [ ] Each validation rule has one test that asserts the user-visible message. When a unit test owns a matrix, reduce duplicate higher-level coverage to one case rather than deleting it.
 - [ ] Rendered user input and each dynamic part of a query have a security test.
 
-## The Data and the Determinism
+## Data and Determinism
 
 - [ ] Each test creates its mutable records directly or through a helper that it calls, and every created record arranges the behavior or supports an assertion.
 @if($pest)
@@ -50,7 +50,7 @@ Apply this section to behavioral tests. An architecture test states a convention
 - [ ] Time, randomness, sleep, and outbound HTTP are controlled.
 - [ ] Each test passes alone, and passes in the complete suite in any order.
 
-## The Assertions
+## Assertions
 
 - [ ] Each expected value is a known value, and the test does not calculate the value with the logic of the implementation.
 - [ ] Each test of a write operation asserts the response, the state in the database, and the side effects.
@@ -60,12 +60,3 @@ Apply this section to behavioral tests. An architecture test states a convention
 @else
 - [ ] Each group of assertions stays on one subject, and each comparison uses `assertSame()`.
 @endif
-
-## The Defects to Report
-
-A review can find defects in the code rather than the tests. Report each defect below, and do not write a test that codifies it as correct behavior.
-
-- [ ] A method with no body.
-- [ ] A policy that exists, but that no action calls.
-- [ ] A write action with no validation.
-- [ ] A status code or a response shape that is different from the shape of a similar endpoint.

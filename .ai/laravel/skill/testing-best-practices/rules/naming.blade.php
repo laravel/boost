@@ -12,7 +12,7 @@ $pest = $assist->hasPackage('pestphp/pest');
 - Move large literal values out of the test body and into fixture files.
 
 @if($pest)
-## The Test Function
+## Test Function
 
 Use the test function used by other files in the same directory. If no neighboring test files exist:
 
@@ -21,7 +21,7 @@ Use the test function used by other files in the same directory. If no neighbori
 
 Use one Pest declaration style in each file. Use either `it()` or `test()` consistently.
 
-## The Names of the Tests
+## Naming Tests
 
 The name of a test is a specification. State the user-visible result and the condition that causes it.
 
@@ -35,12 +35,12 @@ it('does not include deployments from deleted environments', function () { ... }
 it('falls back to the default region when none is configured', function () { ... });
 ```
 @else
-## The Test Class and the Test Methods
+## Test Class and Methods
 
 - Extend the base `TestCase` of the project in each test class.
 - Give each test method the prefix `test_`, or add the `#[Test]` attribute to the method. Use the convention of the other files in the same directory.
 
-## The Names of the Tests
+## Naming Tests
 
 The name of a test method is a specification. Separate the words with underscores. State the user-visible result and the condition that causes it.
 

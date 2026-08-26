@@ -44,7 +44,7 @@ Use `assertSame()` and not `assertEquals()`, because `assertSame()` also compare
 
 Assert each fact once. Do not assert a 200 status before `assertSee`, because `assertSee` already shows that the page rendered.
 
-## The Assertion with a Name for a Response
+## Named Response Assertions
 
 Use a named response assertion, such as `assertNotFound()`, rather than `assertStatus(404)`. A failure then identifies the broken contract. Laravel provides named assertions for commonly tested status codes.
 
@@ -55,7 +55,7 @@ Group the assertions for one subject together. Start a new group when the subjec
 @endif
 
 @if($pest5)
-## The Expectation for a Format
+## Format Expectations
 
 Use Pest's format expectations rather than regular expressions because they provide clearer failure messages. Pest covers email addresses, URLs, UUIDs, IP addresses, and other common formats, and each expectation supports `not` for the negative case.
 
@@ -66,21 +66,21 @@ Write the expected value in the test, or calculate the expected value by a diffe
 
 @if($pest)
 ```php
-// The test calculates the value with the logic of the implementation.
+// The test calculates the value with the logic of the implementation...
 $expected = now()->subHours(24)->floorSeconds(30)->toJson();
 expect($from)->toBe($expected);
 
-// The test sets a fixed input and asserts a known value.
+// The test sets a fixed input and asserts a known value...
 travelTo('2025-01-01 00:00:00');
 expect($from)->toBe('2024-12-31T00:00:00.000000Z');
 ```
 @else
 ```php
-// The test calculates the value with the logic of the implementation.
+// The test calculates the value with the logic of the implementation...
 $expected = now()->subHours(24)->floorSeconds(30)->toJson();
 $this->assertSame($expected, $from);
 
-// The test sets a fixed input and asserts a known value.
+// The test sets a fixed input and asserts a known value...
 $this->travelTo('2025-01-01 00:00:00');
 $this->assertSame('2024-12-31T00:00:00.000000Z', $from);
 ```
@@ -90,9 +90,9 @@ $this->assertSame('2024-12-31T00:00:00.000000Z', $from);
 
 A status code is not the complete result of a write operation. Assert each of the following if the operation changes it:
 
-- the response or the return value
-- the state in the database
-- the jobs and the events that the operation dispatches
-- the notifications and the mail that the operation sends
+- The response or the return value.
+- The state in the database.
+- The jobs and the events that the operation dispatches.
+- The notifications and the mail that the operation sends.
 
 On the failure path, assert that the operation makes none of these changes. A test that asserts only `assertOk()` passes even when the application saves no record.

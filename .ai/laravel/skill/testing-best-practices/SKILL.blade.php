@@ -23,17 +23,6 @@ A pattern repeated throughout the project is a convention, and project conventio
 
 These rules govern the tests you write now. An existing test that follows a project convention is not defective merely because it conflicts with this skill. Do not delete or rewrite it. If the convention has drawbacks, explain them and let the user decide.
 
-Use the project convention for each item that follows:
-
-@if($pest)
-- the use of `it()` or `test()`
-@else
-- the test method name and the use of `#[Test]`
-@endif
-- the construction of a factory
-- the setup of the authentication
-- the layout of the files
-
 ## What to Test
 
 Read this section before you write a test.
@@ -68,14 +57,14 @@ Read this section before you write a test.
 
 Most changes need more than one rule file.
 
-| Subject | Rule file |
+| Subject | Rule File |
 | --- | --- |
-| A feature of the test framework that can already do the work | [`rules/finding-features.md`](rules/finding-features.md) |
-| The layout of the files, the names of the tests, and the groups | [`rules/naming.md`](rules/naming.md) |
-| Arrange-act-assert, and the correct assertion for each subject | [`rules/assertions.md`](rules/assertions.md) |
-| The coverage of an endpoint, the authentication, the authorization, the isolation of a tenant, the validation, and the tests in a browser | [`rules/endpoint-tests.md`](rules/endpoint-tests.md) |
-| The factories, the owner of the test data, and the repeated input values | [`rules/test-data.md`](rules/test-data.md) |
-| The fakes, the mocks, the outbound HTTP, the time, the randomness, and the database | [`rules/isolation.md`](rules/isolation.md) |
-| The escaping, the injection, the access across tenants, and the checks of privilege | [`rules/security.md`](rules/security.md) |
-| The settings of the environment and of the CI for a slow suite | [`rules/performance.md`](rules/performance.md) |
-| The review of a test or of a suite | [`rules/review.md`](rules/review.md) |
+| Test framework features that may already do the work | [`rules/finding-features.md`](rules/finding-features.md) |
+| File layout, test names, and groups | [`rules/naming.md`](rules/naming.md) |
+| Arrange-act-assert and choosing the correct assertion | [`rules/assertions.md`](rules/assertions.md) |
+| Endpoint coverage, authentication, authorization, tenant isolation, validation, and browser tests | [`rules/endpoint-tests.md`](rules/endpoint-tests.md) |
+| Factories, test data ownership, and repeated input values | [`rules/test-data.md`](rules/test-data.md) |
+| Fakes, mocks, outbound HTTP, time, randomness, and databases | [`rules/isolation.md`](rules/isolation.md) |
+| Escaping, injection, cross-tenant access, and privilege checks | [`rules/security.md`](rules/security.md) |
+| Environment and CI settings for a slow suite | [`rules/performance.md`](rules/performance.md) |
+| Reviewing a test or suite | [`rules/review.md`](rules/review.md) |

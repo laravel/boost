@@ -8,7 +8,7 @@ Test each security boundary where user input affects authorization, rendered out
 
 Write a test for each of these cases:
 
-- **Cross-tenant access.** Request a record of a different tenant, team, or organization. Read `rules/endpoint-tests.md` for why the response should be `404` rather than `403`.
+- **Cross-tenant access.** Request a record of a different tenant, team, or organization. Read `rules/endpoint-tests.md` for why the response should possibly be `404` rather than `403`.
 @if($pest)
 - **Each unprivileged role.** Use a dataset over the roles that the endpoint must refuse.
 @else
