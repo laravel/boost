@@ -125,7 +125,7 @@ class ToolExecutor
      */
     protected function buildCommand(string $toolClass, array $arguments): array
     {
-        $phpBinary = config('boost.executable_paths.php') ?? PHP_BINARY;
+        $phpBinary = config('boost.executable_paths.php') ?: PHP_BINARY;
         $normalized = CommandNormalizer::normalize($phpBinary);
 
         return [

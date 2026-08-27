@@ -32,7 +32,7 @@ abstract class Agent
 
     public function getPhpPath(bool $forceAbsolutePath = false): string
     {
-        $phpBinaryPath = config('boost.executable_paths.php') ?? 'php';
+        $phpBinaryPath = config('boost.executable_paths.php') ?: 'php';
 
         if ($phpBinaryPath === 'php' && ($this->useAbsolutePathForMcp() || $forceAbsolutePath)) {
             return PHP_BINARY;

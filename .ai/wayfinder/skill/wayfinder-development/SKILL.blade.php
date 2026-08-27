@@ -19,13 +19,17 @@ Use `search-docs` for detailed Wayfinder patterns and documentation.
 ### Generate Routes
 
 Run after route changes if Vite plugin isn't installed:
+
 ```bash
 {{ $assist->artisanCommand('wayfinder:generate --no-interaction') }}
 ```
+
 For form helpers, use `--with-form` flag:
+
 ```bash
 {{ $assist->artisanCommand('wayfinder:generate --with-form --no-interaction') }}
 ```
+
 ### Import Patterns
 
 @boostsnippet("Controller Action Imports", "typescript")
@@ -55,7 +59,7 @@ destroy.delete(1)
 store.form() // { action: "/posts", method: "post" }
 
 // Query parameters...
-show(1, { query: { page: 1 } }) // "/posts/1?page=1"
+show(1, { query: { page: 1 } }) // { url: "/posts/1?page=1", method: "get" }
 @endboostsnippet
 
 @if($assist->project->php()->uses(\Laravel\Boost\Support\PackageRegistry::INERTIA_LARAVEL) || $assist->project->js()->uses([\Laravel\Boost\Support\PackageRegistry::INERTIA_REACT, \Laravel\Boost\Support\PackageRegistry::INERTIA_VUE, \Laravel\Boost\Support\PackageRegistry::INERTIA_SVELTE]))

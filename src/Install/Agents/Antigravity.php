@@ -36,7 +36,7 @@ class Antigravity extends Agent implements SupportsGuidelines, SupportsMcp, Supp
     public function projectDetectionConfig(): array
     {
         return [
-            'paths' => ['.agents'],
+            'paths' => ['.gemini'],
             'files' => ['.agents/mcp_config.json'],
         ];
     }

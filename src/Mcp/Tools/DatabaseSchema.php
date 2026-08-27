@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Closure;
 use Exception;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema\SchemaDriverFactory;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -100,27 +102,66 @@ class DatabaseSchema extends Tool
     ): array {
         $result = [
             'engine' => DB::connection($connection)->getDriverName(),
-            'tables' => $summary
+            'tables' => $this->withoutTablePrefix($connection, fn (): array => $summary
                 ? $this->getAllTableColumnTypes($connection, $filter)
-                : $this->getAllTablesStructure($connection, $filter, $includeColumnDetails),
+                : $this->getAllTablesStructure($connection, $filter, $includeColumnDetails)),
         ];
 
-        if ($summary) {
+        if (! $summary) {
+            $driver = SchemaDriverFactory::make($connection);
+
+            if ($includeViews) {
+                $result['views'] = $driver->getViews();
+            }
+
+            if ($includeRoutines) {
+                $result['routines'] = [
+                    'stored_procedures' => $driver->getStoredProcedures(),
+                    'functions' => $driver->getFunctions(),
+                    'sequences' => $driver->getSequences(),
+                ];
+            }
+        }
+
+        return $this->stripTablePrefix($connection, $result);
+    }
+
+    /**
+     * Report names as the application writes them, since Eloquent and the query builder re-apply the prefix.
+     *
+     * @param  array<string, mixed>  $result
+     * @return array<string, mixed>
+     */
+    protected function stripTablePrefix(?string $connection, array $result): array
+    {
+        $prefix = DB::connection($connection)->getTablePrefix();
+
+        if ($prefix === '') {
             return $result;
         }
 
-        $driver = SchemaDriverFactory::make($connection);
+        $strip = fn (string $name): string => Str::replaceStart($prefix, '', $name);
 
-        if ($includeViews) {
-            $result['views'] = $driver->getViews();
+        $tables = [];
+
+        foreach ($result['tables'] as $name => $structure) {
+            if (is_array($structure['foreign_keys'] ?? null)) {
+                foreach ($structure['foreign_keys'] as $index => $foreignKey) {
+                    $structure['foreign_keys'][$index]['foreign_table'] = $strip($foreignKey['foreign_table']);
+                }
+            }
+
+            $tables[$strip((string) $name)] = $structure;
         }
 
-        if ($includeRoutines) {
-            $result['routines'] = [
-                'stored_procedures' => $driver->getStoredProcedures(),
-                'functions' => $driver->getFunctions(),
-                'sequences' => $driver->getSequences(),
-            ];
+        $result['tables'] = $tables;
+
+        foreach ($result['views'] ?? [] as $key => $view) {
+            foreach (['name', 'viewname'] as $field) {
+                if (is_string($name = data_get($view, $field))) {
+                    data_set($result['views'][$key], $field, $strip($name));
+                }
+            }
         }
 
         return $result;
@@ -166,6 +207,32 @@ class DatabaseSchema extends Tool
         }
 
         return $tables;
+    }
+
+    /**
+     * Schema drivers read the catalog, so table names arrive with the connection prefix already applied.
+     *
+     * @template TReturn
+     *
+     * @param  Closure(): TReturn  $callback
+     * @return TReturn
+     */
+    protected function withoutTablePrefix(?string $connection, Closure $callback): mixed
+    {
+        $db = DB::connection($connection);
+        $prefix = $db->getTablePrefix();
+
+        if ($prefix === '') {
+            return $callback();
+        }
+
+        $db->setTablePrefix('');
+
+        try {
+            return $callback();
+        } finally {
+            $db->setTablePrefix($prefix);
+        }
     }
 
     /**

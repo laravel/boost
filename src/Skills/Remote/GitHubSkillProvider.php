@@ -9,6 +9,8 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Laravel\Boost\Install\SkillWriter;
 use RuntimeException;
 use Throwable;
 
@@ -35,28 +37,36 @@ class GitHubSkillProvider
             return collect();
         }
 
-        $basePath = $this->repository->path;
+        $prefix = $this->repository->path === '' ? '' : $this->repository->path.'/';
 
-        $skillMarkers = collect($tree['tree'])
-            ->filter(fn (array $item): bool => $item['type'] === 'blob' && basename((string) $item['path']) === 'SKILL.md');
+        return collect($tree['tree'])
+            ->filter(function (array $item) use ($prefix): bool {
+                $path = (string) $item['path'];
 
-        if ($basePath !== '') {
-            $prefix = $basePath.'/';
-
-            $skillMarkers = $skillMarkers->filter(function (array $item) use ($prefix): bool {
-                $skillDir = dirname((string) $item['path']);
-
-                return str_starts_with($skillDir, $prefix) && ! str_contains(substr($skillDir, strlen($prefix)), '/');
-            });
-        }
-
-        return $skillMarkers
+                // Matching the marker rather than its directory accepts a path that is itself a skill directory.
+                return $item['type'] === 'blob'
+                    && Str::afterLast($path, '/') === 'SKILL.md'
+                    && str_starts_with($path, $prefix)
+                    // A skill is named after its directory, so that directory has to be a usable name.
+                    && SkillWriter::isValidSkillName(self::skillName($path));
+            })
             ->map(fn (array $item): RemoteSkill => new RemoteSkill(
-                name: basename(dirname((string) $item['path'])),
+                name: self::skillName((string) $item['path']),
                 repo: $this->repository->fullName(),
-                path: dirname((string) $item['path']),
+                path: self::skillDirectory((string) $item['path']),
             ))
             ->keyBy(fn (RemoteSkill $skill): string => $skill->name);
+    }
+
+    protected static function skillName(string $markerPath): string
+    {
+        return Str::afterLast(self::skillDirectory($markerPath), '/');
+    }
+
+    // Repository paths are always slash-delimited, so basename() and dirname() would split on a backslash under Windows.
+    protected static function skillDirectory(string $markerPath): string
+    {
+        return Str::contains($markerPath, '/') ? Str::beforeLast($markerPath, '/') : '';
     }
 
     public function downloadSkill(RemoteSkill $skill, string $targetPath): bool
@@ -103,7 +113,7 @@ class GitHubSkillProvider
             'https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1',
             $this->repository->owner,
             $this->repository->repo,
-            urlencode($this->resolveDefaultBranch())
+            urlencode($this->resolveBranch())
         );
 
         $response = $this->client()->get($url);
@@ -220,7 +230,7 @@ class GitHubSkillProvider
             'https://raw.githubusercontent.com/%s/%s/%s/%s',
             $this->repository->owner,
             $this->repository->repo,
-            $this->resolveDefaultBranch(),
+            $this->resolveBranch(),
             ltrim($path, '/')
         );
     }
@@ -255,8 +265,12 @@ class GitHubSkillProvider
         return Http::withHeaders($headers)->timeout($timeout);
     }
 
-    protected function resolveDefaultBranch(): string
+    protected function resolveBranch(): string
     {
+        if ($this->repository->branch !== '') {
+            return $this->repository->branch;
+        }
+
         if ($this->defaultBranch !== null) {
             return $this->defaultBranch;
         }

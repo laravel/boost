@@ -101,13 +101,13 @@ class GuidelineAssist
         return $this->project->php()->uses(PackageRegistry::PINT, '>=1.27.0');
     }
 
-    public function hasPackage(string $package): bool
+    public function hasPackage(string $package, ?string $constraint = null): bool
     {
-        if ($this->project->php()->uses($package)) {
+        if ($this->project->php()->uses($package, $constraint)) {
             return true;
         }
 
-        return $this->project->js()->uses($package);
+        return $this->project->js()->uses($package, $constraint);
     }
 
     public function nodePackageManager(): string
@@ -124,7 +124,7 @@ class GuidelineAssist
     {
         $npmExecutable = config('boost.executable_paths.npm');
 
-        if ($npmExecutable !== null) {
+        if ($npmExecutable) {
             return "{$npmExecutable} {$command}";
         }
 
@@ -144,7 +144,7 @@ class GuidelineAssist
     {
         $composerExecutable = config('boost.executable_paths.composer');
 
-        if ($composerExecutable !== null) {
+        if ($composerExecutable) {
             return "{$composerExecutable} {$command}";
         }
 
@@ -159,7 +159,7 @@ class GuidelineAssist
     {
         $vendorBinPrefix = config('boost.executable_paths.vendor_bin');
 
-        if ($vendorBinPrefix !== null) {
+        if ($vendorBinPrefix) {
             return "{$vendorBinPrefix}{$command}";
         }
 
@@ -174,7 +174,7 @@ class GuidelineAssist
     {
         $phpExecutable = config('boost.executable_paths.php');
 
-        if ($phpExecutable !== null) {
+        if ($phpExecutable) {
             return "{$phpExecutable} artisan";
         }
 

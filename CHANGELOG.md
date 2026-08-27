@@ -1,6 +1,70 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.5.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.7.0...main)
+
+## [v2.7.0](https://github.com/laravel/boost/compare/v2.6.0...v2.7.0) - 2026-08-26
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.6.0...v2.7.0
+
+## [v2.6.0](https://github.com/laravel/boost/compare/v2.5.5...v2.6.0) - 2026-08-25
+
+* Run `DatabaseQuery` under a guaranteed database enforced read-only transaction by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/boost/pull/957
+* Quote the MySQL table type as a string literal so schema reads work under ANSI_QUOTES by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/958
+* Point the last-error tool description at the correct browser-logs tool name by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/959
+* Ignore a repository-root SKILL.md so add-skill cannot delete the whole skills directory by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/954
+* Accept any skill path shape in boost:add-skill, and keep the audit gate correct by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/960
+* Keep the separating comma out of trailing comments when injecting MCP servers by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/977
+* Stop detecting Antigravity from the shared .agents directory that Boost itself creates for other agents' skills by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/981
+* Re-key the search-docs query list after filtering by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/962
+* Testing Best Practices Skill by [@nexxai](https://github.com/nexxai) in https://github.com/laravel/boost/pull/769
+
+## [v2.5.5](https://github.com/laravel/boost/compare/v2.5.4...v2.5.5) - 2026-08-19
+
+### What's Changed
+
+* Correct the Wayfinder query parameter return value by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/950
+* Add the missing PHP opening tag to the Volt class-based example by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/951
+* Point the Livewire 4 stream migration at the correct parameter by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/949
+* chore: allow guzzle v8 by [@joostdebruijn](https://github.com/joostdebruijn) in https://github.com/laravel/boost/pull/956
+* Fix newline normalization corrupting multi-byte UTF-8 in rule files by [@nixprosoft](https://github.com/nixprosoft) in https://github.com/laravel/boost/pull/947
+
+### New Contributors
+
+* [@joostdebruijn](https://github.com/joostdebruijn) made their first contribution in https://github.com/laravel/boost/pull/956
+* [@nixprosoft](https://github.com/nixprosoft) made their first contribution in https://github.com/laravel/boost/pull/947
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.5.4...v2.5.5
+
+## [v2.5.4](https://github.com/laravel/boost/compare/v2.5.3...v2.5.4) - 2026-08-18
+
+### What's Changed
+
+* Wrap lockForUpdate example in a transaction by [@ulofiai](https://github.com/ulofiai) in https://github.com/laravel/boost/pull/918
+* Prevent `boost:update` from failing when there is nothing to update by [@ohnotnow](https://github.com/ohnotnow) in https://github.com/laravel/boost/pull/907
+* Handle signaled process when detecting test enforcement by [@lazerg](https://github.com/lazerg) in https://github.com/laravel/boost/pull/901
+* Reject Blade templates from remote skills by [@drewmt](https://github.com/drewmt) in https://github.com/laravel/boost/pull/914
+* Improve argument decoding error handling in ExecuteToolCommand by [@AmadulHaque](https://github.com/AmadulHaque) in https://github.com/laravel/boost/pull/896
+* feat(agents): add MCP configuration support to Antigravity by [@imKenjo18](https://github.com/imKenjo18) in https://github.com/laravel/boost/pull/869
+* Refine search-docs usage guidance by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/923
+* Correct the mimes and extensions guidance for file upload validation by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/928
+* Include `PATCH` in the CSRF rule by [@MartinCamen](https://github.com/MartinCamen) in https://github.com/laravel/boost/pull/934
+* Fix the JavaScript hook example in the Livewire 3 skill by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/927
+* Send an idempotency key in the retried charge example by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/938
+* Treat blank executable path config values as unset by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/937
+* Ignore the connection table prefix when reading table details by [@lazerg](https://github.com/lazerg) in https://github.com/laravel/boost/pull/922
+* Fix the foreign key index example so it actually creates an index by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/942
+* Correct the wire:model default in the Livewire 4 skill by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/943
+* Describe what LazilyRefreshDatabase actually defers by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/944
+* Correct the cache tag driver support list by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/941
+
+### New Contributors
+
+* [@ulofiai](https://github.com/ulofiai) made their first contribution in https://github.com/laravel/boost/pull/918
+* [@drewmt](https://github.com/drewmt) made their first contribution in https://github.com/laravel/boost/pull/914
+* [@AmadulHaque](https://github.com/AmadulHaque) made their first contribution in https://github.com/laravel/boost/pull/896
+* [@MartinCamen](https://github.com/MartinCamen) made their first contribution in https://github.com/laravel/boost/pull/934
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.5.3...v2.5.4
 
 ## [v2.5.3](https://github.com/laravel/boost/compare/v2.5.1...v2.5.3) - 2026-08-07
 
@@ -482,11 +546,19 @@ If you have custom overrides in:
 
 
 
+
+
+
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
+
+
+
 
 
 
@@ -563,12 +635,20 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
+
+
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
+
+
+
 
 
 

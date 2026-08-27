@@ -269,3 +269,21 @@ test('it caps token_limit at maximum of 1000000', function (): void {
 
     Http::assertSent(fn ($request): bool => $request->data()['token_limit'] === 1000000);
 });
+
+test('it sends the remaining queries as a list when some are filtered out', function (): void {
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/framework', '11.0.0')]));
+
+    Http::fake([
+        'https://boost.laravel.com/api/docs' => Http::response('Documentation search results', 200),
+    ]);
+
+    $tool = new SearchDocs($project);
+    $response = $tool->handle(new Request(['queries' => ['*', 'middleware', '', 'routing']]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+
+    // Dropping the first query must not turn "queries" into a JSON object.
+    Http::assertSent(fn ($request): bool => $request->data()['queries'] === ['middleware', 'routing']
+        && str_contains($request->body(), '"queries":["middleware","routing"]'));
+});
