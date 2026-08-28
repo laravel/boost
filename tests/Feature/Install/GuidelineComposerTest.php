@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -26,6 +27,11 @@ beforeEach(function (): void {
     $this->app->instance(ProjectManager::class, $this->project);
 
     $this->composer = new GuidelineComposer($this->project, $this->herd);
+});
+
+afterEach(function (): void {
+    File::deleteDirectory(base_path('node_modules'));
+    @unlink(base_path('package.json'));
 });
 
 test('includes Inertia React conditional guidelines based on version', function (string $version): void {
@@ -1318,3 +1324,37 @@ test('inertia core guideline matches the installed major version', function (str
     'v2' => ['2.1.0', '# Inertia v2', '# Inertia v3'],
     'v3' => ['3.1.1', '# Inertia v3', '# Inertia v2'],
 ]);
+
+test('discovers third-party npm package guidelines', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $guidelineDir = base_path('node_modules/@some-scope/third-party/resources/boost/guidelines');
+    File::ensureDirectoryExists($guidelineDir);
+    file_put_contents($guidelineDir.'/core.md', "# Third-Party NPM Guidelines\n\nThese are npm vendor guidelines.");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@some-scope/third-party' => '^1.0']]));
+
+    $guidelines = $this->composer->guidelines();
+
+    expect($guidelines->has('@some-scope/third-party/core'))->toBeTrue()
+        ->and($guidelines->get('@some-scope/third-party/core')['content'])->toContain('Third-Party NPM Guidelines')
+        ->and($guidelines->get('@some-scope/third-party/core')['third_party'])->toBeTrue();
+});
+
+test('excludes first-party npm packages from third-party guideline discovery', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $guidelineDir = base_path('node_modules/@laravel/some-package/resources/boost/guidelines');
+    File::ensureDirectoryExists($guidelineDir);
+    file_put_contents($guidelineDir.'/core.md', "# First-Party NPM Guidelines\n\nThese should not appear as third-party.");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@laravel/some-package' => '^1.0']]));
+
+    expect($this->composer->guidelines()->has('@laravel/some-package/core'))->toBeFalse();
+});

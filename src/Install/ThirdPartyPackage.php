@@ -6,6 +6,7 @@ namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\Npm;
 
 class ThirdPartyPackage
 {
@@ -24,8 +25,8 @@ class ThirdPartyPackage
      */
     public static function discover(): Collection
     {
-        $withGuidelines = Composer::packagesDirectoriesWithBoostGuidelines();
-        $withSkills = Composer::packagesDirectoriesWithBoostSkills();
+        $withGuidelines = self::guidelineDirectories();
+        $withSkills = self::skillDirectories();
 
         $allPackageNames = array_unique(array_merge(
             array_keys($withGuidelines),
@@ -33,7 +34,6 @@ class ThirdPartyPackage
         ));
 
         return collect($allPackageNames)
-            ->reject(fn (string $name): bool => Composer::isFirstPartyPackage($name))
             ->mapWithKeys(fn (string $name): array => [
                 $name => new self(
                     name: $name,
@@ -41,6 +41,41 @@ class ThirdPartyPackage
                     hasSkills: isset($withSkills[$name]),
                 ),
             ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function guidelineDirectories(): array
+    {
+        return self::rejectFirstParty(array_merge(
+            Composer::packagesDirectoriesWithBoostGuidelines(),
+            Npm::packagesDirectoriesWithBoostGuidelines()
+        ));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function skillDirectories(): array
+    {
+        return self::rejectFirstParty(array_merge(
+            Composer::packagesDirectoriesWithBoostSkills(),
+            Npm::packagesDirectoriesWithBoostSkills()
+        ));
+    }
+
+    /**
+     * @param  array<string, string>  $directories
+     * @return array<string, string>
+     */
+    private static function rejectFirstParty(array $directories): array
+    {
+        return array_filter(
+            $directories,
+            fn (string $name): bool => ! Composer::isFirstPartyPackage($name) && ! Npm::isFirstPartyPackage($name),
+            ARRAY_FILTER_USE_KEY
+        );
     }
 
     public function featureLabel(): string

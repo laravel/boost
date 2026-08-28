@@ -8,7 +8,6 @@ use Exception;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
-use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
 use Symfony\Component\Yaml\Yaml;
@@ -107,8 +106,7 @@ class SkillComposer
      */
     protected function getThirdPartySkills(): Collection
     {
-        $skills = collect(Composer::packagesDirectoriesWithBoostSkills())
-            ->reject(fn (string $path, string $package): bool => Composer::isFirstPartyPackage($package))
+        $skills = collect(ThirdPartyPackage::skillDirectories())
             ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package));
 
         if (! isset($this->config->aiGuidelines)) {
