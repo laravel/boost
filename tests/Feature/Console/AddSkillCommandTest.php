@@ -113,6 +113,37 @@ it('installs all skills with --all option', function (): void {
     $this->assertFileContains(['# SKILL Content'], '.ai/skills/skill-one/SKILL.md');
 });
 
+it('installs skills in the configured skills path', function (): void {
+    config(['boost.skills.path' => '.custom/skills']);
+
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response(<<<'YAML'
+            ---
+            name: skill-one
+            description: First skill
+            ---
+            # SKILL Content
+            YAML),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo',
+        '--all' => true,
+    ])->assertSuccessful();
+
+    $this->assertFilenameExists('.custom/skills/skill-one/SKILL.md');
+
+    File::deleteDirectory(base_path('.custom'));
+});
+
 it('installs specific skills with --skill option', function (): void {
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([

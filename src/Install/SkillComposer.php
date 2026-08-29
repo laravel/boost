@@ -134,7 +134,7 @@ class SkillComposer
      */
     protected function discoverExplicitUserSkills(): Collection
     {
-        $path = base_path('.ai/skills');
+        $path = base_path(config('boost.skills.path'));
 
         if (! is_dir($path)) {
             return collect();

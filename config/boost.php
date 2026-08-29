@@ -50,16 +50,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Excluded Skills
+    | Skills
     |--------------------------------------------------------------------------
+    |
+    | The path option defines where project skills are stored. It may be
+    | customized when your project uses a different skills directory.
     |
     | Any skills listed here will not be installed or synced to your agents
     | by boost:install and boost:update, e.g. "fluxui-development". Your
-    | own skills within the ".ai/skills" directory are never excluded.
+    | own skills within the configured directory are never excluded.
     |
     */
 
     'skills' => [
+        'path' => env('BOOST_SKILLS_PATH', '.ai/skills'),
         'exclude' => [],
     ],
 

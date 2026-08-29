@@ -75,7 +75,7 @@ it('displays name without asterisk when not custom', function (): void {
     expect($skill->displayName())->toBe('building-livewire-components');
 });
 
-it('displays name with .ai/ prefix and asterisk when custom', function (): void {
+it('displays configured skills path with asterisk when custom', function (): void {
     $skill = new Skill(
         name: 'my-custom-skill',
         package: 'user',
@@ -84,5 +84,19 @@ it('displays name with .ai/ prefix and asterisk when custom', function (): void 
         custom: true,
     );
 
-    expect($skill->displayName())->toBe('.ai/my-custom-skill*');
+    expect($skill->displayName())->toBe('.ai/skills/my-custom-skill*');
+});
+
+it('displays custom skills with the configured path', function (): void {
+    config(['boost.skills.path' => '.custom/skills']);
+
+    $skill = new Skill(
+        name: 'my-custom-skill',
+        package: 'user',
+        path: '/path/to/custom',
+        description: 'Custom skill',
+        custom: true,
+    );
+
+    expect($skill->displayName())->toBe('.custom/skills/my-custom-skill*');
 });

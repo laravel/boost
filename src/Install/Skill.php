@@ -28,7 +28,7 @@ class Skill
     public function displayName(): string
     {
         return $this->custom
-            ? '.ai/'.$this->name.'*'
+            ? config('boost.skills.path').'/'.$this->name.'*'
             : $this->name;
     }
 }

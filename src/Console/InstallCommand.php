@@ -521,7 +521,7 @@ class InstallCommand extends Command
                 return;
             }
 
-            $provider->downloadSkill($skill, base_path('.ai/skills/'.$this->cloud->skillName()));
+            $provider->downloadSkill($skill, base_path(config('boost.skills.path').DIRECTORY_SEPARATOR.$this->cloud->skillName()));
         } catch (Exception $exception) {
             $this->warn('Failed to download Cloud skill: '.$exception->getMessage());
             $this->line('You can install it later with: php artisan boost:add-skill '.$this->cloud->skillRepo());

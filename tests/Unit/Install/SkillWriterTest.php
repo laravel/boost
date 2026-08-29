@@ -64,6 +64,37 @@ it('writes skill to a target directory', function (): void {
     cleanupSkillDirectory($absoluteTarget);
 });
 
+it('uses the configured path for canonical skills', function (): void {
+    $sourceDir = fixture('skills/test-skill');
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillsPath = '.custom/skills-'.uniqid();
+    $canonicalSkillPath = base_path($skillsPath.'/custom-skill');
+    config(['boost.skills.path' => $skillsPath]);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+
+    $skill = new Skill(
+        name: 'custom-skill',
+        package: 'boost',
+        path: $sourceDir,
+        description: 'Custom skill',
+        custom: true,
+    );
+
+    $writer = new SkillWriter($agent);
+    $result = $writer->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and($canonicalSkillPath)->toBeDirectory()
+        ->and($canonicalSkillPath.'/SKILL.md')->toBeFile();
+
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+    cleanupSkillDirectory(base_path($skillsPath));
+});
+
 it('updates existing canonical skills when installing non-custom skills', function (): void {
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();

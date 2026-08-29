@@ -51,8 +51,6 @@ class AddSkillCommand extends Command
     /** @var Collection<string, RemoteSkill> */
     protected Collection $availableSkills;
 
-    protected string $defaultSkillsPath = '.ai/skills';
-
     public function __construct(private readonly Terminal $terminal)
     {
         parent::__construct();
@@ -266,7 +264,7 @@ class AddSkillCommand extends Command
 
     protected function skillTargetPath(RemoteSkill $skill): string
     {
-        return base_path($this->defaultSkillsPath.DIRECTORY_SEPARATOR.$skill->name);
+        return base_path(config('boost.skills.path').DIRECTORY_SEPARATOR.$skill->name);
     }
 
     /**

@@ -30,7 +30,7 @@ class UpdateCommand extends Command
         }
 
         $guidelines = $config->getGuidelines();
-        $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(base_path('.ai/skills')));
+        $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(base_path(config('boost.skills.path'))));
 
         if (! $guidelines && ! $hasSkills) {
             return self::SUCCESS;

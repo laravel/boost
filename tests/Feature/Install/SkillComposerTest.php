@@ -381,3 +381,31 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
         ->toHaveKey('name', 'pest-testing')
         ->toHaveKey('description', 'Write and run tests with Pest');
 });
+
+test('discovers explicit user skills from the configured skills path', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $skillsPath = '.custom/skills';
+    $skillDir = base_path($skillsPath.'/custom-skill');
+    config(['boost.skills.path' => $skillsPath]);
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: custom-skill\ndescription: A custom skill\n---\n\n# Content\n");
+
+    try {
+        $skill = (new SkillComposer($this->project))->skills()->get('custom-skill');
+
+        expect($skill)
+            ->not->toBeNull()
+            ->path->toBe($skillDir)
+            ->custom->toBeTrue();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+        @rmdir(base_path($skillsPath));
+        @rmdir(base_path('.custom'));
+    }
+});

@@ -36,7 +36,7 @@ class SkillWriter
         }
 
         $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
-        $canonicalPath = base_path('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
+        $canonicalPath = base_path(config('boost.skills.path').DIRECTORY_SEPARATOR.$skill->name);
         $existed = $this->pathExists($targetPath);
 
         if (! $skill->custom) {
