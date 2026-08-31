@@ -28,6 +28,95 @@ beforeEach(function (): void {
     $this->composer = new GuidelineComposer($this->project, $this->herd);
 });
 
+afterEach(function (): void {
+    if (file_exists(base_path('package.json'))) {
+        unlink(base_path('package.json'));
+    }
+});
+
+test('includes starter kit guidelines when composer.json declares one', function (): void {
+    $this->project->shouldReceive('starterKit')->andReturn('laravel/agent-kit');
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '13.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)
+        ->toContain('=== kits/agent-kit rules ===')
+        ->toContain('Laravel Agent Kit');
+});
+
+test('excludes starter kit guidelines when composer.json declares none', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '13.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)->not->toContain('=== kits/agent-kit rules ===');
+});
+
+test('a user override in .ai/guidelines replaces the starter kit guideline', function (): void {
+    $this->project->shouldReceive('starterKit')->andReturn('laravel/agent-kit');
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '13.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/kit-override-guidelines')).'/'.ltrim((string) $path, '/'));
+
+    expect($composer->compose())
+        ->toContain('=== kits/agent-kit rules ===')
+        ->toContain('User Override Agent Kit')
+        ->not->toContain('slim starter kit for building AI agents');
+});
+
+test('ignores a declared starter kit that has no guidelines', function (): void {
+    $this->project->shouldReceive('starterKit')->andReturn('acme/unknown-kit');
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '13.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    expect($guidelines)->not->toContain('kits/acme-unknown-kit');
+});
+
+test('includes vite guidance only when the project has a package.json', function (bool $hasPackageJson): void {
+    if ($hasPackageJson) {
+        file_put_contents(base_path('package.json'), '{}');
+    }
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '13.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $guidelines = $this->composer->compose();
+
+    $hasPackageJson
+        ? expect($guidelines)->toContain('Vite Error')
+        : expect($guidelines)->not->toContain('Vite Error');
+})->with([
+    'with package.json' => [true],
+    'without package.json' => [false],
+]);
+
 test('includes Inertia React conditional guidelines based on version', function (string $version): void {
     config(['boost.rules.enabled' => false]);
 

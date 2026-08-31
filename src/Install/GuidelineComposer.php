@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
@@ -131,6 +132,7 @@ class GuidelineComposer
 
         $base = collect()
             ->merge($this->getCoreGuidelines())
+            ->merge($this->getStarterKitGuidelines())
             ->merge($this->getConditionalGuidelines())
             ->merge($this->getPackageGuidelines())
             ->merge($this->getThirdPartyGuidelines())
@@ -164,6 +166,24 @@ class GuidelineComposer
             'php' => $this->guideline('php/core'),
             'deployments' => $this->guideline('deployments/core'),
         ]);
+    }
+
+    /**
+     * Guidelines for the starter kit declared in composer.json `extra.laravel.starter-kit`.
+     *
+     * @return Collection<string, array>
+     */
+    protected function getStarterKitGuidelines(): Collection
+    {
+        $kit = $this->project->starterKit();
+
+        if ($kit === null) {
+            return collect();
+        }
+
+        $key = 'kits/'.PackageRegistry::guidelineName($kit);
+
+        return collect([$key => $this->guideline($key.'/core')]);
     }
 
     /**

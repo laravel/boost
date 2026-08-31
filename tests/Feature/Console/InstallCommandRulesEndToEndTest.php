@@ -12,7 +12,7 @@ beforeEach(function (): void {
     $this->originalBasePath = base_path();
     $this->tempBasePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost-install-rules-test-'.uniqid();
 
-    File::makeDirectory($this->tempBasePath, 0755, true);
+    File::makeDirectory($this->tempBasePath.'/app/Models', 0755, true);
     $this->app->setBasePath($this->tempBasePath);
 
     file_put_contents($this->tempBasePath.'/composer.lock', json_encode([

@@ -40,6 +40,7 @@ class PackageRegistry
         '@inertiajs/svelte' => 'inertia-svelte',
         '@inertiajs/vue3' => 'inertia-vue',
         'inertiajs/inertia-laravel' => 'inertia-laravel',
+        'laravel/agent-kit' => 'agent-kit',
         'laravel/boost' => 'boost',
         'laravel/folio' => 'folio',
         'laravel/framework' => 'laravel',

@@ -113,4 +113,5 @@ function mockProjectPackages(ProjectManager $project, PackageCollection $package
 
     $project->shouldReceive('php')->andReturn(new Ecosystem($php));
     $project->shouldReceive('js')->andReturn(new JsEcosystem($js, $packageManager));
+    $project->shouldReceive('starterKit')->andReturnNull()->byDefault();
 }
