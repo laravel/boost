@@ -562,6 +562,59 @@ test('detectIndentation works correctly with various patterns', function (string
     expect($result)->toBe($expected, $description);
 })->with(indentationDetectionCases());
 
+test('new file ends with a trailing newline', function (): void {
+    $writtenContent = '';
+    mockFileOperations(capturedContent: $writtenContent);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toEndWith("\n");
+});
+
+test('updated plain JSON file ends with a trailing newline', function (): void {
+    $writtenContent = '';
+    mockFileOperations(
+        fileExists: true,
+        content: fixtureContent('mcp-with-servers.json'),
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toEndWith("\n");
+});
+
+test('updated JSON5 file ends with a single trailing newline', function (): void {
+    $writtenContent = '';
+    mockFileOperations(
+        fileExists: true,
+        content: fixtureContent('mcp.json5'),
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(1000);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->configKey('servers')
+        ->addServerConfig('test', ['command' => 'cmd'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toEndWith("\n");
+    expect($writtenContent)->not->toEndWith("\n\n");
+});
+
 function mockFileOperations(bool $fileExists = false, string $content = '{}', bool $writeSuccess = true, ?string &$capturedPath = null, ?string &$capturedContent = null): void
 {
     // Clear any existing File facade mock
