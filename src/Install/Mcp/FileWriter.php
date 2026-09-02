@@ -472,11 +472,6 @@ class FileWriter
 
     protected function writeFile(string $content): bool
     {
-        return File::put($this->filePath, $this->ensureTrailingNewline($content)) !== false;
-    }
-
-    protected function ensureTrailingNewline(string $content): string
-    {
-        return str_ends_with($content, "\n") ? $content : $content."\n";
+        return File::put($this->filePath, Str::finish($content, "\n")) !== false;
     }
 }
