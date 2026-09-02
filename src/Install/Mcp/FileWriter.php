@@ -472,6 +472,6 @@ class FileWriter
 
     protected function writeFile(string $content): bool
     {
-        return File::put($this->filePath, $content) !== false;
+        return File::put($this->filePath, Str::finish($content, "\n")) !== false;
     }
 }
