@@ -48,9 +48,11 @@ class GitHubRepository
      */
     private static function normalizeUrl(string $input): array
     {
-        $isUrl = Str::startsWith($input, ['http://', 'https://']);
+        if (preg_match('~^(?:[^@/:]+@)?(?<host>[^:]+):(?!//)(?<path>.+)$~', $input, $matches) === 1) {
+            $input = 'ssh://'.$matches['host'].'/'.$matches['path'];
+        }
 
-        if (! $isUrl) {
+        if (! Str::startsWith($input, ['http://', 'https://', 'ssh://'])) {
             return [$input, ''];
         }
 
@@ -63,7 +65,7 @@ class GitHubRepository
             throw new InvalidArgumentException('Only GitHub URLs are supported.');
         }
 
-        $path = Str::of($parsed['path'] ?? '')->trim('/')->toString();
+        $path = Str::of($parsed['path'] ?? '')->trim('/')->replaceEnd('.git', '')->toString();
 
         // ponytail: a branch name containing a slash is indistinguishable from the path after it.
         if (preg_match('#^(?P<repository>[^/]+/[^/]+)/(?:tree|blob)/(?P<branch>[^/]+)/?(?P<path>.*)$#', $path, $matches) === 1) {
