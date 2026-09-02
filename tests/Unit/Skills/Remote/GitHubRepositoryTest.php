@@ -18,6 +18,10 @@ it('parses valid repository input', function (string $input, string $owner, stri
     'HTTP GitHub URL' => ['http://github.com/owner/repo', 'owner', 'repo', ''],
     'GitHub SSH URL' => ['git@github.com:owner/repo.git', 'owner', 'repo', ''],
     'GitHub SSH URL scheme' => ['ssh://git@github.com/owner/repo.git', 'owner', 'repo', ''],
+    'GitHub SSH URL with port' => ['ssh://git@github.com:22/owner/repo.git', 'owner', 'repo', ''],
+    'GitHub SSH URL with leading slash and trailing slash' => ['git@github.com:/owner/repo.git/', 'owner', 'repo', ''],
+    'GitHub SSH URL with path' => ['git@github.com:owner/repo/skills/my-skill', 'owner', 'repo', 'skills/my-skill'],
+    'GitHub HTTPS clone URL' => ['https://github.com/owner/repo.git', 'owner', 'repo', ''],
     'GitHub URL with tree/branch' => ['https://github.com/owner/repo/tree/main/skills', 'owner', 'repo', 'skills'],
     'GitHub URL with tree/branch and nested path' => ['https://github.com/owner/repo/tree/feature-branch/path/to/skills', 'owner', 'repo', 'path/to/skills'],
     'complex branch names in tree URLs' => ['https://github.com/owner/repo/tree/feature/my-branch/skills', 'owner', 'repo', 'my-branch/skills'],
@@ -41,6 +45,7 @@ it('throws for invalid input', function (string $input, string $message): void {
     'Bitbucket URL' => ['https://bitbucket.org/owner/repo', 'Only GitHub URLs are supported'],
     'Bitbucket SSH URL' => ['git@bitbucket.org:owner/repo.git', 'Only GitHub URLs are supported'],
     'Bitbucket SSH URL scheme' => ['ssh://git@bitbucket.org/owner/repo.git', 'Only GitHub URLs are supported'],
+    'SSH URL with slash in host' => ['git@evil.com/x.github.com:owner/repo', 'Only GitHub URLs are supported'],
 ]);
 
 it('returns full name from fullName method', function (): void {

@@ -48,31 +48,11 @@ class GitHubRepository
      */
     private static function normalizeUrl(string $input): array
     {
-        $isUrl = Str::startsWith($input, ['http://', 'https://']);
-
-        $isSshUrl = Str::startsWith($input, 'ssh://');
-        $isScpUrl = preg_match('~^[^@/:]+@[^:]+:.+$~', $input) === 1;
-
-        if ($isSshUrl || $isScpUrl) {
-            if ($isScpUrl) {
-                preg_match('~^(?:[^@/:]+@)?(?<host>[^:]+):(?<path>.+)$~', $input, $matches);
-                $host = $matches['host'] ?? '';
-                $path = $matches['path'] ?? '';
-            } else {
-                $parsed = parse_url($input);
-                $host = $parsed['host'] ?? '';
-                $path = ltrim($parsed['path'] ?? '', '/');
-            }
-            $isGitHubHost = $host === 'github.com' || Str::endsWith($host, '.github.com');
-
-            if (! $isGitHubHost) {
-                throw new InvalidArgumentException('Only GitHub URLs are supported.');
-            }
-
-            return [Str::replaceEnd('.git', '', $path), ''];
+        if (preg_match('~^(?:[^@/:]+@)?(?<host>[^:]+):(?!//)(?<path>.+)$~', $input, $matches) === 1) {
+            $input = 'ssh://'.$matches['host'].'/'.$matches['path'];
         }
 
-        if (! $isUrl) {
+        if (! Str::startsWith($input, ['http://', 'https://', 'ssh://'])) {
             return [$input, ''];
         }
 
@@ -85,7 +65,7 @@ class GitHubRepository
             throw new InvalidArgumentException('Only GitHub URLs are supported.');
         }
 
-        $path = Str::of($parsed['path'] ?? '')->trim('/')->toString();
+        $path = Str::of($parsed['path'] ?? '')->trim('/')->replaceEnd('.git', '')->toString();
 
         // ponytail: a branch name containing a slash is indistinguishable from the path after it.
         if (preg_match('#^(?P<repository>[^/]+/[^/]+)/(?:tree|blob)/(?P<branch>[^/]+)/?(?P<path>.*)$#', $path, $matches) === 1) {
