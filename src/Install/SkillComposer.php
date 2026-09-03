@@ -8,9 +8,9 @@ use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
-use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
+use RuntimeException;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -216,18 +216,7 @@ class SkillComposer
         try {
             $frontmatter = $this->parseSkillFrontmatter($content);
         } catch (ParseException $parseException) {
-            // A skill whose frontmatter fails to parse must not be treated as absent,
-            // otherwise the next sync unregisters it and deletes its agent symlinks.
-            // Keep it registered under its directory name and report the failure.
-            app(SkillParseFailures::class)->record($skillFile, $parseException->getMessage());
-
-            return new Skill(
-                name: basename($skillPath),
-                package: $package ?: $this->determinePackageFromPath($skillPath),
-                path: $skillPath,
-                description: '',
-                custom: $custom,
-            );
+            throw new RuntimeException(sprintf('Invalid YAML frontmatter in %s: %s', $skillFile, $parseException->getMessage()), $parseException->getCode(), previous: $parseException);
         }
 
         if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
@@ -258,8 +247,6 @@ class SkillComposer
 
     /**
      * @return array<string, mixed>
-     *
-     * @throws ParseException
      */
     protected function parseSkillFrontmatter(string $content): array
     {
