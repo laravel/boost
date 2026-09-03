@@ -150,8 +150,14 @@ class FileWriter
         $commaPosition = $this->findCommaInsertionPoint($content, $openBracePos, $closeBracePos);
 
         if ($commaPosition !== -1) {
-            $newContent = substr_replace($content, ',', $commaPosition, 0);
-            $newContent = substr_replace($newContent, $serversJson, $commaPosition + 1, 0);
+            // Anything non-blank before the brace is a trailing comment: comma goes ahead of it, servers after it.
+            if (trim(substr($content, $commaPosition, $closeBracePos - $commaPosition)) === '') {
+                $newContent = substr_replace($content, ',', $commaPosition, 0);
+                $newContent = substr_replace($newContent, $serversJson, $commaPosition + 1, 0);
+            } else {
+                $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
+                $newContent = substr_replace($newContent, ',', $commaPosition, 0);
+            }
         } else {
             $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
         }
@@ -289,21 +295,21 @@ class FileWriter
 
     protected function findCommaInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
     {
+        // Strings are matched only to skip them; comments become equal-length spaces so offsets still line up.
+        $masked = preg_replace_callback(
+            '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|(\/\/[^\r\n]*)|(\/\*[\s\S]*?\*\/)/',
+            fn (array $match): string => ($match[1] ?? '') !== '' || ($match[2] ?? '') !== ''
+                ? str_repeat(' ', strlen($match[0]))
+                : $match[0],
+            $content
+        ) ?? $content;
+
         // Work backwards from closing brace to find last meaningful character
         for ($i = $closeBracePos - 1; $i > $openBracePos; $i--) {
-            $char = $content[$i];
+            $char = $masked[$i];
 
             // Skip whitespace and newlines
             if (in_array($char, [' ', "\t", "\n", "\r"], true)) {
-                continue;
-            }
-
-            // Skip comments (simple approach - if we hit //, skip to start of line)
-            if ($i > 0 && $content[$i - 1] === '/' && $char === '/') {
-                // Find start of this line
-                $lineStart = strrpos($content, "\n", $i - strlen($content)) ?: 0;
-                $i = $lineStart;
-
                 continue;
             }
 
@@ -466,6 +472,6 @@ class FileWriter
 
     protected function writeFile(string $content): bool
     {
-        return File::put($this->filePath, $content) !== false;
+        return File::put($this->filePath, Str::finish($content, "\n")) !== false;
     }
 }

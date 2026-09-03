@@ -218,7 +218,9 @@ class GuidelineComposer
                     $guidelineDir.'/core' => $this->resolveGuideline($vendorCorePath, $guidelineDir.'/core'),
                 ]);
 
-                $packageGuidelines = $this->guidelinesDir($guidelineDir.'/'.$package->major());
+                $packageGuidelines = $package->major() === null
+                    ? []
+                    : $this->guidelinesDir($guidelineDir.'/'.$package->major());
 
                 foreach ($packageGuidelines as $guideline) {
                     $suffix = $guideline['name'] === 'core' ? '' : '/'.$guideline['name'];

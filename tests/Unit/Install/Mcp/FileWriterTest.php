@@ -451,6 +451,78 @@ test('preserves trailing commas when injecting into existing servers', function 
         );
 });
 
+test('adds the comma outside a trailing comment in the servers object', function (): void {
+    $writtenContent = '';
+
+    $contentWithTrailingComment = <<<'JSON5'
+    {
+      "mcpServers": {
+        "context7": {
+          "command": "npx"
+        } // docs lookup
+      }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $contentWithTrailingComment,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    $withoutComments = preg_replace('/\/\/[^\n]*/', '', $writtenContent);
+
+    expect($result)->toBeTrue()
+        ->and(json_decode((string) $withoutComments, true))->not->toBeNull()
+        ->and($writtenContent)->toContain(
+            '"boost"', // New server added
+            '"context7"', // Existing server preserved
+            '// docs lookup' // Comment preserved
+        );
+});
+
+test('does not read a // inside a single-quoted string as a comment', function (): void {
+    $writtenContent = '';
+
+    $singleQuotedUrl = <<<'JSON5'
+    {
+      'mcpServers': {
+        'remote': { 'url': 'https://example.test/sse' }
+      }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $singleQuotedUrl,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain(
+            "'url': 'https://example.test/sse'", // URL survives untouched
+            '"boost"' // New server added
+        );
+});
+
 test('updates JSON5 file with only single-quoted strings', function (): void {
     $writtenContent = '';
     $singleQuotedJson5 = <<<'JSON5'
@@ -489,6 +561,59 @@ test('detectIndentation works correctly with various patterns', function (string
 
     expect($result)->toBe($expected, $description);
 })->with(indentationDetectionCases());
+
+test('new file ends with a trailing newline', function (): void {
+    $writtenContent = '';
+    mockFileOperations(capturedContent: $writtenContent);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toEndWith("\n");
+});
+
+test('updated plain JSON file ends with a trailing newline', function (): void {
+    $writtenContent = '';
+    mockFileOperations(
+        fileExists: true,
+        content: fixtureContent('mcp-with-servers.json'),
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toEndWith("\n");
+});
+
+test('updated JSON5 file ends with a single trailing newline', function (): void {
+    $writtenContent = '';
+    mockFileOperations(
+        fileExists: true,
+        content: fixtureContent('mcp.json5'),
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(1000);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->configKey('servers')
+        ->addServerConfig('test', ['command' => 'cmd'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toEndWith("\n");
+    expect($writtenContent)->not->toEndWith("\n\n");
+});
 
 function mockFileOperations(bool $fileExists = false, string $content = '{}', bool $writeSuccess = true, ?string &$capturedPath = null, ?string &$capturedContent = null): void
 {
