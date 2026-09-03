@@ -11,10 +11,12 @@ use Laravel\Boost\Concerns\MakesHttpRequests;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
 use Throwable;
 
+#[IsReadOnly]
 class SearchDocs extends Tool
 {
     use MakesHttpRequests;
