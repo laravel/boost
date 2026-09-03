@@ -20,3 +20,17 @@ test('httpMcpServerConfig returns npx mcp-remote config', function (): void {
         'args' => ['-y', 'mcp-remote', 'https://nightwatch.laravel.com/mcp'],
     ]);
 });
+
+it('returns default mcp config path', function (): void {
+    $agent = new Junie($this->strategyFactory);
+
+    expect($agent->mcpConfigPath())->toBe('.junie/mcp/mcp.json');
+});
+
+it('returns configured mcp config path', function (): void {
+    config()->set('boost.agents.junie.mcp_config_path', '../.junie/mcp/mcp.json');
+
+    $agent = new Junie($this->strategyFactory);
+
+    expect($agent->mcpConfigPath())->toBe('../.junie/mcp/mcp.json');
+});
