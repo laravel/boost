@@ -158,6 +158,20 @@ test('all common html entities are decoded', function (): void {
         ->not->toContain('&gt;');
 });
 
+test('html entities inside fenced code blocks are preserved', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+```php
+$this->assertStringContainsString('&lt;script&gt;', $content);
+```
+MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toBe($content);
+});
+
 test('renderBladeFile returns empty string for non-existent file', function (): void {
     $result = $this->renderer->renderFile('/non/existent/guideline.blade.php');
 
