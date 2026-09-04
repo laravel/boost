@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Concerns\ReportsSkillParseFailures;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
@@ -32,6 +33,7 @@ use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
 use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
@@ -45,6 +47,7 @@ use function Laravel\Prompts\note;
 class InstallCommand extends Command
 {
     use DisplayHelper;
+    use ReportsSkillParseFailures;
 
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
@@ -88,6 +91,8 @@ class InstallCommand extends Command
 
     public function handle(): int
     {
+        app(SkillParseFailures::class)->flush();
+
         $this->terminal->initDimensions();
         $this->projectName = config('app.name');
 
@@ -97,6 +102,7 @@ class InstallCommand extends Command
         $this->performInstallation();
 
         $this->reportRenderFailures();
+        $this->reportSkillParseFailures();
 
         $this->noteInferConventions();
 
@@ -475,8 +481,15 @@ class InstallCommand extends Command
         $skillsAgents = $this->agentsWithSkills();
         $skillsComposer = app(SkillComposer::class)->config($this->buildGuidelineConfig());
         $skills = $skillsComposer->skills();
+        $previouslyTrackedSkills = $this->config->getSkills();
+        $invalidSkillNames = app(SkillParseFailures::class)->skillNames();
+        $preservedSkillNames = array_values(array_intersect($previouslyTrackedSkills, $invalidSkillNames));
+        $trackedSkillsToSync = array_values(array_diff($previouslyTrackedSkills, $preservedSkillNames));
 
-        $this->installedSkillNames = $skills->keys()->toArray();
+        $this->installedSkillNames = array_values(array_unique([
+            ...$skills->keys()->toArray(),
+            ...$preservedSkillNames,
+        ]));
 
         /** @var Collection<int, SupportsSkills&Agent> $skillsAgents */
         $this->installFeature(
@@ -484,7 +497,7 @@ class InstallCommand extends Command
             emptyMessage: 'No agents are selected for skill installation.',
             headerMessage: sprintf('Syncing %d skills for skills-capable agents', $skills->count()),
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
-            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $this->config->getSkills()),
+            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $trackedSkillsToSync),
             featureName: 'skills',
             beforeProcess: $skills->isNotEmpty()
                 ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())

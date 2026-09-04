@@ -3,12 +3,16 @@
 declare(strict_types=1);
 
 use Illuminate\Console\OutputStyle;
+use Illuminate\Filesystem\Filesystem;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\NullOutput;
@@ -128,6 +132,78 @@ it('calls install command with skills flag when skills are configured', function
     $command->setOutput($output);
 
     expect($command->handle($config))->toBe(0);
+});
+
+it('reports invalid skills and completes the update', function (): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(false);
+    $config->setSkills(['broken-frontmatter']);
+
+    $command = Mockery::mock(UpdateCommand::class)->makePartial();
+    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
+    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
+    $command->shouldReceive('callSilently')
+        ->once()
+        ->andReturnUsing(function (): int {
+            app(SkillParseFailures::class)->record(
+                base_path('.ai/skills/broken-frontmatter/SKILL.md'),
+                'A colon cannot be used in an unquoted mapping value',
+            );
+
+            return 0;
+        });
+
+    $input = new ArrayInput([]);
+    $buffer = new BufferedOutput;
+    $output = new OutputStyle($input, $buffer);
+
+    $command->setLaravel($this->app);
+    $command->setOutput($output);
+
+    expect($command->handle($config))->toBe(0)
+        ->and($buffer->fetch())
+        ->toContain('1 skill is not valid and was skipped. Its existing registration was left unchanged:')
+        ->toContain('.ai/skills/broken-frontmatter/SKILL.md')
+        ->toContain('Boost guidelines and skills updated successfully.');
+});
+
+it('preserves a tracked invalid skill while completing the update', function (): void {
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([]));
+    $this->app->instance(ProjectManager::class, $project);
+
+    $skillDir = base_path('.ai/skills/broken-frontmatter');
+    $agentSkillsPath = '.boost-test-skills-'.uniqid();
+    $installedSkillDir = base_path($agentSkillsPath.'/broken-frontmatter');
+    @mkdir($skillDir, 0755, true);
+    @mkdir($installedSkillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: broken-frontmatter\ndescription: Does a thing. Covers: the important bit.\n---\n");
+    file_put_contents($installedSkillDir.'/SKILL.md', 'previously installed');
+
+    config([
+        'boost.agents.claude_code.skills_path' => $agentSkillsPath,
+        'boost.enforce_tests' => false,
+    ]);
+
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills(['broken-frontmatter']);
+
+    try {
+        $this->artisan('boost:update', ['--no-discover' => true])
+            ->expectsOutputToContain('1 skill is not valid and was skipped.')
+            ->expectsOutputToContain('Boost guidelines and skills updated successfully.')
+            ->assertSuccessful();
+
+        expect((new Config)->getSkills())->toContain('broken-frontmatter')
+            ->and($installedSkillDir.'/SKILL.md')->toBeFile()
+            ->and(file_get_contents($installedSkillDir.'/SKILL.md'))->toBe('previously installed');
+    } finally {
+        (new Filesystem)->deleteDirectory(base_path($agentSkillsPath));
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+    }
 });
 
 it('calls install command with both flags when guidelines and skills are enabled', function (): void {
