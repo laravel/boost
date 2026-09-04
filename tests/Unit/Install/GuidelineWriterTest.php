@@ -37,6 +37,40 @@ test('it creates directory when it does not exist', function (): void {
     rmdir($tempDir);
 });
 
+test('it leaves blank lines inside fenced code blocks alone when normalizing', function (): void {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+
+    $userContent = <<<'MD'
+    # My Project
+
+    ```python
+    def first():
+        pass
+
+
+    def second():
+        pass
+    ```
+    MD;
+
+    file_put_contents($tempFile, $userContent);
+
+    $agent = Mockery::mock(SupportsGuidelines::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+
+    $writer = new GuidelineWriter($agent);
+    $writer->write('boost guidelines');
+
+    $written = file_get_contents($tempFile);
+
+    expect($written)->toContain("def first():\n    pass\n\n\ndef second():")
+        ->toContain('boost guidelines');
+
+    unlink($tempFile);
+});
+
 test('it throws exception when directory creation fails', function (): void {
     // Use a path that cannot be created (root directory with insufficient permissions)
     $filePath = '/root/boost_test/test.md';
