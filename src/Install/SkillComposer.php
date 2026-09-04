@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Exception;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
+use RuntimeException;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillComposer
@@ -212,7 +213,11 @@ class SkillComposer
             return null;
         }
 
-        $frontmatter = $this->parseSkillFrontmatter($content);
+        try {
+            $frontmatter = $this->parseSkillFrontmatter($content);
+        } catch (ParseException $parseException) {
+            throw new RuntimeException(sprintf('Invalid YAML frontmatter in %s: %s', $skillFile, $parseException->getMessage()), $parseException->getCode(), previous: $parseException);
+        }
 
         if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
             return null;
@@ -251,11 +256,7 @@ class SkillComposer
             return [];
         }
 
-        try {
-            return Yaml::parse($matches[1]) ?? [];
-        } catch (Exception) {
-            return [];
-        }
+        return Yaml::parse($matches[1]) ?? [];
     }
 
     protected function determinePackageFromPath(string $skillPath): string

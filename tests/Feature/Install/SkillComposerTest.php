@@ -9,6 +9,7 @@ use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
+use RuntimeException;
 
 beforeEach(function (): void {
     $this->project = Mockery::mock(ProjectManager::class);
@@ -380,4 +381,20 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
     expect($result)
         ->toHaveKey('name', 'pest-testing')
         ->toHaveKey('description', 'Write and run tests with Pest');
+});
+
+test('a skill with invalid YAML frontmatter throws instead of being silently dropped', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('.ai/skills/broken-frontmatter');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', "---\nname: broken-frontmatter\ndescription: Does a thing. Covers: the important bit.\n---\n\n# Content\n");
+
+    try {
+        expect(fn (): Collection => (new SkillComposer($this->project))->skills())
+            ->toThrow(RuntimeException::class, 'Invalid YAML frontmatter in');
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+    }
 });
