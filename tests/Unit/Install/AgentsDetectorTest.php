@@ -18,6 +18,7 @@ use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
 use Laravel\Boost\Install\Agents\Pi;
+use Laravel\Boost\Install\Agents\ZCode;
 use Laravel\Boost\Install\Agents\Zed;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Enums\Platform;
@@ -36,9 +37,9 @@ it('returns collection of all registered agents', function (): void {
     $agents = $this->detector->getAgents();
 
     expect($agents)->toBeInstanceOf(Collection::class)
-        ->and($agents->count())->toBe(13)
+        ->and($agents->count())->toBe(14)
         ->and($agents->keys()->toArray())->toBe([
-            'amp', 'antigravity', 'claude_code', 'codex', 'copilot', 'cursor', 'factory', 'grok_build', 'junie', 'kiro', 'opencode', 'pi', 'zed',
+            'amp', 'antigravity', 'claude_code', 'codex', 'copilot', 'cursor', 'factory', 'grok_build', 'junie', 'kiro', 'opencode', 'pi', 'zcode', 'zed',
         ]);
 
     $agents->each(function ($agent): void {
@@ -72,6 +73,7 @@ it('returns an array of detected agents names for system discovery', function ()
     $this->container->bind(Zed::class, fn () => $mockOther);
     $this->container->bind(Pi::class, fn () => $mockOther);
     $this->container->bind(GrokBuild::class, fn () => $mockOther);
+    $this->container->bind(ZCode::class, fn () => $mockOther);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledAgents();
@@ -97,6 +99,7 @@ it('returns an empty array when no agents are detected for system discovery', fu
     $this->container->bind(Zed::class, fn () => $mockAgent);
     $this->container->bind(Pi::class, fn () => $mockAgent);
     $this->container->bind(GrokBuild::class, fn () => $mockAgent);
+    $this->container->bind(ZCode::class, fn () => $mockAgent);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverSystemInstalledAgents();
@@ -132,6 +135,7 @@ it('returns an array of detected agent names for project discovery', function ()
     $this->container->bind(Zed::class, fn () => $mockOther);
     $this->container->bind(Pi::class, fn () => $mockOther);
     $this->container->bind(GrokBuild::class, fn () => $mockOther);
+    $this->container->bind(ZCode::class, fn () => $mockOther);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledAgents($basePath);
@@ -159,6 +163,7 @@ it('returns an empty array when no agents are detected for project discovery', f
     $this->container->bind(Zed::class, fn () => $mockAgent);
     $this->container->bind(Pi::class, fn () => $mockAgent);
     $this->container->bind(GrokBuild::class, fn () => $mockAgent);
+    $this->container->bind(ZCode::class, fn () => $mockAgent);
 
     $detector = new AgentsDetector($this->container, $this->boostManager);
     $detected = $detector->discoverProjectInstalledAgents($basePath);

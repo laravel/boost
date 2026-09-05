@@ -18,6 +18,7 @@ use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Agents\OpenCode;
 use Laravel\Boost\Install\Agents\Pi;
+use Laravel\Boost\Install\Agents\ZCode;
 use Laravel\Boost\Install\Agents\Zed;
 
 class BoostManager
@@ -36,6 +37,7 @@ class BoostManager
         'kiro' => Kiro::class,
         'opencode' => OpenCode::class,
         'pi' => Pi::class,
+        'zcode' => ZCode::class,
         'zed' => Zed::class,
     ];
 
