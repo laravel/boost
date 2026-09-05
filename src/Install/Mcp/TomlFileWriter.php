@@ -19,9 +19,10 @@ class TomlFileWriter
         //
     }
 
-    public function configKey(string $key): self
+    /** @param string|array<int, string> $key */
+    public function configKey(string|array $key): self
     {
-        $this->configKey = $key;
+        $this->configKey = is_array($key) ? implode('.', $key) : $key;
 
         return $this;
     }

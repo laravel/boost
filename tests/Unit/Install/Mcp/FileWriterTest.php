@@ -45,7 +45,7 @@ test('save method returns boolean', function (): void {
     expect($result)->toBe(true);
 });
 
-test('written data is correct for brand new file', function (string $configKey, array $servers, string $expectedJson): void {
+test('written data is correct for brand new file', function (string|array $configKey, array $servers, string $expectedJson): void {
     $writtenPath = '';
     $writtenContent = '';
     mockFileOperations(capturedPath: $writtenPath, capturedContent: $writtenContent);
@@ -615,6 +615,149 @@ test('updated JSON5 file ends with a single trailing newline', function (): void
     expect($writtenContent)->not->toEndWith("\n\n");
 });
 
+test('updates existing nested config key in plain JSON preserving siblings', function (): void {
+    $writtenContent = '';
+    $content = <<<'JSON'
+    {
+        "mcp": {
+            "theme": "dark",
+            "servers": {
+                "existing": {
+                    "command": "node"
+                }
+            }
+        }
+    }
+    JSON;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $content,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/config.json'))
+        ->configKey('mcp.servers')
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    $decoded = json_decode((string) $writtenContent, true);
+
+    expect($result)->toBeTrue()
+        ->and($decoded['mcp']['theme'])->toBe('dark')
+        ->and($decoded['mcp']['servers']['existing']['command'])->toBe('node')
+        ->and($decoded['mcp']['servers']['boost']['command'])->toBe('php');
+});
+
+test('injects into existing nested config key in JSON5 without duplicating existing servers', function (): void {
+    $writtenContent = '';
+    $content = <<<'JSON5'
+    {
+        // ZCode project config
+        "mcp": {
+            "servers": {
+                "existing": {
+                    "command": "node"
+                }
+            }
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $content,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/config.json'))
+        ->configKey('mcp.servers')
+        ->addServerConfig('existing', ['command' => 'node'])
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and(substr_count($writtenContent, '"existing"'))->toBe(1)
+        ->and($writtenContent)->toContain(
+            '"boost"', // New server added
+            '// ZCode project config' // Comments preserved
+        );
+});
+
+test('injects missing nested segment into existing parent key in JSON5', function (): void {
+    $writtenContent = '';
+    $content = <<<'JSON5'
+    {
+        // ZCode project config
+        "mcp": {
+            "theme": "dark"
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $content,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/config.json'))
+        ->configKey('mcp.servers')
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    $withoutComments = preg_replace('/\/\/[^\n]*/', '', $writtenContent);
+    $decoded = json_decode((string) $withoutComments, true);
+
+    expect($result)->toBeTrue()
+        ->and($decoded['mcp']['theme'])->toBe('dark')
+        ->and($decoded['mcp']['servers']['boost']['command'])->toBe('php')
+        ->and($writtenContent)->toContain('// ZCode project config');
+});
+
+test('injects full nested config key into JSON5 without it', function (): void {
+    $writtenContent = '';
+    $content = <<<'JSON5'
+    {
+        // ZCode project config
+        "permissions": {}
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $content,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/config.json'))
+        ->configKey('mcp.servers')
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    $withoutComments = preg_replace('/\/\/[^\n]*/', '', $writtenContent);
+    $decoded = json_decode((string) $withoutComments, true);
+
+    expect($result)->toBeTrue()
+        ->and($decoded['mcp']['servers']['boost']['command'])->toBe('php')
+        ->and($decoded['permissions'])->toBe([])
+        ->and($writtenContent)->toContain('// ZCode project config');
+});
+
 function mockFileOperations(bool $fileExists = false, string $content = '{}', bool $writeSuccess = true, ?string &$capturedPath = null, ?string &$capturedContent = null): void
 {
     // Clear any existing File facade mock
@@ -692,6 +835,23 @@ function newFileServerConfigurations(): array
                 'test' => ['command' => 'test-cmd'],
             ],
             '{"customKey":{"test":{"command":"test-cmd"}}}',
+        ],
+        'array config key keeps literal dots' => [
+            ['amp.mcpServers'],
+            [
+                'test' => ['command' => 'test-cmd'],
+            ],
+            '{"amp.mcpServers":{"test":{"command":"test-cmd"}}}',
+        ],
+        'nested dot-notation config key' => [
+            'mcp.servers',
+            [
+                'boost' => [
+                    'command' => 'php',
+                    'args' => ['artisan', 'boost:mcp'],
+                ],
+            ],
+            '{"mcp":{"servers":{"boost":{"command":"php","args":["artisan","boost:mcp"]}}}}',
         ],
     ];
 }

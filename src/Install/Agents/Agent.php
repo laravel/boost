@@ -113,7 +113,8 @@ abstract class Agent
         return false;
     }
 
-    public function mcpConfigKey(): string
+    /** @return string|array<int, string> */
+    public function mcpConfigKey(): string|array
     {
         return 'mcpServers';
     }

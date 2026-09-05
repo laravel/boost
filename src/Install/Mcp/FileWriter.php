@@ -10,7 +10,8 @@ use stdClass;
 
 class FileWriter
 {
-    protected string $configKey = 'mcpServers';
+    /** @var string|array<int, string> */
+    protected string|array $configKey = 'mcpServers';
 
     protected array $serversToAdd = [];
 
@@ -21,11 +22,22 @@ class FileWriter
         //
     }
 
-    public function configKey(string $key): self
+    /**
+     * @param  string|array<int, string>  $key
+     */
+    public function configKey(string|array $key): self
     {
         $this->configKey = $key;
 
         return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function configKeySegments(): array
+    {
+        return is_array($this->configKey) ? $this->configKey : explode('.', $this->configKey);
     }
 
     /**
@@ -91,34 +103,38 @@ class FileWriter
 
     protected function updateJson5File(string $content): bool
     {
-        $configKeyPattern = '/["\']'.preg_quote($this->configKey, '/').'["\']\\s*:\\s*\\{/';
+        $segments = $this->configKeySegments();
+        $openBracePos = null;
+        $closeBracePos = null;
 
-        if (preg_match($configKeyPattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
-            return $this->injectIntoExistingConfigKey($content, $matches);
+        // Walk the configKey one segment at a time, narrowing to each segment's braces
+        foreach ($segments as $index => $segment) {
+            $segmentPattern = '/["\']'.preg_quote($segment, '/').'["\']\\s*:\\s*\\{/';
+            $searchPos = $openBracePos === null ? 0 : $openBracePos + 1;
+
+            if (! preg_match($segmentPattern, $content, $matches, PREG_OFFSET_CAPTURE, $searchPos)
+                || ($closeBracePos !== null && $matches[0][1] >= $closeBracePos)) {
+                return $this->injectNewConfigKey($content, $openBracePos, array_slice($segments, $index));
+            }
+
+            $openBracePos = strpos($content, '{', $matches[0][1]);
+
+            if ($openBracePos === false) {
+                return false;
+            }
+
+            $closeBracePos = $this->findMatchingClosingBrace($content, $openBracePos);
+
+            if ($closeBracePos === false) {
+                return false;
+            }
         }
 
-        return $this->injectNewConfigKey($content);
+        return $this->injectIntoExistingConfigKey($content, $openBracePos, $closeBracePos);
     }
 
-    protected function injectIntoExistingConfigKey(string $content, array $matches): bool
+    protected function injectIntoExistingConfigKey(string $content, int $openBracePos, int $closeBracePos): bool
     {
-        // $matches[0][1] contains the position of the configKey pattern match
-        $configKeyStart = $matches[0][1];
-
-        // Find the opening brace of the configKey object
-        $openBracePos = strpos($content, '{', $configKeyStart);
-
-        if ($openBracePos === false) {
-            return false;
-        }
-
-        // Find the matching closing brace for this configKey object
-        $closeBracePos = $this->findMatchingClosingBrace($content, $openBracePos);
-
-        if ($closeBracePos === false) {
-            return false;
-        }
-
         // Filter out servers that already exist
         $serversToAdd = $this->filterExistingServers($content, $openBracePos, $closeBracePos);
 
@@ -187,9 +203,12 @@ class FileWriter
         return preg_match($quotedPattern, $content) || preg_match($unquotedPattern, $content);
     }
 
-    protected function injectNewConfigKey(string $content): bool
+    /**
+     * @param  array<int, string>  $segments
+     */
+    protected function injectNewConfigKey(string $content, ?int $openBracePos, array $segments): bool
     {
-        $openBracePos = strpos($content, '{');
+        $openBracePos ??= strpos($content, '{');
 
         if ($openBracePos === false) {
             return false;
@@ -201,8 +220,11 @@ class FileWriter
             $serverJsonParts[] = $this->generateServerJson($key, $serverConfig);
         }
 
-        $serversJson = implode(',', $serverJsonParts);
-        $configKeySection = '"'.$this->configKey.'": {'.$serversJson.'}';
+        $configKeySection = implode(',', $serverJsonParts);
+
+        foreach (array_reverse($segments) as $segment) {
+            $configKeySection = '"'.$segment.'": {'.$configKeySection.'}';
+        }
 
         $needsComma = $this->needsCommaAfterBrace($content, $openBracePos);
         $injection = $configKeySection.($needsComma ? ',' : '');
@@ -424,12 +446,18 @@ class FileWriter
             $config = (object) $config;
         }
 
-        if (! isset($config->{$this->configKey}) || ! is_object($config->{$this->configKey})) {
-            $config->{$this->configKey} = new stdClass;
+        $target = $config;
+
+        foreach ($this->configKeySegments() as $segment) {
+            if (! isset($target->{$segment}) || ! is_object($target->{$segment})) {
+                $target->{$segment} = new stdClass;
+            }
+
+            $target = $target->{$segment};
         }
 
         foreach ($this->serversToAdd as $key => $serverConfig) {
-            $config->{$this->configKey}->{$key} = $serverConfig;
+            $target->{$key} = $serverConfig;
         }
     }
 
