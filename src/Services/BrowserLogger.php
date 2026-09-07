@@ -75,6 +75,12 @@ class BrowserLogger
         if (value instanceof Error) {
             return { name: value.name, message: value.message, stack: value.stack };
         }
+        // Date has no own enumerable keys, so the own-keys walk below would
+        // silently collapse it to {}. It's a real (non-Proxy) built-in, so
+        // calling its own native toISOString directly is safe.
+        if (value instanceof Date) {
+            return value.toISOString();
+        }
         if (seen.has(value)) {
             return '[Circular]';
         }
