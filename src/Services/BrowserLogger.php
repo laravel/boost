@@ -62,23 +62,40 @@ class BrowserLogger
         table: console.table
     };
 
+    // Recursively build a plain-data copy WITHOUT ever letting JSON.stringify's
+    // native toJSON() auto-invocation run on the original value. Some libraries
+    // (e.g. Livewire's `$wire` proxy) return a callable "remote action invoker"
+    // for ANY unrecognized property access, including `toJSON` — so naively
+    // calling JSON.stringify(obj) on such an object fires a real network
+    // request. Walking own-enumerable keys ourselves never touches `.toJSON`.
+    function toSafeValue(value, seen) {
+        if (value === null || typeof value !== 'object') {
+            return value;
+        }
+        if (value instanceof Error) {
+            return { name: value.name, message: value.message, stack: value.stack };
+        }
+        if (seen.has(value)) {
+            return '[Circular]';
+        }
+        seen.add(value);
+        if (Array.isArray(value)) {
+            return value.map((item) => toSafeValue(item, seen));
+        }
+        const plain = {};
+        for (const key of Object.keys(value)) {
+            try {
+                plain[key] = toSafeValue(value[key], seen);
+            } catch (e) {
+                plain[key] = '[Unreadable]';
+            }
+        }
+        return plain;
+    }
+
     // Helper to safely stringify values
     function safeStringify(obj) {
-        const seen = new WeakSet();
-        return JSON.stringify(obj, (key, value) => {
-            if (typeof value === 'object' && value !== null) {
-                if (seen.has(value)) return '[Circular]';
-                seen.add(value);
-            }
-            if (value instanceof Error) {
-                return {
-                    name: value.name,
-                    message: value.message,
-                    stack: value.stack
-                };
-            }
-            return value;
-        });
+        return JSON.stringify(toSafeValue(obj, new WeakSet()));
     }
 
     // Normalize log type for consistency (e.g., 'warn' to 'warning')
