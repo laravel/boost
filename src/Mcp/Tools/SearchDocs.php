@@ -11,10 +11,12 @@ use Laravel\Boost\Concerns\MakesHttpRequests;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
 use Throwable;
 
+#[IsReadOnly]
 class SearchDocs extends Tool
 {
     use MakesHttpRequests;
@@ -68,10 +70,10 @@ class SearchDocs extends Tool
             return $rawQueries;
         }
 
-        $queries = array_filter(
+        $queries = array_values(array_filter(
             array_map(trim(...), $rawQueries),
             fn (string $query): bool => $query !== '' && $query !== '*'
-        );
+        ));
 
         try {
             $packagesCollection = $this->project->php()->packages()->concat($this->project->js()->packages());

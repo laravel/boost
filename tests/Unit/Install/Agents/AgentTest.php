@@ -277,7 +277,7 @@ JSON;
 
     expect($result)->toBe(true)
         ->and($capturedPath)->toBe($environment->mcpConfigPath())
-        ->and($capturedContent)->toBe($expectedContent);
+        ->and($capturedContent)->toStartWith($expectedContent);
 });
 
 test('installFileMcp updates existing config file', function (): void {

@@ -37,6 +37,78 @@ test('it creates directory when it does not exist', function (): void {
     rmdir($tempDir);
 });
 
+test('it leaves existing user content untouched', function (): void {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+
+    // A prose ``` run desynchronises naive fence pairing, and PEP 8 wants two blank lines here.
+    $userContent = <<<'MD'
+    # My Project
+
+    Use ``` to open a fence.
+
+    ```python
+    def first():
+        pass
+
+
+    def second():
+        pass
+    ```
+
+
+    Notes above keep their spacing too.
+    MD;
+
+    file_put_contents($tempFile, $userContent);
+
+    $agent = Mockery::mock(SupportsGuidelines::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+
+    $writer = new GuidelineWriter($agent);
+    $writer->write('boost guidelines');
+
+    expect((string) file_get_contents($tempFile))->toStartWith($userContent)
+        ->toContain('boost guidelines');
+
+    unlink($tempFile);
+});
+
+test('it leaves user content around an existing block untouched when replacing', function (): void {
+    $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
+
+    // The replace path runs on every boost:update, and PEP 8 wants two blank lines here.
+    $trailingContent = <<<'MD'
+
+
+        ```python
+        def first():
+            pass
+
+
+        def second():
+            pass
+        ```
+        MD;
+
+    file_put_contents($tempFile, "# My Project\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>".$trailingContent);
+
+    $agent = Mockery::mock(SupportsGuidelines::class);
+    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
+    $agent->shouldReceive('frontmatter')->andReturn(false);
+    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+
+    $writer = new GuidelineWriter($agent);
+    $writer->write('updated guidelines');
+
+    expect((string) file_get_contents($tempFile))->toStartWith('# My Project')
+        ->toContain('updated guidelines')
+        ->toContain($trailingContent);
+
+    unlink($tempFile);
+});
+
 test('it throws exception when directory creation fails', function (): void {
     // Use a path that cannot be created (root directory with insufficient permissions)
     $filePath = '/root/boost_test/test.md';

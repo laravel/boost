@@ -19,16 +19,6 @@ abstract class TestCase extends OrchestraTestCase
         $app->useStoragePath(realpath(__DIR__.'/../workbench/storage'));
     }
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-    }
-
     protected function getPackageProviders($app)
     {
         return [BoostServiceProvider::class];
