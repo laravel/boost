@@ -23,13 +23,14 @@ function bootProject(array $packages): ProjectManager
 /**
  * @param  array<int, Package>  $extraPackages
  */
-function renderTestingSkill(bool $pest, array $extraPackages = [], string $version = '4.0.0'): string
+function renderTestingSkill(bool $pest, array $extraPackages = [], ?string $version = null): string
 {
+    $version ??= $pest ? '4.0.0' : '11.5.3';
     bootProject(array_merge([
         rosterPackage('laravel/framework', '12.0.0'),
         $pest
             ? rosterPackage('pestphp/pest', $version, true)
-            : rosterPackage('phpunit/phpunit', '11.0.0', true),
+            : rosterPackage('phpunit/phpunit', $version, true),
     ], $extraPackages));
 
     $renderer = new class
@@ -73,6 +74,17 @@ it('teaches PHPUnit syntax to a PHPUnit project and never Pest syntax', function
         ->not->toContain('beforeEach()')
         ->not->toContain('pestphp.com');
 });
+
+it('links to the installed PHPUnit documentation edition', function (string $version, string $docsVersion): void {
+    expect(renderTestingSkill(pest: false, version: $version))
+        ->toContain("https://docs.phpunit.de/en/{$docsVersion}/` for PHPUnit API syntax")
+        ->toContain("https://docs.phpunit.de/en/{$docsVersion}/assertions.html")
+        ->toContain("https://docs.phpunit.de/en/{$docsVersion}/` for PHPUnit options")
+        ->not->toContain('https://docs.phpunit.de/en/13.3/');
+})->with([
+    'PHPUnit 11' => ['11.5.3', '11.5'],
+    'PHPUnit 12' => ['12.5.0', '12.5'],
+]);
 
 it('teaches browser testing when the project installs a browser tool the framework can run', function (bool $pest, string $package, string $docs): void {
     expect(renderTestingSkill($pest, [rosterPackage($package, '1.0.0', true)]))

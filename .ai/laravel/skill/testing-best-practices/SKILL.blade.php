@@ -11,7 +11,7 @@ $pest = $assist->hasPackage('pestphp/pest');
 @endphp
 # Testing Best Practices
 
-This skill provides rules for designing Laravel tests. Each rule file explains what to do and why. Use `search-docs` for {{ $pest ? 'Laravel and Pest API syntax' : 'Laravel API syntax' }}.@if(! $pest) Fetch `https://docs.phpunit.de/en/13.3/` for PHPUnit API syntax.@endif
+This skill provides rules for designing Laravel tests. Each rule file explains what to do and why. Use `search-docs` for {{ $pest ? 'Laravel and Pest API syntax' : 'Laravel API syntax' }}.@if(! $pest) Fetch `{{ $assist->phpunitDocsUrl() }}` for PHPUnit API syntax.@endif
 
 This project uses {{ $pest ? 'Pest' : 'PHPUnit' }}. Follow the corresponding guidance in each rule.
 

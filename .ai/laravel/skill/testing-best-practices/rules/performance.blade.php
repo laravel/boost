@@ -10,7 +10,7 @@ These settings apply to the project and CI, not to individual tests. Read `rules
 @if($pest)
 Fetch `https://pestphp.com/docs/optimizing-tests` for Pest options that make test runs faster.
 @else
-Fetch `https://docs.phpunit.de/en/13.3/` for PHPUnit options that make test runs faster.
+Fetch `{{ $assist->phpunitDocsUrl() }}` for PHPUnit options that make test runs faster.
 @endif
 Verify each flag in the documentation before adding it to CI.
 

@@ -15,6 +15,29 @@ beforeEach(function (): void {
     $this->config = new GuidelineConfig;
 });
 
+test('phpunit documentation URLs use the installed major and minor version', function (): void {
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([
+        rosterPackage('phpunit/phpunit', '11.5.3', true),
+    ]));
+
+    $assist = Mockery::mock(GuidelineAssist::class, [$project, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->phpunitDocsUrl())->toBe('https://docs.phpunit.de/en/11.5/')
+        ->and($assist->phpunitDocsUrl('assertions.html'))
+        ->toBe('https://docs.phpunit.de/en/11.5/assertions.html');
+});
+
+test('phpunit documentation URL falls back to the version selector when PHPUnit is not installed', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class, [$this->project, $this->config])->makePartial();
+    $assist->shouldAllowMockingProtectedMethods();
+    $assist->shouldReceive('discover')->andReturn([]);
+
+    expect($assist->phpunitDocsUrl())->toBe('https://phpunit.de/documentation.html');
+});
+
 test('php executable falls back to Sail when no config is set', function (): void {
     config(['boost.executable_paths.php' => null]);
     $this->config->usesSail = true;

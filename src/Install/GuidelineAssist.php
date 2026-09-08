@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
 use Symfony\Component\Finder\Finder;
 
@@ -108,6 +109,18 @@ class GuidelineAssist
         }
 
         return $this->project->js()->uses($package, $constraint);
+    }
+
+    public function phpunitDocsUrl(string $path = ''): string
+    {
+        $phpunit = $this->project->php()->packages()
+            ->first(fn (Package $package): bool => $package->name() === PackageRegistry::PHPUNIT);
+
+        if (! $phpunit || preg_match('/^\d+\.\d+/', $phpunit->version(), $matches) !== 1) {
+            return 'https://phpunit.de/documentation.html';
+        }
+
+        return "https://docs.phpunit.de/en/{$matches[0]}/".ltrim($path, '/');
     }
 
     public function nodePackageManager(): string
