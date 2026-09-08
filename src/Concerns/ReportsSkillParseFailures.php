@@ -16,16 +16,16 @@ trait ReportsSkillParseFailures
             return;
         }
 
-        $count = count($failures->all());
-        $message = $count === 1
-            ? '1 skill is not valid and was skipped. Its existing registration was left unchanged:'
-            : sprintf('%d skills are not valid and were skipped. Their existing registrations were left unchanged:', $count);
+        $names = $failures->skillNames();
+        $message = count($names) === 1
+            ? '1 skill has invalid YAML frontmatter and was skipped. Its existing registration was left unchanged:'
+            : sprintf('%d skills have invalid YAML frontmatter and were skipped. Their existing registrations were left unchanged:', count($names));
 
         $this->newLine();
         $this->warn($message);
 
-        foreach ($failures->all() as $path => $failure) {
-            $this->line('  - '.str_replace(base_path().DIRECTORY_SEPARATOR, '', $path).': '.$failure);
+        foreach ($names as $name) {
+            $this->line('  - '.$name);
         }
     }
 }

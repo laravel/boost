@@ -6,20 +6,12 @@ namespace Laravel\Boost\Support;
 
 class SkillParseFailures
 {
-    /** @var array<string, string> */
+    /** @var array<int, string> */
     protected array $failures = [];
 
-    public function record(string $path, string $message): void
+    public function record(string $path): void
     {
-        $this->failures[$path] = $message;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function all(): array
-    {
-        return $this->failures;
+        $this->failures[$path] = $path;
     }
 
     public function isEmpty(): bool
@@ -32,7 +24,7 @@ class SkillParseFailures
      */
     public function skillNames(): array
     {
-        return collect(array_keys($this->failures))
+        return collect($this->failures)
             ->map(fn (string $path): string => basename(dirname($path)))
             ->unique()
             ->values()

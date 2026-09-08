@@ -422,12 +422,8 @@ test('a skill with invalid YAML frontmatter is skipped and records the failure',
 
     try {
         $skills = (new SkillComposer($this->project))->skills();
-        $failures = app(SkillParseFailures::class)->all();
-        $skillFile = $skillDir.DIRECTORY_SEPARATOR.'SKILL.md';
 
         expect($skills->has('broken-frontmatter'))->toBeFalse()
-            ->and($failures)->toHaveKey($skillFile)
-            ->and($failures[$skillFile])->toContain('colon')
             ->and(app(SkillParseFailures::class)->skillNames())->toBe(['broken-frontmatter']);
     } finally {
         @unlink($skillDir.'/SKILL.md');
@@ -444,12 +440,9 @@ test('a skill with unclosed frontmatter is skipped and records the failure', fun
 
     try {
         $skills = (new SkillComposer($this->project))->skills();
-        $failures = app(SkillParseFailures::class)->all();
-        $skillFile = $skillDir.DIRECTORY_SEPARATOR.'SKILL.md';
 
         expect($skills->has('unclosed-frontmatter'))->toBeFalse()
-            ->and($failures)->toHaveKey($skillFile)
-            ->and($failures[$skillFile])->toContain('no closing delimiter');
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['unclosed-frontmatter']);
     } finally {
         @unlink($skillDir.'/SKILL.md');
         @rmdir($skillDir);

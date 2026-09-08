@@ -146,10 +146,7 @@ it('reports invalid skills and completes the update', function (): void {
     $command->shouldReceive('callSilently')
         ->once()
         ->andReturnUsing(function (): int {
-            app(SkillParseFailures::class)->record(
-                base_path('.ai/skills/broken-frontmatter/SKILL.md'),
-                'A colon cannot be used in an unquoted mapping value',
-            );
+            app(SkillParseFailures::class)->record(base_path('.ai/skills/broken-frontmatter/SKILL.md'));
 
             return 0;
         });
@@ -163,8 +160,8 @@ it('reports invalid skills and completes the update', function (): void {
 
     expect($command->handle($config))->toBe(0)
         ->and($buffer->fetch())
-        ->toContain('1 skill is not valid and was skipped. Its existing registration was left unchanged:')
-        ->toContain('.ai/skills/broken-frontmatter/SKILL.md')
+        ->toContain('1 skill has invalid YAML frontmatter and was skipped. Its existing registration was left unchanged:')
+        ->toContain('- broken-frontmatter')
         ->toContain('Boost guidelines and skills updated successfully.');
 });
 
@@ -192,7 +189,7 @@ it('preserves a tracked invalid skill while completing the update', function ():
 
     try {
         $this->artisan('boost:update', ['--no-discover' => true])
-            ->expectsOutputToContain('1 skill is not valid and was skipped.')
+            ->expectsOutputToContain('1 skill has invalid YAML frontmatter and was skipped.')
             ->expectsOutputToContain('Boost guidelines and skills updated successfully.')
             ->assertSuccessful();
 

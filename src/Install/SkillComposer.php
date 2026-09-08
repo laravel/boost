@@ -216,8 +216,8 @@ class SkillComposer
 
         try {
             $frontmatter = $this->parseSkillFrontmatter($content);
-        } catch (ParseException $parseException) {
-            app(SkillParseFailures::class)->record($skillFile, $parseException->getMessage());
+        } catch (ParseException) {
+            app(SkillParseFailures::class)->record($skillFile);
 
             return null;
         }
