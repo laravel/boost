@@ -252,6 +252,10 @@ trait ReadsLogs
                 return [];
             }
 
+            if ($offset > 0 && preg_match('/^'.$this->getTimestampRegex().'/', $entries[0]) !== 1) {
+                array_shift($entries);
+            }
+
             return $entries; // already in chronological order relative to chunk
         } finally {
             fclose($handle);
