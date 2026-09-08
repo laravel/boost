@@ -45,6 +45,20 @@ test('save method returns boolean', function (): void {
     expect($result)->toBe(true);
 });
 
+test('save writes servers when the existing file is whitespace only', function (): void {
+    $writtenContent = '';
+    mockFileOperations(fileExists: true, content: "\n  \n", capturedContent: $writtenContent);
+    File::shouldReceive('size')->andReturn(4);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('laravel-boost', ['command' => 'php artisan boost:mcp'])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"laravel-boost"')
+        ->and($writtenContent)->toContain('php artisan boost:mcp');
+});
+
 test('written data is correct for brand new file', function (string $configKey, array $servers, string $expectedJson): void {
     $writtenPath = '';
     $writtenContent = '';

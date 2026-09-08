@@ -65,6 +65,10 @@ class FileWriter
 
         $content = $this->readFile();
 
+        if (trim($content) === '') {
+            return $this->createNewFile();
+        }
+
         if ($this->isPlainJson($content)) {
             return $this->updatePlainJsonFile($content);
         }
