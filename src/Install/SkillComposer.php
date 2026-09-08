@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Install;
 
-use Exception;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
 use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillComposer
@@ -107,16 +108,17 @@ class SkillComposer
      */
     protected function getThirdPartySkills(): Collection
     {
-        $skills = collect(Composer::packagesDirectoriesWithBoostSkills())
-            ->reject(fn (string $path, string $package): bool => Composer::isFirstPartyPackage($package))
-            ->flatMap(fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package));
+        $packages = collect(Composer::packagesDirectoriesWithBoostSkills())
+            ->reject(fn (string $path, string $package): bool => Composer::isFirstPartyPackage($package));
 
-        if (! isset($this->config->aiGuidelines)) {
-            return $skills;
+        if (isset($this->config->aiGuidelines)) {
+            $packages = $packages->filter(
+                fn (string $path, string $package): bool => in_array($package, $this->config->aiGuidelines, true)
+            );
         }
 
-        return $skills->filter(
-            fn (Skill $skill): bool => in_array($skill->package, $this->config->aiGuidelines, true)
+        return $packages->flatMap(
+            fn (string $path, string $package): Collection => $this->discoverSkillsFromDirectory($path, $package)
         );
     }
 
@@ -212,9 +214,19 @@ class SkillComposer
             return null;
         }
 
-        $frontmatter = $this->parseSkillFrontmatter($content);
+        try {
+            $frontmatter = $this->parseSkillFrontmatter($content);
+        } catch (ParseException $parseException) {
+            app(SkillParseFailures::class)->record($skillFile, $parseException->getMessage());
+
+            return null;
+        }
 
         if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
+            if ($frontmatter !== []) {
+                app(SkillParseFailures::class)->record($skillFile, 'The frontmatter must define both [name] and [description].');
+            }
+
             return null;
         }
 
@@ -242,20 +254,32 @@ class SkillComposer
 
     /**
      * @return array<string, mixed>
+     *
+     * @throws ParseException
      */
     protected function parseSkillFrontmatter(string $content): array
     {
         $content = preg_replace('/^(\s*<!--.*?-->\s*)+/s', '', $content);
 
-        if (! preg_match('/^\s*---\s*\n(.*?)\n---\s*\n/s', (string) $content, $matches)) {
-            return [];
+        if (preg_match('/^\s*---[^\S\r\n]*\R(.*?)\R---[^\S\r\n]*(?:\R|$)/s', (string) $content, $matches)) {
+            $frontmatter = Yaml::parse($matches[1]);
+
+            if ($frontmatter === null) {
+                return [];
+            }
+
+            if (! is_array($frontmatter)) {
+                throw new ParseException('Skill frontmatter must be a YAML mapping.');
+            }
+
+            return $frontmatter;
         }
 
-        try {
-            return Yaml::parse($matches[1]) ?? [];
-        } catch (Exception) {
-            return [];
+        if (preg_match('/^\s*---[^\S\r\n]*(?:\R|$)/', (string) $content)) {
+            throw new ParseException('The SKILL.md frontmatter has no closing delimiter.');
         }
+
+        return [];
     }
 
     protected function determinePackageFromPath(string $skillPath): string

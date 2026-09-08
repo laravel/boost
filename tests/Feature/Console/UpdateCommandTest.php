@@ -3,12 +3,16 @@
 declare(strict_types=1);
 
 use Illuminate\Console\OutputStyle;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Artisan;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\NullOutput;
@@ -129,6 +133,45 @@ it('calls install command with skills flag when skills are configured', function
 
     expect($command->handle($config))->toBe(0);
 });
+
+it('preserves tracked skills with unusable frontmatter while completing the update', function (string $skill, string $reason): void {
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([]));
+    $this->app->instance(ProjectManager::class, $project);
+
+    $skillDir = stageCustomSkill($skill);
+    $agentSkillsPath = '.boost-test-skills-'.uniqid();
+    $installedSkillDir = base_path($agentSkillsPath.'/'.$skill);
+    @mkdir($installedSkillDir, 0755, true);
+    file_put_contents($installedSkillDir.'/SKILL.md', 'previously installed');
+
+    config([
+        'boost.agents.claude_code.skills_path' => $agentSkillsPath,
+        'boost.enforce_tests' => false,
+    ]);
+
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setSkills([$skill]);
+
+    try {
+        expect(Artisan::call('boost:update', ['--no-discover' => true]))->toBe(0)
+            ->and(Artisan::output())
+            ->toContain('Skipped 1 skill with invalid or incomplete frontmatter, leaving existing registration unchanged:')
+            ->toContain('- '.$skill.' (.ai/skills/'.$skill.'/SKILL.md): '.$reason)
+            ->toContain('Boost guidelines and skills updated successfully.');
+
+        expect((new Config)->getSkills())->toContain($skill)
+            ->and($installedSkillDir.'/SKILL.md')->toBeFile()
+            ->and(file_get_contents($installedSkillDir.'/SKILL.md'))->toBe('previously installed');
+    } finally {
+        (new Filesystem)->deleteDirectory(base_path($agentSkillsPath));
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+})->with([
+    'invalid yaml' => ['broken-frontmatter', 'A colon cannot be used in an unquoted mapping value'],
+    'missing name' => ['incomplete-frontmatter', 'The frontmatter must define both [name] and [description].'],
+]);
 
 it('calls install command with both flags when guidelines and skills are enabled', function (): void {
     $config = new Config;
