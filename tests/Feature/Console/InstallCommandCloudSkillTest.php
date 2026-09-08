@@ -56,6 +56,8 @@ it('installs the bundled cloud skill when the skills feature is selected', funct
 });
 
 it('does not install the cloud skill when the integration is not selected', function (): void {
+    (new Config)->setCloud(false);
+
     $this->artisan('boost:install', ['--skills' => true, '--no-interaction' => true])
         ->assertSuccessful();
 
