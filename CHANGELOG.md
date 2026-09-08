@@ -1,6 +1,29 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.7.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.8.0...main)
+
+## [v2.8.0](https://github.com/laravel/boost/compare/v2.7.1...v2.8.0) - 2026-09-08
+
+### What's Changed
+
+* Remove redundant test lifecycle overrides by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1004
+* Leave fenced code blocks alone when spacing markdown headings by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/961
+* Throw on invalid SKILL.md frontmatter instead of silently unregistering the skill by [@shoemoney](https://github.com/shoemoney) in https://github.com/laravel/boost/pull/965
+* Show repo-relative skill paths with forward slashes on Windows by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1011
+* Stop normalizing blank lines outside the Boost guidelines block by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/996
+* Use installed PHPUnit version in testing skill docs by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1008
+* Fix entity decoding in fenced code blocks by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/997
+* Fix: browser-logs watcher can crash any Livewire page via JSON.stringify auto-invoking $wire's fake toJSON by [@thealejandro](https://github.com/thealejandro) in https://github.com/laravel/boost/pull/1007
+* Drop the truncated leading fragment when the log chunk boundary lands inside an entry by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1009
+* Bundle the Laravel Cloud skill and sync it nightly from cloud-cli by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1012
+* Key nested user guidelines by relative path so same-named files stop overwriting each other by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1010
+
+### New Contributors
+
+* [@shoemoney](https://github.com/shoemoney) made their first contribution in https://github.com/laravel/boost/pull/965
+* [@thealejandro](https://github.com/thealejandro) made their first contribution in https://github.com/laravel/boost/pull/1007
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.7.1...v2.8.0
 
 ## [v2.7.1](https://github.com/laravel/boost/compare/v2.7.0...v2.7.1) - 2026-09-07
 
@@ -579,11 +602,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -670,12 +695,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
