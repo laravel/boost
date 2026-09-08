@@ -158,7 +158,7 @@ test('all common html entities are decoded', function (): void {
         ->not->toContain('&gt;');
 });
 
-test('html entities inside fenced code blocks are preserved', function (): void {
+test('html entities written literally inside fenced code blocks are preserved', function (): void {
     $this->mock(GuidelineAssist::class);
 
     $content = <<<'MARKDOWN'
@@ -170,6 +170,34 @@ MARKDOWN;
     $result = $this->renderer->render($content, '/path/to/guide.blade.php');
 
     expect($result)->toBe($content);
+});
+
+test('html entities from blade expressions inside fenced code blocks are decoded', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+```bash
+php artisan tinker --execute {{ '"$a < $b && $c"' }}
+```
+MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('--execute "$a < $b && $c"')
+        ->not->toContain('&quot;')
+        ->not->toContain('&lt;')
+        ->not->toContain('&amp;');
+});
+
+test('renderBladeFile preserves literal entities while decoding blade output', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $result = $this->renderer->renderFile(fixture('entities-in-code-blocks.blade.php'));
+
+    expect($result)
+        ->toContain("assertStringContainsString('&lt;script&gt;', \$content)")
+        ->toContain('Run php artisan tinker --execute "User::count()" to check.')
+        ->toContain('--execute "$a < $b && $c"');
 });
 
 test('renderBladeFile returns empty string for non-existent file', function (): void {

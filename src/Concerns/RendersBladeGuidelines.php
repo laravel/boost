@@ -36,6 +36,13 @@ trait RendersBladeGuidelines
             '<x-' => '___BLADE_COMPONENT_OPEN___',
         ];
 
+        // Hiding literal ampersands in fenced code before rendering leaves only Blade's own escaping to decode.
+        $content = preg_replace_callback(
+            '/(?<fence>`{3,}|~{3,}).*?\k<fence>/s',
+            fn (array $matches): string => str_replace('&', '___AMPERSAND___', $matches[0]),
+            $content,
+        ) ?? $content;
+
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
 
         $rendered = rescue(
@@ -52,42 +59,10 @@ trait RendersBladeGuidelines
             return '';
         }
 
-        $rendered = str_replace(
-            $placeholders['`'],
-            '`',
-            $rendered,
-        );
-
-        $fencedCodeBlocks = [];
-
-        $rendered = preg_replace_callback(
-            '/(?<fence>`{3,}|~{3,}).*?\k<fence>/s',
-            function (array $matches) use (&$fencedCodeBlocks): string {
-                $placeholder = '___FENCED_CODE_BLOCK_'.count($fencedCodeBlocks).'___';
-
-                $fencedCodeBlocks[$placeholder] = $matches[0];
-
-                return $placeholder;
-            },
-            $rendered,
-        );
-
         $rendered = html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5);
+        $rendered = str_replace('___AMPERSAND___', '&', $rendered);
 
-        $rendered = str_replace(
-            array_keys($fencedCodeBlocks),
-            array_values($fencedCodeBlocks),
-            $rendered,
-        );
-
-        $remainingPlaceholders = $placeholders;
-        unset($remainingPlaceholders['`']);
-
-        return str_replace(
-            array_values($remainingPlaceholders),
-            array_keys($remainingPlaceholders),
-            $rendered,
-        );
+        return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
 
     protected function processBoostSnippets(string $content): string
