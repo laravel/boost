@@ -2,6 +2,8 @@
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 $pest = $assist->hasPackage('pestphp/pest');
 $pest5 = $assist->hasPackage('pestphp/pest', '>=5.0');
+$phpunit = $assist->project->php()->package('phpunit/phpunit');
+$phpunitDocs = 'the PHPUnit '.($phpunit ? $phpunit->version().' ' : '').'documentation at `https://phpunit.de/documentation.html`';
 @endphp
 # Test Suite Performance
 
@@ -10,7 +12,7 @@ These settings apply to the project and CI, not to individual tests. Read `rules
 @if($pest)
 Fetch `https://pestphp.com/docs/optimizing-tests` for Pest options that make test runs faster.
 @else
-Fetch `{{ $assist->phpunitDocsUrl() }}` for PHPUnit options that make test runs faster.
+Fetch {{ $phpunitDocs }} for PHPUnit options that make test runs faster.
 @endif
 Verify each flag in the documentation before adding it to CI.
 

@@ -75,15 +75,15 @@ it('teaches PHPUnit syntax to a PHPUnit project and never Pest syntax', function
         ->not->toContain('pestphp.com');
 });
 
-it('links to the installed PHPUnit documentation edition', function (string $version, string $docsVersion): void {
+it('names the installed PHPUnit version instead of pinning a documentation edition', function (string $version): void {
     expect(renderTestingSkill(pest: false, version: $version))
-        ->toContain("https://docs.phpunit.de/en/{$docsVersion}/` for PHPUnit API syntax")
-        ->toContain("https://docs.phpunit.de/en/{$docsVersion}/assertions.html")
-        ->toContain("https://docs.phpunit.de/en/{$docsVersion}/` for PHPUnit options")
-        ->not->toContain('https://docs.phpunit.de/en/13.3/');
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit API syntax")
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for the assertions of PHPUnit")
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit options")
+        ->not->toContain('docs.phpunit.de');
 })->with([
-    'PHPUnit 11' => ['11.5.3', '11.5'],
-    'PHPUnit 12' => ['12.5.0', '12.5'],
+    'PHPUnit 11' => ['11.5.3'],
+    'PHPUnit 12' => ['12.5.0'],
 ]);
 
 it('teaches browser testing when the project installs a browser tool the framework can run', function (bool $pest, string $package, string $docs): void {
