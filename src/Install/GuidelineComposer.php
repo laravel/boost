@@ -149,8 +149,11 @@ class GuidelineComposer
      */
     protected function getUserGuidelines(): Collection
     {
-        return collect($this->guidelinesDir($this->customGuidelinePath()))
-            ->mapWithKeys(fn ($guideline): array => ['.ai/'.$guideline['name'] => $guideline]);
+        return collect($this->guidelinesDir(
+            $this->customGuidelinePath(),
+            false,
+            fn (SplFileInfo $file): string => '.ai/'.$this->relativeGuidelineKey($file),
+        ));
     }
 
     /**
@@ -272,12 +275,10 @@ class GuidelineComposer
                 continue;
             }
 
-            $root = str_replace('\\', '/', (string) (realpath($path) ?: $path));
-
             $keyed = $this->guidelinesDir(
                 $path,
                 true,
-                fn (SplFileInfo $file): string => $package.'/'.$this->relativeGuidelineKey($root, $file->getRealPath()),
+                fn (SplFileInfo $file): string => $package.'/'.$this->relativeGuidelineKey($file),
             );
 
             foreach ($keyed as $key => $guideline) {
@@ -303,15 +304,13 @@ class GuidelineComposer
         return false;
     }
 
-    private function relativeGuidelineKey(string $root, string $file): string
+    private function relativeGuidelineKey(SplFileInfo $file): string
     {
-        $file = str_replace('\\', '/', $file);
-
-        $relative = str_starts_with($file, $root)
-            ? ltrim(Str::after($file, $root), '/')
-            : basename($file);
-
-        return (string) preg_replace('/\.(blade\.php|md)$/', '', $relative);
+        return (string) preg_replace(
+            '/\.(blade\.php|md)$/',
+            '',
+            str_replace('\\', '/', $file->getRelativePathname())
+        );
     }
 
     /**
@@ -414,7 +413,8 @@ class GuidelineComposer
 
     protected function guidelinePath(string $path, ?string $overrideKey = null): ?string
     {
-        if ($overrideKey !== null) {
+        // A user guideline is never its own override.
+        if ($overrideKey !== null && ! $this->isCustomGuideline($path)) {
             foreach (['.blade.php', '.md'] as $ext) {
                 $customPath = $this->prependUserGuidelinePath($overrideKey.$ext);
 
