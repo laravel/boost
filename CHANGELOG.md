@@ -1,6 +1,50 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.5.5...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.7.1...main)
+
+## [v2.7.1](https://github.com/laravel/boost/compare/v2.7.0...v2.7.1) - 2026-09-07
+
+### What's Changed
+
+* Detect Livewire navigate requests by header presence since Livewire 3 sends an empty value by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/984
+* Ensure MCP config files end with a trailing newline by [@iitenkida7](https://github.com/iitenkida7) in https://github.com/laravel/boost/pull/990
+* Skip versioned guideline discovery for packages without a major version by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/988
+* Join TABLE_CONSTRAINTS for check constraints since MySQL's CHECK_CONSTRAINTS table has no TABLE_NAME column by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/980
+* Fix non-GitHub SSH remote validation by [@simonyang08](https://github.com/simonyang08) in https://github.com/laravel/boost/pull/986
+* Register the browser-logs route only when the browser logs watcher is enabled by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/993
+* Report the database driver name as database_engine instead of the connection name by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/994
+* Read the standard mcp_config_path config key for Junie instead of the never-documented mcp_path by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/995
+* Declare search-docs read-only so agents in plan mode stop re-asking for it by [@humanik](https://github.com/humanik) in https://github.com/laravel/boost/pull/998
+* Align action examples to use handle() by [@bjoernzosel](https://github.com/bjoernzosel) in https://github.com/laravel/boost/pull/999
+* Remove deprecated Rector skips by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1000
+* Use unlimited memory for PHPStan type checks by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1003
+* Remove deprecated early return Rector set by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1002
+
+### New Contributors
+
+* [@iitenkida7](https://github.com/iitenkida7) made their first contribution in https://github.com/laravel/boost/pull/990
+* [@simonyang08](https://github.com/simonyang08) made their first contribution in https://github.com/laravel/boost/pull/986
+* [@humanik](https://github.com/humanik) made their first contribution in https://github.com/laravel/boost/pull/998
+* [@bjoernzosel](https://github.com/bjoernzosel) made their first contribution in https://github.com/laravel/boost/pull/999
+* [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) made their first contribution in https://github.com/laravel/boost/pull/1000
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.7.0...v2.7.1
+
+## [v2.7.0](https://github.com/laravel/boost/compare/v2.6.0...v2.7.0) - 2026-08-26
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.6.0...v2.7.0
+
+## [v2.6.0](https://github.com/laravel/boost/compare/v2.5.5...v2.6.0) - 2026-08-25
+
+* Run `DatabaseQuery` under a guaranteed database enforced read-only transaction by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/boost/pull/957
+* Quote the MySQL table type as a string literal so schema reads work under ANSI_QUOTES by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/958
+* Point the last-error tool description at the correct browser-logs tool name by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/959
+* Ignore a repository-root SKILL.md so add-skill cannot delete the whole skills directory by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/954
+* Accept any skill path shape in boost:add-skill, and keep the audit gate correct by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/960
+* Keep the separating comma out of trailing comments when injecting MCP servers by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/977
+* Stop detecting Antigravity from the shared .agents directory that Boost itself creates for other agents' skills by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/981
+* Re-key the search-docs query list after filtering by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/962
+* Testing Best Practices Skill by [@nexxai](https://github.com/nexxai) in https://github.com/laravel/boost/pull/769
 
 ## [v2.5.5](https://github.com/laravel/boost/compare/v2.5.4...v2.5.5) - 2026-08-19
 
@@ -532,11 +576,17 @@ If you have custom overrides in:
 
 
 
+
+
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
+
+
 
 
 
@@ -617,12 +667,18 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
+
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
+
+
 
 
 
