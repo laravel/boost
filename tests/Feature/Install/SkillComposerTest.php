@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
@@ -14,6 +16,7 @@ beforeEach(function (): void {
     $this->project = Mockery::mock(ProjectManager::class);
 
     $this->app->instance(ProjectManager::class, $this->project);
+    app(SkillParseFailures::class)->flush();
 });
 
 test('skills return a collection keyed by skill name', function (): void {
@@ -319,6 +322,35 @@ test('excludes third-party skills for packages not in aiGuidelines', function ()
     }
 });
 
+test('does not parse invalid skills from excluded third-party packages', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
+    @mkdir($skillDir, 0755, true);
+    file_put_contents($skillDir.'/SKILL.md', fixtureContent('skills/broken-frontmatter/SKILL.md'));
+    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+
+    try {
+        $config = new GuidelineConfig;
+        $config->aiGuidelines = ['other/package'];
+
+        $skills = (new SkillComposer($this->project))->config($config)->skills();
+
+        expect($skills->has('broken-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
+    } finally {
+        @unlink($skillDir.'/SKILL.md');
+        @rmdir($skillDir);
+        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
+        @rmdir(base_path('vendor/some/third-party/resources/boost'));
+        @rmdir(base_path('vendor/some/third-party/resources'));
+        @rmdir(base_path('vendor/some/third-party'));
+        @rmdir(base_path('vendor/some'));
+        @rmdir(base_path('vendor'));
+        @unlink(base_path('composer.json'));
+    }
+});
+
 test('blade skills with code before frontmatter are parsed correctly', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
@@ -380,4 +412,69 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
     expect($result)
         ->toHaveKey('name', 'pest-testing')
         ->toHaveKey('description', 'Write and run tests with Pest');
+});
+
+test('a skill with invalid YAML frontmatter is skipped and records the failure', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('broken-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('broken-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['broken-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])
+            ->toContain('A colon cannot be used in an unquoted mapping value')
+            ->toContain('description: Does a thing. Covers: the important bit.');
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+});
+
+test('a skill with unclosed frontmatter is skipped and records the failure', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('unclosed-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('unclosed-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['unclosed-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])->toContain('no closing delimiter');
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+});
+
+test('a skill whose frontmatter omits the name is skipped and records the failure', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('incomplete-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('incomplete-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['incomplete-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])->toContain('[name] and [description]');
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+});
+
+test('a skill without frontmatter is treated as absent', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('no-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('no-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
 });
