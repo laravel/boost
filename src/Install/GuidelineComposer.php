@@ -149,8 +149,13 @@ class GuidelineComposer
      */
     protected function getUserGuidelines(): Collection
     {
-        return collect($this->guidelinesDir($this->customGuidelinePath()))
-            ->mapWithKeys(fn ($guideline): array => ['.ai/'.$guideline['name'] => $guideline]);
+        $root = str_replace('\\', '/', (string) (realpath($this->customGuidelinePath()) ?: $this->customGuidelinePath()));
+
+        return collect($this->guidelinesDir(
+            $this->customGuidelinePath(),
+            false,
+            fn (SplFileInfo $file): string => '.ai/'.$this->relativeGuidelineKey($root, $file->getRealPath()),
+        ));
     }
 
     /**

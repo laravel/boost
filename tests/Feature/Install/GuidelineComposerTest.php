@@ -375,6 +375,25 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
         ->toContain('.ai/project-specific');
 });
 
+test('nested user guidelines with the same filename do not overwrite each other', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines-nested')).'/'.ltrim((string) $path, '/'));
+
+    expect($composer->compose())
+        ->toContain('=== .ai/frontend/api rules ===')
+        ->toContain('=== .ai/backend/api rules ===')
+        ->toContain('Frontend api guideline body')
+        ->toContain('Backend api guideline body');
+});
+
 test('a user override still applies for a package whose bundled core.blade.php no longer exists', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
