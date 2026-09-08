@@ -15,7 +15,6 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
-use Laravel\Boost\Install\Cloud;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -28,9 +27,6 @@ use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Rules\RuleRepository;
-use Laravel\Boost\Skills\Remote\GitHubRepository;
-use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
-use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Boost\Support\SkillParseFailures;
@@ -80,7 +76,6 @@ class InstallCommand extends Command
 
     public function __construct(
         private readonly AgentsDetector $agentsDetector,
-        private readonly Cloud $cloud,
         private readonly Config $config,
         private readonly Nightwatch $nightwatch,
         private readonly Sail $sail,
@@ -141,10 +136,6 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->installGuidelines();
-        }
-
-        if ($this->shouldInstallCloudSkill()) {
-            $this->downloadCloudSkill();
         }
 
         if ($this->selectedBoostFeatures->contains('skills')) {
@@ -513,33 +504,11 @@ class InstallCommand extends Command
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
+        $guidelineConfig->usesCloud = $this->selectedBoostFeatures->contains('cloud');
         $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
         $guidelineConfig->hasMcp = $this->selectedBoostFeatures->contains('mcp') || ($this->isExplicitFlagMode() && $this->config->getMcp());
 
         return $guidelineConfig;
-    }
-
-    protected function shouldInstallCloudSkill(): bool
-    {
-        return $this->selectedBoostFeatures->contains('cloud');
-    }
-
-    protected function downloadCloudSkill(): void
-    {
-        try {
-            $repository = GitHubRepository::fromInput($this->cloud->skillRepo().'/'.$this->cloud->skillPath());
-            $provider = new GitHubSkillProvider($repository);
-            $skill = $provider->discoverSkills()->get($this->cloud->skillName());
-
-            if (! $skill instanceof RemoteSkill) {
-                return;
-            }
-
-            $provider->downloadSkill($skill, base_path('.ai/skills/'.$this->cloud->skillName()));
-        } catch (Exception $exception) {
-            $this->warn('Failed to download Cloud skill: '.$exception->getMessage());
-            $this->line('You can install it later with: php artisan boost:add-skill '.$this->cloud->skillRepo());
-        }
     }
 
     protected function storeConfig(): void

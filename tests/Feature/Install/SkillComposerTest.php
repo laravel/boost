@@ -59,6 +59,19 @@ test('skills only includes skills for installed packages', function (): void {
     expect($skills->has('livewire-development'))->toBeFalse();
 });
 
+test('the cloud skill is only included when the cloud integration is enabled', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([rosterPackage('laravel/framework', '11.0.0')]));
+
+    $composer = new SkillComposer($this->project);
+
+    expect($composer->skills()->has('deploying-to-cloud'))->toBeFalse();
+
+    $config = new GuidelineConfig;
+    $config->usesCloud = true;
+
+    expect($composer->config($config)->skills()->get('deploying-to-cloud')->package)->toBe('deployments');
+});
+
 test('skill has name, description, path, and package', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),

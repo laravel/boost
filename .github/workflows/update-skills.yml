@@ -1,0 +1,37 @@
+name: update skills
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Fetch cloud-cli skill
+        run: |
+          git clone --no-checkout --depth 1 --filter=blob:none \
+            https://github.com/laravel/cloud-cli.git /tmp/cloud-cli
+          cd /tmp/cloud-cli
+          git sparse-checkout set skills/deploying-laravel-cloud
+          git checkout
+          rm -rf $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud
+          mkdir -p $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud
+          cp -r skills/deploying-laravel-cloud/. \
+            $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud/
+          sed -i 's/^name: .*/name: deploying-to-cloud/' \
+            $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud/SKILL.md
+
+      - name: Commit updated skills
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
+        with:
+          commit_message: Update skills from upstream

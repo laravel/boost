@@ -90,7 +90,7 @@ class Config
 
     public function getNightwatch(): bool
     {
-        return (bool) $this->get('nightwatch', $this->get('nightwatch_mcp', false));
+        return (bool) $this->get('nightwatch', $this->get('nightwatch_mcp', true));
     }
 
     public function setCloud(bool $installed): void
@@ -100,7 +100,7 @@ class Config
 
     public function getCloud(): bool
     {
-        return $this->get('cloud', false);
+        return $this->get('cloud', true);
     }
 
     public function setSail(bool $useSail): void
