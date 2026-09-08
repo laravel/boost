@@ -1288,6 +1288,47 @@ test('symlinked custom guideline file does not produce duplicates', function ():
     }
 });
 
+test('symlinked nested user guidelines with the same filename keep distinct keys', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $customDir = testDirectory('Fixtures/.ai/symlinked-nested-guidelines');
+    $cleanup = function () use ($customDir): void {
+        foreach (['frontend', 'backend'] as $group) {
+            @unlink($customDir.'/'.$group.'/api.blade.php');
+            @rmdir($customDir.'/'.$group);
+        }
+
+        @rmdir($customDir);
+    };
+
+    $cleanup();
+
+    foreach (['frontend', 'backend'] as $group) {
+        mkdir($customDir.'/'.$group, 0755, true);
+        symlink(
+            realpath(testDirectory('Fixtures/.ai/guidelines-nested/'.$group.'/api.blade.php')),
+            $customDir.'/'.$group.'/api.blade.php'
+        );
+    }
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        expect($composer->used())
+            ->toContain('.ai/frontend/api')
+            ->toContain('.ai/backend/api');
+    } finally {
+        $cleanup();
+    }
+});
+
 test('php core guideline adapts enum naming guidance to the application enums', function (array $enums, ?string $fixtureName, string $expected, string $notExpected): void {
     $assist = Mockery::mock(GuidelineAssist::class);
     $assist->shouldReceive('enums')->andReturn($enums);
