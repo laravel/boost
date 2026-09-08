@@ -83,10 +83,14 @@ class GitHubSkillProvider
             return false;
         }
 
-        $files = $skillFiles
-            ->filter(fn (array $item): bool => $item['type'] === 'blob')
-            ->reject(fn (array $item): bool => preg_match('/\.(php\d?|phar|phtml)$/i', (string) $item['path']) === 1)
-            ->reject(fn (array $item): bool => self::escapesSkillDirectory((string) $item['path']));
+        $blobs = $skillFiles->filter(fn (array $item): bool => $item['type'] === 'blob');
+
+        // A tree that escapes the skill directory is malformed or hostile, so nothing from it is worth writing.
+        if ($blobs->contains(fn (array $item): bool => self::escapesSkillDirectory((string) $item['path']))) {
+            return false;
+        }
+
+        $files = $blobs->reject(fn (array $item): bool => preg_match('/\.(php\d?|phar|phtml)$/i', (string) $item['path']) === 1);
 
         if (! $files->contains(fn (array $item): bool => Str::afterLast((string) $item['path'], '/') === 'SKILL.md')) {
             return false;
@@ -99,7 +103,7 @@ class GitHubSkillProvider
         return $this->downloadFiles($files->toArray(), $targetPath, $skill->path);
     }
 
-    // A tree path is relative and slash-delimited, so any of these can only resolve outside the skill directory.
+    // Segment-wise SkillWriter::isValidSkillName(): in a slash-delimited tree path these can only resolve outside the skill directory.
     protected static function escapesSkillDirectory(string $path): bool
     {
         return str_contains($path, '\\')
@@ -218,8 +222,7 @@ class GitHubSkillProvider
                 return false;
             }
 
-            $relativePath = $this->getRelativePath($item['path'], $basePath);
-            $localPath = $targetPath.'/'.$relativePath;
+            $localPath = $targetPath.'/'.substr((string) $item['path'], strlen($basePath) + 1);
 
             if (! $this->ensureDirectoryExists(dirname($localPath))) {
                 return false;
@@ -242,15 +245,6 @@ class GitHubSkillProvider
             $this->resolveBranch(),
             ltrim($path, '/')
         );
-    }
-
-    protected function getRelativePath(string $fullPath, string $basePath): string
-    {
-        if (str_starts_with($fullPath, $basePath.'/')) {
-            return substr($fullPath, strlen($basePath.'/'));
-        }
-
-        return basename($fullPath);
     }
 
     protected function ensureDirectoryExists(string $path): bool
