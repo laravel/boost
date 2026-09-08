@@ -19,6 +19,7 @@ use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Services\BrowserLogger;
 use Laravel\Boost\Support\RenderFailures;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\ProjectManager;
 
@@ -32,6 +33,7 @@ class BoostServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(RenderFailures::class, fn (): RenderFailures => new RenderFailures);
+        $this->app->singleton(SkillParseFailures::class, fn (): SkillParseFailures => new SkillParseFailures);
 
         if (! $this->shouldRun()) {
             return;

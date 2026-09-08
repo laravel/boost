@@ -287,3 +287,9 @@ test('it sends the remaining queries as a list when some are filtered out', func
     Http::assertSent(fn ($request): bool => $request->data()['queries'] === ['middleware', 'routing']
         && str_contains($request->body(), '"queries":["middleware","routing"]'));
 });
+
+test('it advertises itself as a read-only tool', function (): void {
+    $tool = new SearchDocs(Mockery::mock(ProjectManager::class));
+
+    expect($tool->toArray()['annotations'])->toBe(['readOnlyHint' => true]);
+});

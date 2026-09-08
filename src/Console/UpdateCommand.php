@@ -6,8 +6,10 @@ namespace Laravel\Boost\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
+use Laravel\Boost\Concerns\ReportsSkillParseFailures;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
+use Laravel\Boost\Support\SkillParseFailures;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\multiselect;
@@ -15,6 +17,8 @@ use function Laravel\Prompts\multiselect;
 #[AsCommand('boost:update', 'Update the Laravel Boost guidelines & skills to the latest guidance')]
 class UpdateCommand extends Command
 {
+    use ReportsSkillParseFailures;
+
     /** @var string */
     protected $signature = 'boost:update
         {--discover : Discover and prompt for newly available guidelines and skills (default)}
@@ -23,6 +27,8 @@ class UpdateCommand extends Command
 
     public function handle(Config $config): int
     {
+        app(SkillParseFailures::class)->flush();
+
         if (! $config->isValid()) {
             $this->error('Please set up Boost with [php artisan boost:install] first.');
 
@@ -51,6 +57,8 @@ class UpdateCommand extends Command
             '--guidelines' => $guidelines,
             '--skills' => $hasSkills,
         ]);
+
+        $this->reportSkillParseFailures();
 
         $this->info('Boost guidelines and skills updated successfully.');
 
