@@ -55,6 +55,7 @@ class SkillComposer
 
         return $this->skills = collect()
             ->merge($this->getCoreSkills())
+            ->merge($this->getIntegrationSkills())
             ->merge($this->getBoostSkills())
             ->merge($this->getThirdPartySkills())
             ->reject(fn (Skill $skill, string $key): bool => in_array($key, $excluded, true))
@@ -71,6 +72,23 @@ class SkillComposer
         return $this->discoverSkillsFromDirectory(
             $this->getBoostAiPath().DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.'skill',
             'boost',
+        );
+    }
+
+    /**
+     * Skills for opted-in integrations, discovered from `.ai/deployments/skill`.
+     *
+     * @return Collection<string, Skill>
+     */
+    protected function getIntegrationSkills(): Collection
+    {
+        if (! $this->config->usesCloud) {
+            return collect();
+        }
+
+        return $this->discoverSkillsFromDirectory(
+            $this->getBoostAiPath().DIRECTORY_SEPARATOR.'deployments'.DIRECTORY_SEPARATOR.'skill',
+            'deployments',
         );
     }
 

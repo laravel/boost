@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Prompt;
@@ -35,29 +34,32 @@ afterEach(function (): void {
     File::deleteDirectory($this->tempBasePath);
 });
 
-it('does not download the cloud skill when the skills feature is not selected', function (): void {
-    Http::fake();
-
+it('does not install the cloud skill when the skills feature is not selected', function (): void {
     (new Config)->setCloud(true);
 
     $this->artisan('boost:install', ['--mcp' => true, '--no-interaction' => true])
         ->assertSuccessful();
 
-    Http::assertNotSent(fn ($request): bool => str_contains((string) $request->url(), 'cloud-cli'));
-
-    expect(is_dir($this->tempBasePath.'/.ai/skills'))->toBeFalse()
+    expect(is_dir($this->tempBasePath.'/.claude/skills/deploying-to-cloud'))->toBeFalse()
         ->and((new Config)->getCloud())->toBeTrue();
 });
 
-it('still downloads the cloud skill when the skills feature is selected', function (): void {
-    Http::fake();
-
+it('installs the bundled cloud skill when the skills feature is selected', function (): void {
     (new Config)->setCloud(true);
 
     $this->artisan('boost:install', ['--skills' => true, '--no-interaction' => true])
         ->assertSuccessful();
 
-    Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'cloud-cli'));
+    expect(file_exists($this->tempBasePath.'/.claude/skills/deploying-to-cloud/SKILL.md'))->toBeTrue()
+        ->and(file_exists($this->tempBasePath.'/.claude/skills/deploying-to-cloud/reference/checklists.md'))->toBeTrue()
+        ->and((new Config)->getSkills())->toContain('deploying-to-cloud');
+});
+
+it('does not install the cloud skill when the integration is not selected', function (): void {
+    $this->artisan('boost:install', ['--skills' => true, '--no-interaction' => true])
+        ->assertSuccessful();
+
+    expect(is_dir($this->tempBasePath.'/.claude/skills/deploying-to-cloud'))->toBeFalse();
 });
 
 it('does not prompt for integrations when none are available', function (): void {
