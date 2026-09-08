@@ -6,6 +6,7 @@ namespace Laravel\Boost\Concerns;
 
 use Illuminate\Support\Facades\Blade;
 use Laravel\Boost\Install\GuidelineAssist;
+use Laravel\Boost\Support\Fences;
 use Laravel\Boost\Support\RenderFailures;
 
 trait RendersBladeGuidelines
@@ -35,6 +36,13 @@ trait RendersBladeGuidelines
             '<x-' => '___BLADE_COMPONENT_OPEN___',
         ];
 
+        // Hiding literal ampersands in fenced code before rendering leaves only Blade's own escaping to decode.
+        $content = preg_replace_callback(
+            '/(?<fence>`{3,}|~{3,}).*?\k<fence>/s',
+            fn (array $matches): string => str_replace('&', '___AMPERSAND___', $matches[0]),
+            $content,
+        ) ?? $content;
+
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
 
         $rendered = rescue(
@@ -52,6 +60,7 @@ trait RendersBladeGuidelines
         }
 
         $rendered = html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5);
+        $rendered = str_replace('___AMPERSAND___', '&', $rendered);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
@@ -73,36 +82,15 @@ trait RendersBladeGuidelines
 
     protected function markScopedBlocks(string $content): string
     {
-        $fences = [];
+        return Fences::outside($content, function (string $markdown): string {
+            $marked = preg_replace_callback(
+                '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
+                fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
+                $markdown
+            ) ?? $markdown;
 
-        $marked = preg_replace_callback('/^ {0,3}(?<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\k<fence>[`~]*[ \t]*$|\z)/ms', function (array $matches) use (&$fences): string {
-            $placeholder = '___SCOPED_FENCE_'.count($fences).'___';
-            $fences[$placeholder] = $matches[0];
-
-            return $placeholder;
-        }, $content);
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        $marked = preg_replace_callback(
-            '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
-            fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
-            $marked
-        );
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        $marked = preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked);
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        return str_replace(array_keys($fences), array_values($fences), $marked);
+            return preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked) ?? $marked;
+        });
     }
 
     /**

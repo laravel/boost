@@ -100,6 +100,13 @@ test('browser logger script contains required functionality', function (): void 
     );
 });
 
+test('browser logger script never hands a raw logged value to JSON.stringify', function (): void {
+    expect(BrowserLogger::getScript())
+        ->toContain('function toSafeValue(')
+        ->toContain('toSafeValue(event.reason, new WeakSet())')
+        ->not->toContain('JSON.stringify(obj,');
+});
+
 test('browser logger script captures the configured log levels', function (?array $configuredLevels, array $capturedTypes): void {
     config(['boost.browser_log_levels' => $configuredLevels]);
 
