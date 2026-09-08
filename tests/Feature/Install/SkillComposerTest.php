@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
@@ -326,7 +327,7 @@ test('does not parse invalid skills from excluded third-party packages', functio
 
     $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
     @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: Does a thing. Covers: the important bit.\n---\n");
+    file_put_contents($skillDir.'/SKILL.md', fixtureContent('skills/broken-frontmatter/SKILL.md'));
     file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
 
     try {
@@ -335,7 +336,7 @@ test('does not parse invalid skills from excluded third-party packages', functio
 
         $skills = (new SkillComposer($this->project))->config($config)->skills();
 
-        expect($skills->has('third-party-skill'))->toBeFalse()
+        expect($skills->has('broken-frontmatter'))->toBeFalse()
             ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
     } finally {
         @unlink($skillDir.'/SKILL.md');
@@ -416,45 +417,57 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
 test('a skill with invalid YAML frontmatter is skipped and records the failure', function (): void {
     mockProjectPackages($this->project, new PackageCollection([]));
 
-    $skillDir = base_path('.ai/skills/broken-frontmatter');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: broken-frontmatter\ndescription: Does a thing. Covers: the important bit.\n---\n\n# Content\n");
+    $skillDir = stageCustomSkill('broken-frontmatter');
 
     try {
         $skills = (new SkillComposer($this->project))->skills();
 
         expect($skills->has('broken-frontmatter'))->toBeFalse()
-            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['broken-frontmatter']);
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['broken-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])
+            ->toContain('A colon cannot be used in an unquoted mapping value')
+            ->toContain('description: Does a thing. Covers: the important bit.');
     } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
+        (new Filesystem)->deleteDirectory($skillDir);
     }
 });
 
 test('a skill with unclosed frontmatter is skipped and records the failure', function (): void {
     mockProjectPackages($this->project, new PackageCollection([]));
 
-    $skillDir = base_path('.ai/skills/unclosed-frontmatter');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: unclosed-frontmatter\ndescription: Missing the closing delimiter\n");
+    $skillDir = stageCustomSkill('unclosed-frontmatter');
 
     try {
         $skills = (new SkillComposer($this->project))->skills();
 
         expect($skills->has('unclosed-frontmatter'))->toBeFalse()
-            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['unclosed-frontmatter']);
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['unclosed-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])->toContain('no closing delimiter');
     } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+});
+
+test('a skill whose frontmatter omits the name is skipped and records the failure', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('incomplete-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('incomplete-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['incomplete-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])->toContain('[name] and [description]');
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
     }
 });
 
 test('a skill without frontmatter is treated as absent', function (): void {
     mockProjectPackages($this->project, new PackageCollection([]));
 
-    $skillDir = base_path('.ai/skills/no-frontmatter');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "# Just a heading\n\nNo frontmatter here.\n");
+    $skillDir = stageCustomSkill('no-frontmatter');
 
     try {
         $skills = (new SkillComposer($this->project))->skills();
@@ -462,7 +475,6 @@ test('a skill without frontmatter is treated as absent', function (): void {
         expect($skills->has('no-frontmatter'))->toBeFalse()
             ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
     } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
+        (new Filesystem)->deleteDirectory($skillDir);
     }
 });

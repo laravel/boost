@@ -216,13 +216,17 @@ class SkillComposer
 
         try {
             $frontmatter = $this->parseSkillFrontmatter($content);
-        } catch (ParseException) {
-            app(SkillParseFailures::class)->record($skillFile);
+        } catch (ParseException $parseException) {
+            app(SkillParseFailures::class)->record($skillFile, $parseException->getMessage());
 
             return null;
         }
 
         if (empty($frontmatter['name']) || empty($frontmatter['description'])) {
+            if ($frontmatter !== []) {
+                app(SkillParseFailures::class)->record($skillFile, 'The frontmatter must define both [name] and [description].');
+            }
+
             return null;
         }
 

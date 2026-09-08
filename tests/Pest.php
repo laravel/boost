@@ -13,6 +13,7 @@ declare(strict_types=1);
 |
 */
 
+use Illuminate\Filesystem\Filesystem;
 use Laravel\Mcp\Response;
 use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
@@ -83,6 +84,15 @@ if (! function_exists('fixture')) {
 function fixtureContent(string $name): string
 {
     return file_get_contents(fixture($name));
+}
+
+function stageCustomSkill(string $fixture): string
+{
+    $target = base_path('.ai/skills/'.basename($fixture));
+
+    (new Filesystem)->copyDirectory(fixture('skills/'.$fixture), $target);
+
+    return $target;
 }
 
 function rosterPackage(string $name, string $version, bool $dev = false, ?string $path = null): Package

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Console\OutputStyle;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Artisan;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
-use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 use Laravel\Roster\PackageCollection;
@@ -134,48 +134,15 @@ it('calls install command with skills flag when skills are configured', function
     expect($command->handle($config))->toBe(0);
 });
 
-it('reports invalid skills and completes the update', function (): void {
-    $config = new Config;
-    $config->setAgents(['claude_code']);
-    $config->setGuidelines(false);
-    $config->setSkills(['broken-frontmatter']);
-
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->andReturnUsing(function (): int {
-            app(SkillParseFailures::class)->record(base_path('.ai/skills/broken-frontmatter/SKILL.md'));
-
-            return 0;
-        });
-
-    $input = new ArrayInput([]);
-    $buffer = new BufferedOutput;
-    $output = new OutputStyle($input, $buffer);
-
-    $command->setLaravel($this->app);
-    $command->setOutput($output);
-
-    expect($command->handle($config))->toBe(0)
-        ->and($buffer->fetch())
-        ->toContain('1 skill has invalid YAML frontmatter and was skipped. Its existing registration was left unchanged:')
-        ->toContain('- broken-frontmatter')
-        ->toContain('Boost guidelines and skills updated successfully.');
-});
-
-it('preserves a tracked invalid skill while completing the update', function (): void {
+it('preserves tracked skills with unusable frontmatter while completing the update', function (string $skill, string $reason): void {
     $project = Mockery::mock(ProjectManager::class);
     mockProjectPackages($project, new PackageCollection([]));
     $this->app->instance(ProjectManager::class, $project);
 
-    $skillDir = base_path('.ai/skills/broken-frontmatter');
+    $skillDir = stageCustomSkill($skill);
     $agentSkillsPath = '.boost-test-skills-'.uniqid();
-    $installedSkillDir = base_path($agentSkillsPath.'/broken-frontmatter');
-    @mkdir($skillDir, 0755, true);
+    $installedSkillDir = base_path($agentSkillsPath.'/'.$skill);
     @mkdir($installedSkillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: broken-frontmatter\ndescription: Does a thing. Covers: the important bit.\n---\n");
     file_put_contents($installedSkillDir.'/SKILL.md', 'previously installed');
 
     config([
@@ -185,23 +152,26 @@ it('preserves a tracked invalid skill while completing the update', function ():
 
     $config = new Config;
     $config->setAgents(['claude_code']);
-    $config->setSkills(['broken-frontmatter']);
+    $config->setSkills([$skill]);
 
     try {
-        $this->artisan('boost:update', ['--no-discover' => true])
-            ->expectsOutputToContain('1 skill has invalid YAML frontmatter and was skipped.')
-            ->expectsOutputToContain('Boost guidelines and skills updated successfully.')
-            ->assertSuccessful();
+        expect(Artisan::call('boost:update', ['--no-discover' => true]))->toBe(0)
+            ->and(Artisan::output())
+            ->toContain('Skipped 1 skill with invalid or incomplete frontmatter, leaving existing registration unchanged:')
+            ->toContain('- '.$skill.' (.ai/skills/'.$skill.'/SKILL.md): '.$reason)
+            ->toContain('Boost guidelines and skills updated successfully.');
 
-        expect((new Config)->getSkills())->toContain('broken-frontmatter')
+        expect((new Config)->getSkills())->toContain($skill)
             ->and($installedSkillDir.'/SKILL.md')->toBeFile()
             ->and(file_get_contents($installedSkillDir.'/SKILL.md'))->toBe('previously installed');
     } finally {
         (new Filesystem)->deleteDirectory(base_path($agentSkillsPath));
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
+        (new Filesystem)->deleteDirectory($skillDir);
     }
-});
+})->with([
+    'invalid yaml' => ['broken-frontmatter', 'A colon cannot be used in an unquoted mapping value'],
+    'missing name' => ['incomplete-frontmatter', 'The frontmatter must define both [name] and [description].'],
+]);
 
 it('calls install command with both flags when guidelines and skills are enabled', function (): void {
     $config = new Config;

@@ -482,6 +482,7 @@ class InstallCommand extends Command
         $skillsComposer = app(SkillComposer::class)->config($this->buildGuidelineConfig());
         $skills = $skillsComposer->skills();
         $previouslyTrackedSkills = $this->config->getSkills();
+        // Matched on directory name: boost.json tracks frontmatter names, which are unreadable here.
         $invalidSkillNames = app(SkillParseFailures::class)->skillNames();
         $preservedSkillNames = array_values(array_intersect($previouslyTrackedSkills, $invalidSkillNames));
         $trackedSkillsToSync = array_values(array_diff($previouslyTrackedSkills, $preservedSkillNames));

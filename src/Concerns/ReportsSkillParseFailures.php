@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Concerns;
 
+use Illuminate\Support\Str;
 use Laravel\Boost\Support\SkillParseFailures;
 
 trait ReportsSkillParseFailures
@@ -16,16 +17,20 @@ trait ReportsSkillParseFailures
             return;
         }
 
-        $names = $failures->skillNames();
-        $message = count($names) === 1
-            ? '1 skill has invalid YAML frontmatter and was skipped. Its existing registration was left unchanged:'
-            : sprintf('%d skills have invalid YAML frontmatter and were skipped. Their existing registrations were left unchanged:', count($names));
+        $entries = $failures->all();
 
         $this->newLine();
-        $this->warn($message);
+        $this->warn(sprintf(
+            'Skipped %d %s with invalid or incomplete frontmatter, leaving existing %s unchanged:',
+            count($entries),
+            Str::plural('skill', $entries),
+            Str::plural('registration', $entries)
+        ));
 
-        foreach ($names as $name) {
-            $this->line('  - '.$name);
+        foreach ($entries as $entry) {
+            $location = str_replace(base_path().DIRECTORY_SEPARATOR, '', $entry['path']);
+
+            $this->line(rtrim(sprintf('  - %s (%s): %s', $entry['name'], $location, $entry['reason']), ': '));
         }
     }
 }
