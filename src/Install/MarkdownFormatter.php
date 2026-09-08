@@ -17,8 +17,8 @@ class MarkdownFormatter
         $fences = [];
 
         // A "# " line inside a fence is code, not a heading, so hide fences while spacing headings.
-        $masked = preg_replace_callback('/(?<fence>`{3,}|~{3,}).*?\k<fence>/s', function (array $matches) use (&$fences): string {
-            $placeholder = '___MARKDOWN_FENCE_'.count($fences).'___';
+        $masked = preg_replace_callback('/^ {0,3}(?<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\k<fence>[`~]*[ \t]*$|\z)/ms', function (array $matches) use (&$fences): string {
+            $placeholder = "\0".count($fences)."\0";
             $fences[$placeholder] = $matches[0];
 
             return $placeholder;

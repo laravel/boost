@@ -65,3 +65,21 @@ it('still collapses consecutive blank lines outside a fence', function (): void 
 it('still normalizes carriage returns', function (): void {
     expect(MarkdownFormatter::format("first\r\nsecond\rthird"))->toBe("first\nsecond\nthird");
 });
+
+it('does not pair an inline backtick run with a real fence', function (): void {
+    $content = "See ``` for fences.\n\n# Real heading\n\ntext\n\n```bash\n# not a heading\n```";
+
+    expect(MarkdownFormatter::format($content))->toBe($content);
+});
+
+it('leaves an unclosed fence alone', function (): void {
+    $content = "```bash\n# comment\nls";
+
+    expect(MarkdownFormatter::format($content))->toBe($content);
+});
+
+it('does not corrupt content containing a fence placeholder', function (): void {
+    $content = "___MARKDOWN_FENCE_0___\n\n```bash\n# c\n```";
+
+    expect(MarkdownFormatter::format($content))->toBe($content);
+});
