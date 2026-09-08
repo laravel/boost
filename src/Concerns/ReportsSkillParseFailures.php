@@ -28,9 +28,14 @@ trait ReportsSkillParseFailures
         ));
 
         foreach ($entries as $entry) {
-            $location = str_replace(base_path().DIRECTORY_SEPARATOR, '', $entry['path']);
+            $location = Str::after($this->normalizeSeparators($entry['path']), $this->normalizeSeparators(base_path()).'/');
 
             $this->line(rtrim(sprintf('  - %s (%s): %s', $entry['name'], $location, $entry['reason']), ': '));
         }
+    }
+
+    private function normalizeSeparators(string $path): string
+    {
+        return str_replace(DIRECTORY_SEPARATOR, '/', $path);
     }
 }
