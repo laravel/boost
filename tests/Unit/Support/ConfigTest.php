@@ -101,3 +101,17 @@ it('may store and retrieve packages', function (): void {
 
     expect($config->getPackages())->toEqual($packages);
 });
+
+it('may store and retrieve lsp status', function (): void {
+    $config = new Config;
+
+    expect($config->getLsp())->toBeFalse();
+
+    $config->setLsp(true);
+
+    expect($config->getLsp())->toBeTrue();
+
+    $config->setLsp(false);
+
+    expect($config->getLsp())->toBeFalse();
+});

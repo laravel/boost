@@ -76,3 +76,42 @@ it('silently drops stale agents no longer in the available list in non-interacti
 
     expect($command->run($input, new NullOutput))->toBe(0);
 })->skipOnWindows();
+
+it('treats --lsp as explicit flag mode and preserves stored configuration', function (): void {
+    $config = new Config;
+    $config->setGuidelines(true);
+    $config->setSkills(['skill-a']);
+    $config->setMcp(true);
+    $config->setAgents(['claude_code']);
+
+    $nightwatch = Mockery::mock(Nightwatch::class);
+    $nightwatch->shouldReceive('isInstalled')->andReturn(false);
+
+    $sail = Mockery::mock(Sail::class);
+    $sail->shouldReceive('isInstalled')->andReturn(false);
+    $sail->shouldReceive('isActive')->andReturn(false);
+
+    $terminal = Mockery::mock(Terminal::class);
+    $terminal->shouldReceive('initDimensions');
+
+    $command = new class(app(AgentsDetector::class), Mockery::mock(Cloud::class), $config, $nightwatch, $sail, $terminal) extends InstallCommand
+    {
+        protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
+
+        protected function installLsp(): void {}
+
+        protected function outro(): void {}
+    };
+
+    $input = new ArrayInput(['--lsp' => true], $command->getDefinition());
+    $input->setInteractive(false);
+
+    $command->setLaravel(app());
+
+    expect($command->run($input, new NullOutput))->toBe(0)
+        ->and($config->getGuidelines())->toBeTrue()
+        ->and($config->getSkills())->toBe(['skill-a'])
+        ->and($config->getMcp())->toBeTrue()
+        ->and($config->getAgents())->toBe(['claude_code'])
+        ->and($config->getLsp())->toBeTrue();
+})->skipOnWindows();

@@ -10,10 +10,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsLsp;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
+use Laravel\Boost\Install\ClaudeCodeLspWriter;
 use Laravel\Boost\Install\Cloud;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -35,12 +37,15 @@ use Laravel\Boost\Support\RenderFailures;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
+use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use Throwable;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
+use function Laravel\Prompts\spin;
 
 class InstallCommand extends Command
 {
@@ -49,7 +54,8 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}';
+        {--mcp : Install MCP server configuration}
+        {--lsp : Install Laravel LSP registration}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -149,6 +155,10 @@ class InstallCommand extends Command
             $this->installMcpServerConfig();
         }
 
+        if ($this->selectedBoostFeatures->contains('lsp')) {
+            $this->installLsp();
+        }
+
         $this->storeConfig();
     }
 
@@ -229,6 +239,7 @@ class InstallCommand extends Command
             'guidelines' => 'AI Guidelines',
             'skills' => 'Agent Skills',
             'mcp' => 'Boost MCP Server Configuration',
+            'lsp' => 'Laravel LSP Registration',
         ]);
 
         $explicit = $featureLabels->keys()->filter(fn ($feature) => $this->option($feature));
@@ -241,6 +252,7 @@ class InstallCommand extends Command
             'guidelines' => $this->config->getGuidelines(),
             'skills' => $this->config->hasSkills(),
             'mcp' => $this->config->getMcp(),
+            'lsp' => $this->config->getLsp(),
         ]);
 
         $defaults = $configValues->filter()->keys()->whenEmpty(fn () => $featureLabels->keys());
@@ -254,7 +266,7 @@ class InstallCommand extends Command
             options: $featureLabels->all(),
             default: $defaults->all(),
             required: true,
-            hint: 'This will override the current guidelines, skills, and MCP configuration',
+            hint: 'This will override the current guidelines, skills, MCP, and LSP configuration',
         ));
     }
 
@@ -345,6 +357,7 @@ class InstallCommand extends Command
             'guidelines' => SupportsGuidelines::class,
             'skills' => SupportsSkills::class,
             'mcp' => SupportsMcp::class,
+            'lsp' => SupportsLsp::class,
         ];
 
         $filteredAgents = $allAgents->filter(
@@ -409,6 +422,14 @@ class InstallCommand extends Command
     protected function agentsWithSkills(): Collection
     {
         return $this->selectedAgents->filter(fn (Agent $a): bool => $a instanceof SupportsSkills);
+    }
+
+    /**
+     * @return Collection<int, Agent&SupportsLsp>
+     */
+    protected function agentsWithLsp(): Collection
+    {
+        return $this->selectedAgents->filter(fn (Agent $a): bool => $a instanceof SupportsLsp);
     }
 
     protected function installGuidelines(): void
@@ -557,6 +578,10 @@ class InstallCommand extends Command
             $this->config->setSail($this->shouldUseSail());
             $this->config->setNightwatch($this->shouldInstallNightwatchMcp());
         }
+
+        if ($this->selectedBoostFeatures->contains('lsp')) {
+            $this->config->setLsp(true);
+        }
     }
 
     protected function shouldInstallNightwatchMcp(): bool
@@ -583,6 +608,10 @@ class InstallCommand extends Command
             return true;
         }
 
+        if ($this->option('lsp')) {
+            return true;
+        }
+
         return (bool) $this->option('mcp');
     }
 
@@ -600,6 +629,89 @@ class InstallCommand extends Command
             featureName: 'MCP servers',
             withDelay: true,
         );
+    }
+
+    protected function installLsp(): void
+    {
+        $lspAgents = $this->agentsWithLsp();
+
+        $this->installFeature(
+            agents: $lspAgents,
+            emptyMessage: 'No agents are selected for Laravel LSP installation.',
+            headerMessage: 'Registering the Laravel language server with your selected Agents',
+            nameResolver: fn (Agent $agent): string => $agent->displayName(),
+            processor: fn (Agent&SupportsLsp $agent): int => (new ClaudeCodeLspWriter($agent))->write(),
+            featureName: 'Laravel LSP',
+        );
+
+        if ($lspAgents->isNotEmpty()) {
+            $this->ensureLanguageServerInstalled();
+        }
+    }
+
+    protected function ensureLanguageServerInstalled(): void
+    {
+        if ($this->findLanguageServer() !== null) {
+            $this->warnWhenLanguageServerNotOnPath();
+
+            return;
+        }
+
+        $shouldInstall = $this->input->isInteractive()
+            && confirm('The Laravel language server is not installed yet. Install it globally with Composer?');
+
+        if (! $shouldInstall) {
+            note('💡 Install the Laravel language server to activate it: composer global require laravel/lsp');
+
+            return;
+        }
+
+        $composer = config('boost.executable_paths.composer') ?? 'composer';
+        $process = new Process([$composer, 'global', 'require', 'laravel/lsp'], base_path());
+        $process->setTimeout(300);
+
+        spin(fn () => $process->run(), 'Installing laravel/lsp with Composer...');
+
+        if (! $process->isSuccessful()) {
+            $this->warn('Failed to install laravel/lsp: '.trim($process->getErrorOutput()));
+            note('💡 Install it manually: composer global require laravel/lsp');
+
+            return;
+        }
+
+        $this->warnWhenLanguageServerNotOnPath();
+    }
+
+    protected function warnWhenLanguageServerNotOnPath(): void
+    {
+        if ((new ExecutableFinder)->find('laravel-lsp') !== null) {
+            return;
+        }
+
+        $this->warn("laravel/lsp is installed, but Composer's global bin directory is not on your PATH, so agents cannot launch laravel-lsp yet. Add it to your PATH (composer global config bin-dir --absolute shows the location).");
+    }
+
+    /**
+     * Find the laravel-lsp executable on the PATH or in Composer's global bin directory.
+     */
+    protected function findLanguageServer(): ?string
+    {
+        $composerBinDirs = [];
+
+        if ($composerHome = getenv('COMPOSER_HOME')) {
+            $composerBinDirs[] = $composerHome.'/vendor/bin';
+        }
+
+        if ($home = getenv('HOME')) {
+            $composerBinDirs[] = $home.'/.composer/vendor/bin';
+            $composerBinDirs[] = $home.'/.config/composer/vendor/bin';
+        }
+
+        if ($appData = getenv('APPDATA')) {
+            $composerBinDirs[] = $appData.DIRECTORY_SEPARATOR.'Composer'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'bin';
+        }
+
+        return (new ExecutableFinder)->find('laravel-lsp', null, $composerBinDirs);
     }
 
     /**

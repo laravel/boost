@@ -51,6 +51,16 @@ class Config
         $this->set('mcp', $enabled);
     }
 
+    public function getLsp(): bool
+    {
+        return $this->get('lsp', false);
+    }
+
+    public function setLsp(bool $enabled): void
+    {
+        $this->set('lsp', $enabled);
+    }
+
     /**
      * @return array<int, string>
      */
