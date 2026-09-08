@@ -58,9 +58,7 @@ class GuidelineWriter
             $replaced = false;
 
             if (preg_match($pattern, $content)) {
-                // Replace ALL existing boost guidelines blocks in-place
-                // If the user added guidelines after ours then let's
-                // make sure we keep the flow.
+                // Replace our block in-place so user content around it keeps its position.
                 $newContent = preg_replace_callback($pattern, fn (array $m): string => $replacement, $content, 1);
                 $replaced = true;
             } else {
@@ -74,21 +72,6 @@ class GuidelineWriter
                 $existingContent = rtrim($content);
                 $separatingNewlines = empty($existingContent) ? '' : "\n\n===\n\n";
                 $newContent = $frontMatter.$existingContent.$separatingNewlines.$replacement;
-            }
-
-            // Normalize multiple blank lines to single blank lines
-            $fences = [];
-
-            $masked = preg_replace_callback('/(?<fence>`{3,}|~{3,}).*?\k<fence>/s', function (array $matches) use (&$fences): string {
-                $placeholder = '___GUIDELINE_FENCE_'.count($fences).'___';
-                $fences[$placeholder] = $matches[0];
-
-                return $placeholder;
-            }, (string) $newContent);
-
-            if ($masked !== null) {
-                $masked = preg_replace("/\n{3,}/", "\n\n", $masked);
-                $newContent = str_replace(array_keys($fences), array_values($fences), (string) $masked);
             }
 
             // Ensure file content ends with a newline

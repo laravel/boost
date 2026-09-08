@@ -6,6 +6,7 @@ namespace Laravel\Boost\Concerns;
 
 use Illuminate\Support\Facades\Blade;
 use Laravel\Boost\Install\GuidelineAssist;
+use Laravel\Boost\Support\Fences;
 use Laravel\Boost\Support\RenderFailures;
 
 trait RendersBladeGuidelines
@@ -73,36 +74,17 @@ trait RendersBladeGuidelines
 
     protected function markScopedBlocks(string $content): string
     {
-        $fences = [];
+        return Fences::outside($content, function (string $markdown): string {
+            $marked = preg_replace_callback(
+                '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
+                fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
+                $markdown
+            );
 
-        $marked = preg_replace_callback('/^ {0,3}(?<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\k<fence>[`~]*[ \t]*$|\z)/ms', function (array $matches) use (&$fences): string {
-            $placeholder = '___SCOPED_FENCE_'.count($fences).'___';
-            $fences[$placeholder] = $matches[0];
+            $marked = $marked === null ? null : preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked);
 
-            return $placeholder;
-        }, $content);
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        $marked = preg_replace_callback(
-            '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
-            fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
-            $marked
-        );
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        $marked = preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked);
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        return str_replace(array_keys($fences), array_values($fences), $marked);
+            return $marked ?? $markdown;
+        });
     }
 
     /**

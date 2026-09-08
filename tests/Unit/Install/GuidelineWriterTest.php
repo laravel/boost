@@ -37,11 +37,14 @@ test('it creates directory when it does not exist', function (): void {
     rmdir($tempDir);
 });
 
-test('it leaves blank lines inside fenced code blocks alone when normalizing', function (): void {
+test('it leaves existing user content untouched', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
 
+    // A prose ``` run desynchronises naive fence pairing, and PEP 8 wants two blank lines here.
     $userContent = <<<'MD'
     # My Project
+
+    Use ``` to open a fence.
 
     ```python
     def first():
@@ -51,6 +54,9 @@ test('it leaves blank lines inside fenced code blocks alone when normalizing', f
     def second():
         pass
     ```
+
+
+    Notes above keep their spacing too.
     MD;
 
     file_put_contents($tempFile, $userContent);
@@ -63,9 +69,7 @@ test('it leaves blank lines inside fenced code blocks alone when normalizing', f
     $writer = new GuidelineWriter($agent);
     $writer->write('boost guidelines');
 
-    $written = file_get_contents($tempFile);
-
-    expect($written)->toContain("def first():\n    pass\n\n\ndef second():")
+    expect((string) file_get_contents($tempFile))->toStartWith($userContent)
         ->toContain('boost guidelines');
 
     unlink($tempFile);
