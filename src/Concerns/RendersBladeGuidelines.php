@@ -75,7 +75,7 @@ trait RendersBladeGuidelines
     {
         $fences = [];
 
-        $marked = preg_replace_callback('/(?<fence>`{3,}|~{3,}).*?\k<fence>/s', function (array $matches) use (&$fences): string {
+        $marked = preg_replace_callback('/^ {0,3}(?<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\k<fence>[`~]*[ \t]*$|\z)/ms', function (array $matches) use (&$fences): string {
             $placeholder = '___SCOPED_FENCE_'.count($fences).'___';
             $fences[$placeholder] = $matches[0];
 
