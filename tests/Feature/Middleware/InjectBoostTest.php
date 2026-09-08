@@ -56,6 +56,19 @@ it('does not inject for special response types', function ($responseType, $respo
     }],
 ]);
 
+it('does not inject into Livewire navigate responses', function (string $headerValue): void {
+    $request = new Request;
+    $request->headers->set('X-Livewire-Navigate', $headerValue);
+
+    $response = new Response('<html><head><title>Test</title></head><body></body></html>', 200, ['Content-Type' => 'text/html']);
+    $result = (new InjectBoost)->handle($request, fn ($req) => $response);
+
+    expect($result->getContent())->not->toContain('browser-logger-active');
+})->with([
+    'Livewire 4 sends 1' => ['1'],
+    'Livewire 3 sends an empty value' => [''],
+]);
+
 it('does not inject when conditions are not met', function ($scenario, $responseFactory, $assertion): void {
     $response = $responseFactory();
     $result = createMiddlewareResponse($response);

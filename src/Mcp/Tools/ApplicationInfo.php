@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools;
 
+use Illuminate\Support\Facades\DB;
 use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -33,7 +34,7 @@ class ApplicationInfo extends Tool
         return Response::json([
             'php_version' => PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
             'laravel_version' => app()->version(),
-            'database_engine' => config('database.default'),
+            'database_engine' => DB::connection()->getDriverName(),
             'packages' => $this->project->php()->packages()
                 ->concat($this->project->js()->packages())
                 ->map(fn (Package $package): array => [
