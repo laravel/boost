@@ -702,7 +702,7 @@ it('downloads a skill from the branch named in the repository', function (): voi
     }
 });
 
-it('does not write a skill file whose repository path contains a backslash', function (): void {
+it('refuses to download a skill whose tree escapes the skill directory', function (string $escapingPath): void {
     $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
 
     Http::fake([
@@ -710,26 +710,25 @@ it('does not write a skill file whose repository path contains a backslash', fun
         ...fakeTreeResponse([
             ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'aaa'],
             ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
-            ['path' => 'skill-one/..\\..\\escaped.txt', 'type' => 'blob', 'sha' => 'ccc', 'size' => 456],
+            ['path' => $escapingPath, 'type' => 'blob', 'sha' => 'ccc', 'size' => 456],
         ]),
-        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# Skill'),
         '*' => Http::response('escaped'),
     ]);
 
     $skill = new RemoteSkill(name: 'skill-one', repo: 'owner/repo', path: 'skill-one');
     $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
 
-    try {
-        // Windows reads the backslash as a separator, so this path would land outside the skill directory.
-        expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
-            ->and(array_values(array_diff(scandir($targetDir), ['.', '..'])))->toBe(['SKILL.md']);
-    } finally {
-        array_map(unlink(...), glob($targetDir.'/*') ?: []);
-        rmdir($targetDir);
-    }
-});
+    expect($fetcher->downloadSkill($skill, $targetDir))->toBeFalse()
+        ->and(is_dir($targetDir))->toBeFalse()
+        ->and(file_exists(sys_get_temp_dir().'/escaped.txt'))->toBeFalse();
+})->with([
+    // Windows reads the backslash as a separator, so this path would land outside the skill directory.
+    'backslash' => ['skill-one/..\\..\\escaped.txt'],
+    'parent segment' => ['skill-one/../../escaped.txt'],
+    'null byte' => ["skill-one/nested\0/escaped.txt"],
+]);
 
-it('does not accept a backslash path as the required SKILL.md', function (): void {
+it('refuses to download a skill whose only SKILL.md sits behind an escaping path', function (): void {
     $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
 
     Http::fake([
