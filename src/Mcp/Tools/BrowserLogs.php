@@ -6,6 +6,8 @@ namespace Laravel\Boost\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Laravel\Boost\Concerns\ReadsLogs;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -48,7 +50,13 @@ class BrowserLogs extends Tool
         }
 
         // Locate the correct log file using the shared helper.
-        $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'browser.log');
+        $channelConfig = Config::get('logging.channels.browser');
+
+        $logFile = Arr::get($channelConfig, 'path', storage_path('logs'.DIRECTORY_SEPARATOR.'browser.log'));
+
+        if (Arr::get($channelConfig, 'driver') === 'daily') {
+            $logFile = $this->resolveDailyLogFilePath($logFile);
+        }
 
         if (! file_exists($logFile)) {
             return Response::error('No log file found, probably means no logs yet.');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,46 @@ LOG);
         ->toolHasNoError()
         ->toolTextContains('browser.WARNING: Warning message', 'browser.ERROR: JavaScript error occurred')
         ->toolTextDoesNotContain('browser.DEBUG: console log message');
+});
+
+test('it reads from a user-defined browser channel path', function (): void {
+    $customLogFile = storage_path('logs'.DIRECTORY_SEPARATOR.'frontend.log');
+
+    Config::set('logging.channels.browser', [
+        'driver' => 'single',
+        'path' => $customLogFile,
+    ]);
+
+    File::put($customLogFile, '[2024-01-15 10:00:00] browser.ERROR: Custom channel error {"url":"http://example.com"}');
+
+    $tool = new BrowserLogs;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('browser.ERROR: Custom channel error');
+
+    File::delete($customLogFile);
+});
+
+test('it reads from a user-defined browser channel with a daily driver', function (): void {
+    $dailyLogFile = storage_path('logs'.DIRECTORY_SEPARATOR.'browser-'.date('Y-m-d').'.log');
+
+    Config::set('logging.channels.browser', [
+        'driver' => 'daily',
+        'path' => storage_path('logs'.DIRECTORY_SEPARATOR.'browser.log'),
+    ]);
+
+    File::put($dailyLogFile, '[2024-01-15 10:00:00] browser.WARNING: Daily channel warning {"url":"http://example.com"}');
+
+    $tool = new BrowserLogs;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('browser.WARNING: Daily channel warning');
+
+    File::delete($dailyLogFile);
 });
 
 test('it returns error when entries argument is invalid', function (): void {
