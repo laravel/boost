@@ -2,6 +2,8 @@
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 $pest = $assist->hasPackage('pestphp/pest');
 $pest5 = $assist->hasPackage('pestphp/pest', '>=5.0');
+$phpunit = $assist->project->php()->package('phpunit/phpunit');
+$phpunitDocs = 'the PHPUnit '.($phpunit ? $phpunit->version().' ' : '').'documentation at `https://phpunit.de/documentation.html`';
 @endphp
 # Assertions
 
@@ -16,7 +18,7 @@ Keep each test self-contained. Do not use values created by another test.
 First identify the subject of the check, then find an assertion designed for it. A subject-specific assertion identifies the incorrect value when the test fails.
 
 1. Search Laravel's assertions for framework subjects such as responses, the database, sessions, models, queues, events, mail, and notifications.
-2. Fetch {{ $pest ? '`https://pestphp.com/docs/expectations.md` for the expectations of Pest' : '`https://docs.phpunit.de/en/13.3/assertions.html` for the assertions of PHPUnit' }} for a plain value, a type, a format, or a shape.
+2. Fetch {{ $pest ? '`https://pestphp.com/docs/expectations.md` for the expectations of Pest' : $phpunitDocs.' for the assertions of PHPUnit' }} for a plain value, a type, a format, or a shape.
 3. Build the check by hand only if no assertion exists for the subject.
 4. Confirm the name in the documentation before you use it. Do not write an assertion that you did not confirm.
 
