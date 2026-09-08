@@ -79,11 +79,9 @@ trait RendersBladeGuidelines
                 '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
                 fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
                 $markdown
-            );
+            ) ?? $markdown;
 
-            $marked = $marked === null ? null : preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked);
-
-            return $marked ?? $markdown;
+            return preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked) ?? $marked;
         });
     }
 
