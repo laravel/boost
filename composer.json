@@ -62,7 +62,7 @@
             "pint --test --format agent",
             "rector --dry-run"
         ],
-        "test:types": "phpstan",
+        "test:types": "phpstan --memory-limit=-1",
         "check": [
             "@composer lint",
             "@composer test"

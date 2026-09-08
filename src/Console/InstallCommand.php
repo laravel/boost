@@ -9,12 +9,12 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
+use Laravel\Boost\Concerns\ReportsSkillParseFailures;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\AgentsDetector;
-use Laravel\Boost\Install\Cloud;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
@@ -27,11 +27,9 @@ use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\SkillWriter;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Rules\RuleRepository;
-use Laravel\Boost\Skills\Remote\GitHubRepository;
-use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
-use Laravel\Boost\Skills\Remote\RemoteSkill;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Prompts\Terminal;
 use RuntimeException;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
@@ -45,6 +43,7 @@ use function Laravel\Prompts\note;
 class InstallCommand extends Command
 {
     use DisplayHelper;
+    use ReportsSkillParseFailures;
 
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
@@ -77,7 +76,6 @@ class InstallCommand extends Command
 
     public function __construct(
         private readonly AgentsDetector $agentsDetector,
-        private readonly Cloud $cloud,
         private readonly Config $config,
         private readonly Nightwatch $nightwatch,
         private readonly Sail $sail,
@@ -88,6 +86,8 @@ class InstallCommand extends Command
 
     public function handle(): int
     {
+        app(SkillParseFailures::class)->flush();
+
         $this->terminal->initDimensions();
         $this->projectName = config('app.name');
 
@@ -97,6 +97,7 @@ class InstallCommand extends Command
         $this->performInstallation();
 
         $this->reportRenderFailures();
+        $this->reportSkillParseFailures();
 
         $this->noteInferConventions();
 
@@ -135,10 +136,6 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('guidelines')) {
             $this->installGuidelines();
-        }
-
-        if ($this->shouldInstallCloudSkill()) {
-            $this->downloadCloudSkill();
         }
 
         if ($this->selectedBoostFeatures->contains('skills')) {
@@ -475,8 +472,16 @@ class InstallCommand extends Command
         $skillsAgents = $this->agentsWithSkills();
         $skillsComposer = app(SkillComposer::class)->config($this->buildGuidelineConfig());
         $skills = $skillsComposer->skills();
+        $previouslyTrackedSkills = $this->config->getSkills();
+        // Matched on directory name: boost.json tracks frontmatter names, which are unreadable here.
+        $invalidSkillNames = app(SkillParseFailures::class)->skillNames();
+        $preservedSkillNames = array_values(array_intersect($previouslyTrackedSkills, $invalidSkillNames));
+        $trackedSkillsToSync = array_values(array_diff($previouslyTrackedSkills, $preservedSkillNames));
 
-        $this->installedSkillNames = $skills->keys()->toArray();
+        $this->installedSkillNames = array_values(array_unique([
+            ...$skills->keys()->toArray(),
+            ...$preservedSkillNames,
+        ]));
 
         /** @var Collection<int, SupportsSkills&Agent> $skillsAgents */
         $this->installFeature(
@@ -484,7 +489,7 @@ class InstallCommand extends Command
             emptyMessage: 'No agents are selected for skill installation.',
             headerMessage: sprintf('Syncing %d skills for skills-capable agents', $skills->count()),
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
-            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $this->config->getSkills()),
+            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $trackedSkillsToSync),
             featureName: 'skills',
             beforeProcess: $skills->isNotEmpty()
                 ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())
@@ -499,33 +504,11 @@ class InstallCommand extends Command
         $guidelineConfig->hasAnApi = false;
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
+        $guidelineConfig->usesCloud = $this->selectedBoostFeatures->contains('cloud');
         $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
         $guidelineConfig->hasMcp = $this->selectedBoostFeatures->contains('mcp') || ($this->isExplicitFlagMode() && $this->config->getMcp());
 
         return $guidelineConfig;
-    }
-
-    protected function shouldInstallCloudSkill(): bool
-    {
-        return $this->selectedBoostFeatures->contains('cloud');
-    }
-
-    protected function downloadCloudSkill(): void
-    {
-        try {
-            $repository = GitHubRepository::fromInput($this->cloud->skillRepo().'/'.$this->cloud->skillPath());
-            $provider = new GitHubSkillProvider($repository);
-            $skill = $provider->discoverSkills()->get($this->cloud->skillName());
-
-            if (! $skill instanceof RemoteSkill) {
-                return;
-            }
-
-            $provider->downloadSkill($skill, base_path('.ai/skills/'.$this->cloud->skillName()));
-        } catch (Exception $exception) {
-            $this->warn('Failed to download Cloud skill: '.$exception->getMessage());
-            $this->line('You can install it later with: php artisan boost:add-skill '.$this->cloud->skillRepo());
-        }
     }
 
     protected function storeConfig(): void

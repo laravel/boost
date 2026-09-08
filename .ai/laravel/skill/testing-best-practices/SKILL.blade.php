@@ -8,10 +8,12 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 $pest = $assist->hasPackage('pestphp/pest');
+$phpunit = $assist->project->php()->package('phpunit/phpunit');
+$phpunitDocs = 'the PHPUnit '.($phpunit ? $phpunit->version().' ' : '').'documentation at `https://phpunit.de/documentation.html`';
 @endphp
 # Testing Best Practices
 
-This skill provides rules for designing Laravel tests. Each rule file explains what to do and why. Use `search-docs` for {{ $pest ? 'Laravel and Pest API syntax' : 'Laravel API syntax' }}.@if(! $pest) Fetch `https://docs.phpunit.de/en/13.3/` for PHPUnit API syntax.@endif
+This skill provides rules for designing Laravel tests. Each rule file explains what to do and why. Use `search-docs` for {{ $pest ? 'Laravel and Pest API syntax' : 'Laravel API syntax' }}.@if(! $pest) Fetch {{ $phpunitDocs }} for PHPUnit API syntax.@endif
 
 This project uses {{ $pest ? 'Pest' : 'PHPUnit' }}. Follow the corresponding guidance in each rule.
 

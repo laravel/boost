@@ -24,7 +24,7 @@ test('it returns application info with packages', function (): void {
         ->toolJsonContentToMatchArray([
             'php_version' => PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
             'laravel_version' => app()->version(),
-            'database_engine' => config('database.default'),
+            'database_engine' => 'sqlite',
             'packages' => [
                 [
                     'roster_name' => 'LARAVEL',
@@ -40,6 +40,23 @@ test('it returns application info with packages', function (): void {
         ]);
 });
 
+test('it reports the driver name when the default connection has a custom name', function (): void {
+    config()->set('database.connections.tenant', config('database.connections.testing'));
+    config()->set('database.default', 'tenant');
+
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([]));
+
+    $tool = new ApplicationInfo($project);
+    $response = $tool->handle(new Request([]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolJsonContent(function (array $data): void {
+            expect($data['database_engine'])->toBe('sqlite');
+        });
+});
+
 test('it returns application info with no packages', function (): void {
     $project = Mockery::mock(ProjectManager::class);
     mockProjectPackages($project, new PackageCollection([]));
@@ -52,7 +69,7 @@ test('it returns application info with no packages', function (): void {
         ->toolJsonContentToMatchArray([
             'php_version' => PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
             'laravel_version' => app()->version(),
-            'database_engine' => config('database.default'),
+            'database_engine' => 'sqlite',
             'packages' => [],
         ]);
 });

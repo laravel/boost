@@ -34,6 +34,21 @@ afterEach(function (): void {
     @unlink(base_path('package.json'));
 });
 
+test('versionless packages do not emit a duplicate versioned guideline', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', ''),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $keys = $this->composer->guidelines()->keys()->all();
+
+    expect($keys)->toContain('laravel/core')
+        ->not->toContain('laravel/v');
+});
+
 test('includes Inertia React conditional guidelines based on version', function (string $version): void {
     config(['boost.rules.enabled' => false]);
 
@@ -364,6 +379,25 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
         ->and($composer->used())
         ->toContain('.ai/custom-rule')
         ->toContain('.ai/project-specific');
+});
+
+test('nested user guidelines with the same filename do not overwrite each other', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+    $composer
+        ->shouldReceive('customGuidelinePath')
+        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines-nested')).'/'.ltrim((string) $path, '/'));
+
+    expect($composer->compose())
+        ->toContain('=== .ai/frontend/api rules ===')
+        ->toContain('=== .ai/backend/api rules ===')
+        ->toContain('Frontend api guideline body')
+        ->toContain('Backend api guideline body');
 });
 
 test('a user override still applies for a package whose bundled core.blade.php no longer exists', function (): void {
@@ -1257,6 +1291,47 @@ test('symlinked custom guideline file does not produce duplicates', function ():
         @unlink($customDir.'/laravel/core.blade.php');
         @rmdir($customDir.'/laravel');
         @rmdir($customDir);
+    }
+});
+
+test('symlinked nested user guidelines with the same filename keep distinct keys', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $customDir = testDirectory('Fixtures/.ai/symlinked-nested-guidelines');
+    $cleanup = function () use ($customDir): void {
+        foreach (['frontend', 'backend'] as $group) {
+            @unlink($customDir.'/'.$group.'/api.blade.php');
+            @rmdir($customDir.'/'.$group);
+        }
+
+        @rmdir($customDir);
+    };
+
+    $cleanup();
+
+    foreach (['frontend', 'backend'] as $group) {
+        mkdir($customDir.'/'.$group, 0755, true);
+        symlink(
+            realpath(testDirectory('Fixtures/.ai/guidelines-nested/'.$group.'/api.blade.php')),
+            $customDir.'/'.$group.'/api.blade.php'
+        );
+    }
+
+    try {
+        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
+        $composer
+            ->shouldReceive('customGuidelinePath')
+            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+
+        expect($composer->used())
+            ->toContain('.ai/frontend/api')
+            ->toContain('.ai/backend/api');
+    } finally {
+        $cleanup();
     }
 });
 
