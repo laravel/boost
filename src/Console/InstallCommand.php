@@ -31,6 +31,7 @@ use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Prompts\Terminal;
+use Laravel\Roster\ProjectManager;
 use RuntimeException;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Symfony\Component\Process\Process;
@@ -78,6 +79,7 @@ class InstallCommand extends Command
         private readonly AgentsDetector $agentsDetector,
         private readonly Config $config,
         private readonly Nightwatch $nightwatch,
+        private readonly ProjectManager $project,
         private readonly Sail $sail,
         private readonly Terminal $terminal
     ) {
@@ -260,7 +262,7 @@ class InstallCommand extends Command
      */
     protected function selectThirdPartyPackages(): Collection
     {
-        $packages = ThirdPartyPackage::discover();
+        $packages = ThirdPartyPackage::discover($this->project);
 
         if ($packages->isEmpty()) {
             return collect();

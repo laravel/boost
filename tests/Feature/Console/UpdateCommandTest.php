@@ -104,7 +104,7 @@ it('calls install command with a guidelines flag when guidelines are enabled', f
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('calls install command with skills flag when skills are configured', function (): void {
@@ -131,7 +131,7 @@ it('calls install command with skills flag when skills are configured', function
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('preserves tracked skills with unusable frontmatter while completing the update', function (string $skill, string $reason): void {
@@ -197,7 +197,7 @@ it('calls install command with both flags when guidelines and skills are enabled
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('does not pass mcp flag to install command even when mcp is configured', function (): void {
@@ -224,7 +224,7 @@ it('does not pass mcp flag to install command even when mcp is configured', func
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('preserves sail configuration when updating guidelines', function (): void {
@@ -251,7 +251,7 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getSail())->toBeTrue();
 });
 
@@ -279,7 +279,7 @@ it('preserves non-sail configuration when updating guidelines', function (): voi
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getSail())->toBeFalse();
 });
 
@@ -307,7 +307,7 @@ it('preserves sail configuration when updating skills', function (): void {
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getSail())->toBeTrue();
 });
 
@@ -336,7 +336,7 @@ it('calls install command with skills flag when .ai/skills directory exists but 
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('defaults to non-sail when config is missing', function (): void {
@@ -376,7 +376,7 @@ it('does not run discovery when --no-discover flag is set', function (): void {
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getSkills())->toBe(['existing-skill']);
 });
 
@@ -405,7 +405,7 @@ it('runs discovery by default and adds selected new packages to config', functio
     $command->setInput($input);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getPackages())->toContain('vendor/default-pkg');
 })->skipOnWindows();
 
@@ -428,7 +428,7 @@ it('does not change config when no new packages are found during discovery', fun
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getSkills())->toBe(['existing-skill'])
         ->and($config->getPackages())->toBe([]);
 });
@@ -458,7 +458,7 @@ it('adds selected new packages to config during discovery', function (): void {
     $command->setInput($input);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getPackages())->toContain('vendor/awesome-pkg');
 })->skipOnWindows();
 
@@ -487,7 +487,7 @@ it('skips new-package discovery prompt when running as a composer script', funct
     $command->setInput($input);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0)
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
         ->and($config->getPackages())->toBe([]);
 })->skipOnWindows();
 
@@ -515,7 +515,7 @@ it('skips skills when --ignore-skills flag is set even if skills are configured'
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('skips skills when --ignore-skills flag is set even if .ai/skills directory exists', function (): void {
@@ -543,7 +543,7 @@ it('skips skills when --ignore-skills flag is set even if .ai/skills directory e
     $command->setLaravel($this->app);
     $command->setOutput($output);
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('exits silently when --ignore-skills flag is set and no guidelines are configured', function (): void {
@@ -582,7 +582,7 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
     $command->setLaravel($this->app);
     $command->setOutput(new OutputStyle($nonInteractiveInput, new NullOutput));
 
-    expect($command->handle($config))->toBe(0);
+    expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 
     expect($config->getPackages())->toBe([]);
 })->skipOnWindows();

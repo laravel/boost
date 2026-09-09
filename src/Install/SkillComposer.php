@@ -7,7 +7,6 @@ namespace Laravel\Boost\Install;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
-use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
@@ -126,8 +125,7 @@ class SkillComposer
      */
     protected function getThirdPartySkills(): Collection
     {
-        $packages = collect(Composer::packagesDirectoriesWithBoostSkills())
-            ->reject(fn (string $path, string $package): bool => Composer::isFirstPartyPackage($package));
+        $packages = collect(ThirdPartyPackage::skillDirectories($this->project));
 
         if (isset($this->config->aiGuidelines)) {
             $packages = $packages->filter(

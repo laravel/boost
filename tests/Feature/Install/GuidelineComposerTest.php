@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -26,6 +27,10 @@ beforeEach(function (): void {
     $this->app->instance(ProjectManager::class, $this->project);
 
     $this->composer = new GuidelineComposer($this->project, $this->herd);
+});
+
+afterEach(function (): void {
+    clearStagedPackages();
 });
 
 test('versionless packages do not emit a duplicate versioned guideline', function (): void {
@@ -1393,3 +1398,35 @@ test('inertia core guideline matches the installed major version', function (str
     'v2' => ['2.1.0', '# Inertia v2', '# Inertia v3'],
     'v3' => ['3.1.1', '# Inertia v3', '# Inertia v2'],
 ]);
+
+test('discovers third-party npm package guidelines', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    $package = stagedPackage('@some-scope/third-party', 'guidelines');
+    File::put($package->path().'/resources/boost/guidelines/core.md', '# Third-Party NPM Guidelines');
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+        $package,
+    ]));
+
+    $guidelines = $this->composer->guidelines();
+
+    expect($guidelines->has('@some-scope/third-party/core'))->toBeTrue()
+        ->and($guidelines->get('@some-scope/third-party/core')['content'])->toContain('Third-Party NPM Guidelines')
+        ->and($guidelines->get('@some-scope/third-party/core')['third_party'])->toBeTrue();
+});
+
+test('excludes first-party npm packages from third-party guideline discovery', function (): void {
+    config(['boost.rules.enabled' => false]);
+
+    $package = stagedPackage('@laravel/some-package', 'guidelines');
+    File::put($package->path().'/resources/boost/guidelines/core.md', '# First-Party NPM Guidelines');
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+        $package,
+    ]));
+
+    expect($this->composer->guidelines()->has('@laravel/some-package/core'))->toBeFalse();
+});

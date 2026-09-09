@@ -8,7 +8,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\Concerns\DiscoverPackagePaths;
-use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
@@ -270,11 +269,7 @@ class GuidelineComposer
     {
         $guidelines = collect();
 
-        foreach (Composer::packagesDirectoriesWithBoostGuidelines() as $package => $path) {
-            if (Composer::isFirstPartyPackage($package)) {
-                continue;
-            }
-
+        foreach (ThirdPartyPackage::guidelineDirectories($this->project) as $package => $path) {
             $keyed = $this->guidelinesDir(
                 $path,
                 true,

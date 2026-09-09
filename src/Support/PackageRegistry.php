@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Support;
 
+use Laravel\Roster\Enums\PackageSource;
+use Laravel\Roster\Package;
+
 class PackageRegistry
 {
     public const BOOST = 'laravel/boost';
@@ -66,5 +69,24 @@ class PackageRegistry
     public static function rosterName(string $package): string
     {
         return strtoupper(str_replace('-', '_', self::guidelineName($package)));
+    }
+
+    public static function isFirstParty(Package $package): bool
+    {
+        return match ($package->source()) {
+            PackageSource::Composer => Composer::isFirstPartyPackage($package->name()),
+            PackageSource::Npm => Npm::isFirstPartyPackage($package->name()),
+        };
+    }
+
+    public static function boostPath(Package $package, string $subpath): ?string
+    {
+        if ($package->path() === null) {
+            return null;
+        }
+
+        $path = implode(DIRECTORY_SEPARATOR, [$package->path(), 'resources', 'boost', $subpath]);
+
+        return is_dir($path) ? $path : null;
     }
 }

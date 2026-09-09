@@ -3,6 +3,16 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Install\ThirdPartyPackage;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
+
+beforeEach(function (): void {
+    $this->project = mock(ProjectManager::class);
+});
+
+afterEach(function (): void {
+    clearStagedPackages();
+});
 
 it('creates a package with all properties', function (): void {
     $package = new ThirdPartyPackage(
@@ -45,29 +55,45 @@ it('returns correct display label', function (bool $hasGuidelines, bool $hasSkil
     'skills only' => [false, true, 'vendor/package (skills)'],
 ]);
 
-it('excludes first-party packages from discover results', function (): void {
-    $packages = ThirdPartyPackage::discover();
+it('discovers third-party packages from both ecosystems and excludes first-party ones', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        stagedPackage('acme/toolkit', 'guidelines', 'skills'),
+        stagedPackage('laravel/folio', 'guidelines'),
+        stagedPackage('@acme/ui', 'guidelines'),
+        stagedPackage('@laravel/some-package', 'guidelines'),
+    ]));
 
-    $firstPartyNames = [
-        'laravel/framework',
-        'livewire/livewire',
-        'pestphp/pest',
-        'phpunit/phpunit',
-        'laravel/folio',
-        'laravel/mcp',
-        'laravel/pennant',
-        'laravel/pint',
-        'laravel/sail',
-        'laravel/wayfinder',
-        'livewire/flux',
-        'livewire/flux-pro',
-        'livewire/volt',
-        'inertiajs/inertia-laravel',
-    ];
+    $packages = ThirdPartyPackage::discover($this->project);
 
-    foreach ($firstPartyNames as $name) {
-        expect($packages->has($name))->toBeFalse(
-            "First-party package {$name} should be excluded from discover()"
-        );
-    }
+    expect($packages)
+        ->not->toHaveKey('laravel/folio')
+        ->not->toHaveKey('@laravel/some-package')
+        ->and($packages->get('acme/toolkit')->hasGuidelines)->toBeTrue()
+        ->and($packages->get('acme/toolkit')->hasSkills)->toBeTrue()
+        ->and($packages->get('@acme/ui')->hasGuidelines)->toBeTrue()
+        ->and($packages->get('@acme/ui')->hasSkills)->toBeFalse();
+});
+
+it('ignores packages without a resources/boost directory', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        stagedPackage('acme/plain'),
+    ]));
+
+    expect(ThirdPartyPackage::discover($this->project))->toBeEmpty();
+});
+
+it('ignores packages that are not installed on disk', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('acme/missing', '1.0.0', path: base_path('staged-packages/nope'))->setDirect(),
+    ]));
+
+    expect(ThirdPartyPackage::discover($this->project))->toBeEmpty();
+});
+
+it('ignores transitive dependencies so an indirect package cannot inject guidelines', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('acme/transitive', '1.0.0', path: stagedPackage('acme/transitive', 'guidelines')->path()),
+    ]));
+
+    expect(ThirdPartyPackage::discover($this->project))->toBeEmpty();
 });

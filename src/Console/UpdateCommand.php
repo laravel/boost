@@ -10,6 +10,7 @@ use Laravel\Boost\Concerns\ReportsSkillParseFailures;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\SkillParseFailures;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\multiselect;
@@ -25,7 +26,7 @@ class UpdateCommand extends Command
         {--no-discover : Skip discovering and prompting for newly available guidelines and skills}
         {--ignore-skills : Skip updating the skills directory}';
 
-    public function handle(Config $config): int
+    public function handle(Config $config, ProjectManager $project): int
     {
         app(SkillParseFailures::class)->flush();
 
@@ -49,7 +50,7 @@ class UpdateCommand extends Command
         }
 
         if (! $this->option('no-discover')) {
-            $this->discoverNewContent($config);
+            $this->discoverNewContent($config, $project);
         }
 
         $this->callSilently(InstallCommand::class, [
@@ -65,9 +66,9 @@ class UpdateCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function discoverNewContent(Config $config): void
+    protected function discoverNewContent(Config $config, ProjectManager $project): void
     {
-        $newPackages = $this->resolveNewPackages($config);
+        $newPackages = $this->resolveNewPackages($config, $project);
 
         if ($newPackages->isEmpty()) {
             return;
@@ -96,11 +97,11 @@ class UpdateCommand extends Command
     /**
      * @return Collection<string, ThirdPartyPackage>
      */
-    protected function resolveNewPackages(Config $config): Collection
+    protected function resolveNewPackages(Config $config, ProjectManager $project): Collection
     {
         $configuredPackages = $config->getPackages();
 
-        return ThirdPartyPackage::discover()
+        return ThirdPartyPackage::discover($project)
             ->filter(fn (ThirdPartyPackage $pkg, string $name): bool => ! in_array($name, $configuredPackages, true));
     }
 
