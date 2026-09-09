@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\AgentsDetector;
-use Laravel\Boost\Install\Cloud;
 use Laravel\Boost\Install\Nightwatch;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Prompts\Terminal;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -41,7 +41,7 @@ function runInstallCommandWithFailures(array $failedPaths): string
     $detector->shouldReceive('discoverSystemInstalledAgents')->andReturn([]);
     $detector->shouldReceive('discoverProjectInstalledAgents')->andReturn([]);
 
-    $command = new class($detector, Mockery::mock(Cloud::class), new Config, $nightwatch, $sail, $terminal) extends InstallCommand
+    $command = new class($detector, new Config, $nightwatch, app(ProjectManager::class), $sail, $terminal) extends InstallCommand
     {
         public array $failedPaths = [];
 

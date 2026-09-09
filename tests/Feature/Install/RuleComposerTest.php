@@ -36,38 +36,33 @@ function composerWithFixtureGuidelines(ProjectManager $project, Herd $herd, stri
 }
 
 /**
- * Scaffold third-party package guideline files under vendor/, require them in composer.json,
+ * Install third-party packages carrying guideline files, register them with Roster,
  * run the assertions, then remove everything the scaffold created.
  *
  * @param  array<string, array<string, string>>  $packages  package name => [relative guideline file => contents]
  */
 function withThirdPartyPackages(array $packages, Closure $assert): void
 {
-    $requires = [];
+    $staged = [];
 
     foreach ($packages as $name => $files) {
-        $requires[$name] = '^1.0';
-        $guidelineDir = base_path('vendor/'.$name.'/resources/boost/guidelines');
+        $package = stagedPackage($name, 'guidelines');
+        $staged[] = $package;
 
         foreach ($files as $relativePath => $contents) {
-            $path = $guidelineDir.'/'.$relativePath;
+            $path = $package->path().'/resources/boost/guidelines/'.$relativePath;
 
             File::ensureDirectoryExists(dirname($path));
             File::put($path, $contents);
         }
     }
 
-    File::put(base_path('composer.json'), (string) json_encode(['require' => $requires]));
+    mockProjectPackages(test()->project, new PackageCollection($staged));
 
     try {
         $assert();
     } finally {
-        foreach (array_keys($packages) as $name) {
-            File::deleteDirectory(base_path('vendor/'.explode('/', $name)[0]));
-        }
-
-        @rmdir(base_path('vendor'));
-        File::delete(base_path('composer.json'));
+        clearStagedPackages();
     }
 }
 
@@ -180,8 +175,6 @@ test('overriding a guideline via .ai/guidelines also overrides its scoped blocks
 });
 
 test('a scoped block from a third-party package guideline produces a managed rule file', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
-
     withThirdPartyPackages([
         'some/third-party' => [
             'core.md' => "# Some Third Party\n\n@scoped(['app/Widgets/**'])\n## Widgets\n\nThird-party widget rule.\n@endscoped\n",
@@ -196,8 +189,6 @@ test('a scoped block from a third-party package guideline produces a managed rul
 });
 
 test('two scoped guideline files from one third-party package each produce a rule', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
-
     withThirdPartyPackages([
         'some/multi' => [
             'core.md' => "# Multi Core\n\n@scoped(['app/Alpha/**'])\n## Alpha\n\nAlpha rule.\n@endscoped\n",
@@ -402,8 +393,6 @@ test('nested scoped blocks are left inline instead of being mis-scoped', functio
 });
 
 test('two third-party guideline files sharing a basename in different dirs are both kept', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
-
     withThirdPartyPackages([
         'some/nested' => [
             'admin/core.md' => "# Admin\n\n@scoped(['app/Admin/**'])\n## Admin\n\nAdmin rule.\n@endscoped\n",
@@ -422,8 +411,6 @@ test('two third-party guideline files sharing a basename in different dirs are b
 });
 
 test('a user override in .ai/guidelines overrides a third-party guideline', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
-
     $overrideDir = base_path('.ai/guidelines/some/ovr');
     File::ensureDirectoryExists($overrideDir);
     File::put($overrideDir.'/core.md', "# Overridden\n\nProject-specific third-party guidance.\n");
@@ -445,8 +432,6 @@ test('a user override in .ai/guidelines overrides a third-party guideline', func
 });
 
 test('third-party package selection matches multi-segment guideline keys', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
-
     withThirdPartyPackages([
         'some/sel' => ['admin/core.md' => "# Admin\n\nAdmin guidance.\n"],
     ], function (): void {

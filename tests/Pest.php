@@ -112,6 +112,45 @@ function rosterPackage(string $name, string $version, bool $dev = false, ?string
     };
 }
 
+/**
+ * Install a direct third-party package outside vendor/ and node_modules/, so discovery is
+ * driven by the Roster package's own path rather than a hard-coded manifest location.
+ */
+function stagedPackage(string $name, string ...$boostSubpaths): Package
+{
+    $path = stagedPackagesPath().DIRECTORY_SEPARATOR.str_replace(['@', '/'], ['', '-'], $name);
+    $files = new Filesystem;
+
+    $files->ensureDirectoryExists($path);
+
+    foreach ($boostSubpaths as $subpath) {
+        $files->ensureDirectoryExists($path.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.$subpath);
+    }
+
+    return rosterPackage($name, '1.0.0', path: $path)->setDirect();
+}
+
+function stageSkill(Package $package, string $name, string $description): string
+{
+    $dir = $package->path().DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, ['resources', 'boost', 'skills', $name]);
+    $files = new Filesystem;
+
+    $files->ensureDirectoryExists($dir);
+    $files->put($dir.DIRECTORY_SEPARATOR.'SKILL.md', "---\nname: {$name}\ndescription: {$description}\n---\n\n# Content\n");
+
+    return $dir;
+}
+
+function stagedPackagesPath(): string
+{
+    return base_path('staged-packages');
+}
+
+function clearStagedPackages(): void
+{
+    (new Filesystem)->deleteDirectory(stagedPackagesPath());
+}
+
 function mockProjectPackages(ProjectManager $project, PackageCollection $packages, ?JsPackageManager $packageManager = null): void
 {
     $php = new PackageCollection($packages->filter(

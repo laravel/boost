@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
-use Laravel\Boost\Support\Composer;
+use Laravel\Boost\Support\PackageRegistry;
+use Laravel\Roster\Package;
+use Laravel\Roster\ProjectManager;
 
 class ThirdPartyPackage
 {
@@ -22,10 +24,10 @@ class ThirdPartyPackage
      *
      * @return Collection<string, ThirdPartyPackage>
      */
-    public static function discover(): Collection
+    public static function discover(ProjectManager $project): Collection
     {
-        $withGuidelines = Composer::packagesDirectoriesWithBoostGuidelines();
-        $withSkills = Composer::packagesDirectoriesWithBoostSkills();
+        $withGuidelines = self::guidelineDirectories($project);
+        $withSkills = self::skillDirectories($project);
 
         $allPackageNames = array_unique(array_merge(
             array_keys($withGuidelines),
@@ -33,7 +35,6 @@ class ThirdPartyPackage
         ));
 
         return collect($allPackageNames)
-            ->reject(fn (string $name): bool => Composer::isFirstPartyPackage($name))
             ->mapWithKeys(fn (string $name): array => [
                 $name => new self(
                     name: $name,
@@ -41,6 +42,40 @@ class ThirdPartyPackage
                     hasSkills: isset($withSkills[$name]),
                 ),
             ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function guidelineDirectories(ProjectManager $project): array
+    {
+        return self::boostDirectories($project, 'guidelines');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function skillDirectories(ProjectManager $project): array
+    {
+        return self::boostDirectories($project, 'skills');
+    }
+
+    /**
+     * Transitive dependencies are excluded so an indirect package cannot inject guidelines.
+     *
+     * @return array<string, string>
+     */
+    private static function boostDirectories(ProjectManager $project, string $subpath): array
+    {
+        /** @var array<string, string> */
+        return $project->php()->packages()
+            ->concat($project->js()->packages())
+            ->filter(fn (Package $package): bool => $package->isDirect() && ! PackageRegistry::isFirstParty($package))
+            ->mapWithKeys(fn (Package $package): array => [
+                $package->name() => PackageRegistry::boostPath($package, $subpath),
+            ])
+            ->filter()
+            ->all();
     }
 
     public function featureLabel(): string

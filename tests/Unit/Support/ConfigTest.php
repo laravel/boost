@@ -74,11 +74,11 @@ it('may store and retrieve mcp status', function (): void {
 it('may store and retrieve nightwatch status', function (): void {
     $config = new Config;
 
-    expect($config->getNightwatch())->toBeFalse();
-
-    $config->setNightwatch(true);
-
     expect($config->getNightwatch())->toBeTrue();
+
+    $config->setNightwatch(false);
+
+    expect($config->getNightwatch())->toBeFalse();
 });
 
 it('reads the legacy nightwatch_mcp key when the new nightwatch key is absent', function (): void {

@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\AgentsDetector;
-use Laravel\Boost\Install\Cloud;
 use Laravel\Boost\Install\Nightwatch;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Config;
 use Laravel\Prompts\Terminal;
+use Laravel\Roster\ProjectManager;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
@@ -35,7 +35,7 @@ function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null
     $terminal = Mockery::mock(Terminal::class);
     $terminal->shouldReceive('initDimensions');
 
-    return new class($detector ?? app(AgentsDetector::class), Mockery::mock(Cloud::class), $config, $nightwatch, $sail, $terminal) extends InstallCommand
+    return new class($detector ?? app(AgentsDetector::class), $config, $nightwatch, app(ProjectManager::class), $sail, $terminal) extends InstallCommand
     {
         protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
 
