@@ -580,10 +580,21 @@ test('injects a server that is only present as a comment', function (): void {
         ->save();
 
     expect($result)->toBeTrue();
-    expect($writtenContent)->toContain(
-        '"command": "php"', // New server added
-        '// "boost"' // Commented out server preserved
-    );
+    expect($writtenContent)->toBe(<<<'JSON5'
+    {
+        "mcpServers": {
+            "boost": {
+                "command": "php",
+                "args": [
+                    "artisan",
+                    "boost:mcp"
+                ]
+            }
+            // "boost": { "command": "php", "args": ["artisan", "boost:mcp"] }
+        }
+    }
+
+    JSON5);
 });
 
 test('injects a server that is only present as a block comment', function (): void {
@@ -612,38 +623,63 @@ test('injects a server that is only present as a block comment', function (): vo
         ->save();
 
     expect($result)->toBeTrue();
-    expect($writtenContent)->toContain(
-        '"command": "php"', // New server added
-        '/* "boost"' // Commented out server preserved
-    )->not->toContain('*/,'); // No comma appended to the comment
-});
-
-test('does not duplicate an existing server whose config contains slashes', function (): void {
-    $json5 = <<<'JSON5'
+    expect($writtenContent)->toBe(<<<'JSON5'
     {
         "mcpServers": {
-            // Remote servers
-            "boost": { "url": "https://example.com/mcp" }
+            "boost": {
+                "command": "php",
+                "args": [
+                    "artisan",
+                    "boost:mcp"
+                ]
+            }
+            /* "boost": { "command": "php" } */
+        }
+    }
+
+    JSON5);
+});
+
+test('injects into the real configKey when a commented-out copy of it comes first', function (): void {
+    $writtenContent = '';
+    $json5 = <<<'JSON5'
+    {
+        // "mcpServers": {
+        //     "boost": { "command": "php" }
+        // }
+        "mcpServers": {
+            "other": { "command": "x" } // has a } brace
         }
     }
     JSON5;
 
-    File::swap(Mockery::mock(Filesystem::class));
+    mockFileOperations(
+        fileExists: true,
+        content: $json5,
+        capturedContent: $writtenContent
+    );
 
-    File::shouldReceive('ensureDirectoryExists')->once();
-    File::shouldReceive('exists')->andReturn(true);
     File::shouldReceive('size')->andReturn(200);
-    File::shouldReceive('get')->andReturn($json5);
-    File::shouldReceive('put')->never(); // The URL slashes are not mistaken for a comment, so nothing is written
 
     $result = (new FileWriter('/path/to/mcp.json'))
-        ->addServerConfig('boost', [
-            'command' => 'php',
-            'args' => ['artisan', 'boost:mcp'],
-        ])
+        ->addServerConfig('boost', ['command' => 'php'])
         ->save();
 
     expect($result)->toBeTrue();
+    expect($writtenContent)->toBe(<<<'JSON5'
+    {
+        // "mcpServers": {
+        //     "boost": { "command": "php" }
+        // }
+        "mcpServers": {
+            "other": { "command": "x" }, // has a } brace
+            "boost": {
+                "command": "php"
+            }
+        }
+    }
+
+    JSON5);
 });
 
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description): void {
@@ -940,6 +976,12 @@ function indentationDetectionCases(): array
             0,
             8,
             'Should fallback to 8 spaces for empty content',
+        ],
+        'empty configKey object' => [
+            "{\n  \"mcpServers\": {\n  }\n}",
+            25,
+            4,
+            'Should indent one level deeper than the configKey line when it has no servers',
         ],
     ];
 }
