@@ -491,12 +491,35 @@ class InstallCommand extends Command
             emptyMessage: 'No agents are selected for skill installation.',
             headerMessage: sprintf('Syncing %d skills for skills-capable agents', $skills->count()),
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
-            processor: fn (SupportsSkills&Agent $agent): array => (new SkillWriter($agent))->sync($skills, $trackedSkillsToSync),
+            processor: function (SupportsSkills&Agent $agent) use ($skills, $trackedSkillsToSync): array {
+                $results = (new SkillWriter($agent))->sync($skills, $trackedSkillsToSync);
+
+                $this->ensureSkillSyncSucceeded($results);
+
+                return $results;
+            },
             featureName: 'skills',
             beforeProcess: $skills->isNotEmpty()
                 ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())
                 : null,
         );
+    }
+
+    /**
+     * @param  array<string, int>  $results
+     */
+    protected function ensureSkillSyncSucceeded(array $results): void
+    {
+        $failedSkills = collect($results)
+            ->filter(fn (int $result): bool => $result === SkillWriter::FAILED)
+            ->keys()
+            ->all();
+
+        if ($failedSkills !== []) {
+            throw new RuntimeException(
+                'Failed to sync skills: '.implode(', ', $failedSkills)
+            );
+        }
     }
 
     protected function buildGuidelineConfig(): GuidelineConfig
