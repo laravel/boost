@@ -223,6 +223,11 @@ it('adds table prefix to queries', function (): void {
         'SELECT * FROM public.users JOIN public.posts ON public.users.id = public.posts.user_id' => 'SELECT * FROM public.wp_users JOIN public.wp_posts ON public.users.id = public.posts.user_id',
         'SELECT * FROM "public"."users"' => 'SELECT * FROM "public"."wp_users"',
         'SELECT * FROM `mydb`.`users`' => 'SELECT * FROM `mydb`.`wp_users`',
+        "SELECT 'FROM users' AS label FROM users" => "SELECT 'FROM users' AS label FROM wp_users",
+        'SELECT "FROM users" AS label FROM users' => 'SELECT "FROM users" AS label FROM wp_users',
+        'SELECT * FROM users -- JOIN posts' => 'SELECT * FROM wp_users -- JOIN posts',
+        'SELECT * FROM users /* JOIN posts */' => 'SELECT * FROM wp_users /* JOIN posts */',
+        "SELECT 'users AS (' AS label FROM users" => "SELECT 'users AS (' AS label FROM wp_users",
     ];
 
     foreach ($testCases as $input => $expected) {

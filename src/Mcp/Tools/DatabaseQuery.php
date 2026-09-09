@@ -247,7 +247,8 @@ class DatabaseQuery extends Tool
 
     protected function addPrefixToQuery(string $query, string $prefix): string
     {
-        $cteNames = $this->extractCteNames($query);
+        $structure = $this->withoutLiteralsAndComments($query)['structure'];
+        $cteNames = $this->extractCteNames($structure);
 
         // Anchored to the start so the `ORDER BY ... DESC` sort direction is never matched.
         $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
@@ -262,9 +263,16 @@ class DatabaseQuery extends Tool
             return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
 
-        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
+        $pattern = <<<'REGEX'
+~'(?:''|\\.|[^'\\])*'|"(?:""|\\.|[^"\\])*"|`(?:``|[^`])*`|--[^\r\n]*|/\*[\s\S]*?\*/|\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"']?)(\w+)\3~i
+REGEX;
 
         return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
+            // String literals, quoted fragments, and comments must be preserved verbatim.
+            if (! isset($matches[1])) {
+                return $matches[0];
+            }
+
             [$full, $keyword, $qualifier, $quote, $tableName] = $matches;
 
             if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
