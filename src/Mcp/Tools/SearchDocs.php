@@ -83,15 +83,14 @@ class SearchDocs extends Tool
                 $packagesCollection = $packagesCollection->filter(fn (Package $package): bool => in_array($package->name(), $packagesFilter, true));
             }
 
-            $packages = $packagesCollection->map(function (Package $package): array {
-                $name = $package->name();
-                $version = $package->major().'.x';
-
-                return [
-                    'name' => $name,
-                    'version' => $version,
-                ];
-            });
+            $packages = $packagesCollection
+                ->reject(fn (Package $package): bool => $package->major() === null)
+                ->map(function (Package $package): array {
+                    return [
+                        'name' => $package->name(),
+                        'version' => $package->major().'.x',
+                    ];
+                });
 
             $packages = $packages->values()->toArray();
         } catch (Throwable $throwable) {

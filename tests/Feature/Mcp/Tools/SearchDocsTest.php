@@ -105,6 +105,30 @@ test('it formats package data correctly', function (): void {
     ] && $request->data()['token_limit'] === 3000);
 });
 
+test('it skips packages without a major version', function (): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', ''),
+        rosterPackage('pestphp/pest', '4.1.0'),
+    ]);
+
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, $packages);
+
+    Http::fake([
+        'https://boost.laravel.com/api/docs' => Http::response('Documentation search results', 200),
+    ]);
+
+    $tool = new SearchDocs($project);
+    $response = $tool->handle(new Request(['queries' => ['testing']]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError();
+
+    Http::assertSent(fn ($request): bool => $request->data()['packages'] === [
+        ['name' => 'pestphp/pest', 'version' => '4.x'],
+    ]);
+});
+
 test('it handles empty results', function (): void {
     $packages = new PackageCollection([]);
 
