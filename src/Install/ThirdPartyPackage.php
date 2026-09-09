@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install;
 
 use Illuminate\Support\Collection;
-use Laravel\Boost\Support\Composer;
-use Laravel\Boost\Support\Npm;
+use Laravel\Boost\Support\PackageRegistry;
+use Laravel\Roster\Package;
+use Laravel\Roster\ProjectManager;
 
 class ThirdPartyPackage
 {
@@ -23,10 +24,10 @@ class ThirdPartyPackage
      *
      * @return Collection<string, ThirdPartyPackage>
      */
-    public static function discover(): Collection
+    public static function discover(ProjectManager $project): Collection
     {
-        $withGuidelines = self::guidelineDirectories();
-        $withSkills = self::skillDirectories();
+        $withGuidelines = self::guidelineDirectories($project);
+        $withSkills = self::skillDirectories($project);
 
         $allPackageNames = array_unique(array_merge(
             array_keys($withGuidelines),
@@ -46,36 +47,35 @@ class ThirdPartyPackage
     /**
      * @return array<string, string>
      */
-    public static function guidelineDirectories(): array
+    public static function guidelineDirectories(ProjectManager $project): array
     {
-        return self::rejectFirstParty(array_merge(
-            Composer::packagesDirectoriesWithBoostGuidelines(),
-            Npm::packagesDirectoriesWithBoostGuidelines()
-        ));
+        return self::boostDirectories($project, 'guidelines');
     }
 
     /**
      * @return array<string, string>
      */
-    public static function skillDirectories(): array
+    public static function skillDirectories(ProjectManager $project): array
     {
-        return self::rejectFirstParty(array_merge(
-            Composer::packagesDirectoriesWithBoostSkills(),
-            Npm::packagesDirectoriesWithBoostSkills()
-        ));
+        return self::boostDirectories($project, 'skills');
     }
 
     /**
-     * @param  array<string, string>  $directories
+     * Transitive dependencies are excluded so an indirect package cannot inject guidelines.
+     *
      * @return array<string, string>
      */
-    private static function rejectFirstParty(array $directories): array
+    private static function boostDirectories(ProjectManager $project, string $subpath): array
     {
-        return array_filter(
-            $directories,
-            fn (string $name): bool => ! Composer::isFirstPartyPackage($name) && ! Npm::isFirstPartyPackage($name),
-            ARRAY_FILTER_USE_KEY
-        );
+        /** @var array<string, string> */
+        return $project->php()->packages()
+            ->concat($project->js()->packages())
+            ->filter(fn (Package $package): bool => $package->isDirect() && ! PackageRegistry::isFirstParty($package))
+            ->mapWithKeys(fn (Package $package): array => [
+                $package->name() => PackageRegistry::boostPath($package, $subpath),
+            ])
+            ->filter()
+            ->all();
     }
 
     public function featureLabel(): string

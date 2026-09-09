@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Concerns;
 
 use Illuminate\Support\Collection;
-use Laravel\Boost\Support\Composer;
-use Laravel\Boost\Support\Npm;
 use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Roster\Package;
 use Laravel\Roster\ProjectManager;
@@ -116,12 +114,8 @@ trait DiscoverPackagePaths
 
     protected function resolveFirstPartyBoostPath(Package $package, string $subpath): ?string
     {
-        if (! Composer::isFirstPartyPackage($package->name()) && ! Npm::isFirstPartyPackage($package->name())) {
-            return null;
-        }
-
-        $path = implode(DIRECTORY_SEPARATOR, [$package->path(), 'resources', 'boost', $subpath]);
-
-        return is_dir($path) ? $path : null;
+        return PackageRegistry::isFirstParty($package)
+            ? PackageRegistry::boostPath($package, $subpath)
+            : null;
     }
 }

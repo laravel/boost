@@ -21,10 +21,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    File::deleteDirectory(base_path('node_modules'));
-    File::deleteDirectory(base_path('vendor'));
-    @unlink(base_path('package.json'));
-    @unlink(base_path('composer.json'));
+    clearStagedPackages();
 });
 
 test('skills return a collection keyed by skill name', function (): void {
@@ -263,113 +260,51 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
 });
 
 test('returns all third-party skills when aiGuidelines is uninitialized', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('some/third-party', 'skills');
+    stageSkill($package, 'third-party-skill', 'A vendor-provided skill');
 
-    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
-    try {
-        $skills = (new SkillComposer($this->project))->skills();
-
-        expect($skills->has('third-party-skill'))->toBeTrue();
-    } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    expect((new SkillComposer($this->project))->skills()->has('third-party-skill'))->toBeTrue();
 });
 
 test('filters third-party skills to matching packages when aiGuidelines is set', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('some/third-party', 'skills');
+    stageSkill($package, 'third-party-skill', 'A vendor-provided skill');
 
-    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
-    try {
-        $config = new GuidelineConfig;
-        $config->aiGuidelines = ['some/third-party'];
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = ['some/third-party'];
 
-        $skills = (new SkillComposer($this->project))->config($config)->skills();
-
-        expect($skills->has('third-party-skill'))->toBeTrue();
-    } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    expect((new SkillComposer($this->project))->config($config)->skills()->has('third-party-skill'))->toBeTrue();
 });
 
 test('excludes third-party skills for packages not in aiGuidelines', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('some/third-party', 'skills');
+    stageSkill($package, 'third-party-skill', 'A vendor-provided skill');
 
-    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
-    try {
-        $config = new GuidelineConfig;
-        $config->aiGuidelines = ['other/package'];
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = ['other/package'];
 
-        $skills = (new SkillComposer($this->project))->config($config)->skills();
-
-        expect($skills->has('third-party-skill'))->toBeFalse();
-    } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    expect((new SkillComposer($this->project))->config($config)->skills()->has('third-party-skill'))->toBeFalse();
 });
 
 test('does not parse invalid skills from excluded third-party packages', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('some/third-party', 'skills');
+    $skillDir = $package->path().'/resources/boost/skills/third-party-skill';
+    File::ensureDirectoryExists($skillDir);
+    File::put($skillDir.'/SKILL.md', fixtureContent('skills/broken-frontmatter/SKILL.md'));
 
-    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', fixtureContent('skills/broken-frontmatter/SKILL.md'));
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
-    try {
-        $config = new GuidelineConfig;
-        $config->aiGuidelines = ['other/package'];
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = ['other/package'];
 
-        $skills = (new SkillComposer($this->project))->config($config)->skills();
-
-        expect($skills->has('broken-frontmatter'))->toBeFalse()
-            ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
-    } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    expect((new SkillComposer($this->project))->config($config)->skills()->has('broken-frontmatter'))->toBeFalse()
+        ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
 });
 
 test('blade skills with code before frontmatter are parsed correctly', function (): void {
@@ -436,25 +371,30 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
 });
 
 test('returns third-party npm skills when aiGuidelines is uninitialized', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('@some-scope/third-party', 'skills');
+    stageSkill($package, 'npm-third-party-skill', 'An npm vendor-provided skill');
 
-    $skillDir = base_path('node_modules/@some-scope/third-party/resources/boost/skills/npm-third-party-skill');
-    File::ensureDirectoryExists($skillDir);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: npm-third-party-skill\ndescription: An npm vendor-provided skill\n---\n\n# Content\n");
-    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@some-scope/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
     expect((new SkillComposer($this->project))->skills()->has('npm-third-party-skill'))->toBeTrue();
 });
 
-test('excludes first-party npm packages from third-party skill discovery', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+test('first-party npm skills load without the third-party opt-in', function (): void {
+    $firstParty = stagedPackage('@laravel/some-package', 'skills');
+    stageSkill($firstParty, 'laravel-skill', 'A first-party skill');
 
-    $skillDir = base_path('node_modules/@laravel/some-package/resources/boost/skills/laravel-skill');
-    File::ensureDirectoryExists($skillDir);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: laravel-skill\ndescription: A first-party skill\n---\n\n# Content\n");
-    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@laravel/some-package' => '^1.0']]));
+    $thirdParty = stagedPackage('@some-scope/third-party', 'skills');
+    stageSkill($thirdParty, 'npm-third-party-skill', 'An npm vendor-provided skill');
 
-    expect((new SkillComposer($this->project))->skills()->has('laravel-skill'))->toBeFalse();
+    mockProjectPackages($this->project, new PackageCollection([$firstParty, $thirdParty]));
+
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = [];
+
+    $skills = (new SkillComposer($this->project))->config($config)->skills();
+
+    expect($skills->has('laravel-skill'))->toBeTrue()
+        ->and($skills->has('npm-third-party-skill'))->toBeFalse();
 });
 
 test('a skill with invalid YAML frontmatter is skipped and records the failure', function (): void {

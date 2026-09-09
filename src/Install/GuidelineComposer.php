@@ -269,7 +269,7 @@ class GuidelineComposer
     {
         $guidelines = collect();
 
-        foreach (ThirdPartyPackage::guidelineDirectories() as $package => $path) {
+        foreach (ThirdPartyPackage::guidelineDirectories($this->project) as $package => $path) {
             $keyed = $this->guidelinesDir(
                 $path,
                 true,

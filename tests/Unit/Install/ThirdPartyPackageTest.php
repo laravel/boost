@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\ThirdPartyPackage;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
+
+beforeEach(function (): void {
+    $this->project = mock(ProjectManager::class);
+});
 
 afterEach(function (): void {
-    File::deleteDirectory(base_path('node_modules'));
-    File::deleteDirectory(base_path('vendor'));
-    @unlink(base_path('package.json'));
-    @unlink(base_path('composer.json'));
+    clearStagedPackages();
 });
 
 it('creates a package with all properties', function (): void {
@@ -53,33 +55,45 @@ it('returns correct display label', function (bool $hasGuidelines, bool $hasSkil
     'skills only' => [false, true, 'vendor/package (skills)'],
 ]);
 
-it('excludes first-party packages and includes third-party ones from both ecosystems', function (): void {
-    foreach ([
-        'vendor/laravel/folio',
-        'vendor/acme/toolkit',
-        'node_modules/@laravel/some-package',
-        'node_modules/@acme/ui',
-    ] as $package) {
-        File::ensureDirectoryExists(base_path($package.'/resources/boost/guidelines'));
-    }
-
-    File::ensureDirectoryExists(base_path('vendor/acme/toolkit/resources/boost/skills'));
-
-    file_put_contents(base_path('composer.json'), json_encode([
-        'require' => ['laravel/folio' => '^1.0', 'acme/toolkit' => '^1.0'],
-    ]));
-    file_put_contents(base_path('package.json'), json_encode([
-        'dependencies' => ['@laravel/some-package' => '^1.0', '@acme/ui' => '^1.0'],
+it('discovers third-party packages from both ecosystems and excludes first-party ones', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        stagedPackage('acme/toolkit', 'guidelines', 'skills'),
+        stagedPackage('laravel/folio', 'guidelines'),
+        stagedPackage('@acme/ui', 'guidelines'),
+        stagedPackage('@laravel/some-package', 'guidelines'),
     ]));
 
-    $packages = ThirdPartyPackage::discover();
+    $packages = ThirdPartyPackage::discover($this->project);
 
     expect($packages)
         ->not->toHaveKey('laravel/folio')
         ->not->toHaveKey('@laravel/some-package')
-        ->toHaveKey('acme/toolkit')
-        ->toHaveKey('@acme/ui')
+        ->and($packages->get('acme/toolkit')->hasGuidelines)->toBeTrue()
         ->and($packages->get('acme/toolkit')->hasSkills)->toBeTrue()
         ->and($packages->get('@acme/ui')->hasGuidelines)->toBeTrue()
         ->and($packages->get('@acme/ui')->hasSkills)->toBeFalse();
+});
+
+it('ignores packages without a resources/boost directory', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        stagedPackage('acme/plain'),
+    ]));
+
+    expect(ThirdPartyPackage::discover($this->project))->toBeEmpty();
+});
+
+it('ignores packages that are not installed on disk', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('acme/missing', '1.0.0', path: base_path('staged-packages/nope'))->setDirect(),
+    ]));
+
+    expect(ThirdPartyPackage::discover($this->project))->toBeEmpty();
+});
+
+it('ignores transitive dependencies so an indirect package cannot inject guidelines', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('acme/transitive', '1.0.0', path: stagedPackage('acme/transitive', 'guidelines')->path()),
+    ]));
+
+    expect(ThirdPartyPackage::discover($this->project))->toBeEmpty();
 });

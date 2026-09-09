@@ -30,8 +30,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    File::deleteDirectory(base_path('node_modules'));
-    @unlink(base_path('package.json'));
+    clearStagedPackages();
 });
 
 test('versionless packages do not emit a duplicate versioned guideline', function (): void {
@@ -1403,14 +1402,13 @@ test('inertia core guideline matches the installed major version', function (str
 test('discovers third-party npm package guidelines', function (): void {
     config(['boost.rules.enabled' => false]);
 
+    $package = stagedPackage('@some-scope/third-party', 'guidelines');
+    File::put($package->path().'/resources/boost/guidelines/core.md', '# Third-Party NPM Guidelines');
+
     mockProjectPackages($this->project, new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
+        $package,
     ]));
-
-    $guidelineDir = base_path('node_modules/@some-scope/third-party/resources/boost/guidelines');
-    File::ensureDirectoryExists($guidelineDir);
-    file_put_contents($guidelineDir.'/core.md', "# Third-Party NPM Guidelines\n\nThese are npm vendor guidelines.");
-    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@some-scope/third-party' => '^1.0']]));
 
     $guidelines = $this->composer->guidelines();
 
@@ -1422,14 +1420,13 @@ test('discovers third-party npm package guidelines', function (): void {
 test('excludes first-party npm packages from third-party guideline discovery', function (): void {
     config(['boost.rules.enabled' => false]);
 
+    $package = stagedPackage('@laravel/some-package', 'guidelines');
+    File::put($package->path().'/resources/boost/guidelines/core.md', '# First-Party NPM Guidelines');
+
     mockProjectPackages($this->project, new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
+        $package,
     ]));
-
-    $guidelineDir = base_path('node_modules/@laravel/some-package/resources/boost/guidelines');
-    File::ensureDirectoryExists($guidelineDir);
-    file_put_contents($guidelineDir.'/core.md', "# First-Party NPM Guidelines\n\nThese should not appear as third-party.");
-    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['@laravel/some-package' => '^1.0']]));
 
     expect($this->composer->guidelines()->has('@laravel/some-package/core'))->toBeFalse();
 });

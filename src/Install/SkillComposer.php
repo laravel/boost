@@ -125,7 +125,7 @@ class SkillComposer
      */
     protected function getThirdPartySkills(): Collection
     {
-        $packages = collect(ThirdPartyPackage::skillDirectories());
+        $packages = collect(ThirdPartyPackage::skillDirectories($this->project));
 
         if (isset($this->config->aiGuidelines)) {
             $packages = $packages->filter(
