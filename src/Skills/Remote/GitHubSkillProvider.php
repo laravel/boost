@@ -103,12 +103,9 @@ class GitHubSkillProvider
         return $this->downloadFiles($files->toArray(), $targetPath, $skill->path);
     }
 
-    // Segment-wise SkillWriter::isValidSkillName(): in a slash-delimited tree path these can only resolve outside the skill directory.
     protected static function escapesSkillDirectory(string $path): bool
     {
-        return str_contains($path, '\\')
-            || str_contains($path, "\0")
-            || in_array('..', explode('/', $path), true);
+        return collect(explode('/', $path))->contains(fn (string $segment): bool => ! SkillWriter::isValidSkillName($segment));
     }
 
     /**
