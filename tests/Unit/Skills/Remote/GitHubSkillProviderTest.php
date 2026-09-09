@@ -701,3 +701,28 @@ it('downloads a skill from the branch named in the repository', function (): voi
         rmdir($targetDir);
     }
 });
+
+it('refuses to download a skill whose tree escapes the skill directory', function (string $escapingPath): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'aaa'],
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'bbb', 'size' => 123],
+            ['path' => $escapingPath, 'type' => 'blob', 'sha' => 'ccc', 'size' => 456],
+        ]),
+        '*' => Http::response('escaped'),
+    ]);
+
+    $skill = new RemoteSkill(name: 'skill-one', repo: 'owner/repo', path: 'skill-one');
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+    expect($fetcher->downloadSkill($skill, $targetDir))->toBeFalse()
+        ->and(is_dir($targetDir))->toBeFalse();
+})->with([
+    // Windows reads the backslash as a separator, so this path would land outside the skill directory.
+    'backslash' => ['skill-one/..\\..\\escaped.txt'],
+    'parent segment' => ['skill-one/../../escaped.txt'],
+    'null byte' => ["skill-one/nested\0/escaped.txt"],
+]);
