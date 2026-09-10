@@ -177,13 +177,20 @@ class DatabaseQuery extends Tool
     }
 
     /**
-     * @return array{structure: string, hasVersionComment: bool}
+     * Locate the string literals and comments in a query.
+     *
+     * `structure` blanks them out for keyword scanning, while `spans` gives their byte
+     * ranges so callers rewriting the original query can skip over them.
+     *
+     * @return array{structure: string, hasVersionComment: bool, spans: list<array{int, int}>}
      */
     protected function withoutLiteralsAndComments(string $query): array
     {
         $structure = '';
         $state = 'none';
         $hasVersionComment = false;
+        $spans = [];
+        $spanStart = 0;
         $length = strlen($query);
 
         for ($i = 0; $i < $length; $i++) {
@@ -197,9 +204,11 @@ class DatabaseQuery extends Tool
                         '"' => 'double',
                         default => 'backtick',
                     };
+                    $spanStart = $i;
                     $structure .= ' ';
                 } elseif ($char === '-' && $next === '-') {
                     $state = 'line_comment';
+                    $spanStart = $i;
                     $structure .= ' ';
                     $i++;
                 } elseif ($char === '/' && $next === '*') {
@@ -209,6 +218,7 @@ class DatabaseQuery extends Tool
                         $structure .= $char;
                     } else {
                         $state = 'block_comment';
+                        $spanStart = $i;
                         $structure .= ' ';
                         $i++;
                     }
@@ -217,11 +227,13 @@ class DatabaseQuery extends Tool
                 }
             } elseif ($state === 'line_comment') {
                 if ($char === "\n") {
+                    $spans[] = [$spanStart, $i];
                     $state = 'none';
                     $structure .= $char;
                 }
             } elseif ($state === 'block_comment') {
                 if ($char === '*' && $next === '/') {
+                    $spans[] = [$spanStart, $i + 2];
                     $state = 'none';
                     $i++;
                 }
@@ -236,51 +248,82 @@ class DatabaseQuery extends Tool
                     if ($next === $quote) {
                         $i++; // doubled quote escapes itself; literal continues
                     } else {
+                        $spans[] = [$spanStart, $i + 1];
                         $state = 'none';
                     }
                 }
             }
         }
 
-        return ['structure' => $structure, 'hasVersionComment' => $hasVersionComment];
+        if ($state !== 'none') {
+            $spans[] = [$spanStart, $length];
+        }
+
+        return ['structure' => $structure, 'hasVersionComment' => $hasVersionComment, 'spans' => $spans];
     }
 
     protected function addPrefixToQuery(string $query, string $prefix): string
     {
-        $structure = $this->withoutLiteralsAndComments($query)['structure'];
-        $cteNames = $this->extractCteNames($structure);
-
         // Anchored to the start so the `ORDER BY ... DESC` sort direction is never matched.
         $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
 
-        $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix, $cteNames): string {
+        // The anchor also means no CTE can precede the table name here.
+        $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix): string {
             [$full, $leading, $keyword, $qualifier, $quote, $tableName] = $matches;
 
-            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+            if (str_starts_with($tableName, $prefix)) {
                 return $full;
             }
 
             return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
 
-        $pattern = <<<'REGEX'
-~'(?:''|\\.|[^'\\])*'|"(?:""|\\.|[^"\\])*"|`(?:``|[^`])*`|--[^\r\n]*|/\*[\s\S]*?\*/|\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"']?)(\w+)\3~i
-REGEX;
+        ['structure' => $structure, 'spans' => $spans] = $this->withoutLiteralsAndComments($query);
+        $cteNames = $this->extractCteNames($structure);
 
-        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
-            // String literals, quoted fragments, and comments must be preserved verbatim.
-            if (! isset($matches[1])) {
-                return $matches[0];
+        $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
+
+        if (! preg_match_all($pattern, $query, $allMatches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
+            return $query;
+        }
+
+        // Rewriting right to left keeps the offsets of the matches still to come valid.
+        foreach (array_reverse($allMatches) as $matches) {
+            [$full, $offset] = $matches[0];
+
+            if ($this->offsetIsInsideLiteralOrComment($offset, $spans)) {
+                continue;
             }
 
-            [$full, $keyword, $qualifier, $quote, $tableName] = $matches;
+            $keyword = $matches[1][0];
+            $qualifier = $matches[2][0];
+            $quote = $matches[3][0];
+            $tableName = $matches[4][0];
 
             if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
-                return $full;
+                continue;
             }
 
-            return "{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
-        }, $query) ?? $query;
+            $query = substr_replace($query, "{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}", $offset, strlen($full));
+        }
+
+        return $query;
+    }
+
+    /**
+     * A keyword starting inside a literal or comment is text, not a table reference.
+     *
+     * @param  list<array{int, int}>  $spans
+     */
+    protected function offsetIsInsideLiteralOrComment(int $offset, array $spans): bool
+    {
+        foreach ($spans as [$start, $end]) {
+            if ($offset >= $start && $offset < $end) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

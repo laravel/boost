@@ -228,6 +228,10 @@ it('adds table prefix to queries', function (): void {
         'SELECT * FROM users -- JOIN posts' => 'SELECT * FROM wp_users -- JOIN posts',
         'SELECT * FROM users /* JOIN posts */' => 'SELECT * FROM wp_users /* JOIN posts */',
         "SELECT 'users AS (' AS label FROM users" => "SELECT 'users AS (' AS label FROM wp_users",
+        "SELECT 'it''s FROM posts' AS label FROM users" => "SELECT 'it''s FROM posts' AS label FROM wp_users",
+        "SELECT 'a\\' AS x, 'b' AS y FROM users, 'c' AS z" => "SELECT 'a\\' AS x, 'b' AS y FROM wp_users, 'c' AS z",
+        "SELECT * FROM users WHERE note = 'unterminated" => "SELECT * FROM wp_users WHERE note = 'unterminated",
+        "SELECT * FROM users -- JOIN posts\nJOIN comments ON 1 = 1" => "SELECT * FROM wp_users -- JOIN posts\nJOIN wp_comments ON 1 = 1",
     ];
 
     foreach ($testCases as $input => $expected) {
