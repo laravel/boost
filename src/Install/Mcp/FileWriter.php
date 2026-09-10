@@ -59,11 +59,12 @@ class FileWriter
     {
         $this->ensureDirectoryExists();
 
-        if ($this->shouldWriteNew()) {
+        $content = $this->fileExists() ? $this->normalizeContent($this->readFile()) : '';
+
+        // A bare `{}` is rebuilt so baseConfig defaults land in it.
+        if ($content === '' || $content === '{}') {
             return $this->createNewFile();
         }
-
-        $content = $this->readFile();
 
         if ($this->isPlainJson($content)) {
             return $this->updatePlainJsonFile($content);
@@ -91,43 +92,39 @@ class FileWriter
 
     protected function updateJson5File(string $content): bool
     {
+        $masked = $this->maskUnquotedComments($content);
         $configKeyPattern = '/["\']'.preg_quote($this->configKey, '/').'["\']\\s*:\\s*\\{/';
 
-        if (preg_match($configKeyPattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
-            return $this->injectIntoExistingConfigKey($content, $matches);
+        if (preg_match($configKeyPattern, $masked, $matches, PREG_OFFSET_CAPTURE)) {
+            return $this->injectIntoExistingConfigKey($content, $masked, $matches);
         }
 
-        return $this->injectNewConfigKey($content);
+        return $this->injectNewConfigKey($content, $masked);
     }
 
-    protected function injectIntoExistingConfigKey(string $content, array $matches): bool
+    protected function injectIntoExistingConfigKey(string $content, string $masked, array $matches): bool
     {
-        // $matches[0][1] contains the position of the configKey pattern match
         $configKeyStart = $matches[0][1];
 
-        // Find the opening brace of the configKey object
-        $openBracePos = strpos($content, '{', $configKeyStart);
+        $openBracePos = strpos($masked, '{', $configKeyStart);
 
         if ($openBracePos === false) {
             return false;
         }
 
-        // Find the matching closing brace for this configKey object
-        $closeBracePos = $this->findMatchingClosingBrace($content, $openBracePos);
+        $closeBracePos = $this->findMatchingClosingBrace($masked, $openBracePos);
 
         if ($closeBracePos === false) {
             return false;
         }
 
-        // Filter out servers that already exist
-        $serversToAdd = $this->filterExistingServers($content, $openBracePos, $closeBracePos);
+        $serversToAdd = $this->filterExistingServers($masked, $openBracePos, $closeBracePos);
 
         if ($serversToAdd === []) {
             return true;
         }
 
-        // Detect indentation from surrounding content
-        $indentLength = $this->detectIndentation($content, $closeBracePos);
+        $indentLength = $this->detectIndentation($masked, $closeBracePos);
 
         $serverJsonParts = [];
 
@@ -137,29 +134,13 @@ class FileWriter
 
         $serversJson = implode(','."\n", $serverJsonParts);
 
-        // Check if we need a comma and add it to the preceding content
-        $needsComma = $this->needsCommaBeforeClosingBrace($content, $openBracePos, $closeBracePos);
+        $insertPos = $this->findInsertionPoint($masked, $openBracePos, $closeBracePos);
+        $lineEnd = $insertPos + strcspn($masked, "\n", $insertPos, $closeBracePos - $insertPos);
 
-        if (! $needsComma) {
-            $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
+        $newContent = substr_replace($content, $serversJson, $lineEnd, 0);
 
-            return $this->writeFile($newContent);
-        }
-
-        // Find the position to add comma (after the last meaningful character)
-        $commaPosition = $this->findCommaInsertionPoint($content, $openBracePos, $closeBracePos);
-
-        if ($commaPosition !== -1) {
-            // Anything non-blank before the brace is a trailing comment: comma goes ahead of it, servers after it.
-            if (trim(substr($content, $commaPosition, $closeBracePos - $commaPosition)) === '') {
-                $newContent = substr_replace($content, ',', $commaPosition, 0);
-                $newContent = substr_replace($newContent, $serversJson, $commaPosition + 1, 0);
-            } else {
-                $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
-                $newContent = substr_replace($newContent, ',', $commaPosition, 0);
-            }
-        } else {
-            $newContent = substr_replace($content, $serversJson, $closeBracePos, 0);
+        if (! in_array($masked[$insertPos - 1], ['{', ','], true)) {
+            $newContent = substr_replace($newContent, ',', $insertPos, 0);
         }
 
         return $this->writeFile($newContent);
@@ -187,9 +168,23 @@ class FileWriter
         return preg_match($quotedPattern, $content) || preg_match($unquotedPattern, $content);
     }
 
-    protected function injectNewConfigKey(string $content): bool
+    protected function maskUnquotedComments(string $content): string
     {
-        $openBracePos = strpos($content, '{');
+        // Match quoted strings (keep) or line and block comments (blank out, keeping length and line breaks)
+        $pattern = '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\//';
+
+        return preg_replace_callback(
+            $pattern,
+            fn (array $matches): string => Str::startsWith($matches[0], ['//', '/*'])
+                ? (string) preg_replace('/[^\n]/', ' ', $matches[0])
+                : $matches[0],
+            $content
+        ) ?? $content;
+    }
+
+    protected function injectNewConfigKey(string $content, string $masked): bool
+    {
+        $openBracePos = strpos($masked, '{');
 
         if ($openBracePos === false) {
             return false;
@@ -204,7 +199,7 @@ class FileWriter
         $serversJson = implode(',', $serverJsonParts);
         $configKeySection = '"'.$this->configKey.'": {'.$serversJson.'}';
 
-        $needsComma = $this->needsCommaAfterBrace($content, $openBracePos);
+        $needsComma = $this->needsCommaAfterBrace($masked, $openBracePos);
         $injection = $configKeySection.($needsComma ? ',' : '');
 
         $newContent = substr_replace($content, $injection, $openBracePos + 1, 0);
@@ -216,15 +211,12 @@ class FileWriter
     {
         $json = json_encode($serverConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        // Normalize line endings to Unix style
         $json = str_replace("\r\n", "\n", $json);
 
-        // If no indentation needed, return as-is
         if (empty($baseIndent)) {
             return '"'.$key.'": '.$json;
         }
 
-        // Apply indentation to each line of the JSON
         $baseIndent = str_repeat(' ', $baseIndent);
         $lines = explode("\n", $json);
         $firstLine = array_shift($lines);
@@ -238,8 +230,7 @@ class FileWriter
 
     protected function needsCommaAfterBrace(string $content, int $bracePosition): bool
     {
-        $afterBrace = substr($content, $bracePosition + 1);
-        $trimmed = preg_replace('/^\s*(?:\/\/.*$)?/m', '', $afterBrace);
+        $trimmed = ltrim(substr($content, $bracePosition + 1));
 
         return filled($trimmed) && ! Str::startsWith($trimmed, '}');
     }
@@ -276,74 +267,32 @@ class FileWriter
         return false;
     }
 
-    protected function needsCommaBeforeClosingBrace(string $content, int $openBracePos, int $closeBracePos): bool
+    protected function findInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
     {
-        // Get content between opening and closing braces
-        $innerContent = substr($content, $openBracePos + 1, $closeBracePos - $openBracePos - 1);
-
-        // Skip whitespace and comments to find last meaningful character
-        $trimmed = preg_replace('/\s+|\/\/.*$/m', '', $innerContent);
-
-        // If empty or ends with opening brace, no comma needed
-        if (blank($trimmed) || Str::endsWith($trimmed, '{')) {
-            return false;
-        }
-
-        // If ends with comma, no additional comma needed
-        return ! Str::endsWith($trimmed, ',');
-    }
-
-    protected function findCommaInsertionPoint(string $content, int $openBracePos, int $closeBracePos): int
-    {
-        // Strings are matched only to skip them; comments become equal-length spaces so offsets still line up.
-        $masked = preg_replace_callback(
-            '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|(\/\/[^\r\n]*)|(\/\*[\s\S]*?\*\/)/',
-            fn (array $match): string => ($match[1] ?? '') !== '' || ($match[2] ?? '') !== ''
-                ? str_repeat(' ', strlen($match[0]))
-                : $match[0],
-            $content
-        ) ?? $content;
-
-        // Work backwards from closing brace to find last meaningful character
         for ($i = $closeBracePos - 1; $i > $openBracePos; $i--) {
-            $char = $masked[$i];
-
-            // Skip whitespace and newlines
-            if (in_array($char, [' ', "\t", "\n", "\r"], true)) {
-                continue;
-            }
-
-            // Found last meaningful character, comma goes after it
-            if ($char !== ',') {
+            if (! in_array($content[$i], [' ', "\t", "\n", "\r"], true)) {
                 return $i + 1;
             }
-
-            // Already has comma, no insertion needed
-            return -1;
         }
 
-        // Fallback - insert right after opening brace
         return $openBracePos + 1;
     }
 
     public function detectIndentation(string $content, int $nearPosition): int
     {
-        // Look backwards from the position to find server-level indentation
-        // We want to find lines that look like: "server-name": {
-
         $lines = explode("\n", substr($content, 0, $nearPosition));
 
-        // Look for the most recent server definition to match its indentation
         for ($i = count($lines) - 1; $i >= 0; $i--) {
             $line = $lines[$i];
 
-            // Match server definitions: any amount of whitespace + "key": {
-            if (preg_match('/^(\s*)"[^"]+"\s*:\s*\{/', $line, $matches)) {
-                return strlen($matches[1]);
+            if (preg_match('/^(\s*)"([^"]+)"\s*:\s*\{/', $line, $matches)) {
+                $indent = strlen($matches[1]);
+
+                // The configKey line itself sits one level shallower than its servers
+                return $matches[2] === $this->configKey ? max($indent * 2, 4) : $indent;
             }
         }
 
-        // Fallback: assume 8 spaces (2 levels of 4-space indentation typical for JSON)
         return $this->defaultIndentation;
     }
 
@@ -380,23 +329,11 @@ class FileWriter
 
     protected function hasUnquotedComments(string $content): bool
     {
-        // Match double-quoted strings (skip), line comments (//), or block comments (/* */)
-        $pattern = '/"(?:\\\\.|[^"\\\\])*"|(\/\/.*)|(\\/\\*[\\s\\S]*?\\*\\/)/';
-
-        if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                if (! empty($match[1]) || ! empty($match[2])) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return $this->maskUnquotedComments($content) !== $content;
     }
 
     protected function hasSingleQuotedStrings(string $content): bool
     {
-        // Match double-quoted strings (skip) or single-quoted strings (detect)
         $pattern = '/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'/';
 
         if (preg_match_all($pattern, $content, $matches)) {
@@ -437,7 +374,6 @@ class FileWriter
     {
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        // Normalize line endings to Unix style
         if ($json) {
             $json = str_replace("\r\n", "\n", $json);
         }
@@ -455,19 +391,14 @@ class FileWriter
         return File::exists($this->filePath);
     }
 
-    protected function shouldWriteNew(): bool
-    {
-        if (! $this->fileExists()) {
-            return true;
-        }
-
-        return File::size($this->filePath) < 3;
-        // To account for files that are just `{}`
-    }
-
     protected function readFile(): string
     {
         return File::get($this->filePath);
+    }
+
+    protected function normalizeContent(string $content): string
+    {
+        return trim(Str::chopStart($content, "\xEF\xBB\xBF"));
     }
 
     protected function writeFile(string $content): bool
