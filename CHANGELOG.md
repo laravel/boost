@@ -1,6 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.8.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.8.1...main)
+
+## [v2.8.1](https://github.com/laravel/boost/compare/v2.8.0...v2.8.1) - 2026-09-10
+
+### What's Changed
+
+* Run test workflows on pushes to main by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1013
+* feat: support third-party NPM package guidelines and skills by [@calebdw](https://github.com/calebdw) in https://github.com/laravel/boost/pull/935
+* Reject backslash paths when downloading a skill so files cannot land outside the skill directory by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/963
+* Ignore commented-out entries when checking for existing MCP servers by [@lazerg](https://github.com/lazerg) in https://github.com/laravel/boost/pull/933
+* Treat a whitespace-only MCP config file as new instead of failing the install by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1018
+* Resolve the browser log path from the browser channel config instead of a hardcoded location by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1017
+* Preserve SQL literals when applying table prefixes by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1014
+* Record rules only when the user asks for them by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1019
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.8.0...v2.8.1
 
 ## [v2.8.0](https://github.com/laravel/boost/compare/v2.7.1...v2.8.0) - 2026-09-08
 
@@ -603,11 +618,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -696,12 +713,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
