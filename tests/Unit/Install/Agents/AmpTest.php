@@ -171,11 +171,6 @@ test('installMcp overwrites existing amp server config while preserving unrelate
         ->with($settingsPath)
         ->andReturn(true);
 
-    File::shouldReceive('size')
-        ->once()
-        ->with($settingsPath)
-        ->andReturn(strlen((string) $existingConfig));
-
     File::shouldReceive('get')
         ->once()
         ->with($settingsPath)
@@ -212,11 +207,6 @@ test('installMcp returns false when existing settings json is invalid', function
         ->once()
         ->with($settingsPath)
         ->andReturn(true);
-
-    File::shouldReceive('size')
-        ->once()
-        ->with($settingsPath)
-        ->andReturn(12);
 
     File::shouldReceive('get')
         ->once()

@@ -59,11 +59,12 @@ class FileWriter
     {
         $this->ensureDirectoryExists();
 
-        if ($this->shouldWriteNew()) {
+        $content = $this->fileExists() ? $this->normalizeContent($this->readFile()) : '';
+
+        // A bare `{}` is rebuilt so baseConfig defaults land in it.
+        if ($content === '' || $content === '{}') {
             return $this->createNewFile();
         }
-
-        $content = $this->readFile();
 
         if ($this->isPlainJson($content)) {
             return $this->updatePlainJsonFile($content);
@@ -390,19 +391,14 @@ class FileWriter
         return File::exists($this->filePath);
     }
 
-    protected function shouldWriteNew(): bool
-    {
-        if (! $this->fileExists()) {
-            return true;
-        }
-
-        return File::size($this->filePath) < 3;
-        // To account for files that are just `{}`
-    }
-
     protected function readFile(): string
     {
         return File::get($this->filePath);
+    }
+
+    protected function normalizeContent(string $content): string
+    {
+        return trim(Str::chopStart($content, "\xEF\xBB\xBF"));
     }
 
     protected function writeFile(string $content): bool

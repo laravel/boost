@@ -45,6 +45,37 @@ test('save method returns boolean', function (): void {
     expect($result)->toBe(true);
 });
 
+test('save writes servers when the existing file is whitespace only', function (): void {
+    $writtenContent = '';
+    mockFileOperations(fileExists: true, content: "\n  \n", capturedContent: $writtenContent);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('laravel-boost', ['command' => 'php artisan boost:mcp'])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"laravel-boost"')
+        ->and($writtenContent)->toContain('php artisan boost:mcp');
+});
+
+test('save updates a plain JSON file that starts with a UTF-8 BOM', function (): void {
+    $writtenContent = '';
+    mockFileOperations(
+        fileExists: true,
+        content: "\xEF\xBB\xBF".json_encode(['mcpServers' => ['existing' => ['command' => 'existing-cmd']]]),
+        capturedContent: $writtenContent
+    );
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('laravel-boost', ['command' => 'php artisan boost:mcp'])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->not->toStartWith("\xEF\xBB\xBF")
+        ->and($writtenContent)->toContain('"existing"')
+        ->and($writtenContent)->toContain('"laravel-boost"');
+});
+
 test('written data is correct for brand new file', function (string $configKey, array $servers, string $expectedJson): void {
     $writtenPath = '';
     $writtenContent = '';
@@ -74,9 +105,6 @@ test('updates existing plain JSON file using simple method', function (): void {
         capturedPath: $writtenPath,
         capturedContent: $writtenContent
     );
-
-    // Need to mock File::size for fileEmpty check
-    File::shouldReceive('size')->andReturn(100);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers')
@@ -108,8 +136,6 @@ test('adds to existing mcpServers in plain JSON', function (): void {
         capturedPath: $writtenPath,
         capturedContent: $writtenContent
     );
-
-    File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', [
@@ -150,8 +176,6 @@ test('preserves empty objects in existing plain JSON files', function (): void {
         capturedContent: $writtenContent
     );
 
-    File::shouldReceive('size')->andReturn(200);
-
     $result = (new FileWriter('/path/to/opencode.json'))
         ->configKey('mcp')
         ->addServerConfig('laravel-boost', [
@@ -177,8 +201,6 @@ test('preserves complex JSON5 features that VS Code supports', function (): void
         capturedContent: $writtenContent
     );
 
-    File::shouldReceive('size')->andReturn(1000);
-
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers') // mcp.json5 uses "servers", not "mcpServers"
         ->addServerConfig('test', ['command' => 'cmd'])
@@ -202,8 +224,6 @@ test('detects plain JSON with comments inside strings as safe', function (): voi
         content: fixtureContent('mcp-comments-in-strings.json'),
         capturedContent: $writtenContent
     );
-
-    File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('new-server', ['command' => 'test-cmd'])
@@ -291,8 +311,6 @@ test('injects new configKey when it does not exist', function (): void {
         capturedContent: $writtenContent
     );
 
-    File::shouldReceive('size')->andReturn(200);
-
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', [
             'command' => 'php',
@@ -317,8 +335,6 @@ test('injects into existing configKey preserving JSON5 features', function (): v
         content: fixtureContent('mcp.json5'),
         capturedContent: $writtenContent
     );
-
-    File::shouldReceive('size')->andReturn(1000);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers') // mcp.json5 uses "servers" not "mcpServers"
@@ -345,7 +361,6 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn(true);
-    File::shouldReceive('size')->andReturn(1000);
     File::shouldReceive('get')->andReturn(fixtureContent('mcp.json5'));
     File::shouldReceive('put')
         ->with(
@@ -379,7 +394,6 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn(true);
-    File::shouldReceive('size')->andReturn(1000);
     File::shouldReceive('get')->andReturn($newContent);
 
     $result = (new FileWriter('/path/to/mcp.json'))
@@ -407,8 +421,6 @@ test('injects into empty configKey object', function (): void {
         capturedContent: $writtenContent
     );
 
-    File::shouldReceive('size')->andReturn(200);
-
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', [
             'command' => 'php',
@@ -432,8 +444,6 @@ test('preserves trailing commas when injecting into existing servers', function 
         content: fixtureContent('mcp-trailing-comma.json5'),
         capturedContent: $writtenContent
     );
-
-    File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', [
@@ -470,8 +480,6 @@ test('adds the comma outside a trailing comment in the servers object', function
         capturedContent: $writtenContent
     );
 
-    File::shouldReceive('size')->andReturn(200);
-
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', [
             'command' => 'php',
@@ -507,8 +515,6 @@ test('does not read a // inside a single-quoted string as a comment', function (
         capturedContent: $writtenContent
     );
 
-    File::shouldReceive('size')->andReturn(200);
-
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', [
             'command' => 'php',
@@ -540,8 +546,6 @@ test('updates JSON5 file with only single-quoted strings', function (): void {
         content: $singleQuotedJson5,
         capturedContent: $writtenContent
     );
-
-    File::shouldReceive('size')->andReturn(200);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', [
@@ -713,8 +717,6 @@ test('updated plain JSON file ends with a trailing newline', function (): void {
         capturedContent: $writtenContent
     );
 
-    File::shouldReceive('size')->andReturn(200);
-
     $result = (new FileWriter('/path/to/mcp.json'))
         ->addServerConfig('boost', ['command' => 'php'])
         ->save();
@@ -730,8 +732,6 @@ test('updated JSON5 file ends with a single trailing newline', function (): void
         content: fixtureContent('mcp.json5'),
         capturedContent: $writtenContent
     );
-
-    File::shouldReceive('size')->andReturn(1000);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers')
