@@ -64,7 +64,7 @@ class DatabaseQuery extends Tool
             $prefix = $connection->getTablePrefix();
 
             if ($prefix) {
-                $query = $this->addPrefixToQuery($query, $prefix);
+                $query = $this->addPrefixToQuery($query, $prefix, $this->usesBackslashEscapes($connection->getDriverName()));
             }
 
             return Response::json(
@@ -184,7 +184,7 @@ class DatabaseQuery extends Tool
      *
      * @return array{structure: string, hasVersionComment: bool, spans: list<array{int, int}>}
      */
-    protected function withoutLiteralsAndComments(string $query): array
+    protected function withoutLiteralsAndComments(string $query, bool $backslashEscapes = false): array
     {
         $structure = '';
         $state = 'none';
@@ -244,6 +244,12 @@ class DatabaseQuery extends Tool
                     default => '`',
                 };
 
+                if ($backslashEscapes && $char === '\\' && $state !== 'backtick') {
+                    $i++; // MySQL only: the escaped character cannot close the literal
+
+                    continue;
+                }
+
                 if ($char === $quote) {
                     if ($next === $quote) {
                         $i++; // doubled quote escapes itself; literal continues
@@ -262,7 +268,7 @@ class DatabaseQuery extends Tool
         return ['structure' => $structure, 'hasVersionComment' => $hasVersionComment, 'spans' => $spans];
     }
 
-    protected function addPrefixToQuery(string $query, string $prefix): string
+    protected function addPrefixToQuery(string $query, string $prefix, bool $backslashEscapes = false): string
     {
         // Anchored to the start so the `ORDER BY ... DESC` sort direction is never matched.
         $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
@@ -278,7 +284,7 @@ class DatabaseQuery extends Tool
             return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
 
-        ['structure' => $structure, 'spans' => $spans] = $this->withoutLiteralsAndComments($query);
+        ['structure' => $structure, 'spans' => $spans] = $this->withoutLiteralsAndComments($query, $backslashEscapes);
         $cteNames = $this->extractCteNames($structure);
 
         $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
@@ -308,6 +314,14 @@ class DatabaseQuery extends Tool
         }
 
         return $query;
+    }
+
+    /**
+     * MySQL and MariaDB treat "\" as an escape inside string literals; the other drivers do not.
+     */
+    protected function usesBackslashEscapes(string $driver): bool
+    {
+        return in_array($driver, ['mysql', 'mariadb'], true);
     }
 
     /**

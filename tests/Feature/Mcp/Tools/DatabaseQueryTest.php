@@ -229,7 +229,7 @@ it('adds table prefix to queries', function (): void {
         'SELECT * FROM users /* JOIN posts */' => 'SELECT * FROM wp_users /* JOIN posts */',
         "SELECT 'users AS (' AS label FROM users" => "SELECT 'users AS (' AS label FROM wp_users",
         "SELECT 'it''s FROM posts' AS label FROM users" => "SELECT 'it''s FROM posts' AS label FROM wp_users",
-        "SELECT 'a\\' AS x, 'b' AS y FROM users, 'c' AS z" => "SELECT 'a\\' AS x, 'b' AS y FROM wp_users, 'c' AS z",
+        "SELECT * FROM users WHERE a = 'don\\'t' AND b IN (SELECT id FROM posts)" => "SELECT * FROM wp_users WHERE a = 'don\\'t' AND b IN (SELECT id FROM wp_posts)",
         "SELECT * FROM users WHERE note = 'unterminated" => "SELECT * FROM wp_users WHERE note = 'unterminated",
         "SELECT * FROM users -- JOIN posts\nJOIN comments ON 1 = 1" => "SELECT * FROM wp_users -- JOIN posts\nJOIN wp_comments ON 1 = 1",
     ];
@@ -243,3 +243,22 @@ it('adds table prefix to queries', function (): void {
         expect($response)->isToolResult()->toolHasNoError();
     }
 });
+
+it('only treats backslashes as escapes on mysql', function (string $driver, string $expected): void {
+    DB::shouldReceive('connection')->andReturnSelf();
+    DB::shouldReceive('getTablePrefix')->andReturn('wp_');
+    DB::shouldReceive('getDriverName')->andReturn($driver);
+    DB::shouldReceive('beginTransaction');
+    DB::shouldReceive('statement')->andReturn(true);
+    DB::shouldReceive('rollBack');
+    DB::shouldReceive('select')->with($expected)->once()->andReturn([]);
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request(['query' => "SELECT 'a\\' AS x, 'b' AS y FROM users, 'c' AS z"]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+})->with([
+    // On MySQL the escaped quote keeps the literal open, so "FROM users" sits inside one.
+    ['mysql', "SELECT 'a\\' AS x, 'b' AS y FROM users, 'c' AS z"],
+    ['pgsql', "SELECT 'a\\' AS x, 'b' AS y FROM wp_users, 'c' AS z"],
+]);
