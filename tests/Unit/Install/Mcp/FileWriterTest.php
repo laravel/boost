@@ -554,6 +554,134 @@ test('updates JSON5 file with only single-quoted strings', function (): void {
     expect($writtenContent)->toContain('"boost"', "'existing'");
 });
 
+test('injects a server that is only present as a comment', function (): void {
+    $writtenContent = '';
+    $commentedOutJson5 = <<<'JSON5'
+    {
+        "mcpServers": {
+            // "boost": { "command": "php", "args": ["artisan", "boost:mcp"] }
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $commentedOutJson5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toBe(<<<'JSON5'
+    {
+        "mcpServers": {
+            "boost": {
+                "command": "php",
+                "args": [
+                    "artisan",
+                    "boost:mcp"
+                ]
+            }
+            // "boost": { "command": "php", "args": ["artisan", "boost:mcp"] }
+        }
+    }
+
+    JSON5);
+});
+
+test('injects a server that is only present as a block comment', function (): void {
+    $writtenContent = '';
+    $commentedOutJson5 = <<<'JSON5'
+    {
+        "mcpServers": {
+            /* "boost": { "command": "php" } */
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $commentedOutJson5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toBe(<<<'JSON5'
+    {
+        "mcpServers": {
+            "boost": {
+                "command": "php",
+                "args": [
+                    "artisan",
+                    "boost:mcp"
+                ]
+            }
+            /* "boost": { "command": "php" } */
+        }
+    }
+
+    JSON5);
+});
+
+test('injects into the real configKey when a commented-out copy of it comes first', function (): void {
+    $writtenContent = '';
+    $json5 = <<<'JSON5'
+    {
+        // "mcpServers": {
+        //     "boost": { "command": "php" }
+        // }
+        "mcpServers": {
+            "other": { "command": "x" } // has a } brace
+        }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $json5,
+        capturedContent: $writtenContent
+    );
+
+    File::shouldReceive('size')->andReturn(200);
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue();
+    expect($writtenContent)->toBe(<<<'JSON5'
+    {
+        // "mcpServers": {
+        //     "boost": { "command": "php" }
+        // }
+        "mcpServers": {
+            "other": { "command": "x" }, // has a } brace
+            "boost": {
+                "command": "php"
+            }
+        }
+    }
+
+    JSON5);
+});
+
 test('detectIndentation works correctly with various patterns', function (string $content, int $position, int $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
 
@@ -848,6 +976,12 @@ function indentationDetectionCases(): array
             0,
             8,
             'Should fallback to 8 spaces for empty content',
+        ],
+        'empty configKey object' => [
+            "{\n  \"mcpServers\": {\n  }\n}",
+            25,
+            4,
+            'Should indent one level deeper than the configKey line when it has no servers',
         ],
     ];
 }
