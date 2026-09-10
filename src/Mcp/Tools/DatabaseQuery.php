@@ -64,7 +64,7 @@ class DatabaseQuery extends Tool
             $prefix = $connection->getTablePrefix();
 
             if ($prefix) {
-                $query = $this->addPrefixToQuery($query, $prefix);
+                $query = $this->addPrefixToQuery($query, $prefix, $this->usesBackslashEscapes($connection->getDriverName()));
             }
 
             return Response::json(
@@ -177,13 +177,20 @@ class DatabaseQuery extends Tool
     }
 
     /**
-     * @return array{structure: string, hasVersionComment: bool}
+     * Locate the string literals and comments in a query.
+     *
+     * `structure` blanks them out for keyword scanning, while `spans` gives their byte
+     * ranges so callers rewriting the original query can skip over them.
+     *
+     * @return array{structure: string, hasVersionComment: bool, spans: list<array{int, int}>}
      */
-    protected function withoutLiteralsAndComments(string $query): array
+    protected function withoutLiteralsAndComments(string $query, bool $backslashEscapes = false): array
     {
         $structure = '';
         $state = 'none';
         $hasVersionComment = false;
+        $spans = [];
+        $spanStart = 0;
         $length = strlen($query);
 
         for ($i = 0; $i < $length; $i++) {
@@ -197,9 +204,11 @@ class DatabaseQuery extends Tool
                         '"' => 'double',
                         default => 'backtick',
                     };
+                    $spanStart = $i;
                     $structure .= ' ';
                 } elseif ($char === '-' && $next === '-') {
                     $state = 'line_comment';
+                    $spanStart = $i;
                     $structure .= ' ';
                     $i++;
                 } elseif ($char === '/' && $next === '*') {
@@ -209,6 +218,7 @@ class DatabaseQuery extends Tool
                         $structure .= $char;
                     } else {
                         $state = 'block_comment';
+                        $spanStart = $i;
                         $structure .= ' ';
                         $i++;
                     }
@@ -217,11 +227,13 @@ class DatabaseQuery extends Tool
                 }
             } elseif ($state === 'line_comment') {
                 if ($char === "\n") {
+                    $spans[] = [$spanStart, $i];
                     $state = 'none';
                     $structure .= $char;
                 }
             } elseif ($state === 'block_comment') {
                 if ($char === '*' && $next === '/') {
+                    $spans[] = [$spanStart, $i + 2];
                     $state = 'none';
                     $i++;
                 }
@@ -232,47 +244,100 @@ class DatabaseQuery extends Tool
                     default => '`',
                 };
 
+                if ($backslashEscapes && $char === '\\' && $state !== 'backtick') {
+                    $i++; // MySQL only: the escaped character cannot close the literal
+
+                    continue;
+                }
+
                 if ($char === $quote) {
                     if ($next === $quote) {
                         $i++; // doubled quote escapes itself; literal continues
                     } else {
+                        $spans[] = [$spanStart, $i + 1];
                         $state = 'none';
                     }
                 }
             }
         }
 
-        return ['structure' => $structure, 'hasVersionComment' => $hasVersionComment];
+        if ($state !== 'none') {
+            $spans[] = [$spanStart, $length];
+        }
+
+        return ['structure' => $structure, 'hasVersionComment' => $hasVersionComment, 'spans' => $spans];
     }
 
-    protected function addPrefixToQuery(string $query, string $prefix): string
+    protected function addPrefixToQuery(string $query, string $prefix, bool $backslashEscapes = false): string
     {
-        $cteNames = $this->extractCteNames($query);
-
         // Anchored to the start so the `ORDER BY ... DESC` sort direction is never matched.
         $describePattern = '/^(\s*)(DESCRIBE|DESC)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\4/i';
 
-        $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix, $cteNames): string {
+        // The anchor also means no CTE can precede the table name here.
+        $query = preg_replace_callback($describePattern, function (array $matches) use ($prefix): string {
             [$full, $leading, $keyword, $qualifier, $quote, $tableName] = $matches;
 
-            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+            if (str_starts_with($tableName, $prefix)) {
                 return $full;
             }
 
             return "{$leading}{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
         }, $query) ?? $query;
 
+        ['structure' => $structure, 'spans' => $spans] = $this->withoutLiteralsAndComments($query, $backslashEscapes);
+        $cteNames = $this->extractCteNames($structure);
+
         $pattern = '/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+((?:[`"]?\w+[`"]?\s*\.\s*)?)([`"\']?)(\w+)\3/i';
 
-        return preg_replace_callback($pattern, function (array $matches) use ($prefix, $cteNames): string {
-            [$full, $keyword, $qualifier, $quote, $tableName] = $matches;
+        if (! preg_match_all($pattern, $query, $allMatches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
+            return $query;
+        }
 
-            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
-                return $full;
+        // Rewriting right to left keeps the offsets of the matches still to come valid.
+        foreach (array_reverse($allMatches) as $matches) {
+            [$full, $offset] = $matches[0];
+
+            if ($this->offsetIsInsideLiteralOrComment($offset, $spans)) {
+                continue;
             }
 
-            return "{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}";
-        }, $query) ?? $query;
+            $keyword = $matches[1][0];
+            $qualifier = $matches[2][0];
+            $quote = $matches[3][0];
+            $tableName = $matches[4][0];
+
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
+                continue;
+            }
+
+            $query = substr_replace($query, "{$keyword} {$qualifier}{$quote}{$prefix}{$tableName}{$quote}", $offset, strlen($full));
+        }
+
+        return $query;
+    }
+
+    /**
+     * MySQL and MariaDB treat "\" as an escape inside string literals; the other drivers do not.
+     */
+    protected function usesBackslashEscapes(string $driver): bool
+    {
+        return in_array($driver, ['mysql', 'mariadb'], true);
+    }
+
+    /**
+     * A keyword starting inside a literal or comment is text, not a table reference.
+     *
+     * @param  list<array{int, int}>  $spans
+     */
+    protected function offsetIsInsideLiteralOrComment(int $offset, array $spans): bool
+    {
+        foreach ($spans as [$start, $end]) {
+            if ($offset >= $start && $offset < $end) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
