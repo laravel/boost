@@ -22,11 +22,11 @@ jobs:
           git clone --no-checkout --depth 1 --filter=blob:none \
             https://github.com/laravel/cloud-cli.git /tmp/cloud-cli
           cd /tmp/cloud-cli
-          git sparse-checkout set skills/deploying-laravel-cloud
+          git sparse-checkout set skills/deploying-to-cloud
           git checkout
           rm -rf $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud
           mkdir -p $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud
-          cp -r skills/deploying-laravel-cloud/. \
+          cp -r skills/deploying-to-cloud/. \
             $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud/
           sed -i 's/^name: .*/name: deploying-to-cloud/' \
             $GITHUB_WORKSPACE/.ai/deployments/skill/deploying-to-cloud/SKILL.md
