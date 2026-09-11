@@ -558,6 +558,37 @@ test('updates JSON5 file with only single-quoted strings', function (): void {
     expect($writtenContent)->toContain('"boost"', "'existing'");
 });
 
+test('injects into an unquoted JSON5 config key', function (): void {
+    $writtenContent = '';
+    $unquotedJson5 = <<<'JSON5'
+    {
+      mcpServers: {
+        existing: {
+          command: 'node'
+        }
+      }
+    }
+    JSON5;
+
+    mockFileOperations(
+        fileExists: true,
+        content: $unquotedJson5,
+        capturedContent: $writtenContent
+    );
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('boost', [
+            'command' => 'php',
+            'args' => ['artisan', 'boost:mcp'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($writtenContent)->toContain('"boost"', 'existing')
+        ->and($writtenContent)->toContain("\n    \"boost\"")
+        ->and(substr_count($writtenContent, 'mcpServers'))->toBe(1);
+});
+
 test('injects a server that is only present as a comment', function (): void {
     $writtenContent = '';
     $commentedOutJson5 = <<<'JSON5'
