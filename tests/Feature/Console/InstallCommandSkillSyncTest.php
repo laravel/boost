@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
@@ -28,14 +27,16 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    $files = new Filesystem;
+    foreach (['first-failed-skill', 'second-failed-skill'] as $name) {
+        $target = $this->tempBasePath.'/.claude/skills/'.$name;
 
-    foreach ($files->allDirectories($this->tempBasePath) as $directory) {
-        chmod($directory, 0755);
-    }
+        if (is_file($target.'/asset.txt')) {
+            chmod($target.'/asset.txt', 0644);
+        }
 
-    foreach ($files->allFiles($this->tempBasePath) as $file) {
-        chmod($file->getPathname(), 0644);
+        if (is_dir($target)) {
+            chmod($target, 0755);
+        }
     }
 
     (new Config)->flush();
