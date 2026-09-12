@@ -115,15 +115,7 @@ class Config
 
     public function isValid(): bool
     {
-        $path = base_path(self::FILE);
-
-        if (! file_exists($path)) {
-            return false;
-        }
-
-        json_decode(file_get_contents($path), true);
-
-        return json_last_error() === JSON_ERROR_NONE;
+        return $this->read() !== null;
     }
 
     public function flush(): void
@@ -157,18 +149,32 @@ class Config
 
     protected function all(): array
     {
+        return $this->read() ?? [];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function read(): ?array
+    {
         $path = base_path(self::FILE);
 
         if (! file_exists($path)) {
-            return [];
+            return null;
         }
 
-        $config = json_decode(file_get_contents($path), true);
+        $contents = file_get_contents($path);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return [];
+        if ($contents === false) {
+            return null;
         }
 
-        return $config ?? [];
+        $config = json_decode($contents);
+
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_object($config)) {
+            return null;
+        }
+
+        return (array) $config;
     }
 }
