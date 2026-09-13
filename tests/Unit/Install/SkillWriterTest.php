@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillWriter;
+use Symfony\Component\Process\Process;
 
 function cleanupSkillDirectory(string $path): void
 {
@@ -1150,3 +1151,47 @@ it('still syncs the valid skills when one skill name is invalid', function (): v
         cleanupSkillDirectory($absoluteTarget);
     }
 });
+
+it('preserves executable scripts without making other skill files executable', function (int $mask, int $scriptMode, int $dataMode): void {
+    if (PHP_OS_FAMILY === 'Windows') {
+        $this->markTestSkipped('POSIX executable permission bits are not available on Windows.');
+    }
+
+    $source = sys_get_temp_dir().'/boost-executable-skill-'.uniqid();
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $target = base_path($relativeTarget.'/executable-skill');
+    mkdir($source.'/scripts', 0755, true);
+    file_put_contents($source.'/SKILL.md', "---\nname: executable-skill\ndescription: Run a bundled script.\n---\n\nRun scripts/check.sh.\n");
+    file_put_contents($source.'/scripts/check.sh', "#!/bin/sh\nprintf 'skill-script-ok\\n'\n");
+    file_put_contents($source.'/scripts/data.json', '{}');
+    chmod($source.'/scripts/check.sh', 0755);
+    chmod($source.'/scripts/data.json', 0644);
+
+    $agent = Mockery::mock(SupportsSkills::class);
+    $agent->shouldReceive('skillsPath')->andReturn($relativeTarget);
+    $skill = new Skill(name: 'executable-skill', package: 'example/package', path: $source, description: 'Run a bundled script.');
+    $writer = new SkillWriter($agent);
+    $previousUmask = umask($mask);
+
+    try {
+        expect($writer->write($skill))->toBe(SkillWriter::SUCCESS)
+            ->and(is_executable($target.'/scripts/check.sh'))->toBeTrue()
+            ->and(is_executable($target.'/scripts/data.json'))->toBeFalse()
+            ->and(is_executable($target.'/SKILL.md'))->toBeFalse()
+            ->and(fileperms($target.'/scripts/check.sh') & 0777)->toBe($scriptMode)
+            ->and(fileperms($target.'/scripts/data.json') & 0777)->toBe($dataMode);
+
+        $process = new Process([$target.'/scripts/check.sh']);
+        $process->mustRun();
+        expect($process->getOutput())->toBe("skill-script-ok\n");
+
+        chmod($source.'/scripts/check.sh', 0644);
+        expect($writer->write($skill))->toBe(SkillWriter::UPDATED);
+        clearstatcache(true, $target.'/scripts/check.sh');
+        expect(is_executable($target.'/scripts/check.sh'))->toBeFalse();
+    } finally {
+        umask($previousUmask);
+        cleanupSkillDirectory($source);
+        cleanupSkillDirectory(base_path($relativeTarget));
+    }
+})->with([[0022, 0755, 0644], [0077, 0700, 0600]]);
