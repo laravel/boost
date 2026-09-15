@@ -76,6 +76,27 @@ test('save updates a plain JSON file that starts with a UTF-8 BOM', function ():
         ->and($writtenContent)->toContain('"laravel-boost"');
 });
 
+test('save rejects plain JSON files without an object root', function (string $content): void {
+    File::swap(Mockery::mock(Filesystem::class));
+
+    File::shouldReceive('ensureDirectoryExists')->once();
+    File::shouldReceive('exists')->once()->andReturn(true);
+    File::shouldReceive('get')->once()->andReturn($content);
+    File::shouldReceive('put')->never();
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('laravel-boost', ['command' => 'php artisan boost:mcp'])
+        ->save();
+
+    expect($result)->toBeFalse();
+})->with([
+    'null' => 'null',
+    'boolean' => 'true',
+    'number' => '1',
+    'string' => '"config"',
+    'array' => '[]',
+]);
+
 test('written data is correct for brand new file', function (string $configKey, array $servers, string $expectedJson): void {
     $writtenPath = '';
     $writtenContent = '';
