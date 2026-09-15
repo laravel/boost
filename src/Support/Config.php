@@ -175,6 +175,6 @@ class Config
             return null;
         }
 
-        return (array) $config;
+        return json_decode($contents, true);
     }
 }
