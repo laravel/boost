@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,12 @@ beforeEach(function (): void {
     }
 });
 
+afterEach(function (): void {
+    File::delete(File::glob(storage_path('logs'.DIRECTORY_SEPARATOR.'browser-*.log')) ?: []);
+    File::delete(storage_path('logs'.DIRECTORY_SEPARATOR.'frontend.log'));
+    File::delete(storage_path('logs'.DIRECTORY_SEPARATOR.'stacked-browser.log'));
+});
+
 test('it returns log entries when file exists', function (): void {
     createBrowserLogFile(<<<'LOG'
 [2024-01-15 10:00:00] browser.DEBUG: console log message {"url":"http://example.com","user_agent":"Mozilla/5.0","timestamp":"2024-01-15T10:00:00.000000Z"}
@@ -51,6 +58,75 @@ LOG);
         ->toolHasNoError()
         ->toolTextContains('browser.WARNING: Warning message', 'browser.ERROR: JavaScript error occurred')
         ->toolTextDoesNotContain('browser.DEBUG: console log message');
+});
+
+test('it reads from a user-defined browser channel path', function (): void {
+    $customLogFile = storage_path('logs'.DIRECTORY_SEPARATOR.'frontend.log');
+
+    Config::set('logging.channels.browser', [
+        'driver' => 'single',
+        'path' => $customLogFile,
+    ]);
+
+    File::put($customLogFile, '[2024-01-15 10:00:00] browser.ERROR: Custom channel error {"url":"http://example.com"}');
+
+    $tool = new BrowserLogs;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('browser.ERROR: Custom channel error');
+});
+
+test('it reads from a user-defined browser channel with a daily driver', function (): void {
+    $dailyLogFile = storage_path('logs'.DIRECTORY_SEPARATOR.'browser-'.date('Y-m-d').'.log');
+
+    Config::set('logging.channels.browser', [
+        'driver' => 'daily',
+        'path' => storage_path('logs'.DIRECTORY_SEPARATOR.'browser.log'),
+    ]);
+
+    File::put($dailyLogFile, '[2024-01-15 10:00:00] browser.WARNING: Daily channel warning {"url":"http://example.com"}');
+
+    $tool = new BrowserLogs;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('browser.WARNING: Daily channel warning');
+});
+
+test('it reads from a user-defined browser channel using a stack driver', function (): void {
+    $stackedLogFile = storage_path('logs'.DIRECTORY_SEPARATOR.'stacked-browser.log');
+
+    Config::set('logging.channels.browser', [
+        'driver' => 'stack',
+        'channels' => ['browser_file'],
+    ]);
+    Config::set('logging.channels.browser_file', [
+        'driver' => 'single',
+        'path' => $stackedLogFile,
+    ]);
+
+    File::put($stackedLogFile, '[2024-01-15 10:00:00] browser.ERROR: Stacked channel error {"url":"http://example.com"}');
+
+    $tool = new BrowserLogs;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('browser.ERROR: Stacked channel error');
+});
+
+test('it reports the resolved path when the browser channel does not write to a file', function (): void {
+    Config::set('logging.channels.browser', ['driver' => 'stderr']);
+
+    $tool = new BrowserLogs;
+    $response = $tool->handle(new Request(['entries' => 1]));
+
+    expect($response)->isToolResult()
+        ->toolHasError()
+        ->toolTextContains('does not write to a file');
 });
 
 test('it returns error when entries argument is invalid', function (): void {
@@ -73,7 +149,7 @@ test('it returns error when a log file does not exist', function (): void {
 
     expect($response)->isToolResult()
         ->toolHasError()
-        ->toolTextContains('No log file found, probably means no logs yet.');
+        ->toolTextContains('No log file found at');
 });
 
 test('it returns error when log file is empty', function (): void {

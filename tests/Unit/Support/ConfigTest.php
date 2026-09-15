@@ -101,3 +101,9 @@ it('may store and retrieve packages', function (): void {
 
     expect($config->getPackages())->toEqual($packages);
 });
+
+it('decodes nested objects as arrays', function (): void {
+    file_put_contents(base_path('boost.json'), '{"skills":{"a":"skill-one"}}');
+
+    expect((new Config)->getSkills())->toEqual(['a' => 'skill-one']);
+});

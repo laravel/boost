@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Mcp;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class TomlFileWriter
 {
@@ -40,11 +41,13 @@ class TomlFileWriter
     {
         File::ensureDirectoryExists(dirname($this->filePath));
 
-        if ($this->shouldWriteNew()) {
+        $content = File::exists($this->filePath) ? $this->normalizeContent(File::get($this->filePath)) : '';
+
+        if ($content === '') {
             return $this->createNewFile();
         }
 
-        return $this->updateExistingFile();
+        return $this->updateExistingFile($content);
     }
 
     protected function createNewFile(): bool
@@ -68,10 +71,8 @@ class TomlFileWriter
         return $this->writeFile(implode(PHP_EOL, $lines).PHP_EOL);
     }
 
-    protected function updateExistingFile(): bool
+    protected function updateExistingFile(string $content): bool
     {
-        $content = File::get($this->filePath);
-
         foreach ($this->serversToAdd as $key => $config) {
             if ($this->serverExists($content, $key)) {
                 $content = $this->removeExistingServer($content, $key);
@@ -161,13 +162,9 @@ class TomlFileWriter
         return preg_replace($mainPattern, '', $content) ?? $content;
     }
 
-    protected function shouldWriteNew(): bool
+    protected function normalizeContent(string $content): string
     {
-        if (! File::exists($this->filePath)) {
-            return true;
-        }
-
-        return File::size($this->filePath) < 3;
+        return trim(Str::chopStart($content, "\xEF\xBB\xBF"));
     }
 
     protected function writeFile(string $content): bool

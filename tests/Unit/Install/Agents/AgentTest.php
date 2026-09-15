@@ -296,8 +296,6 @@ test('installFileMcp updates existing config file', function (): void {
         ->once()
         ->with('.test');
 
-    File::shouldReceive('size')->once()->andReturn(10);
-
     File::shouldReceive('exists')
         ->once()
         ->with('.test/mcp.json')

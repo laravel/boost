@@ -22,7 +22,7 @@ class RecordRule extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Record a durable project rule so the next agent or teammate inherits it instead of working it out again. Use it for a settled decision (why the project does something a certain way), a non-obvious trap, or a standing constraint that must always be followed. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**) and Boost files it into a shared, committed markdown note grouped by area. Keep it to a few lines; only record what you would want to read in three months. Do not record secrets, transient state, or anything already obvious from the code.';
+    protected string $description = 'Record a durable project rule in the shared, committed markdown notes in .ai/rules, grouped by area. Only call this when the user explicitly asks for a rule to be recorded, remembered, or documented. Instructions for the work at hand are not rules, no matter how emphatic: "remove this typo", "use X here", and "don\'t do that again" are work to do, not rules to record. A rule constrains future work across many files; it never describes a single fix. Never call this on your own initiative, as a byproduct of a change, or to summarize what you just did. When in doubt, do not call it. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**). Keep the note to a few lines. Do not record secrets, transient state, or anything already obvious from the code.';
 
     /**
      * Determine whether the tool should be registered with the MCP server.
