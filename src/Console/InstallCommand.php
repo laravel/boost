@@ -493,8 +493,13 @@ class InstallCommand extends Command
             nameResolver: fn (SupportsSkills&Agent $agent): string => $agent->displayName(),
             processor: function (SupportsSkills&Agent $agent) use ($skills, $trackedSkillsToSync): array {
                 $results = (new SkillWriter($agent))->sync($skills, $trackedSkillsToSync);
+                $failedSkills = array_keys($results, SkillWriter::FAILED, true);
 
-                $this->ensureSkillSyncSucceeded($results);
+                $this->installedSkillNames = array_values(array_diff($this->installedSkillNames, $failedSkills));
+
+                if ($failedSkills !== []) {
+                    throw new RuntimeException('Failed to sync skills: '.implode(', ', $failedSkills));
+                }
 
                 return $results;
             },
@@ -503,23 +508,6 @@ class InstallCommand extends Command
                 ? fn () => grid($skills->map(fn (Skill $skill): string => $skill->displayName())->sort()->values()->toArray())
                 : null,
         );
-    }
-
-    /**
-     * @param  array<string, int>  $results
-     */
-    protected function ensureSkillSyncSucceeded(array $results): void
-    {
-        $failedSkills = collect($results)
-            ->filter(fn (int $result): bool => $result === SkillWriter::FAILED)
-            ->keys()
-            ->all();
-
-        if ($failedSkills !== []) {
-            throw new RuntimeException(
-                'Failed to sync skills: '.implode(', ', $failedSkills)
-            );
-        }
     }
 
     protected function buildGuidelineConfig(): GuidelineConfig
