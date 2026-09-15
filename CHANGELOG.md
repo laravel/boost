@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.8.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.9.0...main)
+
+## [v2.9.0](https://github.com/laravel/boost/compare/v2.8.1...v2.9.0) - 2026-09-14
+
+### What's Changed
+
+* Bump the github-actions group with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/1020
+* Point the skill sync workflow at the renamed deploying-to-cloud folder in cloud-cli by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1021
+* Support laravel/mcp 1.x by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1028
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.8.1...v2.9.0
 
 ## [v2.8.1](https://github.com/laravel/boost/compare/v2.8.0...v2.8.1) - 2026-09-10
 
@@ -619,11 +629,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -714,12 +726,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
