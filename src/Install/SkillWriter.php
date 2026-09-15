@@ -117,9 +117,10 @@ class SkillWriter
      */
     public function sync(Collection $skills, array $previouslyTrackedSkills = []): array
     {
-        $this->removeStale(array_values(array_diff($previouslyTrackedSkills, $skills->keys()->all())));
+        $removals = $this->removeStale(array_values(array_diff($previouslyTrackedSkills, $skills->keys()->all())));
+        $failedRemovals = array_fill_keys(array_keys($removals, false, true), self::FAILED);
 
-        return $this->writeAll($skills);
+        return [...$failedRemovals, ...$this->writeAll($skills)];
     }
 
     public function remove(string $skillName): bool
