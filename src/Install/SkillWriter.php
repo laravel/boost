@@ -257,11 +257,11 @@ class SkillWriter
             return false;
         }
 
-        if (PHP_OS_FAMILY === 'Windows') {
-            return true;
+        if (PHP_OS_FAMILY !== 'Windows') {
+            @chmod($targetFile, $file->getPerms() & 0777 & ~umask());
         }
 
-        return @chmod($targetFile, ($file->getPerms() & 0777) & ~umask());
+        return true;
     }
 
     protected function ensureDirectoryExists(string $path): bool

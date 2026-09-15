@@ -1194,4 +1194,7 @@ it('preserves executable scripts without making other skill files executable', f
         cleanupSkillDirectory($source);
         cleanupSkillDirectory(base_path($relativeTarget));
     }
-})->with([[0022, 0755, 0644], [0077, 0700, 0600]]);
+})->with([
+    '0022 umask' => [0022, 0755, 0644],
+    '0077 umask' => [0077, 0700, 0600],
+]);
