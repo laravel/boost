@@ -43,13 +43,17 @@ it('it shows an error when boost.json does not exist', function (): void {
         ->assertFailed();
 });
 
-it('it shows an error when boost.json contains invalid json', function (): void {
-    file_put_contents(base_path('boost.json'), 'invalid json {{{');
+it('shows an error when boost.json does not contain a JSON object', function (string $contents): void {
+    file_put_contents(base_path('boost.json'), $contents);
 
     $this->artisan('boost:update')
         ->expectsOutputToContain('Please set up Boost with [php artisan boost:install] first.')
         ->assertFailed();
-});
+})->with([
+    'invalid JSON' => 'invalid json {{{',
+    'JSON string' => '"invalid config"',
+    'JSON list' => '[]',
+]);
 
 it('it shows an error when agents are empty', function (): void {
     $config = new Config;
