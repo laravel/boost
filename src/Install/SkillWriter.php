@@ -253,7 +253,15 @@ class SkillWriter
             return file_put_contents($targetFile, Str::finish($content, "\n")) !== false;
         }
 
-        return @copy($file->getRealPath(), $targetFile);
+        if (! @copy($file->getRealPath(), $targetFile)) {
+            return false;
+        }
+
+        if (PHP_OS_FAMILY !== 'Windows') {
+            @chmod($targetFile, $file->getPerms() & 0777 & ~umask());
+        }
+
+        return true;
     }
 
     protected function ensureDirectoryExists(string $path): bool
