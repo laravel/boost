@@ -80,8 +80,6 @@ it('appends to an existing TOML file preserving other servers', function (): voi
         capturedContent: $capturedContent
     );
 
-    File::shouldReceive('size')->andReturn(100);
-
     $result = (new TomlFileWriter('/path/to/config.toml'))
         ->configKey('mcp_servers')
         ->addServerConfig('laravel_boost', [
@@ -119,8 +117,6 @@ TOML;
         content: $existingContent,
         capturedContent: $capturedContent
     );
-
-    File::shouldReceive('size')->andReturn(strlen($existingContent));
 
     $result = (new TomlFileWriter('/path/to/config.toml'))
         ->configKey('mcp_servers')
@@ -207,8 +203,6 @@ TOML;
         capturedContent: $capturedContent
     );
 
-    File::shouldReceive('size')->andReturn(strlen($existingContent));
-
     $result = (new TomlFileWriter('/path/to/config.toml'))
         ->configKey('mcp_servers')
         ->addServerConfig('laravel_boost', [
@@ -243,8 +237,6 @@ TOML;
         content: $existingContent,
         capturedContent: $capturedContent
     );
-
-    File::shouldReceive('size')->andReturn(strlen($existingContent));
 
     $result = (new TomlFileWriter('/project/.codex/config.toml'))
         ->configKey('mcp_servers')
@@ -348,8 +340,6 @@ TOML;
         capturedContent: $capturedContent
     );
 
-    File::shouldReceive('size')->andReturn(strlen($existingContent));
-
     $result = (new TomlFileWriter('/path/to/config.toml'))
         ->configKey('mcp_servers')
         ->addServerConfig('laravel_boost', [
@@ -418,8 +408,6 @@ TOML;
         capturedContent: $capturedContent
     );
 
-    File::shouldReceive('size')->andReturn(strlen($existingContent));
-
     $result = (new TomlFileWriter('/path/to/config.toml'))
         ->configKey('mcp_servers')
         ->addServerConfig('my-server.v2', [
@@ -442,8 +430,6 @@ it('treats an empty file as a new file', function (): void {
         capturedContent: $capturedContent
     );
 
-    File::shouldReceive('size')->andReturn(0);
-
     $result = (new TomlFileWriter('/path/to/config.toml'))
         ->configKey('mcp_servers')
         ->addServerConfig('it', ['command' => 'php'])
@@ -463,8 +449,6 @@ it('treats a file with only whitespace as a new file', function (): void {
         capturedContent: $capturedContent
     );
 
-    File::shouldReceive('size')->andReturn(2);
-
     $result = (new TomlFileWriter('/path/to/config.toml'))
         ->configKey('mcp_servers')
         ->addServerConfig('it', ['command' => 'php'])
@@ -473,6 +457,26 @@ it('treats a file with only whitespace as a new file', function (): void {
     expect($result)->toBeTrue()
         ->and($capturedContent)->toContain('[mcp_servers.it]')
         ->and($capturedContent)->toContain('command = "php"');
+});
+
+it('updates a file that starts with a UTF-8 BOM without duplicating the server table', function (): void {
+    $capturedContent = '';
+
+    mockTomlFileOperations(
+        fileExists: true,
+        content: "\xEF\xBB\xBF[mcp_servers.laravel-boost]\ncommand = \"php\"\n",
+        capturedContent: $capturedContent
+    );
+
+    $result = (new TomlFileWriter('/path/to/config.toml'))
+        ->configKey('mcp_servers')
+        ->addServerConfig('laravel-boost', ['command' => 'php', 'args' => ['artisan', 'boost:mcp']])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($capturedContent)->not->toStartWith("\xEF\xBB\xBF")
+        ->and(substr_count($capturedContent, '[mcp_servers.laravel-boost]'))->toBe(1)
+        ->and($capturedContent)->toContain('args = ["artisan", "boost:mcp"]');
 });
 
 function mockTomlFileOperations(
