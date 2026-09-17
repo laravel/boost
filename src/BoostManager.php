@@ -16,6 +16,7 @@ use Laravel\Boost\Install\Agents\Factory;
 use Laravel\Boost\Install\Agents\GrokBuild;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
+use Laravel\Boost\Install\Agents\Omp;
 use Laravel\Boost\Install\Agents\OpenCode;
 use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Agents\Zed;
@@ -34,6 +35,7 @@ class BoostManager
         'grok_build' => GrokBuild::class,
         'junie' => Junie::class,
         'kiro' => Kiro::class,
+        'omp' => Omp::class,
         'opencode' => OpenCode::class,
         'pi' => Pi::class,
         'zed' => Zed::class,

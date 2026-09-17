@@ -13,6 +13,7 @@ use Laravel\Boost\Install\Agents\Factory;
 use Laravel\Boost\Install\Agents\GrokBuild;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Kiro;
+use Laravel\Boost\Install\Agents\Omp;
 use Laravel\Boost\Install\Agents\OpenCode;
 use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Agents\Zed;
@@ -32,9 +33,10 @@ it('returns default agents', function (): void {
         'factory' => Factory::class,
         'kiro' => Kiro::class,
         'opencode' => OpenCode::class,
+        'pi' => Pi::class,
+        'omp' => Omp::class,
         'antigravity' => Antigravity::class,
         'zed' => Zed::class,
-        'pi' => Pi::class,
         'grok_build' => GrokBuild::class,
     ]);
 });
@@ -44,7 +46,7 @@ it('returns agents sorted alphabetically by key', function (): void {
     $manager->registerAgent('boostbot', ExampleAgent::class);
 
     expect(array_keys($manager->getAgents()))->toBe([
-        'amp', 'antigravity', 'boostbot', 'claude_code', 'codex', 'copilot', 'cursor', 'factory', 'grok_build', 'junie', 'kiro', 'opencode', 'pi', 'zed',
+        'amp', 'antigravity', 'boostbot', 'claude_code', 'codex', 'copilot', 'cursor', 'factory', 'grok_build', 'junie', 'kiro', 'omp', 'opencode', 'pi', 'zed',
     ]);
 });
 

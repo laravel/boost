@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Junie;
+use Laravel\Boost\Install\Agents\Omp;
 use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 
@@ -121,4 +122,14 @@ test('Pi uses AGENTS.md and .pi/skills defaults', function (): void {
         ->and($pi->getArtisanPath())->toBe('artisan')
         ->and($pi->guidelinesPath())->toBe('AGENTS.md')
         ->and($pi->skillsPath())->toBe('.pi/skills');
+});
+test('Omp uses AGENTS.md and .omp/skills defaults', function (): void {
+    config(['boost.executable_paths.php' => null]);
+    $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $omp = new Omp($strategyFactory);
+
+    expect($omp->getPhpPath())->toBe('php')
+        ->and($omp->getArtisanPath())->toBe('artisan')
+        ->and($omp->guidelinesPath())->toBe('AGENTS.md')
+        ->and($omp->skillsPath())->toBe('.omp/skills');
 });
