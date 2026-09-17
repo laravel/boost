@@ -1,6 +1,24 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.9.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.9.1...main)
+
+## [v2.9.1](https://github.com/laravel/boost/compare/v2.9.0...v2.9.1) - 2026-09-17
+
+### What's Changed
+
+* Use scanner-safe placeholders in config skill example by [@reedmackayfr](https://github.com/reedmackayfr) in https://github.com/laravel/boost/pull/1027
+* Reject non-object Boost configuration by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1025
+* Handle unquoted JSON5 MCP config keys by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1023
+* Strip a leading BOM from TOML MCP config files so the existing server table is found instead of duplicated by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1022
+* Preserve executable permissions on bundled skill scripts by [@cyppe](https://github.com/cyppe) in https://github.com/laravel/boost/pull/1026
+* Report failed skill syncs during installation by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1016
+* Reject non-object MCP configuration roots by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1029
+
+### New Contributors
+
+* [@reedmackayfr](https://github.com/reedmackayfr) made their first contribution in https://github.com/laravel/boost/pull/1027
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.9.0...v2.9.1
 
 ## [v2.9.0](https://github.com/laravel/boost/compare/v2.8.1...v2.9.0) - 2026-09-14
 
@@ -630,11 +648,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -727,12 +747,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
