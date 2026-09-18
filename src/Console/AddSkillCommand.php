@@ -291,19 +291,30 @@ class AddSkillCommand extends Command
 
         foreach ($skills as $skill) {
             $targetPath = $this->skillTargetPath($skill);
-
-            if ($this->skillExists($skill)) {
-                File::deleteDirectory($targetPath);
-            }
+            $temporaryPath = dirname($targetPath).DIRECTORY_SEPARATOR.'.'.$skill->name.'-'.Str::random(8);
 
             try {
-                if ($this->fetcher->downloadSkill($skill, $targetPath)) {
-                    $results['installedNames'][] = $skill->name;
-                } else {
+                if (! $this->fetcher->downloadSkill($skill, $temporaryPath)) {
                     $results['failedDetails'][$skill->name] = 'Download failed';
+
+                    continue;
                 }
+
+                if ($this->skillExists($skill)) {
+                    File::deleteDirectory($targetPath);
+                }
+
+                if (! File::moveDirectory($temporaryPath, $targetPath)) {
+                    $results['failedDetails'][$skill->name] = 'Install failed';
+
+                    continue;
+                }
+
+                $results['installedNames'][] = $skill->name;
             } catch (RuntimeException $e) {
                 $results['failedDetails'][$skill->name] = $e->getMessage();
+            } finally {
+                File::deleteDirectory($temporaryPath);
             }
         }
 
