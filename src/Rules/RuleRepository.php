@@ -256,11 +256,23 @@ class RuleRepository
      */
     protected function meaningfulSegments(string $glob): array
     {
-        return Str::of($glob)
+        $segments = Str::of($glob)
             ->explode('/')
-            ->filter(static fn (string $segment): bool => filled($segment) && ! Str::contains($segment, ['*', '.']))
-            ->values()
-            ->all();
+            ->filter(static fn (string $segment): bool => filled($segment))
+            ->values();
+
+        $directories = $segments
+            ->filter(static fn (string $segment): bool => ! Str::contains($segment, ['*', '.']))
+            ->values();
+
+        if ($directories->isNotEmpty()) {
+            return $directories->all();
+        }
+
+        // Every segment looked like a filename or wildcard (e.g. "composer.json", ".env*", "**"),
+        // so there is no directory to group by. Fall back to the glob's own segments rather than
+        // an empty area key, otherwise every such glob reduces to the same key and collides.
+        return $segments->all();
     }
 
     /**
