@@ -306,7 +306,7 @@ class DatabaseQuery extends Tool
             $quote = $matches[3][0];
             $tableName = $matches[4][0];
 
-            if ($this->tableIsPrefixedOrCte($tableName, $quote, $prefix, $cteNames)) {
+            if ($this->tableIsPrefixedOrCte($tableName, $prefix, $cteNames)) {
                 continue;
             }
 
@@ -343,11 +343,9 @@ class DatabaseQuery extends Tool
     /**
      * @param  array<int, string>  $cteNames
      */
-    protected function tableIsPrefixedOrCte(string $tableName, string $quote, string $prefix, array $cteNames): bool
+    protected function tableIsPrefixedOrCte(string $tableName, string $prefix, array $cteNames): bool
     {
-        $comparableTableName = $quote === '' ? strtolower($tableName) : $tableName;
-
-        return str_starts_with($tableName, $prefix) || in_array($comparableTableName, $cteNames, true);
+        return str_starts_with($tableName, $prefix) || in_array(strtolower($tableName), $cteNames, true);
     }
 
     /**
