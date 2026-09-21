@@ -189,7 +189,10 @@ class AddSkillCommand extends Command
         if ($results['failedDetails'] !== []) {
             $this->error('Some skills failed to install:');
 
-            grid(array_keys($results['failedDetails']));
+            table(['Skill', 'Reason'], collect($results['failedDetails'])
+                ->map(fn (string $reason, string $name): array => [$name, $reason])
+                ->values()
+                ->all());
         }
 
         return self::SUCCESS;
@@ -296,16 +299,13 @@ class AddSkillCommand extends Command
             try {
                 if (! $this->fetcher->downloadSkill($skill, $temporaryPath)) {
                     $results['failedDetails'][$skill->name] = 'Download failed';
+                    File::deleteDirectory($temporaryPath);
 
                     continue;
                 }
 
-                if ($this->skillExists($skill)) {
-                    File::deleteDirectory($targetPath);
-                }
-
-                if (! File::moveDirectory($temporaryPath, $targetPath)) {
-                    $results['failedDetails'][$skill->name] = 'Install failed';
+                if (! File::moveDirectory($temporaryPath, $targetPath, overwrite: true)) {
+                    $results['failedDetails'][$skill->name] = "Install failed, download kept at {$temporaryPath}";
 
                     continue;
                 }
@@ -313,7 +313,6 @@ class AddSkillCommand extends Command
                 $results['installedNames'][] = $skill->name;
             } catch (RuntimeException $e) {
                 $results['failedDetails'][$skill->name] = $e->getMessage();
-            } finally {
                 File::deleteDirectory($temporaryPath);
             }
         }
