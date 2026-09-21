@@ -9,6 +9,8 @@ use Laravel\Roster\Package;
 
 class PackageRegistry
 {
+    public const AI = 'laravel/ai';
+
     public const BOOST = 'laravel/boost';
 
     public const FLUXUI_FREE = 'livewire/flux';
