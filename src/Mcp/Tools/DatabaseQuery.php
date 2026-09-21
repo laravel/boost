@@ -345,7 +345,7 @@ class DatabaseQuery extends Tool
      */
     protected function tableIsPrefixedOrCte(string $tableName, string $prefix, array $cteNames): bool
     {
-        return str_starts_with($tableName, $prefix) || in_array($tableName, $cteNames, true);
+        return str_starts_with($tableName, $prefix) || in_array(strtolower($tableName), $cteNames, true);
     }
 
     /**
@@ -356,7 +356,7 @@ class DatabaseQuery extends Tool
     protected function extractCteNames(string $query): array
     {
         if (preg_match_all('/\b(\w+)\s*(?:\([^)]*\))?\s*AS\s*\(/i', $query, $matches)) {
-            return $matches[1];
+            return array_map(strtolower(...), $matches[1]);
         }
 
         return [];
