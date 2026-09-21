@@ -261,18 +261,9 @@ class RuleRepository
             ->filter(static fn (string $segment): bool => filled($segment))
             ->values();
 
-        $directories = $segments
-            ->filter(static fn (string $segment): bool => ! Str::contains($segment, ['*', '.']))
-            ->values();
+        $directories = $segments->reject(static fn (string $segment): bool => Str::contains($segment, ['*', '.']))->values();
 
-        if ($directories->isNotEmpty()) {
-            return $directories->all();
-        }
-
-        // Every segment looked like a filename or wildcard (e.g. "composer.json", ".env*", "**"),
-        // so there is no directory to group by. Fall back to the glob's own segments rather than
-        // an empty area key, otherwise every such glob reduces to the same key and collides.
-        return $segments->all();
+        return ($directories->isNotEmpty() ? $directories : $segments)->all();
     }
 
     /**
@@ -280,7 +271,12 @@ class RuleRepository
      */
     protected function slugForSegments(array $segments): string
     {
-        return Str::slug(Str::snake(implode(' ', $segments)));
+        $words = array_map(
+            static fn (string $segment): string => Str::contains($segment, ['*', '.']) ? Str::lower(str_replace('.', ' ', $segment)) : Str::snake($segment),
+            $segments,
+        );
+
+        return Str::slug(implode(' ', $words));
     }
 
     /**

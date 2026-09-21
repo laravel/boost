@@ -123,12 +123,9 @@ it('keeps distinct single-segment filename globs in separate files', function ()
     $tool->handle(new Request(['glob' => '.env*', 'title' => 'Env rule', 'note' => 'Env only.']));
     $tool->handle(new Request(['glob' => '**', 'title' => 'Global rule', 'note' => 'Global only.']));
 
-    // Each glob has no directory segment to group by ("composer.json", ".env*", "**" all
-    // contain "." or "*"), so before the fix they all reduced to the same empty area key
-    // and were filed into whichever of these three files happened to be created first.
     expect(ruleFiles($this->rulesDir))->toHaveCount(3);
 
-    expect(File::get($this->rulesDir.'/composerjson.md'))
+    expect(File::get($this->rulesDir.'/composer-json.md'))
         ->toContain('composer.json')
         ->toContain('## Composer rule')
         ->not->toContain('.env*')
