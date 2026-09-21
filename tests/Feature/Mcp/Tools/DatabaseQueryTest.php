@@ -201,6 +201,8 @@ it('adds table prefix to queries', function (): void {
         'SELECT * FROM users JOIN posts ON users.id = posts.user_id JOIN comments ON posts.id = comments.post_id' => 'SELECT * FROM wp_users JOIN wp_posts ON users.id = posts.user_id JOIN wp_comments ON posts.id = comments.post_id',
         'SELECT * FROM "users"' => 'SELECT * FROM "wp_users"',
         'WITH cte AS (SELECT * FROM users) SELECT * FROM cte' => 'WITH cte AS (SELECT * FROM wp_users) SELECT * FROM cte',
+        'WITH RecentUsers AS (SELECT * FROM users) SELECT * FROM recentusers' => 'WITH RecentUsers AS (SELECT * FROM wp_users) SELECT * FROM recentusers',
+        'WITH RecentUsers AS (SELECT * FROM users) SELECT * FROM "RecentUsers"' => 'WITH RecentUsers AS (SELECT * FROM wp_users) SELECT * FROM "RecentUsers"',
         'WITH cte1 AS (SELECT * FROM users), cte2 AS (SELECT * FROM posts) SELECT * FROM cte1 JOIN cte2' => 'WITH cte1 AS (SELECT * FROM wp_users), cte2 AS (SELECT * FROM wp_posts) SELECT * FROM cte1 JOIN cte2',
         'WITH RECURSIVE cte AS (SELECT * FROM users) SELECT * FROM cte' => 'WITH RECURSIVE cte AS (SELECT * FROM wp_users) SELECT * FROM cte',
         'WITH cte (id, name) AS (SELECT id, name FROM users) SELECT * FROM cte' => 'WITH cte (id, name) AS (SELECT id, name FROM wp_users) SELECT * FROM cte',
