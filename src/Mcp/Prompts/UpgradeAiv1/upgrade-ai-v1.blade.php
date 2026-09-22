@@ -38,6 +38,7 @@ Search the codebase for patterns affected by 1.0 changes:
 
 **High Priority Searches:**
 - `tool_calls` or `tool_results` - Columns replaced by a single `steps` column
+- `approval_state` or `approvalState` - Column and property replaced by a `status` enum
 - `->toolCalls` or `->toolResults` on `StoredMessage` - Now methods, not properties
 - `promptTokens` or `completionTokens` - Renamed to `inputTokens` and `outputTokens`
 - `AgentPrompt $prompt` inside middleware `handle()` - Middleware now receives a `PendingStep`
@@ -50,6 +51,7 @@ Search the codebase for patterns affected by 1.0 changes:
 - `usingVercelDataProtocol(true` - The boolean first argument was removed
 - `toVercelProtocolArray(` or `CanStreamUsingVercelProtocol` - Removed
 - `instanceof ToolResult` in stream consumers - Sub-agent runs now emit preliminary results
+- Transcript rendering or message counting - Resumed turns fold into one message, and failed turns are now stored
 - `TextStart` / `TextEnd` handling - Now one pair per step instead of per content block
 
 **Low Priority Searches:**
@@ -114,7 +116,13 @@ The `tool_calls` and `tool_results` columns on the `agent_conversation_messages`
 
 The `participant_index` on the same table now also includes the `agent` column.
 
-The package's existing migration will not run again during an upgrade. If you have already migrated the conversation tables, create a new migration containing the code below, then run `{{ $assist->artisanCommand('migrate') }}` before deploying the new version of your application. The migration adds the `steps` column, rewrites every existing row, and drops the old columns.
+The `approval_state` column has been replaced by a `status` column holding a `Laravel\Ai\Enums\MessageStatus` value: `completed`, `paused`, or `failed`. The reason a call is waiting on a decision is now stored on the call itself as `approval_reason`, so a stored call carrying that key without a `result` is one still pending:
+
+@boostsnippet('Pending Tool Call Shape', 'json')
+{"id": "call_1", "name": "delete_file", "arguments": {"path": "a"}, "approval_reason": "Destructive."}
+@endboostsnippet
+
+The package's existing migration will not run again during an upgrade. If you have already migrated the conversation tables, create a new migration containing the code below, then run `{{ $assist->artisanCommand('migrate') }}` before deploying the new version of your application. The migration adds the `steps` and `status` columns, rewrites every existing row, and drops the old columns.
 
 @boostsnippet('Backfill Migration', 'php')
 use Illuminate\Database\Query\Builder;
@@ -122,6 +130,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Ai\Enums\MessageStatus;
 use Laravel\Ai\Migrations\AiMigration;
 
 return new class extends AiMigration
@@ -132,6 +141,7 @@ return new class extends AiMigration
 
         Schema::connection($this->getConnection())->table($table, function (Blueprint $blueprint) {
             $blueprint->longText('steps')->nullable();
+            $blueprint->string('status', 25)->default(MessageStatus::Completed->value);
         });
 
         $this->query($table)->where('role', 'user')->update(['steps' => '[]']);
@@ -148,7 +158,7 @@ return new class extends AiMigration
 
         Schema::connection($this->getConnection())->table($table, function (Blueprint $blueprint) {
             $blueprint->longText('steps')->nullable(false)->change();
-            $blueprint->dropColumn(['tool_calls', 'tool_results']);
+            $blueprint->dropColumn(['tool_calls', 'tool_results', 'approval_state']);
             $blueprint->dropIndex('participant_index');
             $blueprint->index(['participant_type', 'participant_id', 'agent'], 'participant_index');
         });
@@ -173,7 +183,7 @@ return new class extends AiMigration
                 }
             }
 
-            $pending = [...$pending, ...array_keys($this->decoded($row->approval_state)['pending'] ?? [])];
+            $pending = [...$pending, ...$this->decoded($row->approval_state)['pending'] ?? []];
         }
 
         foreach ($rows as $row) {
@@ -185,14 +195,19 @@ return new class extends AiMigration
                 foreach ($step['tool_calls'] as $toolCall) {
                     $result = $results[$toolCall['id'] ?? ''] ?? null;
 
-                    if ($result === null && ! in_array($toolCall['id'] ?? null, $pending, true)) {
+                    $awaiting = array_key_exists($toolCall['id'] ?? '', $pending);
+
+                    if ($result === null && ! $awaiting) {
                         continue;
                     }
 
-                    $toolCalls[] = $result === null ? $toolCall : [
+                    $toolCalls[] = [
                         ...$toolCall,
-                        'result' => $result['result'] ?? null,
-                        ...array_filter(['denied' => $result['denied'] ?? false, 'failed' => $result['failed'] ?? false]),
+                        ...$awaiting ? ['approval_reason' => $pending[$toolCall['id']]] : [],
+                        ...$result === null ? [] : [
+                            'result' => $result['result'] ?? null,
+                            ...array_filter(['denied' => $result['denied'] ?? false, 'failed' => $result['failed'] ?? false]),
+                        ],
                     ];
                 }
 
@@ -204,6 +219,7 @@ return new class extends AiMigration
             $this->query($table)->where('id', $row->id)->update([
                 'steps' => json_encode($steps),
                 'meta' => json_encode($meta),
+                'status' => blank($this->decoded($row->approval_state)['pending'] ?? []) ? MessageStatus::Completed : MessageStatus::Paused,
             ]);
         }
     }
@@ -282,7 +298,7 @@ If you read a message's reasoning or replay state from the `meta` column, update
 - `meta.reasoning` is now `steps[].reasoning`
 - `meta.provider_steps` and `meta.provider_content_blocks` are now `steps[].replay_blocks`
 
-Replay blocks are only retained while a turn is paused for tool approval and are cleared when the turn completes. Each stored tool call contains only the `id`, `name`, `arguments`, `result`, `result_id`, `denied`, and `failed` keys, plus `thought_signature` when Gemini provides one. Provider-specific reasoning keys such as `reasoning_id` and `reasoning_encrypted_content` are no longer stored.
+Replay blocks are only retained while a turn is paused for tool approval and are cleared when the turn completes. Each stored tool call contains only the `id`, `name`, `arguments`, `result`, `result_id`, `denied`, and `failed` keys, plus `approval_reason` when the call was gated behind an approval and `thought_signature` when Gemini provides one. Provider-specific reasoning keys such as `reasoning_id` and `reasoning_encrypted_content` are no longer stored.
 
 If you use the `Laravel\Ai\Storage\StoredMessage` class, replace the removed `$toolCalls` and `$toolResults` properties with the new methods:
 
@@ -296,6 +312,18 @@ $message->toolCalls();
 $message->toolResults();
 $message->providerToolCalls();
 @endboostsnippet
+
+Its `$approvalState` array has also been replaced by a `$status` enum, and `toArray()` emits a `status` key in place of `approval_state`. Read the pending calls from the steps instead:
+
+@boostsnippet('Reading Pending Approvals', 'php')
+// Before...
+$message->approvalState['pending'];
+
+// After...
+array_filter($message->toolCalls(), fn (array $call) => PendingApproval::isPending($call));
+@endboostsnippet
+
+The `approval_state` cast on the `Laravel\Ai\Models\ConversationMessage` model has been replaced by a `status` cast to the same enum.
 
 The `StoredMessage` constructor now accepts a `steps` argument in place of `toolCalls` and `toolResults`, and `toArray()` emits a `steps` key in their place. Update any code that constructs a `StoredMessage` manually.
 
@@ -397,6 +425,26 @@ Reported values have also changed in three places:
 - Cohere embeddings on Bedrock report the input token count returned by the API rather than always reporting `0`
 
 ## Medium-impact changes
+
+### Resumed turns fold into the message they paused on
+
+Resuming a paused turn now appends the steps the resumed run made to the assistant message the turn paused on, rather than storing a second assistant message. The turn's usage is summed and its citations are merged, and `storeAssistantMessage()` returns the ID of the message it folded into.
+
+A conversation that paused for an approval therefore holds one assistant message per turn instead of one per request. If you render a transcript or count messages, expect the resumed half of a turn to appear on the message that requested the approval.
+
+### Failed turns are recorded
+
+A remembered run that throws now stores the steps it completed before it died, as an assistant message with a `failed` status carrying the error message in `meta.error`. Previously the turn was lost and the conversation kept only the user message.
+
+The turn is recorded once the run is out of providers to fail over to, so a run that fails over and then succeeds stores only the successful turn. A run that died before its first step stores nothing, unless it was resuming a paused turn, which is failed in place.
+
+If you render a transcript or count messages, expect an assistant message where a failed run previously left none. Filter them out by status:
+
+@boostsnippet('Filtering Failed Turns', 'php')
+$conversation->messages()->where('status', MessageStatus::Completed);
+@endboostsnippet
+
+Streamed runs report their failure through a new `catch()` callback on `StreamableAgentResponse`, which receives the exception before it is rethrown.
 
 ### Text responses report a `TextUsage` object
 
@@ -541,7 +589,7 @@ Several protected methods used by custom providers and gateways have changed:
 
 ### The `ConversationStore` contract
 
-No changes are needed if you use the included database store. If you bind a custom `ConversationStore`, update four method signatures. `storeAssistantMessage()` is unchanged.
+No changes are needed if you use the included database store. If you bind a custom `ConversationStore`, update five method signatures.
 
 @boostsnippet('ConversationStore Signatures', 'php')
 // Receives the agent class name, so scope the lookup to the given agent...
@@ -578,6 +626,19 @@ public function storeApprovalResults(
 @endboostsnippet
 
 Because a turn paused for one participant may now be resolved by another, authorize the resuming participant in your application before passing decisions back to the agent.
+
+`storeAssistantMessage()` accepts the error a run died with as a trailing argument, so a turn that failed can be stored alongside the steps it completed. Store the turn with a `failed` status and record the message when one is passed:
+
+@boostsnippet('storeAssistantMessage Signature', 'php')
+public function storeAssistantMessage(
+    string $conversationId,
+    ?string $participantType,
+    string|int|null $participantId,
+    AgentPrompt $prompt,
+    AgentResponse $response,
+    ?Throwable $exception = null,
+): ?string;
+@endboostsnippet
 
 ### The `RemembersConversations` contract adds `continueOrStart()`
 

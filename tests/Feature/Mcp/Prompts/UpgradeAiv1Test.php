@@ -40,7 +40,10 @@ test('it contains core upgrade content', function (): void {
         ->toolTextContains('Token usage is reported inclusively')
         ->toolTextContains('The AWS SDK is no longer installed by default')
         ->toolTextContains('Backfill Migration')
-        ->toolTextContains('usingVercelDataProtocol');
+        ->toolTextContains('usingVercelDataProtocol')
+        ->toolTextContains('Resumed turns fold into the message they paused on')
+        ->toolTextContains('Failed turns are recorded')
+        ->toolTextContains('MessageStatus');
 });
 
 test('it properly compiles blade assist helpers', function (): void {
