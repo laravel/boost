@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Mcp;
 
-use JMac\Testing\Double;
 use Illuminate\Support\Facades\File;
+use JMac\Testing\Double;
 use Laravel\Boost\Install\Mcp\TomlFileWriter;
 use League\Flysystem\Filesystem;
 use Mockery;

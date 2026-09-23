@@ -8,7 +8,6 @@ use JMac\Testing\Double;
 use Laravel\Boost\Install\Agents\Antigravity;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
-use Mockery;
 
 beforeEach(function (): void {
     $this->strategyFactory = Double::for(DetectionStrategyFactory::class);

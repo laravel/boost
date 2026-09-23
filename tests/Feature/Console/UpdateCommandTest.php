@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
+use JMac\Testing\Double;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
 use Laravel\Boost\Install\ThirdPartyPackage;
@@ -95,10 +95,10 @@ it('calls install command with a guidelines flag when guidelines are enabled', f
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -119,10 +119,10 @@ it('calls install command with skills flag when skills are configured', function
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -182,10 +182,10 @@ it('calls install command with both flags when guidelines and skills are enabled
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => true,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => true,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -206,10 +206,10 @@ it('does not pass mcp flag to install command even when mcp is configured', func
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -230,10 +230,10 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])->resolves(fn (): int => 0);
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->resolves(fn (): int => 0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -255,10 +255,10 @@ it('preserves non-sail configuration when updating guidelines', function (): voi
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -280,10 +280,10 @@ it('preserves sail configuration when updating skills', function (): void {
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -306,10 +306,10 @@ it('calls install command with skills flag when .ai/skills directory exists but 
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -342,10 +342,10 @@ it('does not run discovery when --no-discover flag is set', function (): void {
     $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('discoverNewContent')->never();
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -467,10 +467,10 @@ it('skips skills when --ignore-skills flag is set even if skills are configured'
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(true);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -492,10 +492,10 @@ it('skips skills when --ignore-skills flag is set even if .ai/skills directory e
     $command->allows('option')->with('no-discover')->returns(true);
     $command->allows('option')->with('ignore-skills')->returns(true);
     $command->expects('callSilently')->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])->returns(0);
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);

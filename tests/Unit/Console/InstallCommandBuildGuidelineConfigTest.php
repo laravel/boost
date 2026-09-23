@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
 use Illuminate\Support\Collection;
+use JMac\Testing\Double;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Support\Config;

@@ -8,7 +8,6 @@ use JMac\Testing\Double;
 use Laravel\Boost\Install\Agents\Zed;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
-use Mockery;
 
 beforeEach(function (): void {
     $this->strategyFactory = Double::for(DetectionStrategyFactory::class);

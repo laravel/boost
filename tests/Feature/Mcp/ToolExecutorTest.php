@@ -1,7 +1,7 @@
 <?php
 
-use JMac\Testing\Double;
 use Illuminate\Container\Container;
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
 use Laravel\Mcp\Response;
@@ -39,9 +39,9 @@ test('rejects unregistered tools', function (): void {
 test('subprocess proves fresh process isolation', function (): void {
     $executor = Double::for(ToolExecutor::class)->passthru();
     $executor->allows('buildCommand')->resolves(fn (): array => [
-            PHP_BINARY, '-r',
-            'echo json_encode(["isError" => false, "content" => [["type" => "text", "text" => (string) getmypid()]]]);',
-        ]);
+        PHP_BINARY, '-r',
+        'echo json_encode(["isError" => false, "content" => [["type" => "text", "text" => (string) getmypid()]]]);',
+    ]);
 
     $response1 = $executor->execute(DatabaseConnections::class, []);
     $response2 = $executor->execute(DatabaseConnections::class, []);

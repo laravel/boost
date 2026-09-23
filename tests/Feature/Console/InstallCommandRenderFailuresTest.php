@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use JMac\Testing\Double;
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\AgentsDetector;
@@ -44,7 +44,7 @@ function runInstallCommandWithFailures(array $failedPaths): string
 
     $command = new class($detector, new Config, $nightwatch, app(ProjectManager::class), $sail, $terminal) extends InstallCommand
     {
-    use VerifiesDoubles;
+        use VerifiesDoubles;
 
         public array $failedPaths = [];
 

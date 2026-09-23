@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
+use JMac\Testing\Double;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;

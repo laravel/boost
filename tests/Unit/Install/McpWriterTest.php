@@ -26,10 +26,10 @@ it('installs boost mcp with sail', function (): void {
 
     $sail = Double::for(Sail::class);
     $sail->expects('buildMcpCommand')->with('laravel-boost')->returns([
-            'key' => 'laravel-boost',
-            'command' => 'vendor/bin/sail',
-            'args' => ['artisan', 'boost:mcp'],
-        ]);
+        'key' => 'laravel-boost',
+        'command' => 'vendor/bin/sail',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
 
     $writer = new McpWriter($agent);
     $result = $writer->write($sail);
@@ -113,10 +113,10 @@ it('installs with both sail and nightwatch', function (): void {
 
     $sail = Double::for(Sail::class);
     $sail->expects('buildMcpCommand')->with('laravel-boost')->returns([
-            'key' => 'laravel-boost',
-            'command' => 'vendor/bin/sail',
-            'args' => ['artisan', 'boost:mcp'],
-        ]);
+        'key' => 'laravel-boost',
+        'command' => 'vendor/bin/sail',
+        'args' => ['artisan', 'boost:mcp'],
+    ]);
 
     $nightwatch = Double::for(Nightwatch::class);
     $nightwatch->expects('mcpUrl')->returns('https://nightwatch.laravel.com/mcp');

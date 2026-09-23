@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
 use Illuminate\Support\Facades\Artisan;
+use JMac\Testing\Double;
 use Laravel\Boost\Console\StartCommand;
 use Symfony\Component\Console\Command\Command;
 

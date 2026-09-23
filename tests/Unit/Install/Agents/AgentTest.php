@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
-use JMac\Testing\Double;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use JMac\Testing\Double;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Install\Agents\Agent;

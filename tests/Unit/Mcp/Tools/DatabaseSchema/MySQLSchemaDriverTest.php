@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema\MySQLSchemaDriver;
 
 test('getTables quotes the table type as a string literal', function (): void {
@@ -12,10 +12,10 @@ test('getTables quotes the table type as a string literal', function (): void {
 
     $connection = Double::for(Connection::class);
     $connection->expects('select')->resolves(function (string $query) use (&$sql): array {
-            $sql = $query;
+        $sql = $query;
 
-            return [];
-        });
+        return [];
+    });
 
     DB::shouldReceive('connection')->with('mysql_test')->andReturn($connection);
 
@@ -31,10 +31,10 @@ test('getCheckConstraints filters on TABLE_NAME directly when the column exists'
 
     $connection = Double::for(Connection::class);
     $connection->expects('select')->resolves(function (string $query, array $bindings) use (&$calls): array {
-            $calls[] = [$query, $bindings];
+        $calls[] = [$query, $bindings];
 
-            return [(object) ['CONSTRAINT_NAME' => 'orders_qty_positive']];
-        });
+        return [(object) ['CONSTRAINT_NAME' => 'orders_qty_positive']];
+    });
 
     DB::shouldReceive('connection')->with('mysql_test')->andReturn($connection);
 
@@ -52,14 +52,14 @@ test('getCheckConstraints maps the table through TABLE_CONSTRAINTS when TABLE_NA
 
     $connection = Double::for(Connection::class);
     $connection->expects('select')->times(2)->resolves(function (string $query, array $bindings) use (&$calls): array {
-            $calls[] = [$query, $bindings];
+        $calls[] = [$query, $bindings];
 
-            if (count($calls) === 1) {
-                throw new Exception("Unknown column 'TABLE_NAME' in 'where clause'");
-            }
+        if (count($calls) === 1) {
+            throw new Exception("Unknown column 'TABLE_NAME' in 'where clause'");
+        }
 
-            return [];
-        });
+        return [];
+    });
 
     DB::shouldReceive('connection')->with('mysql_test')->andReturn($connection);
 

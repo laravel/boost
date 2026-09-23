@@ -7,7 +7,6 @@ namespace Tests\Unit\Install\Agents;
 use JMac\Testing\Double;
 use Laravel\Boost\Install\Agents\Copilot;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
-use Mockery;
 
 beforeEach(function (): void {
     $this->strategyFactory = Double::for(DetectionStrategyFactory::class);
