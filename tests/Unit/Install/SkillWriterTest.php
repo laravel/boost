@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
-use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillWriter;
 use Symfony\Component\Process\Process;
+use Tests\Fixtures\FakeAgent;
 
 function cleanupSkillDirectory(string $path): void
 {
@@ -44,8 +43,7 @@ it('writes skill to a target directory', function (): void {
     $absoluteTarget = base_path($relativeTarget);
     $canonicalSkillPath = base_path('.ai/skills/test-skill');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'test-skill',
@@ -79,8 +77,7 @@ it('updates existing canonical skills when installing non-custom skills', functi
 
     file_put_contents($canonicalSkillPath.'/SKILL.md', 'old content');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -114,8 +111,7 @@ it('symlinks skills to the canonical directory', function (): void {
 
     copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -156,8 +152,7 @@ it('does not delete canonical skills when removing symlink', function (): void {
 
     copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -193,8 +188,7 @@ it('returns UPDATED when skill directory already exists', function (): void {
     mkdir($targetSkill, 0755, true);
     file_put_contents($targetSkill.'/SKILL.md', 'old content');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'test-skill',
@@ -217,8 +211,7 @@ it('returns UPDATED when skill directory already exists', function (): void {
 it('returns FAILED when source directory does not exist', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'missing-skill',
@@ -238,8 +231,7 @@ it('writes all skills', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skills = collect([
         new Skill('skill-one', 'boost', $sourceDir, 'First skill'),
@@ -261,8 +253,7 @@ it('copies nested directory structure', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'nested-skill',
@@ -286,8 +277,7 @@ it('throws an exception for path traversal in skill name', function (string $mal
     $sourceDir = fixture('skills/test-skill');
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $maliciousName,
@@ -317,8 +307,7 @@ it('renders blade templates to markdown', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'blade-skill',
@@ -346,8 +335,7 @@ it('preserves vue template syntax in verbatim blocks when rendering blade skills
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'vue-syntax-skill',
@@ -381,8 +369,7 @@ it('removes a skill directory', function (): void {
     mkdir($skillDir, 0755, true);
     file_put_contents($skillDir.'/SKILL.md', 'test content');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $writer = new SkillWriter($agent);
     $result = $writer->remove('test-skill');
@@ -396,8 +383,7 @@ it('removes a skill directory', function (): void {
 it('returns true when removing a non-existent skill', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $writer = new SkillWriter($agent);
     $result = $writer->remove('nonexistent-skill');
@@ -408,8 +394,7 @@ it('returns true when removing a non-existent skill', function (): void {
 it('returns false when removing skill with invalid name', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $writer = new SkillWriter($agent);
 
@@ -435,8 +420,7 @@ it('removes multiple stale skills', function (): void {
     file_put_contents($skillTwoDir.'/SKILL.md', 'skill two');
     file_put_contents($skillThreeDir.'/SKILL.md', 'skill three');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $writer = new SkillWriter($agent);
     $results = $writer->removeStale(['skill-one', 'skill-two']);
@@ -461,8 +445,7 @@ it('removes nested skill directory with deep structure', function (): void {
     file_put_contents($skillDir.'/SKILL.md', 'test');
     file_put_contents($deepDir.'/file.md', 'nested content');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $writer = new SkillWriter($agent);
     $result = $writer->remove('nested-skill');
@@ -482,8 +465,7 @@ it('syncs skills by writing new and removing stale', function (): void {
     mkdir($staleSkillDir, 0755, true);
     file_put_contents($staleSkillDir.'/SKILL.md', 'stale content');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skills = collect([
         'new-skill' => new Skill('new-skill', 'boost', $sourceDir, 'New skill'),
@@ -509,8 +491,7 @@ it('sync preserves skills that exist in both source and target', function (): vo
     mkdir($existingSkillDir, 0755, true);
     file_put_contents($existingSkillDir.'/SKILL.md', 'old content');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skills = collect([
         'existing-skill' => new Skill('existing-skill', 'boost', $sourceDir, 'Existing skill'),
@@ -540,8 +521,7 @@ it('sync preserves user-created custom skills that were never tracked', function
     file_put_contents($trackedSkillDir.'/SKILL.md', 'tracked content');
     file_put_contents($customSkillDir.'/SKILL.md', 'custom content');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skills = collect([
         'new-skill' => new Skill('new-skill', 'boost', $sourceDir, 'New skill'),
@@ -575,8 +555,7 @@ it('sync only removes previously tracked skills', function (): void {
     file_put_contents($trackedTwoDir.'/SKILL.md', 'tracked two');
     file_put_contents($untrackedDir.'/SKILL.md', 'untracked');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skills = collect([
         'tracked-one' => new Skill('tracked-one', 'boost', $sourceDir, 'Tracked one'),
@@ -610,8 +589,7 @@ it('removes directory containing nested symlinks', function (): void {
 
     expect(is_link($symlinkPath))->toBeTrue();
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $writer = new SkillWriter($agent);
     $result = $writer->remove('symlink-skill');
@@ -633,8 +611,7 @@ it('creates canonical directory and symlinks custom skill when canonical does no
     $skillName = 'test-skill-'.uniqid();
     $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -688,8 +665,7 @@ it('handles dangling symlink at target path', function (): void {
         $this->markTestSkipped('Dangling symlink not detectable in this environment');
     }
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -718,8 +694,7 @@ it('transitions from non-custom directory to custom symlink', function (): void 
     $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
     $targetPath = $absoluteTarget.'/'.$skillName;
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $nonCustomSkill = new Skill(
         name: $skillName,
@@ -766,8 +741,7 @@ it('transitions from custom symlink to non-custom directory', function (): void 
     $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
     $targetPath = $absoluteTarget.'/'.$skillName;
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $customSkill = new Skill(
         name: $skillName,
@@ -807,8 +781,7 @@ it('preserves canonical directory when removing custom skill symlink via removeS
     $skillName = 'test-skill-'.uniqid();
     $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -845,8 +818,7 @@ it('compiles blade to markdown instead of symlinking when custom skill source is
     copy(fixture('skills/blade-skill/SKILL.blade.php'), $canonicalSkillPath.'/SKILL.blade.php');
     copy(fixture('skills/blade-skill/references/ref.blade.php'), $canonicalSkillPath.'/references/ref.blade.php');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -895,8 +867,7 @@ it('replaces existing custom skill symlink when canonical skill contains root bl
         $this->markTestSkipped('Symlinks not supported in this environment');
     }
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -943,8 +914,7 @@ it('replaces existing custom skill symlink when canonical skill only contains ne
         $this->markTestSkipped('Symlinks not supported in this environment');
     }
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: $skillName,
@@ -984,8 +954,7 @@ it('removes extra files when updating skill directory', function (): void {
     file_put_contents($targetSkill.'/extra-file.md', 'should be removed');
     file_put_contents($targetSkill.'/references/old/nested.md', 'should also be removed');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'test-skill',
@@ -1007,7 +976,7 @@ it('removes extra files when updating skill directory', function (): void {
 });
 
 it('computes correct relative path when target is outside project directory', function (): void {
-    $agent = Double::for(SupportsSkills::class);
+    $agent = new FakeAgent;
     $writer = new SkillWriter($agent);
 
     $reflection = new ReflectionMethod($writer, 'relativePath');
@@ -1042,8 +1011,7 @@ it('creates relative symlink when skills path is outside the project root', func
     mkdir($canonicalSkillPath, 0755, true);
     copy(fixture('skills/test-skill/SKILL.md'), $canonicalSkillPath.'/SKILL.md');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeOutsidePath);
+    $agent = new FakeAgent($relativeOutsidePath);
 
     $skill = new Skill(
         name: $skillName,
@@ -1082,8 +1050,7 @@ it('writes skill files with a trailing newline', function (): void {
     $relativeTarget = '.boost-test-skills-'.uniqid();
     $absoluteTarget = base_path($relativeTarget);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skill = new Skill(
         name: 'test-skill',
@@ -1111,8 +1078,7 @@ it('never deletes a skills directory when a skill is named "."', function (): vo
     mkdir($canonicalTarget.'/keep-me-too', 0755, true);
     file_put_contents($canonicalTarget.'/keep-me-too/SKILL.md', 'keep me too');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $writer = new SkillWriter($agent);
     $skill = new Skill(name: '.', package: 'boost', path: fixture('skills/test-skill'), description: 'Malicious skill');
@@ -1135,8 +1101,7 @@ it('still syncs the valid skills when one skill name is invalid', function (): v
     mkdir($absoluteTarget.'/stale-skill', 0755, true);
     file_put_contents($absoluteTarget.'/stale-skill/SKILL.md', 'stale');
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
 
     $skills = collect([
         '.' => new Skill(name: '.', package: 'boost', path: fixture('skills/test-skill'), description: 'Malicious skill'),
@@ -1168,8 +1133,7 @@ it('preserves executable scripts without making other skill files executable', f
     chmod($source.'/scripts/check.sh', 0755);
     chmod($source.'/scripts/data.json', 0644);
 
-    $agent = Double::for(SupportsSkills::class);
-    $agent->allows('skillsPath')->returns($relativeTarget);
+    $agent = new FakeAgent($relativeTarget);
     $skill = new Skill(name: 'executable-skill', package: 'example/package', path: $source, description: 'Run a bundled script.');
     $writer = new SkillWriter($agent);
     $previousUmask = umask($mask);
