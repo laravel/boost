@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use JMac\Testing\Matching\Argument;
 use JMac\Testing\Double;
 use Illuminate\Container\Container;
@@ -44,6 +45,8 @@ it('returns collection of all registered agents', function (): void {
         ]);
 
     $agents->each(function ($agent): void {
+    use VerifiesDoubles;
+
         expect($agent)->toBeInstanceOf(Agent::class);
     });
 });

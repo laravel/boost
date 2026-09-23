@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use JMac\Testing\Double;
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
@@ -22,7 +23,6 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     (new Config)->flush();
-    Mockery::close();
 });
 
 function runInstallCommandWithFailures(array $failedPaths): string
@@ -44,6 +44,8 @@ function runInstallCommandWithFailures(array $failedPaths): string
 
     $command = new class($detector, new Config, $nightwatch, app(ProjectManager::class), $sail, $terminal) extends InstallCommand
     {
+    use VerifiesDoubles;
+
         public array $failedPaths = [];
 
         protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
