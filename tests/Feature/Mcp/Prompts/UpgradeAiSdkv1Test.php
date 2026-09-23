@@ -16,12 +16,12 @@ test('it has the correct name', function (): void {
 });
 
 test('it registers only for pre-1.0 installations', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '0.11.2')]));
 
     expect($this->prompt->shouldRegister($project))->toBeTrue();
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '1.0.0')]));
 
     expect($this->prompt->shouldRegister($project))->toBeFalse();

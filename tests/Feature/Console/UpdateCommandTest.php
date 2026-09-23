@@ -134,7 +134,7 @@ it('calls install command with skills flag when skills are configured', function
 });
 
 it('preserves tracked skills with unusable frontmatter while completing the update', function (string $skill, string $reason): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([]));
     $this->app->instance(ProjectManager::class, $project);
 

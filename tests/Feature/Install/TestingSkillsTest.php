@@ -14,7 +14,7 @@ use Laravel\Roster\ProjectManager;
  */
 function bootProject(array $packages): ProjectManager
 {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection($packages));
     app()->instance(ProjectManager::class, $project);
 

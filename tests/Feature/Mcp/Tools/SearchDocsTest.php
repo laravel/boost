@@ -15,7 +15,7 @@ test('it searches documentation successfully', function (): void {
         rosterPackage('pestphp/pest', '2.0.0'),
     ]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -44,7 +44,7 @@ test('it handles API error response', function (): void {
         rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -62,7 +62,7 @@ test('it handles API error response', function (): void {
 test('it filters empty queries', function (): void {
     $packages = new PackageCollection([]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -87,7 +87,7 @@ test('it formats package data correctly', function (): void {
         rosterPackage('livewire/livewire', '3.5.1'),
     ]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -109,7 +109,7 @@ test('it formats package data correctly', function (): void {
 test('it handles empty results', function (): void {
     $packages = new PackageCollection([]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -127,7 +127,7 @@ test('it handles empty results', function (): void {
 test('it uses custom token_limit when provided', function (): void {
     $packages = new PackageCollection([]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -147,7 +147,7 @@ test('it handles queries passed as a JSON-encoded string', function (): void {
         rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -170,7 +170,7 @@ test('it handles packages passed as a JSON-encoded string', function (): void {
         rosterPackage('livewire/livewire', '3.5.1'),
     ]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -191,7 +191,7 @@ test('it handles packages passed as a JSON-encoded string', function (): void {
 });
 
 test('it returns error for malformed JSON in queries string', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
 
     $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => '["authentication","testing"']));
@@ -200,7 +200,7 @@ test('it returns error for malformed JSON in queries string', function (): void 
 });
 
 test('it returns error for non-array JSON in queries string', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
 
     $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => '"authentication"']));
@@ -209,7 +209,7 @@ test('it returns error for non-array JSON in queries string', function (): void 
 });
 
 test('it returns error for malformed JSON in packages string', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
 
     $tool = new SearchDocs($project);
     $response = $tool->handle(new Request([
@@ -221,7 +221,7 @@ test('it returns error for malformed JSON in packages string', function (): void
 });
 
 test('it returns error for non-array JSON in packages string', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
 
     $tool = new SearchDocs($project);
     $response = $tool->handle(new Request([
@@ -233,7 +233,7 @@ test('it returns error for non-array JSON in packages string', function (): void
 });
 
 test('it returns error for JSON object string in queries', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
 
     $tool = new SearchDocs($project);
     $response = $tool->handle(new Request(['queries' => '{"q":"authentication"}']));
@@ -242,7 +242,7 @@ test('it returns error for JSON object string in queries', function (): void {
 });
 
 test('it returns error for JSON object string in packages', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
 
     $tool = new SearchDocs($project);
     $response = $tool->handle(new Request([
@@ -256,7 +256,7 @@ test('it returns error for JSON object string in packages', function (): void {
 test('it caps token_limit at maximum of 1000000', function (): void {
     $packages = new PackageCollection([]);
 
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     Http::fake([
@@ -272,7 +272,7 @@ test('it caps token_limit at maximum of 1000000', function (): void {
 });
 
 test('it sends the remaining queries as a list when some are filtered out', function (): void {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/framework', '11.0.0')]));
 
     Http::fake([
@@ -290,7 +290,7 @@ test('it sends the remaining queries as a list when some are filtered out', func
 });
 
 test('it advertises itself as a read-only tool', function (): void {
-    $tool = new SearchDocs(Double::for(ProjectManager::class));
+    $tool = new SearchDocs(Double::for(ProjectManager::class, override: true)->instance());
 
     expect($tool->toArray()['annotations'])->toBe(['readOnlyHint' => true]);
 });

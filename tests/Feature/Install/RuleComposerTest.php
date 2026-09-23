@@ -12,7 +12,7 @@ use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Double::for(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
 
     $this->herd = Double::for(Herd::class);
     $this->herd->allows('isInstalled')->returns(false);

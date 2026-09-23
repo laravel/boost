@@ -15,7 +15,7 @@ use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Double::for(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
 
     $this->app->instance(ProjectManager::class, $this->project);
     app(SkillParseFailures::class)->flush();

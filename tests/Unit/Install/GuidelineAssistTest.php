@@ -10,7 +10,7 @@ use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Double::for(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($this->project, new PackageCollection([]));
 
     $this->config = new GuidelineConfig;

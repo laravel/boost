@@ -14,7 +14,7 @@ beforeEach(function (): void {
 
 function mockProjectWithFrameworks(bool $react = false, bool $vue = false, bool $svelte = false): ProjectManager
 {
-    $project = Double::for(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     $packages = new PackageCollection([
         rosterPackage('inertiajs/inertia-laravel', '2.0.0'),
         ...($react ? [rosterPackage('@inertiajs/react', '2.0.0')] : []),

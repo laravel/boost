@@ -7,7 +7,7 @@ use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Double::for(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
 
     $this->inertia = new Inertia($this->project);
 });
