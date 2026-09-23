@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Console\OutputStyle;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
+use JMac\Testing\Double;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Console\UpdateCommand;
 use Laravel\Boost\Install\ThirdPartyPackage;
@@ -90,22 +91,18 @@ it('calls install command with a guidelines flag when guidelines are enabled', f
     $config->setGuidelines(true);
     $config->setSkills([]);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -117,29 +114,25 @@ it('calls install command with skills flag when skills are configured', function
     $config->setGuidelines(false);
     $config->setSkills(['test-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
 it('preserves tracked skills with unusable frontmatter while completing the update', function (string $skill, string $reason): void {
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([]));
     $this->app->instance(ProjectManager::class, $project);
 
@@ -183,22 +176,18 @@ it('calls install command with both flags when guidelines and skills are enabled
     $config->setGuidelines(true);
     $config->setSkills(['test-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => true,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -210,22 +199,18 @@ it('does not pass mcp flag to install command even when mcp is configured', func
     $config->setGuidelines(true);
     $config->setMcp(true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -237,22 +222,18 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $config->setGuidelines(true);
     $config->setSail(true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])
-        ->andReturnUsing(fn (): int => 0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->resolves(fn (): int => 0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -265,22 +246,18 @@ it('preserves non-sail configuration when updating guidelines', function (): voi
     $config->setGuidelines(true);
     $config->setSail(false);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -293,22 +270,18 @@ it('preserves sail configuration when updating skills', function (): void {
     $config->setSkills(['commit']);
     $config->setSail(true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -322,22 +295,18 @@ it('calls install command with skills flag when .ai/skills directory exists but 
 
     mkdir(base_path('.ai/skills'), 0755, true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -360,24 +329,18 @@ it('does not run discovery when --no-discover flag is set', function (): void {
     $config->setAgents(['claude_code']);
     $config->setSkills(['existing-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldNotReceive('discoverNewContent');
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => false,
-            '--skills' => true,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('discoverNewContent')->never();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => false,
+        '--skills' => true,
+    ])->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -394,17 +357,12 @@ it('runs discovery by default and adds selected new packages to config', functio
 
     Prompt::fake([Key::SPACE, Key::ENTER]);
 
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')
-        ->andReturn(collect(['vendor/default-pkg' => $newPackage]));
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->allows('resolveNewPackages')->returns(collect(['vendor/default-pkg' => $newPackage]));
+    $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setInput($input);
     $command->setOutput($output);
@@ -419,17 +377,14 @@ it('does not change config when no new packages are found during discovery', fun
     $config->setGuidelines(true);
     $config->setSkills(['existing-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')->andReturn(collect());
-    $command->shouldReceive('callSilently')->once()->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('resolveNewPackages')->returns(collect());
+    $command->expects('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -447,17 +402,12 @@ it('adds selected new packages to config during discovery', function (): void {
 
     Prompt::fake([Key::SPACE, Key::ENTER]);
 
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')
-        ->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setInput($input);
     $command->setOutput($output);
@@ -476,17 +426,13 @@ it('skips new-package discovery prompt when running as a composer script', funct
 
     Prompt::fake([]);
 
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
-    $command->shouldReceive('runningAsComposerScript')->andReturn(true);
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->allows('runningAsComposerScript')->returns(true);
+    $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setInput($input);
     $command->setOutput($output);
@@ -501,22 +447,18 @@ it('skips skills when --ignore-skills flag is set even if skills are configured'
     $config->setGuidelines(true);
     $config->setSkills(['test-skill']);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(true);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true, '--ignore-skills' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -529,22 +471,18 @@ it('skips skills when --ignore-skills flag is set even if .ai/skills directory e
 
     mkdir(base_path('.ai/skills'), 0755, true);
 
-    $command = Mockery::mock(UpdateCommand::class)->makePartial();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(true);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
-            '--no-interaction' => true,
-            '--guidelines' => true,
-            '--skills' => false,
-        ])
-        ->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true, '--ignore-skills' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -571,15 +509,11 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
 
     Prompt::fake([]);
 
-    $command = Mockery::mock(UpdateCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->allows('callSilently')->returns(0);
 
-    $nonInteractiveInput = new ArrayInput([]);
+    $nonInteractiveInput = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $nonInteractiveInput->setInteractive(false);
 
     $command->setInput($nonInteractiveInput);

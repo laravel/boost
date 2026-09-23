@@ -6,10 +6,9 @@ namespace Tests\Unit\Install\Agents;
 
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
-use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('httpMcpServerConfig returns npx mcp-remote config', function (): void {

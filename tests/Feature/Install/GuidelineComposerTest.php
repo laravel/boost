@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
+use JMac\Testing\Double;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -19,10 +20,10 @@ use Laravel\Roster\ProjectManager;
 use function Pest\testDirectory;
 
 beforeEach(function (): void {
-    $this->project = Mockery::mock(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
 
-    $this->herd = Mockery::mock(Herd::class);
-    $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
+    $this->herd = Double::for(Herd::class);
+    $this->herd->allows('isInstalled')->returns(false);
 
     $this->app->instance(ProjectManager::class, $this->project);
 
@@ -174,7 +175,7 @@ test('includes Herd guidelines only when on .test domain and Herd is installed',
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn($herdInstalled);
+    $this->herd->allows('isInstalled')->returns($herdInstalled);
 
     config(['app.url' => $appUrl]);
 
@@ -198,7 +199,7 @@ test('excludes Herd guidelines when Sail is configured', function (): void {
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
 
     config(['app.url' => 'http://myapp.test']);
 
@@ -221,7 +222,7 @@ test('excludes Sail guidelines when Herd is configured', function (): void {
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
 
     config(['app.url' => 'http://myapp.test']);
 
@@ -364,10 +365,9 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     expect($composer->compose())
         ->toContain('=== .ai/custom-rule rules ===')
@@ -387,10 +387,9 @@ test('nested user guidelines with the same filename do not overwrite each other'
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines-nested')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures/nested-guidelines'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     expect($composer->compose())
         ->toContain('=== .ai/frontend/api rules ===')
@@ -407,15 +406,15 @@ test('a user override still applies for a package whose bundled core.blade.php n
 
     mockProjectPackages($this->project, $packages);
 
-    $customDir = testDirectory('Fixtures/.ai/pest-core-override-guidelines');
+    $root = testDirectory('Fixtures/pest-core-override');
+    $customDir = $root.'/.ai/guidelines';
     @mkdir($customDir.'/pest', 0755, true);
     file_put_contents($customDir.'/pest/core.blade.php', "# Custom Pest Override\n\nAlways use this project's own Pest conventions.\n");
 
     try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         $guidelines = $composer->guidelines();
 
@@ -425,6 +424,8 @@ test('a user override still applies for a package whose bundled core.blade.php n
         @unlink($customDir.'/pest/core.blade.php');
         @rmdir($customDir.'/pest');
         @rmdir($customDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     }
 });
 
@@ -435,10 +436,9 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
     $overrideStringCount = substr_count((string) $guidelines, 'Thanks though, appreciate you');
@@ -553,10 +553,9 @@ test('renderContent handles blade and markdown files correctly', function (): vo
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -676,10 +675,9 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
 test('the guidelines are in correct order', function (): void {
     config(['boost.rules.enabled' => false]);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
@@ -689,7 +687,7 @@ test('the guidelines are in correct order', function (): void {
 
     $config = new GuidelineConfig;
     $config->enforceTests = true;
-    $this->herd->shouldReceive('isInstalled')->andReturn(false);
+    $this->herd->allows('isInstalled')->returns(false);
     $composer->config($config);
 
     $guidelines = $composer->guidelines();
@@ -761,7 +759,7 @@ test('includes enabled conditional guidelines and orders them before packages', 
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
     config(['app.url' => 'http://myapp.test']);
 
     $config = new GuidelineConfig;
@@ -792,10 +790,9 @@ test('user guidelines are sorted by filename for predictable ordering', function
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/sorted-guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures/sorted-guidelines'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->guidelines();
     $keys = $guidelines->keys()->toArray();
@@ -867,7 +864,7 @@ test('excludes guidelines listed in config exclude list', function (): void {
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
 
     config(['app.url' => 'http://myapp.test']);
     config(['boost.guidelines.exclude' => ['herd', 'tests']]);
@@ -962,10 +959,9 @@ test('does not exclude user guidelines via config', function (): void {
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     config(['boost.guidelines.exclude' => ['.ai/custom-rule']]);
 
@@ -1059,18 +1055,12 @@ test('includes MCP Tools and Searching Documentation sections when hasMcp is tru
 test('loads vendor core guideline when available', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1087,10 +1077,7 @@ test('falls back to .ai/ when vendor guideline path does not exist', function ()
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1100,18 +1087,12 @@ test('falls back to .ai/ when vendor guideline path does not exist', function ()
 test('guideline key is unchanged regardless of vendor or .ai/ source', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $keys = $composer->used();
 
@@ -1120,20 +1101,14 @@ test('guideline key is unchanged regardless of vendor or .ai/ source', function 
 
 test('user override works with vendor-sourced guideline', function (): void {
     $packages = new PackageCollection([
-        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
+    app()->setBasePath(testDirectory('Fixtures'));
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'laravel/framework' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->guidelines();
     $laravelCore = $guidelines->get('laravel/core');
@@ -1161,18 +1136,12 @@ test('isFirstPartyPackage identifies scoped npm packages', function (): void {
 test('loads node_modules core guideline for npm first-party packages', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('@inertiajs/react', '2.1.0'),
+        rosterPackage('@inertiajs/react', '2.1.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1189,10 +1158,7 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1202,24 +1168,19 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
 test('user override resolves .md files for vendor-sourced guidelines', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $mdOverrideDir = testDirectory('Fixtures/.ai/guidelines-md-override');
+    $root = testDirectory('Fixtures/md-override');
+    $mdOverrideDir = $root.'/.ai/guidelines';
     @mkdir($mdOverrideDir.'/pest', 0755, true);
     file_put_contents($mdOverrideDir.'/pest/core.md', '# Pest Markdown Override');
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
-    $composer->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
+    app()->setBasePath($root);
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->guidelines();
     $pestCore = $guidelines->get('pest/core');
@@ -1231,6 +1192,8 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     @unlink($mdOverrideDir.'/pest/core.md');
     @rmdir($mdOverrideDir.'/pest');
     @rmdir($mdOverrideDir);
+    @rmdir($root.'/.ai');
+    @rmdir($root);
 });
 
 test('symlinked custom guidelines directory does not produce duplicates', function (): void {
@@ -1241,16 +1204,17 @@ test('symlinked custom guidelines directory does not produce duplicates', functi
     mockProjectPackages($this->project, $packages);
 
     $realGuidelinesDir = realpath(testDirectory('Fixtures/.ai/guidelines'));
-    $symlinkDir = testDirectory('Fixtures/.ai/symlinked-guidelines');
+    $root = testDirectory('Fixtures/symlinked-guidelines');
+    $symlinkDir = $root.'/.ai/guidelines';
 
     @unlink($symlinkDir);
+    @mkdir($root.'/.ai', 0755, true);
     symlink($realGuidelinesDir, $symlinkDir);
 
     try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $symlinkDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         $composed = $composer->compose();
         $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
@@ -1258,6 +1222,8 @@ test('symlinked custom guidelines directory does not produce duplicates', functi
         expect($overrideCount)->toBe(1);
     } finally {
         @unlink($symlinkDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     }
 });
 
@@ -1268,7 +1234,8 @@ test('symlinked custom guideline file does not produce duplicates', function ():
 
     mockProjectPackages($this->project, $packages);
 
-    $customDir = testDirectory('Fixtures/.ai/symlinked-file-guidelines');
+    $root = testDirectory('Fixtures/symlinked-file-guidelines');
+    $customDir = $root.'/.ai/guidelines';
     $externalFile = realpath(testDirectory('Fixtures/.ai/guidelines/laravel/core.blade.php'));
 
     @rmdir($customDir.'/laravel');
@@ -1277,10 +1244,9 @@ test('symlinked custom guideline file does not produce duplicates', function ():
     symlink($externalFile, $customDir.'/laravel/core.blade.php');
 
     try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         $composed = $composer->compose();
         $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
@@ -1290,6 +1256,8 @@ test('symlinked custom guideline file does not produce duplicates', function ():
         @unlink($customDir.'/laravel/core.blade.php');
         @rmdir($customDir.'/laravel');
         @rmdir($customDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     }
 });
 
@@ -1300,14 +1268,17 @@ test('symlinked nested user guidelines with the same filename keep distinct keys
 
     mockProjectPackages($this->project, $packages);
 
-    $customDir = testDirectory('Fixtures/.ai/symlinked-nested-guidelines');
-    $cleanup = function () use ($customDir): void {
+    $root = testDirectory('Fixtures/symlinked-nested-guidelines');
+    $customDir = $root.'/.ai/guidelines';
+    $cleanup = function () use ($root, $customDir): void {
         foreach (['frontend', 'backend'] as $group) {
             @unlink($customDir.'/'.$group.'/api.blade.php');
             @rmdir($customDir.'/'.$group);
         }
 
         @rmdir($customDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     };
 
     $cleanup();
@@ -1315,16 +1286,15 @@ test('symlinked nested user guidelines with the same filename keep distinct keys
     foreach (['frontend', 'backend'] as $group) {
         mkdir($customDir.'/'.$group, 0755, true);
         symlink(
-            realpath(testDirectory('Fixtures/.ai/guidelines-nested/'.$group.'/api.blade.php')),
+            realpath(testDirectory('Fixtures/nested-guidelines/.ai/guidelines/'.$group.'/api.blade.php')),
             $customDir.'/'.$group.'/api.blade.php'
         );
     }
 
     try {
-        $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])->makePartial();
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         expect($composer->used())
             ->toContain('.ai/frontend/api')
@@ -1335,9 +1305,9 @@ test('symlinked nested user guidelines with the same filename keep distinct keys
 });
 
 test('php core guideline adapts enum naming guidance to the application enums', function (array $enums, ?string $fixtureName, string $expected, string $notExpected): void {
-    $assist = Mockery::mock(GuidelineAssist::class);
-    $assist->shouldReceive('enums')->andReturn($enums);
-    $assist->shouldReceive('enumContents')->andReturn($fixtureName === null ? '' : fixtureContent($fixtureName));
+    $assist = Double::for(GuidelineAssist::class);
+    $assist->allows('enums')->returns($enums);
+    $assist->allows('enumContents')->returns($fixtureName === null ? '' : fixtureContent($fixtureName));
 
     $rendered = Blade::render(file_get_contents(testDirectory('../.ai/php/core.blade.php')), ['assist' => $assist]);
 
@@ -1356,18 +1326,14 @@ test('does not fail when a vendor guideline targets an API that no longer exists
 
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/incompatible')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(fixture('vendor-guidelines/incompatible'));
+    $vendorFixture = realpath(fixture('vendor-packages/incompatible/resources/boost/guidelines'));
 
-    $composer = Mockery::mock(GuidelineComposer::class, [$this->project, $this->herd])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 

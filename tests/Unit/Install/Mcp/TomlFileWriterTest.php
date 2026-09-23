@@ -6,7 +6,6 @@ namespace Tests\Unit\Install\Mcp;
 
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Mcp\TomlFileWriter;
-use League\Flysystem\Filesystem;
 use Mockery;
 
 it('creates the new TOML file with the correct structure', function (): void {
@@ -486,8 +485,6 @@ function mockTomlFileOperations(
     ?string &$capturedPath = null,
     ?string &$capturedContent = null
 ): void {
-    File::swap(Mockery::mock(Filesystem::class));
-
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn($fileExists);
 

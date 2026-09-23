@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Mcp\Request;
 use Laravel\Roster\PackageCollection;
@@ -13,7 +14,7 @@ test('it returns application info with packages', function (): void {
         rosterPackage('pestphp/pest', '2.0.0'),
     ]);
 
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $packages);
 
     $tool = new ApplicationInfo($project);
@@ -44,7 +45,7 @@ test('it reports the driver name when the default connection has a custom name',
     config()->set('database.connections.tenant', config('database.connections.testing'));
     config()->set('database.default', 'tenant');
 
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([]));
 
     $tool = new ApplicationInfo($project);
@@ -58,7 +59,7 @@ test('it reports the driver name when the default connection has a custom name',
 });
 
 test('it returns application info with no packages', function (): void {
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([]));
 
     $tool = new ApplicationInfo($project);
@@ -79,7 +80,7 @@ it('returns updated package versions when roster binding changes in container', 
         rosterPackage('laravel/framework', '11.0.0'),
     ]);
 
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, $initialPackages);
     $this->app->instance(ProjectManager::class, $project);
 
@@ -99,7 +100,7 @@ it('returns updated package versions when roster binding changes in container', 
         rosterPackage('pestphp/pest', '3.0.0'),
     ]);
 
-    $updatedProject = Mockery::mock(ProjectManager::class);
+    $updatedProject = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($updatedProject, $updatedPackages);
     $this->app->instance(ProjectManager::class, $updatedProject);
 

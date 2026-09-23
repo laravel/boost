@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\AgentsDetector;
@@ -20,20 +21,19 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     (new Config)->flush();
-    Mockery::close();
 });
 
 function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null): InstallCommand
 {
-    $nightwatch = Mockery::mock(Nightwatch::class);
-    $nightwatch->shouldReceive('isInstalled')->andReturn(false);
+    $nightwatch = Double::for(Nightwatch::class);
+    $nightwatch->allows('isInstalled')->returns(false);
 
-    $sail = Mockery::mock(Sail::class);
-    $sail->shouldReceive('isInstalled')->andReturn(false);
-    $sail->shouldReceive('isActive')->andReturn(false);
+    $sail = Double::for(Sail::class);
+    $sail->allows('isInstalled')->returns(false);
+    $sail->allows('isActive')->returns(false);
 
-    $terminal = Mockery::mock(Terminal::class);
-    $terminal->shouldReceive('initDimensions');
+    $terminal = Double::for(Terminal::class);
+    $terminal->allows('initDimensions');
 
     return new class($detector ?? app(AgentsDetector::class), $config, $nightwatch, app(ProjectManager::class), $sail, $terminal) extends InstallCommand
     {
@@ -48,10 +48,10 @@ function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null
 it('does not throw when no agents are saved and none are auto-detected in non-interactive mode', function (): void {
     $config = new Config;
 
-    $detector = Mockery::mock(AgentsDetector::class);
-    $detector->shouldReceive('getAgents')->andReturn(app(AgentsDetector::class)->getAgents());
-    $detector->shouldReceive('discoverSystemInstalledAgents')->andReturn([]);
-    $detector->shouldReceive('discoverProjectInstalledAgents')->andReturn([]);
+    $detector = Double::for(AgentsDetector::class);
+    $detector->allows('getAgents')->returns(app(AgentsDetector::class)->getAgents());
+    $detector->allows('discoverSystemInstalledAgents')->returns([]);
+    $detector->allows('discoverProjectInstalledAgents')->returns([]);
 
     $command = makeTestInstallCommand($config, $detector);
 

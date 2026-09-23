@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use JMac\Testing\Double;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Support\Config;
@@ -17,11 +18,9 @@ afterEach(function (): void {
 
 function buildGuidelineConfigWith(Collection $selectedBoostFeatures, Config $config, bool $explicitFlagMode = false): GuidelineConfig
 {
-    $command = Mockery::mock(InstallCommand::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $command = Double::for(InstallCommand::class)->passthru();
 
-    $command->shouldReceive('isExplicitFlagMode')->andReturn($explicitFlagMode);
+    $command->allows('isExplicitFlagMode')->returns($explicitFlagMode);
 
     $reflect = new ReflectionClass(InstallCommand::class);
 

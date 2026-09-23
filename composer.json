@@ -24,6 +24,7 @@
         "laravel/roster": "^1.0.0"
     },
     "require-dev": {
+        "jasonmccreary/double": "~0.10",
         "laravel/pint": "^1.27.0",
         "mockery/mockery": "^1.6.12",
         "orchestra/testbench": "^9.15.0|^10.6|^11.0",
