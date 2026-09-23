@@ -1044,15 +1044,12 @@ test('includes MCP Tools and Searching Documentation sections when hasMcp is tru
 test('loads vendor core guideline when available', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1069,8 +1066,7 @@ test('falls back to .ai/ when vendor guideline path does not exist', function ()
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('resolveFirstPartyBoostPath')->returns(null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1080,15 +1076,12 @@ test('falls back to .ai/ when vendor guideline path does not exist', function ()
 test('guideline key is unchanged regardless of vendor or .ai/ source', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $keys = $composer->used();
 
@@ -1097,16 +1090,13 @@ test('guideline key is unchanged regardless of vendor or .ai/ source', function 
 
 test('user override works with vendor-sourced guideline', function (): void {
     $packages = new PackageCollection([
-        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('laravel/framework', '11.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
     $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
-    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'laravel/framework' ? $vendorFixture : null);
 
     $guidelines = $composer->guidelines();
     $laravelCore = $guidelines->get('laravel/core');
@@ -1134,15 +1124,12 @@ test('isFirstPartyPackage identifies scoped npm packages', function (): void {
 test('loads node_modules core guideline for npm first-party packages', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('@inertiajs/react', '2.1.0'),
+        rosterPackage('@inertiajs/react', '2.1.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
-
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1159,8 +1146,7 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('resolveFirstPartyBoostPath')->returns(null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -1170,19 +1156,16 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
 test('user override resolves .md files for vendor-sourced guidelines', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/core-only')),
     ]);
 
     mockProjectPackages($this->project, $packages);
-
-    $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
     $mdOverrideDir = testDirectory('Fixtures/.ai/guidelines-md-override');
     @mkdir($mdOverrideDir.'/pest', 0755, true);
     file_put_contents($mdOverrideDir.'/pest/core.md', '# Pest Markdown Override');
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
     $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->guidelines();
@@ -1314,15 +1297,14 @@ test('does not fail when a vendor guideline targets an API that no longer exists
 
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('pestphp/pest', '3.0.0'),
+        rosterPackage('pestphp/pest', '3.0.0', path: fixture('vendor-packages/incompatible')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(fixture('vendor-guidelines/incompatible'));
+    $vendorFixture = realpath(fixture('vendor-packages/incompatible/resources/boost/guidelines'));
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
