@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Matching\Argument;
-use JMac\Testing\Double;
 use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
+use JMac\Testing\Double;
+use JMac\Testing\Matching\Argument;
 use Laravel\Boost\BoostManager;
 use Laravel\Boost\Install\Agents\Agent;
 use Laravel\Boost\Install\Agents\Amp;

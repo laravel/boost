@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
 use Illuminate\Support\Facades\Http;
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Tools\SearchDocs;
 use Laravel\Mcp\Request;
 use Laravel\Roster\PackageCollection;
