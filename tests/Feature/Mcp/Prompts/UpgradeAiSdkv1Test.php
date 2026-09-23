@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Laravel\Boost\Mcp\Prompts\UpgradeAiv1\UpgradeAiV1;
+use Laravel\Boost\Mcp\Prompts\UpgradeAiSdkv1\UpgradeAiSdkV1;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->prompt = new UpgradeAiV1;
+    $this->prompt = new UpgradeAiSdkV1;
 });
 
 test('it has the correct name', function (): void {
-    expect($this->prompt->name())->toBe('upgrade-ai-v1');
+    expect($this->prompt->name())->toBe('upgrade-ai-sdk-v1');
 });
 
 test('it registers only for pre-1.0 installations', function (): void {
@@ -35,14 +35,15 @@ test('it returns a valid response', function (): void {
 test('it contains core upgrade content', function (): void {
     expect($this->prompt->handle())->isToolResult()
         ->toolTextContains('Laravel AI 0.11 to 1.0 Upgrade Specialist')
-        ->toolTextContains('Conversation messages store steps')
-        ->toolTextContains('Agent middleware wraps each generation step')
-        ->toolTextContains('Token usage is reported inclusively')
-        ->toolTextContains('The AWS SDK is no longer installed by default')
-        ->toolTextContains('Backfill Migration')
+        ->toolTextContains('Conversation Messages Now Store Steps')
+        ->toolTextContains('Agent Middleware Wraps Each Generation Step')
+        ->toolTextContains('Token Usage Includes All Tokens')
+        ->toolTextContains('The AWS SDK Is No Longer Installed By Default')
+        ->toolTextContains('Resumed Turns Fold Into The Message They Paused On')
+        ->toolTextContains('Failed Turns Are Recorded')
+        ->toolTextContains('Latest Conversations Are Scoped To The Agent')
+        ->toolTextContains('Gemini Uses The Interactions API')
         ->toolTextContains('usingVercelDataProtocol')
-        ->toolTextContains('Resumed turns fold into the message they paused on')
-        ->toolTextContains('Failed turns are recorded')
         ->toolTextContains('MessageStatus');
 });
 
@@ -56,5 +57,6 @@ test('it properly compiles blade assist helpers', function (): void {
         ->toContain('php artisan migrate')
         ->not->toContain('$assist->composerCommand')
         ->not->toContain('$assist->artisanCommand')
-        ->not->toContain('{{ $assist');
+        ->not->toContain('{{ $assist')
+        ->not->toContain('<details>');
 });
