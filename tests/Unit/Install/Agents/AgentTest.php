@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
+use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use JMac\Testing\Double;
@@ -144,7 +145,7 @@ test('installShellMcp executes command with placeholders replaced', function ():
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(\stdClass::class);
+    $mockResult = Double::for(ProcessResult::class);
     $mockResult->allows('successful')->returns(true);
     $mockResult->allows('errorOutput')->returns('');
 
@@ -167,7 +168,7 @@ test('installShellMcp returns true when process fails but has already exists err
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(\stdClass::class);
+    $mockResult = Double::for(ProcessResult::class);
     $mockResult->allows('successful')->returns(false);
     $mockResult->allows('errorOutput')->returns('Error: already exists');
 
@@ -416,7 +417,7 @@ test('shell installation handles valet php commands', function (): void {
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(\stdClass::class);
+    $mockResult = Double::for(ProcessResult::class);
     $mockResult->allows('successful')->returns(true);
     $mockResult->allows('errorOutput')->returns('');
 
@@ -439,7 +440,7 @@ test('shell installation handles herd php commands', function (): void {
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(\stdClass::class);
+    $mockResult = Double::for(ProcessResult::class);
     $mockResult->allows('successful')->returns(true);
     $mockResult->allows('errorOutput')->returns('');
 
