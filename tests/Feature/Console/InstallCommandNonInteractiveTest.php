@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use JMac\Testing\Double;
-use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\AgentsDetector;
@@ -38,8 +37,6 @@ function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null
 
     return new class($detector ?? app(AgentsDetector::class), $config, $nightwatch, app(ProjectManager::class), $sail, $terminal) extends InstallCommand
     {
-        use VerifiesDoubles;
-
         protected function displayBoostHeader(string $featureName, string $projectName, ?Theme $theme = null): void {}
 
         protected function performInstallation(): void {}
