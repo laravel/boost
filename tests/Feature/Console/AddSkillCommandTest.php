@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use JMac\Testing\Double;
 use Orchestra\Testbench\Concerns\InteractsWithPublishedFiles;
 
 uses(InteractsWithPublishedFiles::class);
@@ -247,9 +245,7 @@ it('keeps the existing skill and the download when the install move fails', func
         'raw.githubusercontent.com/*' => Http::response('# New Content'),
     ]);
 
-    $files = Double::for(Filesystem::class)->passthru(new Filesystem);
-    $files->expects('moveDirectory')->returns(false);
-    File::swap($files);
+    File::partialMock()->shouldReceive('moveDirectory')->once()->andReturnFalse();
 
     $this->artisan('boost:add-skill', [
         'repo' => 'owner/repo',
