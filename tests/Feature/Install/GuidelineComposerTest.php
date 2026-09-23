@@ -23,7 +23,7 @@ beforeEach(function (): void {
     $this->project = Double::for(ProjectManager::class);
 
     $this->herd = Double::for(Herd::class);
-    $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
+    $this->herd->allows('isInstalled')->returns(false);
 
     $this->app->instance(ProjectManager::class, $this->project);
 
@@ -175,7 +175,7 @@ test('includes Herd guidelines only when on .test domain and Herd is installed',
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn($herdInstalled);
+    $this->herd->allows('isInstalled')->returns($herdInstalled);
 
     config(['app.url' => $appUrl]);
 
@@ -199,7 +199,7 @@ test('excludes Herd guidelines when Sail is configured', function (): void {
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
 
     config(['app.url' => 'http://myapp.test']);
 
@@ -222,7 +222,7 @@ test('excludes Sail guidelines when Herd is configured', function (): void {
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
 
     config(['app.url' => 'http://myapp.test']);
 
@@ -366,9 +366,7 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     expect($composer->compose())
         ->toContain('=== .ai/custom-rule rules ===')
@@ -389,9 +387,7 @@ test('nested user guidelines with the same filename do not overwrite each other'
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines-nested')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines-nested')).'/'.ltrim((string) $path, '/'));
 
     expect($composer->compose())
         ->toContain('=== .ai/frontend/api rules ===')
@@ -414,9 +410,7 @@ test('a user override still applies for a package whose bundled core.blade.php n
 
     try {
         $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
 
         $guidelines = $composer->guidelines();
 
@@ -437,9 +431,7 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->compose();
     $overrideStringCount = substr_count((string) $guidelines, 'Thanks though, appreciate you');
@@ -555,9 +547,7 @@ test('renderContent handles blade and markdown files correctly', function (): vo
 
     mockProjectPackages($this->project, $packages);
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->compose();
 
@@ -678,9 +668,7 @@ test('the guidelines are in correct order', function (): void {
     config(['boost.rules.enabled' => false]);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
@@ -690,7 +678,7 @@ test('the guidelines are in correct order', function (): void {
 
     $config = new GuidelineConfig;
     $config->enforceTests = true;
-    $this->herd->shouldReceive('isInstalled')->andReturn(false);
+    $this->herd->allows('isInstalled')->returns(false);
     $composer->config($config);
 
     $guidelines = $composer->guidelines();
@@ -762,7 +750,7 @@ test('includes enabled conditional guidelines and orders them before packages', 
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
     config(['app.url' => 'http://myapp.test']);
 
     $config = new GuidelineConfig;
@@ -794,9 +782,7 @@ test('user guidelines are sorted by filename for predictable ordering', function
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/sorted-guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/sorted-guidelines')).'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->guidelines();
     $keys = $guidelines->keys()->toArray();
@@ -868,7 +854,7 @@ test('excludes guidelines listed in config exclude list', function (): void {
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $this->herd->shouldReceive('isInstalled')->andReturn(true);
+    $this->herd->allows('isInstalled')->returns(true);
 
     config(['app.url' => 'http://myapp.test']);
     config(['boost.guidelines.exclude' => ['herd', 'tests']]);
@@ -964,9 +950,7 @@ test('does not exclude user guidelines via config', function (): void {
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
 
     config(['boost.guidelines.exclude' => ['.ai/custom-rule']]);
 
@@ -1068,8 +1052,7 @@ test('loads vendor core guideline when available', function (): void {
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -1087,7 +1070,7 @@ test('falls back to .ai/ when vendor guideline path does not exist', function ()
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer->allows('resolveFirstPartyBoostPath')->returns(null);
 
     $guidelines = $composer->compose();
 
@@ -1105,8 +1088,7 @@ test('guideline key is unchanged regardless of vendor or .ai/ source', function 
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
 
     $keys = $composer->used();
 
@@ -1123,10 +1105,8 @@ test('user override works with vendor-sourced guideline', function (): void {
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'laravel/framework' ? $vendorFixture : null);
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'laravel/framework' ? $vendorFixture : null);
 
     $guidelines = $composer->guidelines();
     $laravelCore = $guidelines->get('laravel/core');
@@ -1162,8 +1142,7 @@ test('loads node_modules core guideline for npm first-party packages', function 
     $vendorFixture = realpath(testDirectory('Fixtures/vendor-guidelines/core-only'));
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 
@@ -1181,7 +1160,7 @@ test('falls back to .ai/ when node_modules guideline path does not exist for npm
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer->allows('resolveFirstPartyBoostPath')->returns(null);
 
     $guidelines = $composer->compose();
 
@@ -1203,10 +1182,8 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     file_put_contents($mdOverrideDir.'/pest/core.md', '# Pest Markdown Override');
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
-    $composer->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
 
     $guidelines = $composer->guidelines();
     $pestCore = $guidelines->get('pest/core');
@@ -1235,9 +1212,7 @@ test('symlinked custom guidelines directory does not produce duplicates', functi
 
     try {
         $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $symlinkDir.'/'.ltrim((string) $path, '/'));
+        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $symlinkDir.'/'.ltrim((string) $path, '/'));
 
         $composed = $composer->compose();
         $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
@@ -1265,9 +1240,7 @@ test('symlinked custom guideline file does not produce duplicates', function ():
 
     try {
         $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
 
         $composed = $composer->compose();
         $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
@@ -1309,9 +1282,7 @@ test('symlinked nested user guidelines with the same filename keep distinct keys
 
     try {
         $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer
-            ->shouldReceive('customGuidelinePath')
-            ->andReturnUsing(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
 
         expect($composer->used())
             ->toContain('.ai/frontend/api')
@@ -1323,8 +1294,8 @@ test('symlinked nested user guidelines with the same filename keep distinct keys
 
 test('php core guideline adapts enum naming guidance to the application enums', function (array $enums, ?string $fixtureName, string $expected, string $notExpected): void {
     $assist = Double::for(GuidelineAssist::class);
-    $assist->shouldReceive('enums')->andReturn($enums);
-    $assist->shouldReceive('enumContents')->andReturn($fixtureName === null ? '' : fixtureContent($fixtureName));
+    $assist->allows('enums')->returns($enums);
+    $assist->allows('enumContents')->returns($fixtureName === null ? '' : fixtureContent($fixtureName));
 
     $rendered = Blade::render(file_get_contents(testDirectory('../.ai/php/core.blade.php')), ['assist' => $assist]);
 
@@ -1351,8 +1322,7 @@ test('does not fail when a vendor guideline targets an API that no longer exists
     $vendorFixture = realpath(fixture('vendor-guidelines/incompatible'));
 
     $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'pestphp/pest' ? $vendorFixture : null);
 
     $guidelines = $composer->compose();
 

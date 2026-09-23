@@ -9,10 +9,7 @@ use Symfony\Component\Console\Command\Command;
 
 it('invokes mcp:start with laravel-boost as the server name', function (): void {
     $mockArtisan = Double::for(\stdClass::class);
-    $mockArtisan->shouldReceive('call')
-        ->once()
-        ->with('mcp:start laravel-boost')
-        ->andReturn(0);
+    $mockArtisan->expects('call')->with('mcp:start laravel-boost')->returns(0);
 
     Artisan::swap($mockArtisan);
 
@@ -23,10 +20,7 @@ it('invokes mcp:start with laravel-boost as the server name', function (): void 
 
 it('returns the same exit code that mcp:start returns', function (): void {
     $mockArtisan = Double::for(\stdClass::class);
-    $mockArtisan->shouldReceive('call')
-        ->once()
-        ->with('mcp:start laravel-boost')
-        ->andReturn(Command::FAILURE);
+    $mockArtisan->expects('call')->with('mcp:start laravel-boost')->returns(Command::FAILURE);
 
     Artisan::swap($mockArtisan);
 

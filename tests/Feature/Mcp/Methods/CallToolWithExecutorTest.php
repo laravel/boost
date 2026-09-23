@@ -58,10 +58,7 @@ test('throws JsonRpcException when tool does not exist', function (): void {
 
 test('successful tool execution returns proper response', function (): void {
     $executor = Double::for(ToolExecutor::class);
-    $executor->shouldReceive('execute')
-        ->once()
-        ->with(DatabaseConnections::class, [])
-        ->andReturn(Response::text('Success result'));
+    $executor->expects('execute')->with(DatabaseConnections::class, [])->returns(Response::text('Success result'));
 
     $method = new CallToolWithExecutor($executor);
     $context = createServerContext([DatabaseConnections::class]);
@@ -76,10 +73,7 @@ test('successful tool execution returns proper response', function (): void {
 
 test('tool execution exceptions are caught and returned as error responses', function (): void {
     $executor = Double::for(ToolExecutor::class);
-    $executor->shouldReceive('execute')
-        ->once()
-        ->with(DatabaseConnections::class, [])
-        ->andThrow(new RuntimeException('Database connection failed'));
+    $executor->expects('execute')->with(DatabaseConnections::class, [])->throws(new RuntimeException('Database connection failed'));
 
     $method = new CallToolWithExecutor($executor);
     $context = createServerContext([DatabaseConnections::class]);
@@ -96,10 +90,7 @@ test('arguments are properly passed to executor', function (): void {
     $expectedArgs = ['key' => 'app.name'];
 
     $executor = Double::for(ToolExecutor::class);
-    $executor->shouldReceive('execute')
-        ->once()
-        ->with(DatabaseConnections::class, $expectedArgs)
-        ->andReturn(Response::text('{"key":"app.name","value":"Laravel"}'));
+    $executor->expects('execute')->with(DatabaseConnections::class, $expectedArgs)->returns(Response::text('{"key":"app.name","value":"Laravel"}'));
 
     $method = new CallToolWithExecutor($executor);
     $context = createServerContext([DatabaseConnections::class]);

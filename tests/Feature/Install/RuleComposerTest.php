@@ -15,7 +15,7 @@ beforeEach(function (): void {
     $this->project = Double::for(ProjectManager::class);
 
     $this->herd = Double::for(Herd::class);
-    $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
+    $this->herd->allows('isInstalled')->returns(false);
 
     $this->app->instance(ProjectManager::class, $this->project);
 
@@ -29,9 +29,7 @@ function composerWithFixtureGuidelines(ProjectManager $project, Herd $herd, stri
     $dir = fixture($fixture);
 
     $guidelines = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($project, $herd));
-    $guidelines
-        ->shouldReceive('customGuidelinePath')
-        ->andReturnUsing(fn ($path = ''): string => $dir.'/'.ltrim((string) $path, '/'));
+    $guidelines->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $dir.'/'.ltrim((string) $path, '/'));
 
     return $guidelines;
 }

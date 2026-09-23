@@ -8,8 +8,8 @@ use Laravel\Boost\Install\GuidelineWriter;
 
 test('it returns NOOP when guidelines are empty', function (): void {
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn('/tmp/test.md');
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns('/tmp/test.md');
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
 
@@ -22,9 +22,9 @@ test('it creates directory when it does not exist', function (): void {
     $filePath = $tempDir.'/subdir/test.md';
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($filePath);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($filePath);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('test guidelines');
@@ -63,9 +63,9 @@ test('it leaves existing user content untouched', function (): void {
     file_put_contents($tempFile, $userContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('boost guidelines');
@@ -96,9 +96,9 @@ test('it leaves user content around an existing block untouched when replacing',
     file_put_contents($tempFile, "# My Project\n\n<laravel-boost-guidelines>\nold guidelines\n</laravel-boost-guidelines>".$trailingContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('updated guidelines');
@@ -115,9 +115,9 @@ test('it throws exception when directory creation fails', function (): void {
     $filePath = '/root/boost_test/test.md';
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($filePath);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($filePath);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
 
@@ -129,9 +129,9 @@ test('it writes guidelines to new file', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'boost_test_');
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('test guidelines content');
@@ -147,9 +147,9 @@ test('it writes guidelines to existing file without existing guidelines', functi
     file_put_contents($tempFile, "# Existing content\n\nSome text here.");
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('new guidelines');
@@ -166,9 +166,9 @@ test('it replaces existing guidelines in-place', function (): void {
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('updated guidelines');
@@ -185,9 +185,9 @@ test('it avoids adding extra newline if one already exists', function (): void {
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('updated guidelines');
@@ -209,9 +209,9 @@ test('it handles multiline existing guidelines', function (): void {
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('single line');
@@ -229,9 +229,9 @@ test('it handles multiple guideline blocks', function (): void {
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('replacement');
@@ -248,9 +248,9 @@ test('it throws exception when file cannot be opened', function (): void {
     $dirPath = sys_get_temp_dir();
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($dirPath);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($dirPath);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
 
@@ -264,9 +264,9 @@ test('it preserves file content structure with proper spacing', function (): voi
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('my guidelines');
@@ -282,9 +282,9 @@ test('it handles empty file', function (): void {
     file_put_contents($tempFile, '');
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('first guidelines');
@@ -300,9 +300,9 @@ test('it handles file with only whitespace', function (): void {
     file_put_contents($tempFile, "   \n\n  \t  \n");
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('clean guidelines');
@@ -319,9 +319,9 @@ test('it does not interfere with other XML-like tags', function (): void {
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $result = $writer->write('new guidelines');
@@ -339,9 +339,9 @@ test('it preserves user content after guidelines when replacing', function (): v
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('updated guidelines from boost');
@@ -372,9 +372,9 @@ test('it preserves dollar-sign literals in guidelines when replacing existing bl
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('Apple Developer Program renewal ($99/yr) before the anniversary');
@@ -391,9 +391,9 @@ test('it preserves backslash and dollar patterns in guidelines when replacing ex
     file_put_contents($tempFile, $initialContent);
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('Use $1 and $2 capture groups, cost $99, path C:\\Users\\dev');
@@ -417,9 +417,9 @@ test('it adds frontmatter when agent supports it and file has no existing frontm
     file_put_contents($tempFile, "# Existing content\n\nSome text here.");
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(true);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(true);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('new guidelines');
@@ -435,9 +435,9 @@ test('it does not add frontmatter when agent supports it but file already has fr
     file_put_contents($tempFile, "---\ncustomOption: true\n---\n# Existing content\n\nSome text here.");
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(true);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(true);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $writer->write('new guidelines');
@@ -453,9 +453,9 @@ test('it does not add frontmatter when agent does not support it', function (): 
     file_put_contents($tempFile, "# Existing content\n\nSome text here.");
 
     $agent = Double::for(SupportsGuidelines::class);
-    $agent->shouldReceive('guidelinesPath')->andReturn($tempFile);
-    $agent->shouldReceive('frontmatter')->andReturn(false);
-    $agent->shouldReceive('transformGuidelines')->andReturnUsing(fn ($markdown) => $markdown);
+    $agent->allows('guidelinesPath')->returns($tempFile);
+    $agent->allows('frontmatter')->returns(false);
+    $agent->allows('transformGuidelines')->resolves(fn ($markdown) => $markdown);
 
     $writer = new GuidelineWriter($agent);
     $result = $writer->write('new guidelines');

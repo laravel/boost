@@ -92,16 +92,13 @@ it('calls install command with a guidelines flag when guidelines are enabled', f
     $config->setSkills([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => false,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -119,16 +116,13 @@ it('calls install command with skills flag when skills are configured', function
     $config->setSkills(['test-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => false,
             '--skills' => true,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -185,16 +179,13 @@ it('calls install command with both flags when guidelines and skills are enabled
     $config->setSkills(['test-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => true,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -212,16 +203,13 @@ it('does not pass mcp flag to install command even when mcp is configured', func
     $config->setMcp(true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => false,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -239,16 +227,13 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $config->setSail(true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => false,
-        ])
-        ->andReturnUsing(fn (): int => 0);
+        ])->resolves(fn (): int => 0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -267,16 +252,13 @@ it('preserves non-sail configuration when updating guidelines', function (): voi
     $config->setSail(false);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => false,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -295,16 +277,13 @@ it('preserves sail configuration when updating skills', function (): void {
     $config->setSail(true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => false,
             '--skills' => true,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -324,16 +303,13 @@ it('calls install command with skills flag when .ai/skills directory exists but 
     mkdir(base_path('.ai/skills'), 0755, true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => false,
             '--skills' => true,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -362,17 +338,14 @@ it('does not run discovery when --no-discover flag is set', function (): void {
     $config->setSkills(['existing-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldNotReceive('discoverNewContent');
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->expects('discoverNewContent')->never();
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => false,
             '--skills' => true,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -394,11 +367,10 @@ it('runs discovery by default and adds selected new packages to config', functio
     Prompt::fake([Key::SPACE, Key::ENTER]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')
-        ->andReturn(collect(['vendor/default-pkg' => $newPackage]));
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->allows('option')->with('no-discover')->returns(false);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->allows('resolveNewPackages')->returns(collect(['vendor/default-pkg' => $newPackage]));
+    $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -417,10 +389,10 @@ it('does not change config when no new packages are found during discovery', fun
     $config->setSkills(['existing-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')->andReturn(collect());
-    $command->shouldReceive('callSilently')->once()->andReturn(0);
+    $command->allows('option')->with('no-discover')->returns(false);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->allows('resolveNewPackages')->returns(collect());
+    $command->expects('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -443,11 +415,10 @@ it('adds selected new packages to config during discovery', function (): void {
     Prompt::fake([Key::SPACE, Key::ENTER]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')
-        ->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->allows('option')->with('no-discover')->returns(false);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -470,11 +441,11 @@ it('skips new-package discovery prompt when running as a composer script', funct
     Prompt::fake([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
-    $command->shouldReceive('runningAsComposerScript')->andReturn(true);
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->allows('option')->with('no-discover')->returns(false);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->allows('runningAsComposerScript')->returns(true);
+    $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
     $input = new ArrayInput([]);
@@ -493,16 +464,13 @@ it('skips skills when --ignore-skills flag is set even if skills are configured'
     $config->setSkills(['test-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(true);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(true);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => false,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -521,16 +489,13 @@ it('skips skills when --ignore-skills flag is set even if .ai/skills directory e
     mkdir(base_path('.ai/skills'), 0755, true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(true);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(true);
-    $command->shouldReceive('callSilently')
-        ->once()
-        ->with(InstallCommand::class, [
+    $command->allows('option')->with('no-discover')->returns(true);
+    $command->allows('option')->with('ignore-skills')->returns(true);
+    $command->expects('callSilently')->with(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => true,
             '--skills' => false,
-        ])
-        ->andReturn(0);
+        ])->returns(0);
 
     $input = new ArrayInput([]);
     $output = new OutputStyle($input, new BufferedOutput);
@@ -563,10 +528,10 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
     Prompt::fake([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->shouldReceive('option')->with('no-discover')->andReturn(false);
-    $command->shouldReceive('option')->with('ignore-skills')->andReturn(false);
-    $command->shouldReceive('resolveNewPackages')->andReturn(collect(['vendor/awesome-pkg' => $newPackage]));
-    $command->shouldReceive('callSilently')->andReturn(0);
+    $command->allows('option')->with('no-discover')->returns(false);
+    $command->allows('option')->with('ignore-skills')->returns(false);
+    $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->allows('callSilently')->returns(0);
 
     $nonInteractiveInput = new ArrayInput([]);
     $nonInteractiveInput->setInteractive(false);

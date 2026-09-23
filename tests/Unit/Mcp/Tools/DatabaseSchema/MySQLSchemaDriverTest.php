@@ -11,9 +11,7 @@ test('getTables quotes the table type as a string literal', function (): void {
     $sql = null;
 
     $connection = Double::for(Connection::class);
-    $connection->shouldReceive('select')
-        ->once()
-        ->andReturnUsing(function (string $query) use (&$sql): array {
+    $connection->expects('select')->resolves(function (string $query) use (&$sql): array {
             $sql = $query;
 
             return [];
@@ -32,9 +30,7 @@ test('getCheckConstraints filters on TABLE_NAME directly when the column exists'
     $calls = [];
 
     $connection = Double::for(Connection::class);
-    $connection->shouldReceive('select')
-        ->once()
-        ->andReturnUsing(function (string $query, array $bindings) use (&$calls): array {
+    $connection->expects('select')->resolves(function (string $query, array $bindings) use (&$calls): array {
             $calls[] = [$query, $bindings];
 
             return [(object) ['CONSTRAINT_NAME' => 'orders_qty_positive']];
@@ -55,9 +51,7 @@ test('getCheckConstraints maps the table through TABLE_CONSTRAINTS when TABLE_NA
     $calls = [];
 
     $connection = Double::for(Connection::class);
-    $connection->shouldReceive('select')
-        ->twice()
-        ->andReturnUsing(function (string $query, array $bindings) use (&$calls): array {
+    $connection->expects('select')->times(2)->resolves(function (string $query, array $bindings) use (&$calls): array {
             $calls[] = [$query, $bindings];
 
             if (count($calls) === 1) {

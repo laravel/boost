@@ -10,9 +10,7 @@ use Laravel\Tinker\TinkerServiceProvider;
 test('can execute tool in subprocess', function (): void {
     // Create a mock that overrides buildCommand to work with testbench
     $executor = Double::for(ToolExecutor::class)->passthru();
-    $executor->shouldReceive('buildCommand')
-        ->once()
-        ->andReturnUsing(buildSubprocessCommand(...));
+    $executor->expects('buildCommand')->resolves(buildSubprocessCommand(...));
 
     $response = $executor->execute(DatabaseConnections::class, []);
 
@@ -40,8 +38,7 @@ test('rejects unregistered tools', function (): void {
 
 test('subprocess proves fresh process isolation', function (): void {
     $executor = Double::for(ToolExecutor::class)->passthru();
-    $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(fn (): array => [
+    $executor->allows('buildCommand')->resolves(fn (): array => [
             PHP_BINARY, '-r',
             'echo json_encode(["isError" => false, "content" => [["type" => "text", "text" => (string) getmypid()]]]);',
         ]);
@@ -62,8 +59,7 @@ test('subprocess proves fresh process isolation', function (): void {
 
 test('subprocess sees modified autoloaded code changes', function (): void {
     $executor = Double::for(ToolExecutor::class)->passthru();
-    $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(buildSubprocessCommand(...));
+    $executor->allows('buildCommand')->resolves(buildSubprocessCommand(...));
 
     // Path to the DatabaseConnections tool that we'll temporarily modify
     // TODO: Improve for parallelisation
@@ -135,8 +131,7 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
 test('respects custom timeout parameter', function (): void {
     $executor = Double::for(ToolExecutor::class)->passthru();
 
-    $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(buildSubprocessCommand(...));
+    $executor->allows('buildCommand')->resolves(buildSubprocessCommand(...));
 
     // Test with custom timeout - should succeed with a fast tool
     $response = $executor->execute(DatabaseConnections::class, [
@@ -163,8 +158,7 @@ test('resolves timeout from argument, then config, then default', function (): v
 
 test('output buffering discards stray stdout during tool execution', function (): void {
     $executor = Double::for(ToolExecutor::class)->passthru();
-    $executor->shouldReceive('buildCommand')
-        ->andReturnUsing(buildSubprocessCommand(...));
+    $executor->allows('buildCommand')->resolves(buildSubprocessCommand(...));
 
     $toolPath = dirname(__DIR__, 3).'/src/Mcp/Tools/DatabaseConnections.php';
     $originalContent = file_get_contents($toolPath);

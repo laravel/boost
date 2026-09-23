@@ -70,17 +70,9 @@ test('detectOnSystem delegates to strategy factory and detection strategy', func
     $platform = Platform::Darwin;
     $config = ['paths' => ['/test/path']];
 
-    $this->strategyFactory
-        ->shouldReceive('makeFromConfig')
-        ->once()
-        ->with($config)
-        ->andReturn($this->strategy);
+    $this->strategyFactory->expects('makeFromConfig')->with($config)->returns($this->strategy);
 
-    $this->strategy
-        ->shouldReceive('detect')
-        ->once()
-        ->with($config, $platform)
-        ->andReturn(true);
+    $this->strategy->expects('detect')->with($config, $platform)->returns(true);
 
     $environment = new TestAgent($this->strategyFactory);
     $result = $environment->detectOnSystem($platform);
@@ -93,17 +85,9 @@ test('detectInProject merges config with basePath and delegates to strategy', fu
     $projectConfig = ['files' => ['test.config']];
     $mergedConfig = ['files' => ['test.config'], 'basePath' => $basePath];
 
-    $this->strategyFactory
-        ->shouldReceive('makeFromConfig')
-        ->once()
-        ->with($mergedConfig)
-        ->andReturn($this->strategy);
+    $this->strategyFactory->expects('makeFromConfig')->with($mergedConfig)->returns($this->strategy);
 
-    $this->strategy
-        ->shouldReceive('detect')
-        ->once()
-        ->with($mergedConfig)
-        ->andReturn(false);
+    $this->strategy->expects('detect')->with($mergedConfig)->returns(false);
 
     $environment = new TestAgent($this->strategyFactory);
     $result = $environment->detectInProject($basePath);
@@ -114,13 +98,9 @@ test('detectInProject merges config with basePath and delegates to strategy', fu
 test('installMcp uses Shell strategy when configured', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $environment->shouldReceive('installShellMcp')
-        ->once()
-        ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])
-        ->andReturn(true);
+    $environment->expects('installShellMcp')->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])->returns(true);
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
@@ -130,13 +110,9 @@ test('installMcp uses Shell strategy when configured', function (): void {
 test('installMcp uses File strategy when configured', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::FILE);
 
-    $environment->shouldReceive('installFileMcp')
-        ->once()
-        ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])
-        ->andReturn(true);
+    $environment->expects('installFileMcp')->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])->returns(true);
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
@@ -146,8 +122,7 @@ test('installMcp uses File strategy when configured', function (): void {
 test('installMcp returns false for None strategy', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::NONE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::NONE);
 
     $result = $environment->installMcp('test-key', 'test-command');
 
@@ -165,15 +140,13 @@ test('installShellMcp returns false when shellMcpCommand is null', function (): 
 test('installShellMcp executes command with placeholders replaced', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key} {command} {args} {env}');
+    $environment->allows('shellMcpCommand')->returns('install {key} {command} {args} {env}');
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
     $mockResult = Double::for(\stdClass::class);
-    $mockResult->shouldReceive('successful')->andReturn(true);
-    $mockResult->shouldReceive('errorOutput')->andReturn('');
+    $mockResult->allows('successful')->returns(true);
+    $mockResult->allows('errorOutput')->returns('');
 
     Process::shouldReceive('run')
         ->once()
@@ -190,15 +163,13 @@ test('installShellMcp executes command with placeholders replaced', function ():
 test('installShellMcp returns true when process fails but has already exists error', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key}');
+    $environment->allows('shellMcpCommand')->returns('install {key}');
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
     $mockResult = Double::for(\stdClass::class);
-    $mockResult->shouldReceive('successful')->andReturn(false);
-    $mockResult->shouldReceive('errorOutput')->andReturn('Error: already exists');
+    $mockResult->allows('successful')->returns(false);
+    $mockResult->allows('errorOutput')->returns('Error: already exists');
 
     Process::shouldReceive('run')
         ->once()
@@ -212,11 +183,9 @@ test('installShellMcp returns true when process fails but has already exists err
 test('installShellMcp returns false when the process is signaled', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('php -r "posix_kill(posix_getpid(), 5);"');
+    $environment->allows('shellMcpCommand')->returns('php -r "posix_kill(posix_getpid(), 5);"');
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
     $result = $environment->installMcp('test-key', 'test-command');
 
@@ -251,8 +220,7 @@ test('installFileMcp creates new config file when none exists', function (): voi
 }
 JSON;
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -281,8 +249,7 @@ test('installFileMcp updates existing config file', function (): void {
     $capturedPath = '';
     $capturedContent = '';
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::FILE);
 
     $existingConfig = json_encode(['mcpServers' => ['existing' => ['command' => 'existing-cmd']]]);
 
@@ -445,15 +412,13 @@ test('preserves single commands without arguments', function (): void {
 test('shell installation handles valet php commands', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key} {command} {args}');
+    $environment->allows('shellMcpCommand')->returns('install {key} {command} {args}');
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
     $mockResult = Double::for(\stdClass::class);
-    $mockResult->shouldReceive('successful')->andReturn(true);
-    $mockResult->shouldReceive('errorOutput')->andReturn('');
+    $mockResult->allows('successful')->returns(true);
+    $mockResult->allows('errorOutput')->returns('');
 
     Process::shouldReceive('run')
         ->once()
@@ -470,15 +435,13 @@ test('shell installation handles valet php commands', function (): void {
 test('shell installation handles herd php commands', function (): void {
     $environment = Double::for(TestAgent::class)->passthru();
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key} {command} {args}');
+    $environment->allows('shellMcpCommand')->returns('install {key} {command} {args}');
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
     $mockResult = Double::for(\stdClass::class);
-    $mockResult->shouldReceive('successful')->andReturn(true);
-    $mockResult->shouldReceive('errorOutput')->andReturn('');
+    $mockResult->allows('successful')->returns(true);
+    $mockResult->allows('errorOutput')->returns('');
 
     Process::shouldReceive('run')
         ->once()
@@ -497,8 +460,7 @@ test('file installation handles valet php commands', function (): void {
 
     $capturedContent = '';
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -534,8 +496,7 @@ test('file installation handles herd php commands', function (): void {
 
     $capturedContent = '';
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -571,8 +532,7 @@ test('file installation handles docker exec commands', function (): void {
 
     $capturedContent = '';
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -650,8 +610,7 @@ test('file installation handles absolute paths with spaces correctly', function 
 
     $capturedContent = '';
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
+    $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()

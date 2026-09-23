@@ -10,7 +10,7 @@ beforeEach(function (): void {
     $this->prompt = new UpgradeLaravelV13;
 
     $herd = Double::for(Herd::class);
-    $herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
+    $herd->allows('isInstalled')->returns(false);
     $this->app->instance(Herd::class, $herd);
 });
 
@@ -65,7 +65,7 @@ test('it shows the composer installer command when herd is not installed', funct
 
 test('it shows herd update command when herd is installed', function (): void {
     $herd = Double::for(Herd::class);
-    $herd->shouldReceive('isInstalled')->andReturn(true);
+    $herd->allows('isInstalled')->returns(true);
     $this->app->instance(Herd::class, $herd);
 
     $text = (string) $this->prompt->handle()->content();

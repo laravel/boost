@@ -21,7 +21,7 @@ test('php executable falls back to Sail when no config is set', function (): voi
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->artisan())->toBe(Sail::artisanCommand());
 });
@@ -31,7 +31,7 @@ test('php executable config takes precedence over Sail', function (): void {
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->artisan())->toBe('/usr/local/bin/php8.3 artisan');
 });
@@ -41,7 +41,7 @@ test('composer executable falls back to Sail when no config is set', function ()
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     $defaultSailComposer = Sail::composerCommand();
 
@@ -53,7 +53,7 @@ test('composer executable config takes precedence over Sail', function (): void 
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->composerCommand('install'))->toBe('/usr/local/bin/composer2 install');
 });
@@ -63,7 +63,7 @@ test('npm executable falls back to Sail when no config is set', function (): voi
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     $expectedCommand = Sail::nodePackageManagerCommand('npm');
 
@@ -75,7 +75,7 @@ test('npm executable config takes precedence over Sail', function (): void {
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->nodePackageManagerCommand('install'))->toBe('/usr/local/bin/yarn install');
 });
@@ -85,7 +85,7 @@ test('npm executable falls back to npm when no config and no Sail', function ():
     $this->config->usesSail = false;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->nodePackageManagerCommand('install'))->toBe('npm install');
 });
@@ -95,7 +95,7 @@ test('vendor bin prefix falls back to Sail when no config is set', function (): 
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     $expectedPrefix = Sail::binCommand();
 
@@ -107,7 +107,7 @@ test('vendor bin prefix config takes precedence over Sail', function (): void {
     $this->config->usesSail = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->binCommand('pint'))->toBe('/custom/path/pint');
 });
@@ -117,7 +117,7 @@ test('vendor bin prefix falls back to vendor/bin when no config and no Sail', fu
     $this->config->usesSail = false;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->binCommand('pint'))->toBe('vendor/bin/pint');
 });
@@ -139,7 +139,7 @@ test('enumContents returns empty string when app directory does not exist', func
     $sentinel = ['app-path-isnt-a-directory' => sys_get_temp_dir()];
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn($sentinel);
+    $assist->allows('discover')->returns($sentinel);
 
     expect($assist->enumContents())->toBe('');
 });
@@ -186,7 +186,7 @@ test('hasSkillsEnabled returns false when skills are disabled', function (): voi
     $this->config->hasSkills = false;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->hasSkillsEnabled())->toBeFalse();
 });
@@ -195,7 +195,7 @@ test('hasSkillsEnabled returns true when skills are enabled', function (): void 
     $this->config->hasSkills = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->hasSkillsEnabled())->toBeTrue();
 });
@@ -204,7 +204,7 @@ test('hasMcpEnabled returns false when MCP is disabled', function (): void {
     $this->config->hasMcp = false;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->hasMcpEnabled())->toBeFalse();
 });
@@ -213,14 +213,14 @@ test('hasMcpEnabled returns true when MCP is enabled', function (): void {
     $this->config->hasMcp = true;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->hasMcpEnabled())->toBeTrue();
 });
 
 test('appPath returns default app path', function (): void {
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->appPath())->toBe('app');
     expect($assist->appPath('path/to/file.php'))->toBe('app/path/to/file.php');
@@ -228,7 +228,7 @@ test('appPath returns default app path', function (): void {
 
 test('appPath returns customized path', function (): void {
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     app()->useAppPath('src');
 
@@ -238,7 +238,7 @@ test('appPath returns customized path', function (): void {
 
 test('appPath normalizes separators to forward slashes', function (): void {
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->appPath('Http/Kernel.php'))->toBe('app/Http/Kernel.php');
     expect($assist->appPath('Console/Commands/'))->toBe('app/Console/Commands/');
@@ -254,7 +254,7 @@ test('blank executable path config is treated as unset', function (mixed $blank)
     $this->config->usesSail = false;
 
     $assist = Double::for(GuidelineAssist::class)->passthru(new GuidelineAssist($this->project, $this->config));
-    $assist->shouldReceive('discover')->andReturn([]);
+    $assist->allows('discover')->returns([]);
 
     expect($assist->artisan())->toBe('php artisan');
     expect($assist->composerCommand('require foo/bar'))->toBe('composer require foo/bar');

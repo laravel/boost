@@ -20,7 +20,7 @@ function buildGuidelineConfigWith(Collection $selectedBoostFeatures, Config $con
 {
     $command = Double::for(InstallCommand::class)->passthru();
 
-    $command->shouldReceive('isExplicitFlagMode')->andReturn($explicitFlagMode);
+    $command->allows('isExplicitFlagMode')->returns($explicitFlagMode);
 
     $reflect = new ReflectionClass(InstallCommand::class);
 

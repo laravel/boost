@@ -45,7 +45,7 @@ test('isActive returns true when LARAVEL_SAIL env var is set', function (): void
     putenv('LARAVEL_SAIL=1');
 
     $sail = Double::for(Sail::class)->passthru();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(false);
+    $sail->allows('isRunningInDevcontainer')->returns(false);
 
     expect($sail->isActive())->toBeTrue();
 
@@ -56,7 +56,7 @@ test('isActive returns false when running in devcontainer without LARAVEL_SAIL',
     putenv('LARAVEL_SAIL=');
 
     $sail = Double::for(Sail::class)->passthru();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(true);
+    $sail->allows('isRunningInDevcontainer')->returns(true);
 
     expect($sail->isActive())->toBeFalse();
 });
@@ -65,7 +65,7 @@ test('isActive returns false when LARAVEL_SAIL is set inside a devcontainer', fu
     putenv('LARAVEL_SAIL=1');
 
     $sail = Double::for(Sail::class)->passthru();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(true);
+    $sail->allows('isRunningInDevcontainer')->returns(true);
 
     expect($sail->isActive())->toBeFalse();
 
@@ -76,7 +76,7 @@ test('isActive returns false when not sail user and no env var and not in contai
     putenv('LARAVEL_SAIL=');
 
     $sail = Double::for(Sail::class)->passthru();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(false);
+    $sail->allows('isRunningInDevcontainer')->returns(false);
 
     // get_current_user() won't return 'sail' in the test environment
     expect($sail->isActive())->toBeFalse();

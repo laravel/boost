@@ -27,14 +27,14 @@ afterEach(function (): void {
 function makeTestInstallCommand(Config $config, ?AgentsDetector $detector = null): InstallCommand
 {
     $nightwatch = Double::for(Nightwatch::class);
-    $nightwatch->shouldReceive('isInstalled')->andReturn(false);
+    $nightwatch->allows('isInstalled')->returns(false);
 
     $sail = Double::for(Sail::class);
-    $sail->shouldReceive('isInstalled')->andReturn(false);
-    $sail->shouldReceive('isActive')->andReturn(false);
+    $sail->allows('isInstalled')->returns(false);
+    $sail->allows('isActive')->returns(false);
 
     $terminal = Double::for(Terminal::class);
-    $terminal->shouldReceive('initDimensions');
+    $terminal->allows('initDimensions');
 
     return new class($detector ?? app(AgentsDetector::class), $config, $nightwatch, app(ProjectManager::class), $sail, $terminal) extends InstallCommand
     {
@@ -50,9 +50,9 @@ it('does not throw when no agents are saved and none are auto-detected in non-in
     $config = new Config;
 
     $detector = Double::for(AgentsDetector::class);
-    $detector->shouldReceive('getAgents')->andReturn(app(AgentsDetector::class)->getAgents());
-    $detector->shouldReceive('discoverSystemInstalledAgents')->andReturn([]);
-    $detector->shouldReceive('discoverProjectInstalledAgents')->andReturn([]);
+    $detector->allows('getAgents')->returns(app(AgentsDetector::class)->getAgents());
+    $detector->allows('discoverSystemInstalledAgents')->returns([]);
+    $detector->allows('discoverProjectInstalledAgents')->returns([]);
 
     $command = makeTestInstallCommand($config, $detector);
 

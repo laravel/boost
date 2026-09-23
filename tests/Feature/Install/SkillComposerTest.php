@@ -190,8 +190,7 @@ test('vendor skills override .ai/ skills with the same name', function (): void 
     expect($vendorFixture)->not->toBeFalse();
 
     $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'livewire/livewire' ? $vendorFixture : null);
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === 'livewire/livewire' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 
@@ -208,7 +207,7 @@ test('falls back to .ai/ skills when vendor has none', function (): void {
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer->allows('resolveFirstPartyBoostPath')->returns(null);
 
     $skills = $composer->skills();
 
@@ -227,8 +226,7 @@ test('node_modules skills override .ai/ skills for npm first-party packages', fu
     expect($vendorFixture)->not->toBeFalse();
 
     $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
+    $composer->allows('resolveFirstPartyBoostPath')->resolves(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
 
     $skills = $composer->skills();
 
@@ -245,7 +243,7 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
     mockProjectPackages($this->project, $packages);
 
     $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer->allows('resolveFirstPartyBoostPath')->returns(null);
 
     $skills = $composer->skills();
 

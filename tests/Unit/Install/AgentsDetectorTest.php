@@ -49,16 +49,16 @@ it('returns collection of all registered agents', function (): void {
 
 it('returns an array of detected agents names for system discovery', function (): void {
     $mockJunie = Double::for(Agent::class);
-    $mockJunie->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
-    $mockJunie->shouldReceive('name')->andReturn('junie');
+    $mockJunie->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(true);
+    $mockJunie->allows('name')->returns('junie');
 
     $mockCursor = Double::for(Agent::class);
-    $mockCursor->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
-    $mockCursor->shouldReceive('name')->andReturn('cursor');
+    $mockCursor->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(true);
+    $mockCursor->allows('name')->returns('cursor');
 
     $mockOther = Double::for(Agent::class);
-    $mockOther->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
-    $mockOther->shouldReceive('name')->andReturn('other');
+    $mockOther->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(false);
+    $mockOther->allows('name')->returns('other');
 
     $this->container->bind(Amp::class, fn () => $mockOther);
     $this->container->bind(Junie::class, fn () => $mockJunie);
@@ -82,8 +82,8 @@ it('returns an array of detected agents names for system discovery', function ()
 
 it('returns an empty array when no agents are detected for system discovery', function (): void {
     $mockAgent = Double::for(Agent::class);
-    $mockAgent->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
-    $mockAgent->shouldReceive('name')->andReturn('mock');
+    $mockAgent->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(false);
+    $mockAgent->allows('name')->returns('mock');
 
     $this->container->bind(Amp::class, fn () => $mockAgent);
     $this->container->bind(Junie::class, fn () => $mockAgent);
@@ -109,16 +109,16 @@ it('returns an array of detected agent names for project discovery', function ()
     $basePath = '/test/project';
 
     $mockJunie = Double::for(Agent::class);
-    $mockJunie->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
-    $mockJunie->shouldReceive('name')->andReturn('junie');
+    $mockJunie->allows('detectInProject')->with($basePath)->returns(false);
+    $mockJunie->allows('name')->returns('junie');
 
     $mockClaudeCode = Double::for(Agent::class);
-    $mockClaudeCode->shouldReceive('detectInProject')->with($basePath)->andReturn(true);
-    $mockClaudeCode->shouldReceive('name')->andReturn('claude_code');
+    $mockClaudeCode->allows('detectInProject')->with($basePath)->returns(true);
+    $mockClaudeCode->allows('name')->returns('claude_code');
 
     $mockOther = Double::for(Agent::class);
-    $mockOther->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
-    $mockOther->shouldReceive('name')->andReturn('other');
+    $mockOther->allows('detectInProject')->with($basePath)->returns(false);
+    $mockOther->allows('name')->returns('other');
 
     $this->container->bind(Amp::class, fn () => $mockOther);
     $this->container->bind(Junie::class, fn () => $mockJunie);
@@ -144,8 +144,8 @@ it('returns an empty array when no agents are detected for project discovery', f
     $basePath = '/empty/project';
 
     $mockAgent = Double::for(Agent::class);
-    $mockAgent->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
-    $mockAgent->shouldReceive('name')->andReturn('mock');
+    $mockAgent->allows('detectInProject')->with($basePath)->returns(false);
+    $mockAgent->allows('name')->returns('mock');
 
     $this->container->bind(Amp::class, fn () => $mockAgent);
     $this->container->bind(Junie::class, fn () => $mockAgent);

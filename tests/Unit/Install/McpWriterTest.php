@@ -10,16 +10,9 @@ use Laravel\Boost\Install\Sail;
 
 it('installs boost mcp successfully without sail', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('getPhpPath')
-        ->once()
-        ->andReturn('php');
-    $agent->shouldReceive('getArtisanPath')
-        ->once()
-        ->andReturn('artisan');
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andReturn(true);
+    $agent->expects('getPhpPath')->returns('php');
+    $agent->expects('getArtisanPath')->returns('artisan');
+    $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->returns(true);
 
     $writer = new McpWriter($agent);
     $result = $writer->write();
@@ -29,16 +22,10 @@ it('installs boost mcp successfully without sail', function (): void {
 
 it('installs boost mcp with sail', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andReturn(true);
+    $agent->expects('installMcp')->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])->returns(true);
 
     $sail = Double::for(Sail::class);
-    $sail->shouldReceive('buildMcpCommand')
-        ->with('laravel-boost')
-        ->once()
-        ->andReturn([
+    $sail->expects('buildMcpCommand')->with('laravel-boost')->returns([
             'key' => 'laravel-boost',
             'command' => 'vendor/bin/sail',
             'args' => ['artisan', 'boost:mcp'],
@@ -52,14 +39,9 @@ it('installs boost mcp with sail', function (): void {
 
 it('throws exception when boost mcp installation returns false', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('getPhpPath')
-        ->andReturn('php');
-    $agent->shouldReceive('getArtisanPath')
-        ->andReturn('artisan');
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andReturn(false);
+    $agent->allows('getPhpPath')->returns('php');
+    $agent->allows('getArtisanPath')->returns('artisan');
+    $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->returns(false);
 
     $writer = new McpWriter($agent);
 
@@ -69,14 +51,9 @@ it('throws exception when boost mcp installation returns false', function (): vo
 
 it('throws exception when boost mcp installation throws exception', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('getPhpPath')
-        ->andReturn('php');
-    $agent->shouldReceive('getArtisanPath')
-        ->andReturn('artisan');
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andThrow(new RuntimeException('Permission denied'));
+    $agent->allows('getPhpPath')->returns('php');
+    $agent->allows('getArtisanPath')->returns('artisan');
+    $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->throws(new RuntimeException('Permission denied'));
 
     $writer = new McpWriter($agent);
 
@@ -86,25 +63,13 @@ it('throws exception when boost mcp installation throws exception', function ():
 
 it('installs nightwatch mcp when nightwatch is provided', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('getPhpPath')
-        ->once()
-        ->andReturn('php');
-    $agent->shouldReceive('getArtisanPath')
-        ->once()
-        ->andReturn('artisan');
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andReturn(true);
-    $agent->shouldReceive('installHttpMcp')
-        ->with('nightwatch', 'https://nightwatch.laravel.com/mcp')
-        ->once()
-        ->andReturn(true);
+    $agent->expects('getPhpPath')->returns('php');
+    $agent->expects('getArtisanPath')->returns('artisan');
+    $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->returns(true);
+    $agent->expects('installHttpMcp')->with('nightwatch', 'https://nightwatch.laravel.com/mcp')->returns(true);
 
     $nightwatch = Double::for(Nightwatch::class);
-    $nightwatch->shouldReceive('mcpUrl')
-        ->once()
-        ->andReturn('https://nightwatch.laravel.com/mcp');
+    $nightwatch->expects('mcpUrl')->returns('https://nightwatch.laravel.com/mcp');
 
     $writer = new McpWriter($agent);
     $result = $writer->write(null, $nightwatch);
@@ -114,25 +79,13 @@ it('installs nightwatch mcp when nightwatch is provided', function (): void {
 
 it('throws exception when nightwatch mcp installation returns false', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('getPhpPath')
-        ->once()
-        ->andReturn('php');
-    $agent->shouldReceive('getArtisanPath')
-        ->once()
-        ->andReturn('artisan');
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andReturn(true);
-    $agent->shouldReceive('installHttpMcp')
-        ->with('nightwatch', 'https://nightwatch.laravel.com/mcp')
-        ->once()
-        ->andReturn(false);
+    $agent->expects('getPhpPath')->returns('php');
+    $agent->expects('getArtisanPath')->returns('artisan');
+    $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->returns(true);
+    $agent->expects('installHttpMcp')->with('nightwatch', 'https://nightwatch.laravel.com/mcp')->returns(false);
 
     $nightwatch = Double::for(Nightwatch::class);
-    $nightwatch->shouldReceive('mcpUrl')
-        ->once()
-        ->andReturn('https://nightwatch.laravel.com/mcp');
+    $nightwatch->expects('mcpUrl')->returns('https://nightwatch.laravel.com/mcp');
 
     $writer = new McpWriter($agent);
 
@@ -142,17 +95,10 @@ it('throws exception when nightwatch mcp installation returns false', function (
 
 it('does not install nightwatch mcp when nightwatch is null', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('getPhpPath')
-        ->once()
-        ->andReturn('php');
-    $agent->shouldReceive('getArtisanPath')
-        ->once()
-        ->andReturn('artisan');
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andReturn(true);
-    $agent->shouldNotReceive('installHttpMcp');
+    $agent->expects('getPhpPath')->returns('php');
+    $agent->expects('getArtisanPath')->returns('artisan');
+    $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->returns(true);
+    $agent->expects('installHttpMcp')->never();
 
     $writer = new McpWriter($agent);
     $result = $writer->write();
@@ -162,29 +108,18 @@ it('does not install nightwatch mcp when nightwatch is null', function (): void 
 
 it('installs with both sail and nightwatch', function (): void {
     $agent = Double::for(SupportsMcp::class);
-    $agent->shouldReceive('installMcp')
-        ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])
-        ->once()
-        ->andReturn(true);
-    $agent->shouldReceive('installHttpMcp')
-        ->with('nightwatch', 'https://nightwatch.laravel.com/mcp')
-        ->once()
-        ->andReturn(true);
+    $agent->expects('installMcp')->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])->returns(true);
+    $agent->expects('installHttpMcp')->with('nightwatch', 'https://nightwatch.laravel.com/mcp')->returns(true);
 
     $sail = Double::for(Sail::class);
-    $sail->shouldReceive('buildMcpCommand')
-        ->with('laravel-boost')
-        ->once()
-        ->andReturn([
+    $sail->expects('buildMcpCommand')->with('laravel-boost')->returns([
             'key' => 'laravel-boost',
             'command' => 'vendor/bin/sail',
             'args' => ['artisan', 'boost:mcp'],
         ]);
 
     $nightwatch = Double::for(Nightwatch::class);
-    $nightwatch->shouldReceive('mcpUrl')
-        ->once()
-        ->andReturn('https://nightwatch.laravel.com/mcp');
+    $nightwatch->expects('mcpUrl')->returns('https://nightwatch.laravel.com/mcp');
 
     $writer = new McpWriter($agent);
     $result = $writer->write($sail, $nightwatch);

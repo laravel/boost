@@ -80,8 +80,8 @@ function unwritableSkills(string $basePath, array $names): Collection
 function mockSkillComposer(Collection $skills): void
 {
     $composer = Double::for(SkillComposer::class);
-    $composer->shouldReceive('config')->andReturnSelf();
-    $composer->shouldReceive('skills')->andReturn($skills);
+    $composer->allows('config')->returns($composer);
+    $composer->allows('skills')->returns($skills);
 
     app()->instance(SkillComposer::class, $composer);
 }
