@@ -365,8 +365,9 @@ test('includes user custom guidelines from .ai/guidelines directory', function (
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     expect($composer->compose())
         ->toContain('=== .ai/custom-rule rules ===')
@@ -386,8 +387,9 @@ test('nested user guidelines with the same filename do not overwrite each other'
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines-nested')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures/nested-guidelines'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     expect($composer->compose())
         ->toContain('=== .ai/frontend/api rules ===')
@@ -404,13 +406,15 @@ test('a user override still applies for a package whose bundled core.blade.php n
 
     mockProjectPackages($this->project, $packages);
 
-    $customDir = testDirectory('Fixtures/.ai/pest-core-override-guidelines');
+    $root = testDirectory('Fixtures/pest-core-override');
+    $customDir = $root.'/.ai/guidelines';
     @mkdir($customDir.'/pest', 0755, true);
     file_put_contents($customDir.'/pest/core.blade.php', "# Custom Pest Override\n\nAlways use this project's own Pest conventions.\n");
 
     try {
-        $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         $guidelines = $composer->guidelines();
 
@@ -420,6 +424,8 @@ test('a user override still applies for a package whose bundled core.blade.php n
         @unlink($customDir.'/pest/core.blade.php');
         @rmdir($customDir.'/pest');
         @rmdir($customDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     }
 });
 
@@ -430,8 +436,9 @@ test('non-empty custom guidelines override Boost guidelines', function (): void 
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
     $overrideStringCount = substr_count((string) $guidelines, 'Thanks though, appreciate you');
@@ -546,8 +553,9 @@ test('renderContent handles blade and markdown files correctly', function (): vo
     ]);
 
     mockProjectPackages($this->project, $packages);
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->compose();
 
@@ -667,8 +675,9 @@ test('includes wayfinder guidelines without inertia integration when inertia is 
 test('the guidelines are in correct order', function (): void {
     config(['boost.rules.enabled' => false]);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
@@ -781,8 +790,9 @@ test('user guidelines are sorted by filename for predictable ordering', function
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/sorted-guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures/sorted-guidelines'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->guidelines();
     $keys = $guidelines->keys()->toArray();
@@ -949,8 +959,9 @@ test('does not exclude user guidelines via config', function (): void {
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     config(['boost.guidelines.exclude' => ['.ai/custom-rule']]);
 
@@ -1095,8 +1106,9 @@ test('user override works with vendor-sourced guideline', function (): void {
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => realpath(testDirectory('Fixtures/.ai/guidelines')).'/'.ltrim((string) $path, '/'));
+    app()->setBasePath(testDirectory('Fixtures'));
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->guidelines();
     $laravelCore = $guidelines->get('laravel/core');
@@ -1161,12 +1173,14 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
 
     mockProjectPackages($this->project, $packages);
 
-    $mdOverrideDir = testDirectory('Fixtures/.ai/guidelines-md-override');
+    $root = testDirectory('Fixtures/md-override');
+    $mdOverrideDir = $root.'/.ai/guidelines';
     @mkdir($mdOverrideDir.'/pest', 0755, true);
     file_put_contents($mdOverrideDir.'/pest/core.md', '# Pest Markdown Override');
 
-    $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-    $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $mdOverrideDir.'/'.ltrim((string) $path, '/'));
+    app()->setBasePath($root);
+
+    $composer = new GuidelineComposer($this->project, $this->herd);
 
     $guidelines = $composer->guidelines();
     $pestCore = $guidelines->get('pest/core');
@@ -1178,6 +1192,8 @@ test('user override resolves .md files for vendor-sourced guidelines', function 
     @unlink($mdOverrideDir.'/pest/core.md');
     @rmdir($mdOverrideDir.'/pest');
     @rmdir($mdOverrideDir);
+    @rmdir($root.'/.ai');
+    @rmdir($root);
 });
 
 test('symlinked custom guidelines directory does not produce duplicates', function (): void {
@@ -1188,14 +1204,17 @@ test('symlinked custom guidelines directory does not produce duplicates', functi
     mockProjectPackages($this->project, $packages);
 
     $realGuidelinesDir = realpath(testDirectory('Fixtures/.ai/guidelines'));
-    $symlinkDir = testDirectory('Fixtures/.ai/symlinked-guidelines');
+    $root = testDirectory('Fixtures/symlinked-guidelines');
+    $symlinkDir = $root.'/.ai/guidelines';
 
     @unlink($symlinkDir);
+    @mkdir($root.'/.ai', 0755, true);
     symlink($realGuidelinesDir, $symlinkDir);
 
     try {
-        $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $symlinkDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         $composed = $composer->compose();
         $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
@@ -1203,6 +1222,8 @@ test('symlinked custom guidelines directory does not produce duplicates', functi
         expect($overrideCount)->toBe(1);
     } finally {
         @unlink($symlinkDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     }
 });
 
@@ -1213,7 +1234,8 @@ test('symlinked custom guideline file does not produce duplicates', function ():
 
     mockProjectPackages($this->project, $packages);
 
-    $customDir = testDirectory('Fixtures/.ai/symlinked-file-guidelines');
+    $root = testDirectory('Fixtures/symlinked-file-guidelines');
+    $customDir = $root.'/.ai/guidelines';
     $externalFile = realpath(testDirectory('Fixtures/.ai/guidelines/laravel/core.blade.php'));
 
     @rmdir($customDir.'/laravel');
@@ -1222,8 +1244,9 @@ test('symlinked custom guideline file does not produce duplicates', function ():
     symlink($externalFile, $customDir.'/laravel/core.blade.php');
 
     try {
-        $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         $composed = $composer->compose();
         $overrideCount = substr_count((string) $composed, 'User Override Laravel Core');
@@ -1233,6 +1256,8 @@ test('symlinked custom guideline file does not produce duplicates', function ():
         @unlink($customDir.'/laravel/core.blade.php');
         @rmdir($customDir.'/laravel');
         @rmdir($customDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     }
 });
 
@@ -1243,14 +1268,17 @@ test('symlinked nested user guidelines with the same filename keep distinct keys
 
     mockProjectPackages($this->project, $packages);
 
-    $customDir = testDirectory('Fixtures/.ai/symlinked-nested-guidelines');
-    $cleanup = function () use ($customDir): void {
+    $root = testDirectory('Fixtures/symlinked-nested-guidelines');
+    $customDir = $root.'/.ai/guidelines';
+    $cleanup = function () use ($root, $customDir): void {
         foreach (['frontend', 'backend'] as $group) {
             @unlink($customDir.'/'.$group.'/api.blade.php');
             @rmdir($customDir.'/'.$group);
         }
 
         @rmdir($customDir);
+        @rmdir($root.'/.ai');
+        @rmdir($root);
     };
 
     $cleanup();
@@ -1258,14 +1286,15 @@ test('symlinked nested user guidelines with the same filename keep distinct keys
     foreach (['frontend', 'backend'] as $group) {
         mkdir($customDir.'/'.$group, 0755, true);
         symlink(
-            realpath(testDirectory('Fixtures/.ai/guidelines-nested/'.$group.'/api.blade.php')),
+            realpath(testDirectory('Fixtures/nested-guidelines/.ai/guidelines/'.$group.'/api.blade.php')),
             $customDir.'/'.$group.'/api.blade.php'
         );
     }
 
     try {
-        $composer = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($this->project, $this->herd));
-        $composer->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $customDir.'/'.ltrim((string) $path, '/'));
+        app()->setBasePath($root);
+
+        $composer = new GuidelineComposer($this->project, $this->herd);
 
         expect($composer->used())
             ->toContain('.ai/frontend/api')

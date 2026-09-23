@@ -26,12 +26,9 @@ beforeEach(function (): void {
 
 function composerWithFixtureGuidelines(ProjectManager $project, Herd $herd, string $fixture): GuidelineComposer
 {
-    $dir = fixture($fixture);
+    app()->setBasePath(fixture($fixture));
 
-    $guidelines = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($project, $herd));
-    $guidelines->allows('customGuidelinePath')->resolves(fn ($path = ''): string => $dir.'/'.ltrim((string) $path, '/'));
-
-    return $guidelines;
+    return new GuidelineComposer($project, $herd);
 }
 
 /**
