@@ -92,18 +92,17 @@ it('calls install command with a guidelines flag when guidelines are enabled', f
     $config->setSkills([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => true,
         '--skills' => false,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -116,18 +115,17 @@ it('calls install command with skills flag when skills are configured', function
     $config->setSkills(['test-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => false,
         '--skills' => true,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -179,18 +177,17 @@ it('calls install command with both flags when guidelines and skills are enabled
     $config->setSkills(['test-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => true,
         '--skills' => true,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -203,18 +200,17 @@ it('does not pass mcp flag to install command even when mcp is configured', func
     $config->setMcp(true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => true,
         '--skills' => false,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -227,18 +223,17 @@ it('preserves sail configuration when updating guidelines', function (): void {
     $config->setSail(true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => true,
         '--skills' => false,
     ])->resolves(fn (): int => 0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -252,18 +247,17 @@ it('preserves non-sail configuration when updating guidelines', function (): voi
     $config->setSail(false);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => true,
         '--skills' => false,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -277,18 +271,17 @@ it('preserves sail configuration when updating skills', function (): void {
     $config->setSail(true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => false,
         '--skills' => true,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -303,18 +296,17 @@ it('calls install command with skills flag when .ai/skills directory exists but 
     mkdir(base_path('.ai/skills'), 0755, true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => false,
         '--skills' => true,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -338,8 +330,6 @@ it('does not run discovery when --no-discover flag is set', function (): void {
     $config->setSkills(['existing-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->expects('discoverNewContent')->never();
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
@@ -348,8 +338,9 @@ it('does not run discovery when --no-discover flag is set', function (): void {
     ])->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -367,13 +358,11 @@ it('runs discovery by default and adds selected new packages to config', functio
     Prompt::fake([Key::SPACE, Key::ENTER]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(false);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->allows('resolveNewPackages')->returns(collect(['vendor/default-pkg' => $newPackage]));
     $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setInput($input);
     $command->setOutput($output);
@@ -389,14 +378,13 @@ it('does not change config when no new packages are found during discovery', fun
     $config->setSkills(['existing-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(false);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->allows('resolveNewPackages')->returns(collect());
     $command->expects('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0)
@@ -415,13 +403,11 @@ it('adds selected new packages to config during discovery', function (): void {
     Prompt::fake([Key::SPACE, Key::ENTER]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(false);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
     $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setInput($input);
     $command->setOutput($output);
@@ -441,14 +427,12 @@ it('skips new-package discovery prompt when running as a composer script', funct
     Prompt::fake([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(false);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
     $command->allows('runningAsComposerScript')->returns(true);
     $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
     $command->setInput($input);
     $command->setOutput($output);
@@ -464,18 +448,17 @@ it('skips skills when --ignore-skills flag is set even if skills are configured'
     $config->setSkills(['test-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(true);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => true,
         '--skills' => false,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true, '--ignore-skills' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -489,18 +472,17 @@ it('skips skills when --ignore-skills flag is set even if .ai/skills directory e
     mkdir(base_path('.ai/skills'), 0755, true);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(true);
-    $command->allows('option')->with('ignore-skills')->returns(true);
     $command->expects('callSilently')->with(InstallCommand::class, [
         '--no-interaction' => true,
         '--guidelines' => true,
         '--skills' => false,
     ])->returns(0);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput(['--no-discover' => true, '--ignore-skills' => true], (new UpdateCommand)->getDefinition());
     $output = new OutputStyle($input, new BufferedOutput);
 
     $command->setLaravel($this->app);
+    $command->setInput($input);
     $command->setOutput($output);
 
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
@@ -528,12 +510,10 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
     Prompt::fake([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('option')->with('no-discover')->returns(false);
-    $command->allows('option')->with('ignore-skills')->returns(false);
     $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
     $command->allows('callSilently')->returns(0);
 
-    $nonInteractiveInput = new ArrayInput([]);
+    $nonInteractiveInput = new ArrayInput([], (new UpdateCommand)->getDefinition());
     $nonInteractiveInput->setInteractive(false);
 
     $command->setInput($nonInteractiveInput);
