@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Double;
 use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Agents\Junie;
 use Laravel\Boost\Install\Agents\Pi;
@@ -10,14 +9,14 @@ use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 
 test('Junie returns absolute PHP_BINARY path', function (): void {
     config(['boost.executable_paths.php' => null]);
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $junie = new Junie($strategyFactory);
 
     expect($junie->getPhpPath())->toBe(PHP_BINARY);
 });
 
 test('Junie returns absolute artisan path', function (): void {
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $junie = new Junie($strategyFactory);
 
     $artisanPath = $junie->getArtisanPath();
@@ -29,7 +28,7 @@ test('Junie returns absolute artisan path', function (): void {
 
 test('Cursor returns relative php string', function (): void {
     config(['boost.executable_paths.php' => null]);
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getPhpPath())->toBe('php');
@@ -38,7 +37,7 @@ test('Cursor returns relative php string', function (): void {
 test('Cursor uses configured default_php_bin when not forcing absolute path', function (): void {
     config(['boost.executable_paths.php' => '/custom/path/to/php']);
 
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getPhpPath())->toBe('/custom/path/to/php');
@@ -47,7 +46,7 @@ test('Cursor uses configured default_php_bin when not forcing absolute path', fu
 test('Cursor uses config even when forceAbsolutePath is true', function (): void {
     config(['boost.executable_paths.php' => '/custom/path/to/php']);
 
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getPhpPath(true))->toBe('/custom/path/to/php');
@@ -56,14 +55,14 @@ test('Cursor uses config even when forceAbsolutePath is true', function (): void
 test('Cursor uses PHP_BINARY when forceAbsolutePath is true and config is empty', function (): void {
     config(['boost.executable_paths.php' => null]);
 
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getPhpPath(true))->toBe(PHP_BINARY);
 });
 
 test('Cursor returns relative artisan path', function (): void {
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getArtisanPath())->toBe('artisan');
@@ -71,7 +70,7 @@ test('Cursor returns relative artisan path', function (): void {
 
 test('Agents return absolute paths when forceAbsolutePath is true and config is empty', function (): void {
     config(['boost.executable_paths.php' => null]);
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getPhpPath(true))->toBe(PHP_BINARY)
@@ -81,7 +80,7 @@ test('Agents return absolute paths when forceAbsolutePath is true and config is 
 
 test('Agents maintain relative paths when forceAbsolutePath is false and config is empty', function (): void {
     config(['boost.executable_paths.php' => null]);
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $cursor = new Cursor($strategyFactory);
 
     expect($cursor->getPhpPath())->toBe('php')
@@ -90,7 +89,7 @@ test('Agents maintain relative paths when forceAbsolutePath is false and config 
 
 test('Junie paths remain absolute regardless of forceAbsolutePath parameter', function (): void {
     config(['boost.executable_paths.php' => null]);
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $junie = new Junie($strategyFactory);
 
     // Junie always uses absolute paths, so forceAbsolutePath shouldn't change behavior
@@ -105,7 +104,7 @@ test('Junie paths remain absolute regardless of forceAbsolutePath parameter', fu
 
 test('Junie uses config when configured', function (): void {
     config(['boost.executable_paths.php' => '/custom/php']);
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $junie = new Junie($strategyFactory);
 
     // Config takes precedence over useAbsolutePathForMcp
@@ -115,7 +114,7 @@ test('Junie uses config when configured', function (): void {
 
 test('Pi uses AGENTS.md and .pi/skills defaults', function (): void {
     config(['boost.executable_paths.php' => null]);
-    $strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $strategyFactory = app(DetectionStrategyFactory::class);
     $pi = new Pi($strategyFactory);
 
     expect($pi->getPhpPath())->toBe('php')

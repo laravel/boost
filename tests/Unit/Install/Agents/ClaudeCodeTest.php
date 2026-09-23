@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
-use JMac\Testing\Double;
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('returns default mcp config path', function (): void {

@@ -5,17 +5,14 @@ declare(strict_types=1);
 namespace Tests\Unit\Install\Agents;
 
 use Illuminate\Support\Facades\File;
-use JMac\Testing\Double;
 use Laravel\Boost\Install\Agents\Codex;
-use Laravel\Boost\Install\Contracts\DetectionStrategy;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Double::for(DetectionStrategyFactory::class);
-    $this->strategy = Double::for(DetectionStrategy::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('returns correct name', function (): void {

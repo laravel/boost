@@ -68,11 +68,8 @@ it('installs nightwatch mcp when nightwatch is provided', function (): void {
     $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->returns(true);
     $agent->expects('installHttpMcp')->with('nightwatch', 'https://nightwatch.laravel.com/mcp')->returns(true);
 
-    $nightwatch = Double::for(Nightwatch::class);
-    $nightwatch->expects('mcpUrl')->returns('https://nightwatch.laravel.com/mcp');
-
     $writer = new McpWriter($agent);
-    $result = $writer->write(null, $nightwatch);
+    $result = $writer->write(null, new Nightwatch);
 
     expect($result)->toBe(McpWriter::SUCCESS);
 });
@@ -84,12 +81,9 @@ it('throws exception when nightwatch mcp installation returns false', function (
     $agent->expects('installMcp')->with('laravel-boost', 'php', ['artisan', 'boost:mcp'])->returns(true);
     $agent->expects('installHttpMcp')->with('nightwatch', 'https://nightwatch.laravel.com/mcp')->returns(false);
 
-    $nightwatch = Double::for(Nightwatch::class);
-    $nightwatch->expects('mcpUrl')->returns('https://nightwatch.laravel.com/mcp');
-
     $writer = new McpWriter($agent);
 
-    expect(fn (): int => $writer->write(null, $nightwatch))
+    expect(fn (): int => $writer->write(null, new Nightwatch))
         ->toThrow(RuntimeException::class, 'Failed to install Nightwatch MCP: could not write configuration');
 });
 
@@ -118,11 +112,8 @@ it('installs with both sail and nightwatch', function (): void {
         'args' => ['artisan', 'boost:mcp'],
     ]);
 
-    $nightwatch = Double::for(Nightwatch::class);
-    $nightwatch->expects('mcpUrl')->returns('https://nightwatch.laravel.com/mcp');
-
     $writer = new McpWriter($agent);
-    $result = $writer->write($sail, $nightwatch);
+    $result = $writer->write($sail, new Nightwatch);
 
     expect($result)->toBe(McpWriter::SUCCESS);
 });
