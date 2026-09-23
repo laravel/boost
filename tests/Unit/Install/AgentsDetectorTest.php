@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Matching\Argument;
 use JMac\Testing\Double;
 use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
@@ -49,15 +50,15 @@ it('returns collection of all registered agents', function (): void {
 
 it('returns an array of detected agents names for system discovery', function (): void {
     $mockJunie = Double::for(Agent::class);
-    $mockJunie->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(true);
+    $mockJunie->allows('detectOnSystem')->with(Argument::type(Platform::class))->returns(true);
     $mockJunie->allows('name')->returns('junie');
 
     $mockCursor = Double::for(Agent::class);
-    $mockCursor->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(true);
+    $mockCursor->allows('detectOnSystem')->with(Argument::type(Platform::class))->returns(true);
     $mockCursor->allows('name')->returns('cursor');
 
     $mockOther = Double::for(Agent::class);
-    $mockOther->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(false);
+    $mockOther->allows('detectOnSystem')->with(Argument::type(Platform::class))->returns(false);
     $mockOther->allows('name')->returns('other');
 
     $this->container->bind(Amp::class, fn () => $mockOther);
@@ -82,7 +83,7 @@ it('returns an array of detected agents names for system discovery', function ()
 
 it('returns an empty array when no agents are detected for system discovery', function (): void {
     $mockAgent = Double::for(Agent::class);
-    $mockAgent->allows('detectOnSystem')->with(Mockery::type(Platform::class))->returns(false);
+    $mockAgent->allows('detectOnSystem')->with(Argument::type(Platform::class))->returns(false);
     $mockAgent->allows('name')->returns('mock');
 
     $this->container->bind(Amp::class, fn () => $mockAgent);
