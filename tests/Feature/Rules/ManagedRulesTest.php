@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Tools\RecordRule;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Mcp\Request;
@@ -140,7 +142,9 @@ it('syncManaged throws when the managed directory cannot be fully removed', func
     File::makeDirectory($this->rulesDir.'/boost', 0755, true);
     File::put($this->rulesDir.'/boost/stale.md', 'stale');
 
-    File::partialMock()->shouldReceive('deleteDirectory')->andReturn(false);
+    $files = Double::for(Filesystem::class)->passthru(new Filesystem);
+    $files->allows('deleteDirectory')->returns(false);
+    File::swap($files);
 
     expect(fn (): array => $this->repository->syncManaged(managedRuleFiles('tests')))
         ->toThrow(RuntimeException::class);

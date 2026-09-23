@@ -33,10 +33,6 @@ beforeEach(function (): void {
     $this->detector = new AgentsDetector($this->container, $this->boostManager);
 });
 
-afterEach(function (): void {
-    Mockery::close();
-});
-
 it('returns collection of all registered agents', function (): void {
     $agents = $this->detector->getAgents();
 

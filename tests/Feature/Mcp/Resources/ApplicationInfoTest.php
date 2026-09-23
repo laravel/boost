@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Mcp\Resources\ApplicationInfo;
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\ApplicationInfo as ApplicationInfoTool;
 use Laravel\Mcp\Response;
-use Mockery\MockInterface;
 
 it('returns php version, laravel version, packages, and models when tool executes successfully', function (): void {
     $mockData = [
@@ -20,12 +20,9 @@ it('returns php version, laravel version, packages, and models when tool execute
         'models' => ['App\\Models\\User'],
     ];
 
-    $this->mock(ToolExecutor::class, function (MockInterface $mock) use ($mockData): void {
-        $mock->shouldReceive('execute')
-            ->once()
-            ->with(ApplicationInfoTool::class)
-            ->andReturn(Response::json($mockData));
-    });
+    $executor = Double::for(ToolExecutor::class);
+    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::json($mockData));
+    $this->app->instance(ToolExecutor::class, $executor);
 
     $response = Boost::resource(ApplicationInfo::class);
 
@@ -35,12 +32,9 @@ it('returns php version, laravel version, packages, and models when tool execute
 });
 
 it('propagates tool executor error response directly to the client', function (): void {
-    $this->mock(ToolExecutor::class, function (MockInterface $mock): void {
-        $mock->shouldReceive('execute')
-            ->once()
-            ->with(ApplicationInfoTool::class)
-            ->andReturn(Response::error('Tool execution failed'));
-    });
+    $executor = Double::for(ToolExecutor::class);
+    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::error('Tool execution failed'));
+    $this->app->instance(ToolExecutor::class, $executor);
 
     $response = Boost::resource(ApplicationInfo::class);
 
@@ -48,12 +42,9 @@ it('propagates tool executor error response directly to the client', function ()
 });
 
 it('returns parsing error when tool response contains malformed json', function (): void {
-    $this->mock(ToolExecutor::class, function (MockInterface $mock): void {
-        $mock->shouldReceive('execute')
-            ->once()
-            ->with(ApplicationInfoTool::class)
-            ->andReturn(Response::text('not-valid-json'));
-    });
+    $executor = Double::for(ToolExecutor::class);
+    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::text('not-valid-json'));
+    $this->app->instance(ToolExecutor::class, $executor);
 
     $response = Boost::resource(ApplicationInfo::class);
 
@@ -61,12 +52,9 @@ it('returns parsing error when tool response contains malformed json', function 
 });
 
 it('returns a parsing error when tool response is empty string', function (): void {
-    $this->mock(ToolExecutor::class, function (MockInterface $mock): void {
-        $mock->shouldReceive('execute')
-            ->once()
-            ->with(ApplicationInfoTool::class)
-            ->andReturn(Response::text(''));
-    });
+    $executor = Double::for(ToolExecutor::class);
+    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::text(''));
+    $this->app->instance(ToolExecutor::class, $executor);
 
     $response = Boost::resource(ApplicationInfo::class);
 

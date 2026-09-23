@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\File;
+use JMac\Testing\Double;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Support\Config;
@@ -92,10 +93,10 @@ it('re-inlines everything and removes the managed directory when rules are disab
 it('falls back to inlining scoped content with a warning when rule syncing fails', function (): void {
     config(['boost.rules.enabled' => true]);
 
-    $this->mock(RuleRepository::class, function ($mock): void {
-        $mock->shouldReceive('syncManaged')->andThrow(new RuntimeException('disk full'));
-        $mock->shouldReceive('clearManaged')->andReturn(false);
-    });
+    $repository = Double::for(RuleRepository::class);
+    $repository->allows('syncManaged')->throws(new RuntimeException('disk full'));
+    $repository->allows('clearManaged')->returns(false);
+    $this->app->instance(RuleRepository::class, $repository);
 
     $this->artisan('boost:install', ['--guidelines' => true, '--no-interaction' => true])
         ->expectsOutputToContain('Could not write path-scoped rules to .ai/rules/boost')
@@ -114,10 +115,10 @@ it('falls back to inlining scoped content with a warning when rule syncing fails
 it('aborts instead of re-inlining when both rule syncing and cleanup fail', function (): void {
     config(['boost.rules.enabled' => true]);
 
-    $this->mock(RuleRepository::class, function ($mock): void {
-        $mock->shouldReceive('syncManaged')->andThrow(new RuntimeException('disk full'));
-        $mock->shouldReceive('clearManaged')->andThrow(new RuntimeException('locked directory'));
-    });
+    $repository = Double::for(RuleRepository::class);
+    $repository->allows('syncManaged')->throws(new RuntimeException('disk full'));
+    $repository->allows('clearManaged')->throws(new RuntimeException('locked directory'));
+    $this->app->instance(RuleRepository::class, $repository);
 
     expect(fn (): int => $this->artisan('boost:install', ['--guidelines' => true, '--no-interaction' => true])->run())
         ->toThrow(RuntimeException::class, 'could not clear .ai/rules/boost');
