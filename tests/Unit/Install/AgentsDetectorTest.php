@@ -25,6 +25,8 @@ use Laravel\Boost\Install\Agents\Zed;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Enums\Platform;
 
+uses(VerifiesDoubles::class);
+
 beforeEach(function (): void {
     $this->container = new Container;
     $this->boostManager = new BoostManager;
@@ -45,8 +47,6 @@ it('returns collection of all registered agents', function (): void {
         ]);
 
     $agents->each(function ($agent): void {
-    use VerifiesDoubles;
-
         expect($agent)->toBeInstanceOf(Agent::class);
     });
 });
