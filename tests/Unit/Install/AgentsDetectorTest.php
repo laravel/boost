@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use JMac\Testing\Matching\Argument;
 use JMac\Testing\Double;
 use Illuminate\Container\Container;
@@ -24,8 +23,6 @@ use Laravel\Boost\Install\Agents\Pi;
 use Laravel\Boost\Install\Agents\Zed;
 use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\Enums\Platform;
-
-uses(VerifiesDoubles::class);
 
 beforeEach(function (): void {
     $this->container = new Container;
