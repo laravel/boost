@@ -378,7 +378,7 @@ it('does not change config when no new packages are found during discovery', fun
     $config->setSkills(['existing-skill']);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('resolveNewPackages')->returns(collect());
+    $command->expects('resolveNewPackages')->returns(collect());
     $command->expects('callSilently')->returns(0);
     $command->setLaravel($this->app);
 
@@ -427,7 +427,7 @@ it('skips new-package discovery prompt when running as a composer script', funct
     Prompt::fake([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->expects('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
     $command->allows('runningAsComposerScript')->returns(true);
     $command->allows('callSilently')->returns(0);
     $command->setLaravel($this->app);
@@ -510,7 +510,7 @@ it('skips new-package discovery prompt when running in non-interactive mode', fu
     Prompt::fake([]);
 
     $command = Double::for(UpdateCommand::class)->passthru();
-    $command->allows('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
+    $command->expects('resolveNewPackages')->returns(collect(['vendor/awesome-pkg' => $newPackage]));
     $command->allows('callSilently')->returns(0);
 
     $nonInteractiveInput = new ArrayInput([], (new UpdateCommand)->getDefinition());

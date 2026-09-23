@@ -95,7 +95,7 @@ it('falls back to inlining scoped content with a warning when rule syncing fails
 
     $repository = Double::for(RuleRepository::class);
     $repository->allows('syncManaged')->throws(new RuntimeException('disk full'));
-    $repository->allows('clearManaged')->returns(false);
+    $repository->expects('clearManaged')->returns(false);
     $this->app->instance(RuleRepository::class, $repository);
 
     $this->artisan('boost:install', ['--guidelines' => true, '--no-interaction' => true])
