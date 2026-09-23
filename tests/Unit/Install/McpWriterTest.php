@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Install\McpWriter;
 use Laravel\Boost\Install\Nightwatch;
 use Laravel\Boost\Install\Sail;
 
 it('installs boost mcp successfully without sail', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('getPhpPath')
         ->once()
         ->andReturn('php');
@@ -27,13 +28,13 @@ it('installs boost mcp successfully without sail', function (): void {
 });
 
 it('installs boost mcp with sail', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('installMcp')
         ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])
         ->once()
         ->andReturn(true);
 
-    $sail = Mockery::mock(Sail::class);
+    $sail = Double::for(Sail::class);
     $sail->shouldReceive('buildMcpCommand')
         ->with('laravel-boost')
         ->once()
@@ -50,7 +51,7 @@ it('installs boost mcp with sail', function (): void {
 });
 
 it('throws exception when boost mcp installation returns false', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('getPhpPath')
         ->andReturn('php');
     $agent->shouldReceive('getArtisanPath')
@@ -67,7 +68,7 @@ it('throws exception when boost mcp installation returns false', function (): vo
 });
 
 it('throws exception when boost mcp installation throws exception', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('getPhpPath')
         ->andReturn('php');
     $agent->shouldReceive('getArtisanPath')
@@ -84,7 +85,7 @@ it('throws exception when boost mcp installation throws exception', function ():
 });
 
 it('installs nightwatch mcp when nightwatch is provided', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('getPhpPath')
         ->once()
         ->andReturn('php');
@@ -100,7 +101,7 @@ it('installs nightwatch mcp when nightwatch is provided', function (): void {
         ->once()
         ->andReturn(true);
 
-    $nightwatch = Mockery::mock(Nightwatch::class);
+    $nightwatch = Double::for(Nightwatch::class);
     $nightwatch->shouldReceive('mcpUrl')
         ->once()
         ->andReturn('https://nightwatch.laravel.com/mcp');
@@ -112,7 +113,7 @@ it('installs nightwatch mcp when nightwatch is provided', function (): void {
 });
 
 it('throws exception when nightwatch mcp installation returns false', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('getPhpPath')
         ->once()
         ->andReturn('php');
@@ -128,7 +129,7 @@ it('throws exception when nightwatch mcp installation returns false', function (
         ->once()
         ->andReturn(false);
 
-    $nightwatch = Mockery::mock(Nightwatch::class);
+    $nightwatch = Double::for(Nightwatch::class);
     $nightwatch->shouldReceive('mcpUrl')
         ->once()
         ->andReturn('https://nightwatch.laravel.com/mcp');
@@ -140,7 +141,7 @@ it('throws exception when nightwatch mcp installation returns false', function (
 });
 
 it('does not install nightwatch mcp when nightwatch is null', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('getPhpPath')
         ->once()
         ->andReturn('php');
@@ -160,7 +161,7 @@ it('does not install nightwatch mcp when nightwatch is null', function (): void 
 });
 
 it('installs with both sail and nightwatch', function (): void {
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $agent->shouldReceive('installMcp')
         ->with('laravel-boost', 'vendor/bin/sail', ['artisan', 'boost:mcp'])
         ->once()
@@ -170,7 +171,7 @@ it('installs with both sail and nightwatch', function (): void {
         ->once()
         ->andReturn(true);
 
-    $sail = Mockery::mock(Sail::class);
+    $sail = Double::for(Sail::class);
     $sail->shouldReceive('buildMcpCommand')
         ->with('laravel-boost')
         ->once()
@@ -180,7 +181,7 @@ it('installs with both sail and nightwatch', function (): void {
             'args' => ['artisan', 'boost:mcp'],
         ]);
 
-    $nightwatch = Mockery::mock(Nightwatch::class);
+    $nightwatch = Double::for(Nightwatch::class);
     $nightwatch->shouldReceive('mcpUrl')
         ->once()
         ->andReturn('https://nightwatch.laravel.com/mcp');

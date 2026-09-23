@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Prompts\UpgradeAiSdkv1\UpgradeAiSdkV1;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
@@ -15,12 +16,12 @@ test('it has the correct name', function (): void {
 });
 
 test('it registers only for pre-1.0 installations', function (): void {
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class);
     mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '0.11.2')]));
 
     expect($this->prompt->shouldRegister($project))->toBeTrue();
 
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class);
     mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '1.0.0')]));
 
     expect($this->prompt->shouldRegister($project))->toBeFalse();

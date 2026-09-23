@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Laravel\Boost\Mcp\Tools\DatabaseSchema\MySQLSchemaDriver;
@@ -9,7 +10,7 @@ use Laravel\Boost\Mcp\Tools\DatabaseSchema\MySQLSchemaDriver;
 test('getTables quotes the table type as a string literal', function (): void {
     $sql = null;
 
-    $connection = Mockery::mock(Connection::class);
+    $connection = Double::for(Connection::class);
     $connection->shouldReceive('select')
         ->once()
         ->andReturnUsing(function (string $query) use (&$sql): array {
@@ -30,7 +31,7 @@ test('getTables quotes the table type as a string literal', function (): void {
 test('getCheckConstraints filters on TABLE_NAME directly when the column exists', function (): void {
     $calls = [];
 
-    $connection = Mockery::mock(Connection::class);
+    $connection = Double::for(Connection::class);
     $connection->shouldReceive('select')
         ->once()
         ->andReturnUsing(function (string $query, array $bindings) use (&$calls): array {
@@ -53,7 +54,7 @@ test('getCheckConstraints filters on TABLE_NAME directly when the column exists'
 test('getCheckConstraints maps the table through TABLE_CONSTRAINTS when TABLE_NAME is missing', function (): void {
     $calls = [];
 
-    $connection = Mockery::mock(Connection::class);
+    $connection = Double::for(Connection::class);
     $connection->shouldReceive('select')
         ->twice()
         ->andReturnUsing(function (string $query, array $bindings) use (&$calls): array {

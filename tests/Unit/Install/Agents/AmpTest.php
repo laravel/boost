@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
+use JMac\Testing\Double;
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Agents\Amp;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
@@ -11,7 +12,7 @@ use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = Double::for(DetectionStrategyFactory::class);
 });
 
 test('name returns amp', function (): void {

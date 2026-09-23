@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
+use JMac\Testing\Double;
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Agents\GrokBuild;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
@@ -12,7 +13,7 @@ use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = Double::for(DetectionStrategyFactory::class);
 });
 
 test('returns correct name', function (): void {

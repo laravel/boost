@@ -1,5 +1,6 @@
 <?php
 
+use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Methods\CallToolWithExecutor;
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
@@ -56,7 +57,7 @@ test('throws JsonRpcException when tool does not exist', function (): void {
 })->throws(JsonRpcException::class, 'Tool [non-existent-tool] not found.', -32602);
 
 test('successful tool execution returns proper response', function (): void {
-    $executor = Mockery::mock(ToolExecutor::class);
+    $executor = Double::for(ToolExecutor::class);
     $executor->shouldReceive('execute')
         ->once()
         ->with(DatabaseConnections::class, [])
@@ -74,7 +75,7 @@ test('successful tool execution returns proper response', function (): void {
 });
 
 test('tool execution exceptions are caught and returned as error responses', function (): void {
-    $executor = Mockery::mock(ToolExecutor::class);
+    $executor = Double::for(ToolExecutor::class);
     $executor->shouldReceive('execute')
         ->once()
         ->with(DatabaseConnections::class, [])
@@ -94,7 +95,7 @@ test('tool execution exceptions are caught and returned as error responses', fun
 test('arguments are properly passed to executor', function (): void {
     $expectedArgs = ['key' => 'app.name'];
 
-    $executor = Mockery::mock(ToolExecutor::class);
+    $executor = Double::for(ToolExecutor::class);
     $executor->shouldReceive('execute')
         ->once()
         ->with(DatabaseConnections::class, $expectedArgs)

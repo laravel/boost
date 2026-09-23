@@ -1,5 +1,6 @@
 <?php
 
+use JMac\Testing\Double;
 use Illuminate\Container\Container;
 use Laravel\Boost\Mcp\ToolExecutor;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
@@ -8,8 +9,7 @@ use Laravel\Tinker\TinkerServiceProvider;
 
 test('can execute tool in subprocess', function (): void {
     // Create a mock that overrides buildCommand to work with testbench
-    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $executor = Double::for(ToolExecutor::class)->passthru();
     $executor->shouldReceive('buildCommand')
         ->once()
         ->andReturnUsing(buildSubprocessCommand(...));
@@ -39,8 +39,7 @@ test('rejects unregistered tools', function (): void {
 });
 
 test('subprocess proves fresh process isolation', function (): void {
-    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $executor = Double::for(ToolExecutor::class)->passthru();
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(fn (): array => [
             PHP_BINARY, '-r',
@@ -62,8 +61,7 @@ test('subprocess proves fresh process isolation', function (): void {
 });
 
 test('subprocess sees modified autoloaded code changes', function (): void {
-    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $executor = Double::for(ToolExecutor::class)->passthru();
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(buildSubprocessCommand(...));
 
@@ -135,8 +133,7 @@ function buildSubprocessCommand(string $toolClass, array $arguments): array
 }
 
 test('respects custom timeout parameter', function (): void {
-    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $executor = Double::for(ToolExecutor::class)->passthru();
 
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(buildSubprocessCommand(...));
@@ -165,8 +162,7 @@ test('resolves timeout from argument, then config, then default', function (): v
 });
 
 test('output buffering discards stray stdout during tool execution', function (): void {
-    $executor = Mockery::mock(ToolExecutor::class)->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $executor = Double::for(ToolExecutor::class)->passthru();
     $executor->shouldReceive('buildCommand')
         ->andReturnUsing(buildSubprocessCommand(...));
 

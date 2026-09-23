@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Install\Contracts\DetectionStrategy;
 use Laravel\Boost\Install\Detection\CompositeDetectionStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
 beforeEach(function (): void {
-    $this->firstStrategy = Mockery::mock(DetectionStrategy::class);
-    $this->secondStrategy = Mockery::mock(DetectionStrategy::class);
-    $this->thirdStrategy = Mockery::mock(DetectionStrategy::class);
+    $this->firstStrategy = Double::for(DetectionStrategy::class);
+    $this->secondStrategy = Double::for(DetectionStrategy::class);
+    $this->thirdStrategy = Double::for(DetectionStrategy::class);
 });
 
 test('returns true when first strategy succeeds', function (): void {

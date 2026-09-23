@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Skill;
@@ -78,7 +79,7 @@ function unwritableSkills(string $basePath, array $names): Collection
  */
 function mockSkillComposer(Collection $skills): void
 {
-    $composer = Mockery::mock(SkillComposer::class);
+    $composer = Double::for(SkillComposer::class);
     $composer->shouldReceive('config')->andReturnSelf();
     $composer->shouldReceive('skills')->andReturn($skills);
 

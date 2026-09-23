@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -14,7 +15,7 @@ use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Mockery::mock(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class);
 
     $this->app->instance(ProjectManager::class, $this->project);
     app(SkillParseFailures::class)->flush();
@@ -188,9 +189,7 @@ test('vendor skills override .ai/ skills with the same name', function (): void 
     $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
     expect($vendorFixture)->not->toBeFalse();
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
     $composer->shouldReceive('resolveFirstPartyBoostPath')
         ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'livewire/livewire' ? $vendorFixture : null);
 
@@ -208,9 +207,7 @@ test('falls back to .ai/ skills when vendor has none', function (): void {
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
     $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $skills = $composer->skills();
@@ -229,9 +226,7 @@ test('node_modules skills override .ai/ skills for npm first-party packages', fu
     $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
     expect($vendorFixture)->not->toBeFalse();
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
     $composer->shouldReceive('resolveFirstPartyBoostPath')
         ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
 
@@ -249,9 +244,7 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
+    $composer = Double::for(SkillComposer::class)->passthru(new SkillComposer($this->project));
     $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
 
     $skills = $composer->skills();

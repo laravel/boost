@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
+use JMac\Testing\Double;
 use Laravel\Boost\Install\Agents\Cursor;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = Double::for(DetectionStrategyFactory::class);
 });
 
 test('httpMcpServerConfig returns npx mcp-remote config', function (): void {

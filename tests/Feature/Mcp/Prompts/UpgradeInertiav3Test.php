@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Mcp\Prompts\UpgradeInertiav3\UpgradeInertiaV3;
 use Laravel\Roster\PackageCollection;
@@ -13,7 +14,7 @@ beforeEach(function (): void {
 
 function mockProjectWithFrameworks(bool $react = false, bool $vue = false, bool $svelte = false): ProjectManager
 {
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class);
     $packages = new PackageCollection([
         rosterPackage('inertiajs/inertia-laravel', '2.0.0'),
         ...($react ? [rosterPackage('@inertiajs/react', '2.0.0')] : []),

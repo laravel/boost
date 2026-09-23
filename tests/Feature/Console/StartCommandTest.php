@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Boost\Console\StartCommand;
 use Symfony\Component\Console\Command\Command;
 
 it('invokes mcp:start with laravel-boost as the server name', function (): void {
-    $mockArtisan = Mockery::mock();
+    $mockArtisan = Double::for(\stdClass::class);
     $mockArtisan->shouldReceive('call')
         ->once()
         ->with('mcp:start laravel-boost')
@@ -21,7 +22,7 @@ it('invokes mcp:start with laravel-boost as the server name', function (): void 
 });
 
 it('returns the same exit code that mcp:start returns', function (): void {
-    $mockArtisan = Mockery::mock();
+    $mockArtisan = Double::for(\stdClass::class);
     $mockArtisan->shouldReceive('call')
         ->once()
         ->with('mcp:start laravel-boost')

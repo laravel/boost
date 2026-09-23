@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Mcp;
 
+use JMac\Testing\Double;
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Mcp\TomlFileWriter;
 use League\Flysystem\Filesystem;
@@ -486,7 +487,7 @@ function mockTomlFileOperations(
     ?string &$capturedPath = null,
     ?string &$capturedContent = null
 ): void {
-    File::swap(Mockery::mock(Filesystem::class));
+    File::swap(Double::for(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn($fileExists);

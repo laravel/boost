@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Package;
@@ -13,7 +14,7 @@ use Laravel\Roster\ProjectManager;
  */
 function bootProject(array $packages): ProjectManager
 {
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class);
     mockProjectPackages($project, new PackageCollection($packages));
     app()->instance(ProjectManager::class, $project);
 

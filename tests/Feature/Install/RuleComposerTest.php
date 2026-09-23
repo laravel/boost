@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
@@ -11,9 +12,9 @@ use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Mockery::mock(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class);
 
-    $this->herd = Mockery::mock(Herd::class);
+    $this->herd = Double::for(Herd::class);
     $this->herd->shouldReceive('isInstalled')->andReturn(false)->byDefault();
 
     $this->app->instance(ProjectManager::class, $this->project);
@@ -27,7 +28,7 @@ function composerWithFixtureGuidelines(ProjectManager $project, Herd $herd, stri
 {
     $dir = fixture($fixture);
 
-    $guidelines = Mockery::mock(GuidelineComposer::class, [$project, $herd])->makePartial();
+    $guidelines = Double::for(GuidelineComposer::class)->passthru(new GuidelineComposer($project, $herd));
     $guidelines
         ->shouldReceive('customGuidelinePath')
         ->andReturnUsing(fn ($path = ''): string => $dir.'/'.ltrim((string) $path, '/'));

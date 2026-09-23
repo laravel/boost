@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
 use Laravel\Boost\BoostManager;
@@ -47,15 +48,15 @@ it('returns collection of all registered agents', function (): void {
 });
 
 it('returns an array of detected agents names for system discovery', function (): void {
-    $mockJunie = Mockery::mock(Agent::class);
+    $mockJunie = Double::for(Agent::class);
     $mockJunie->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
     $mockJunie->shouldReceive('name')->andReturn('junie');
 
-    $mockCursor = Mockery::mock(Agent::class);
+    $mockCursor = Double::for(Agent::class);
     $mockCursor->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(true);
     $mockCursor->shouldReceive('name')->andReturn('cursor');
 
-    $mockOther = Mockery::mock(Agent::class);
+    $mockOther = Double::for(Agent::class);
     $mockOther->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
     $mockOther->shouldReceive('name')->andReturn('other');
 
@@ -80,7 +81,7 @@ it('returns an array of detected agents names for system discovery', function ()
 });
 
 it('returns an empty array when no agents are detected for system discovery', function (): void {
-    $mockAgent = Mockery::mock(Agent::class);
+    $mockAgent = Double::for(Agent::class);
     $mockAgent->shouldReceive('detectOnSystem')->with(Mockery::type(Platform::class))->andReturn(false);
     $mockAgent->shouldReceive('name')->andReturn('mock');
 
@@ -107,15 +108,15 @@ it('returns an empty array when no agents are detected for system discovery', fu
 it('returns an array of detected agent names for project discovery', function (): void {
     $basePath = '/test/project';
 
-    $mockJunie = Mockery::mock(Agent::class);
+    $mockJunie = Double::for(Agent::class);
     $mockJunie->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
     $mockJunie->shouldReceive('name')->andReturn('junie');
 
-    $mockClaudeCode = Mockery::mock(Agent::class);
+    $mockClaudeCode = Double::for(Agent::class);
     $mockClaudeCode->shouldReceive('detectInProject')->with($basePath)->andReturn(true);
     $mockClaudeCode->shouldReceive('name')->andReturn('claude_code');
 
-    $mockOther = Mockery::mock(Agent::class);
+    $mockOther = Double::for(Agent::class);
     $mockOther->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
     $mockOther->shouldReceive('name')->andReturn('other');
 
@@ -142,7 +143,7 @@ it('returns an array of detected agent names for project discovery', function ()
 it('returns an empty array when no agents are detected for project discovery', function (): void {
     $basePath = '/empty/project';
 
-    $mockAgent = Mockery::mock(Agent::class);
+    $mockAgent = Double::for(Agent::class);
     $mockAgent->shouldReceive('detectInProject')->with($basePath)->andReturn(false);
     $mockAgent->shouldReceive('name')->andReturn('mock');
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Mcp;
 
+use JMac\Testing\Double;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -77,7 +78,7 @@ test('save updates a plain JSON file that starts with a UTF-8 BOM', function ():
 });
 
 test('save rejects plain JSON files without an object root', function (string $content): void {
-    File::swap(Mockery::mock(Filesystem::class));
+    File::swap(Double::for(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->once()->andReturn(true);
@@ -378,7 +379,7 @@ test('injects into existing configKey preserving JSON5 features', function (): v
 test("injecting twice into existing JSON 5 doesn't cause duplicates", function (): void {
     $capturedContent = '';
 
-    File::swap(Mockery::mock(Filesystem::class));
+    File::swap(Double::for(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn(true);
@@ -411,7 +412,7 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
 
     $newContent = $capturedContent;
 
-    File::swap(Mockery::mock(Filesystem::class));
+    File::swap(Double::for(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn(true);
@@ -798,7 +799,7 @@ test('updated JSON5 file ends with a single trailing newline', function (): void
 function mockFileOperations(bool $fileExists = false, string $content = '{}', bool $writeSuccess = true, ?string &$capturedPath = null, ?string &$capturedContent = null): void
 {
     // Clear any existing File facade mock
-    File::swap(Mockery::mock(Filesystem::class));
+    File::swap(Double::for(Filesystem::class));
 
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn($fileExists);

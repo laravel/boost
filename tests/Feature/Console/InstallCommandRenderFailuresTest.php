@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Console\Enums\Theme;
 use Laravel\Boost\Console\InstallCommand;
 use Laravel\Boost\Install\AgentsDetector;
@@ -26,17 +27,17 @@ afterEach(function (): void {
 
 function runInstallCommandWithFailures(array $failedPaths): string
 {
-    $nightwatch = Mockery::mock(Nightwatch::class);
+    $nightwatch = Double::for(Nightwatch::class);
     $nightwatch->shouldReceive('isInstalled')->andReturn(false);
 
-    $sail = Mockery::mock(Sail::class);
+    $sail = Double::for(Sail::class);
     $sail->shouldReceive('isInstalled')->andReturn(false);
     $sail->shouldReceive('isActive')->andReturn(false);
 
-    $terminal = Mockery::mock(Terminal::class);
+    $terminal = Double::for(Terminal::class);
     $terminal->shouldReceive('initDimensions');
 
-    $detector = Mockery::mock(AgentsDetector::class);
+    $detector = Double::for(AgentsDetector::class);
     $detector->shouldReceive('getAgents')->andReturn(app(AgentsDetector::class)->getAgents());
     $detector->shouldReceive('discoverSystemInstalledAgents')->andReturn([]);
     $detector->shouldReceive('discoverProjectInstalledAgents')->andReturn([]);
