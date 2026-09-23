@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.9.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.10.0...main)
+
+## [v2.10.0](https://github.com/laravel/boost/compare/v2.9.1...v2.10.0) - 2026-09-23
+
+### What's Changed
+
+* Use AGENTS.md for Claude Code guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1032
+* Preserve differently cased CTE references when applying table prefixes by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1035
+* Fix RuleRepository area key collapsing distinct single-segment globs by [@jwynharris](https://github.com/jwynharris) in https://github.com/laravel/boost/pull/1033
+* Preserve existing skills when forced downloads fail by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1031
+* Add an upgrade prompt for Laravel AI 1.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1036
+
+### New Contributors
+
+* [@jwynharris](https://github.com/jwynharris) made their first contribution in https://github.com/laravel/boost/pull/1033
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.9.1...v2.10.0
 
 ## [v2.9.1](https://github.com/laravel/boost/compare/v2.9.0...v2.9.1) - 2026-09-17
 
@@ -649,11 +665,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -748,12 +766,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
