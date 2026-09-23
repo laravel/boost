@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
-use Illuminate\Contracts\Process\ProcessResult;
+use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use JMac\Testing\Double;
@@ -145,18 +145,13 @@ test('installShellMcp executes command with placeholders replaced', function ():
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(ProcessResult::class);
-    $mockResult->allows('successful')->returns(true);
-    $mockResult->allows('errorOutput')->returns('');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key test-command "arg1" "arg2"') &&
-               str_contains((string) $command, '-e ENV1="value1"') &&
-               str_contains((string) $command, '-e ENV2="value2"')))
-        ->andReturn($mockResult);
+    Process::fake();
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1', 'arg2'], ['env1' => 'value1', 'env2' => 'value2']);
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => str_contains($process->command, 'install test-key test-command "arg1" "arg2"') &&
+               str_contains($process->command, '-e ENV1="value1"') &&
+               str_contains($process->command, '-e ENV2="value2"'));
 
     expect($result)->toBe(true);
 });
@@ -168,15 +163,11 @@ test('installShellMcp returns true when process fails but has already exists err
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(ProcessResult::class);
-    $mockResult->allows('successful')->returns(false);
-    $mockResult->allows('errorOutput')->returns('Error: already exists');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->andReturn($mockResult);
+    Process::fake(['*' => Process::result(errorOutput: 'Error: already exists', exitCode: 1)]);
 
     $result = $environment->installMcp('test-key', 'test-command');
+
+    Process::assertRanTimes('install test-key');
 
     expect($result)->toBe(true);
 });
@@ -417,18 +408,13 @@ test('shell installation handles valet php commands', function (): void {
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(ProcessResult::class);
-    $mockResult->allows('successful')->returns(true);
-    $mockResult->allows('errorOutput')->returns('');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key valet') &&
-               str_contains((string) $command, '"php"') &&
-               str_contains((string) $command, '"artisan"')))
-        ->andReturn($mockResult);
+    Process::fake();
 
     $result = $environment->installMcp('test-key', 'valet php', ['artisan', 'boost:mcp']);
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => str_contains($process->command, 'install test-key valet') &&
+               str_contains($process->command, '"php"') &&
+               str_contains($process->command, '"artisan"'));
 
     expect($result)->toBe(true);
 });
@@ -440,18 +426,13 @@ test('shell installation handles herd php commands', function (): void {
 
     $environment->allows('mcpInstallationStrategy')->returns(McpInstallationStrategy::SHELL);
 
-    $mockResult = Double::for(ProcessResult::class);
-    $mockResult->allows('successful')->returns(true);
-    $mockResult->allows('errorOutput')->returns('');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key herd') &&
-               str_contains((string) $command, '"php"') &&
-               str_contains((string) $command, '"artisan"')))
-        ->andReturn($mockResult);
+    Process::fake();
 
     $result = $environment->installMcp('test-key', 'herd php', ['artisan', 'boost:mcp']);
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => str_contains($process->command, 'install test-key herd') &&
+               str_contains($process->command, '"php"') &&
+               str_contains($process->command, '"artisan"'));
 
     expect($result)->toBe(true);
 });
