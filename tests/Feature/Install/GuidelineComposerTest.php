@@ -215,6 +215,27 @@ test('excludes Herd guidelines when Sail is configured', function (): void {
 
 });
 
+test('mentions the deploying-to-cloud skill only when Cloud is enabled', function (bool $usesCloud): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $config = new GuidelineConfig;
+    $config->usesCloud = $usesCloud;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)->toContain('=== deployments rules ===')
+        ->and(str_contains($guidelines, 'deploying-to-cloud'))->toBe($usesCloud);
+})->with([
+    'cloud enabled' => true,
+    'cloud disabled' => false,
+]);
+
 test('excludes Sail guidelines when Herd is configured', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
