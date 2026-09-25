@@ -117,11 +117,11 @@ test('a guideline with multiple scoped blocks produces one rule entry per block'
 
     expect($modelsBlock)->not->toBeNull()
         ->and($modelsBlock['content'])->toContain('Model Creation')
-        ->and($modelsBlock['content'])->not->toContain('Faker')
+        ->and($modelsBlock['content'])->not->toContain('use the factories for the models')
         ->and($apisBlock)->not->toBeNull()
         ->and($apisBlock['content'])->toContain('Eloquent API Resources')
         ->and($testsBlock)->not->toBeNull()
-        ->and($testsBlock['content'])->toContain('Faker')
+        ->and($testsBlock['content'])->toContain('use the factories for the models')
         ->and($testsBlock['content'])->not->toContain('Model Creation');
 });
 

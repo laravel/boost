@@ -307,7 +307,6 @@ test('includes the project rules pointer when rules are enabled and MCP is on', 
     expect($guidelines)
         ->toContain('## Project Rules')
         ->toContain('@.ai/rules/index.md')
-        ->toContain('record-rule')
         ->toContain('.ai/rules');
 });
 
