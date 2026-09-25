@@ -26,7 +26,7 @@ class DatabaseSchema extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Read the database schema for this application. Use it before writing migrations or models. Returns table names, columns, indexes, and foreign keys. Use "summary" mode first to get an overview (table names with column types only), then call again without "summary" and with a "filter" to get full details for specific tables. Params: "summary" (default false) - returns only table names and column types; "database" - connection name; "filter" - substring match on table names; "include_column_details" (default false) - adds nullable, default, auto_increment, comments; "include_views" (default false); "include_routines" (default false) - stored procedures, functions, sequences.';
+    protected string $description = 'Read the database schema for this application. Returns table names, columns, indexes, and foreign keys. Use "summary" mode first to get an overview (table names with column types only), then call again without "summary" and with a "filter" to get full details for specific tables. Params: "summary" (default false) - returns only table names and column types; "database" - connection name; "filter" - substring match on table names; "include_column_details" (default false) - adds nullable, default, auto_increment, comments; "include_views" (default false); "include_routines" (default false) - stored procedures, functions, sequences.';
 
     /**
      * Get the tool's input schema.

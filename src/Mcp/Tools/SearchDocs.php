@@ -29,7 +29,7 @@ class SearchDocs extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = "Search for up-to-date version-specific documentation related to this project and its packages. This tool will search Laravel hosted documentation based on the packages installed and is perfect for all Laravel ecosystem packages. Laravel, Inertia, Pest, Livewire, Filament, Nova, Tailwind, and more. You must use this tool to search for Laravel-ecosystem docs before using other approaches. The results provided are for this project's package version and does not cover all versions of the package. Pass a `packages` array to scope results when you know which packages are relevant. Use multiple broad, topic-based queries such as ['rate limiting', 'routing rate limiting', 'routing'], without package names. Words are auto-stemmed AND terms, \"quoted phrases\" match exact adjacent words, and multiple queries act as OR. Reuse sufficient results already in context instead of searching again.";
+    protected string $description = "Search for up-to-date version-specific documentation related to this project and its packages. This tool will search Laravel hosted documentation based on the packages installed and is perfect for all Laravel ecosystem packages. Laravel, Inertia, Pest, Livewire, Filament, Nova, Tailwind, and more. You must use this tool to search for Laravel-ecosystem docs before using other approaches. The results provided are for this project's package version and does not cover all versions of the package.";
 
     /**
      * Get the tool's input schema.

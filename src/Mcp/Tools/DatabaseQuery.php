@@ -24,7 +24,7 @@ class DatabaseQuery extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Execute a read-only SQL query against the configured database. Use this instead of writing raw SQL in tinker.';
+    protected string $description = 'Execute a read-only SQL query against the configured database.';
 
     /**
      * Get the tool's input schema.
