@@ -17,7 +17,7 @@ class GetAbsoluteUrl extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Get the absolute URL for a given relative path or named route. If no arguments are provided, you will get the absolute URL for "/"';
+    protected string $description = 'Get the absolute URL for a given relative path or named route. If no arguments are provided, you will get the absolute URL for "/". Always use this before sharing a project URL with the user.';
 
     /**
      * Get the tool's input schema.

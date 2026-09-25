@@ -20,7 +20,7 @@ class BrowserLogs extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Read the last N log entries from the BROWSER log. Very helpful for debugging the frontend and JS/Javascript';
+    protected string $description = 'Read the last N log entries from the BROWSER log. Very helpful for debugging the frontend and JS/Javascript. Only recent logs are useful, ignore old entries.';
 
     /**
      * Get the tool's input schema.

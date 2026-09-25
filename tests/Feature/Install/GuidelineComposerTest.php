@@ -120,7 +120,7 @@ test('inlines scoped block content by default since scoped guidelines are opt-in
     expect(config('boost.rules.scoped_guidelines'))->toBeFalse()
         ->and($guidelines)
         ->toContain('=== laravel/core rules ===')
-        ->toContain('URL Generation')
+        ->toContain('Do Things the Laravel Way')
         ->toContain('Model Creation');
 });
 
@@ -138,7 +138,7 @@ test('strips only the scoped portion of a partially-scoped guideline, keeping th
     expect(config('boost.rules.scoped_guidelines'))->toBeTrue()
         ->and($guidelines)
         ->toContain('=== laravel/core rules ===')
-        ->toContain('URL Generation')
+        ->toContain('Do Things the Laravel Way')
         ->not->toContain('APIs & Eloquent Resources')
         ->not->toContain('Model Creation')
         ->not->toContain('When creating new models, create useful factories');
@@ -307,7 +307,6 @@ test('includes the project rules pointer when rules are enabled and MCP is on', 
     expect($guidelines)
         ->toContain('## Project Rules')
         ->toContain('@.ai/rules/index.md')
-        ->toContain('record-rule')
         ->toContain('.ai/rules');
 });
 
@@ -1031,7 +1030,7 @@ test('excludes MCP Tools and Searching Documentation sections when hasMcp is fal
         ->not->toContain('## Searching Documentation');
 });
 
-test('includes MCP Tools and Searching Documentation sections when hasMcp is true', function (): void {
+test('includes the MCP Tools section when hasMcp is true', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
     ]);
@@ -1047,13 +1046,9 @@ test('includes MCP Tools and Searching Documentation sections when hasMcp is tru
 
     expect($guidelines)
         ->toContain('## Tools')
-        ->toContain('database-query')
-        ->toContain('database-schema')
         ->toContain('search-docs')
-        ->toContain('## Searching Documentation')
         ->toContain('before changes that depend on Laravel ecosystem APIs')
-        ->toContain('Skip it for copy-only edits')
-        ->toContain('Reuse sufficient results already in context');
+        ->toContain('Skip it for copy-only edits');
 });
 
 test('loads vendor core guideline when available', function (): void {
