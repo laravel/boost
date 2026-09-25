@@ -3,7 +3,7 @@
 @endphp
 # Do Things the Laravel Way
 
-- Use `{{ $assist->artisanCommand('make:') }}` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `{{ $assist->artisanCommand('list') }}` and check their parameters with `{{ $assist->artisanCommand('[command] --help') }}`.
+- Use `{{ $assist->artisanCommand('make:') }}` commands to create new files (i.e. migrations, controllers, models, etc.).
 - If you're creating a generic PHP class, use `{{ $assist->artisanCommand('make:class') }}`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
@@ -26,6 +26,5 @@
 ## Testing
 
 - When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
-- Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
 - When creating tests, make use of `{{ $assist->artisanCommand('make:test [options] {name}') }}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 @endscoped
