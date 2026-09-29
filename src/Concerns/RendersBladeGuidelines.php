@@ -65,12 +65,12 @@ trait RendersBladeGuidelines
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
 
-    protected function processBoostSnippets(string $content): string
+    protected function processBoostSnippets(string $content, string $path = '', array $data = []): string
     {
-        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function (array $matches): string {
+        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function (array $matches) use ($path, $data): string {
             $name = $matches['name'];
             $lang = empty($matches['lang']) ? 'html' : $matches['lang'];
-            $snippetContent = trim($matches['content']);
+            $snippetContent = $this->renderSnippetAssistExpressions(trim($matches['content']), $path, $data);
 
             $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
 
@@ -78,6 +78,21 @@ trait RendersBladeGuidelines
 
             return $placeholder;
         }, $content);
+    }
+
+    protected function renderSnippetAssistExpressions(string $content, string $path, array $data): string
+    {
+        if (! str_ends_with($path, '.blade.php')) {
+            return $content;
+        }
+
+        return preg_replace_callback('/(?<!@)\{\{.*?\}\}/s', function (array $matches) use ($path, $data): string {
+            if (! str_contains($matches[0], '$assist->')) {
+                return $matches[0];
+            }
+
+            return $this->renderContent($matches[0], $path, $data);
+        }, $content) ?? $content;
     }
 
     protected function markScopedBlocks(string $content): string
@@ -218,7 +233,7 @@ trait RendersBladeGuidelines
      */
     protected function renderBladeStringWithScopedBlocks(string $content, string $path, array $data = [], bool $stripScoped = false): array
     {
-        $content = $this->processBoostSnippets($content);
+        $content = $this->processBoostSnippets($content, $path, $data);
         $content = $this->markScopedBlocks($content);
 
         $rendered = $this->renderContent($content, $path, $data);

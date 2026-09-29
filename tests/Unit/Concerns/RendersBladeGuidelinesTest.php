@@ -94,6 +94,31 @@ test('boostsnippet preserves multiline content', function (): void {
         ->toContain("\$user = User::find(1);\n\$user->name = 'John';\n\$user->save();");
 });
 
+test('boostsnippet renders assist expressions without rendering other blade examples', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class);
+    $assist->shouldReceive('artisanCommand')
+        ->once()
+        ->with('optimize:clear')
+        ->andReturn('vendor/bin/sail artisan optimize:clear');
+
+    app()->instance(GuidelineAssist::class, $assist);
+
+    $tempFile = sys_get_temp_dir().'/boost_test_'.uniqid().'.blade.php';
+    file_put_contents($tempFile, "@boostsnippet('Command', 'bash')\n{{ \$assist->artisanCommand('optimize:clear') }}\n\n{{ \$user->name }}\n@endboostsnippet");
+
+    try {
+        $result = $this->renderer->renderFile($tempFile);
+
+        expect($result)
+            ->toContain('<!-- Command -->')
+            ->toContain('vendor/bin/sail artisan optimize:clear')
+            ->toContain('{{ $user->name }}')
+            ->not->toContain('$assist->artisanCommand');
+    } finally {
+        @unlink($tempFile);
+    }
+});
+
 test('non-blade files bypass blade rendering entirely', function (): void {
     $bladeContent = '{{ $variable }} @if(true) test @endif';
 

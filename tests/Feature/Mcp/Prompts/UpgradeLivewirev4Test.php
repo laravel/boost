@@ -32,6 +32,23 @@ test('it contains core upgrade content', function (): void {
         ->toolTextContains('Islands');
 });
 
+test('it uses configured executables for command snippets', function (): void {
+    config([
+        'boost.executable_paths.php' => '/usr/local/bin/php8.3',
+        'boost.executable_paths.composer' => '/usr/local/bin/composer',
+    ]);
+
+    $text = (string) $this->prompt->handle()->content();
+
+    expect($text)
+        ->toContain('/usr/local/bin/composer require livewire/livewire:^4.0')
+        ->toContain('/usr/local/bin/php8.3 artisan optimize:clear')
+        ->toContain('/usr/local/bin/php8.3 artisan make:livewire create-post')
+        ->toContain('/usr/local/bin/composer remove livewire/volt')
+        ->not->toContain("\ncomposer require livewire/livewire:^4.0\n")
+        ->not->toContain("\nphp artisan optimize:clear\n");
+});
+
 test('it properly compiles blade assist helpers', function (): void {
     $response = $this->prompt->handle();
     $text = (string) $response->content();
