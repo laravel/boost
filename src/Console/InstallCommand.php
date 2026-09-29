@@ -49,7 +49,10 @@ class InstallCommand extends Command
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
         {--skills : Install agent skills}
-        {--mcp : Install MCP server configuration}';
+        {--mcp : Install MCP server configuration}
+        {--package=* : Preselect third-party AI guidelines/skills by package name, wildcards allowed (e.g. vendor/*)}
+        {--integration=* : Preselect integrations (cloud, nightwatch, sail)}
+        {--agent=* : Preselect AI agents (e.g. claude_code)}';
 
     /** @var Collection<int, Agent> */
     private Collection $selectedAgents;
@@ -263,12 +266,13 @@ class InstallCommand extends Command
     protected function selectThirdPartyPackages(): Collection
     {
         $packages = ThirdPartyPackage::discover($this->project);
+        $preselected = $this->preselectFromOption('package', $packages->keys(), allowWildcards: true);
 
         if ($packages->isEmpty()) {
             return collect();
         }
 
-        $defaults = collect($this->config->getPackages())
+        $defaults = $preselected ?? collect($this->config->getPackages())
             ->filter(fn (string $name) => $packages->has($name))
             ->values();
 
@@ -307,11 +311,13 @@ class InstallCommand extends Command
             ],
         ])->filter(fn (array $integration): bool => $integration['available']);
 
+        $preselected = $this->preselectFromOption('integration', $integrations->keys());
+
         if ($integrations->isEmpty()) {
             return;
         }
 
-        $defaults = $integrations->filter(fn (array $integration): bool => $integration['default'])->keys()->all();
+        $defaults = ($preselected ?? $integrations->filter(fn (array $integration): bool => $integration['default'])->keys())->all();
 
         if (! $this->input->isInteractive()) {
             $this->selectedBoostFeatures->push(...$defaults);
@@ -351,6 +357,8 @@ class InstallCommand extends Command
                 fn ($feature): bool => isset($featureInterfaces[$feature]) && $agent instanceof $featureInterfaces[$feature])
         )->keyBy(fn (Agent $agent): string => $agent->name());
 
+        $preselected = $this->preselectFromOption('agent', $filteredAgents->keys());
+
         if ($filteredAgents->isEmpty()) {
             return collect();
         }
@@ -359,7 +367,7 @@ class InstallCommand extends Command
             ->mapWithKeys(fn (Agent $agent): array => [$agent->name() => $agent->displayName()])
             ->sort();
 
-        $defaults = collect($this->config->getAgents())
+        $defaults = $preselected ?? collect($this->config->getAgents())
             ->filter(fn (string $name) => $filteredAgents->has($name))
             ->whenEmpty(fn () => collect([...$this->projectInstalledAgents, ...$this->systemInstalledAgents])
                 ->unique()
@@ -383,6 +391,46 @@ class InstallCommand extends Command
 
         return collect($selected)
             ->map(fn (string $name) => $filteredAgents->get($name))
+            ->values();
+    }
+
+    /**
+     * Resolve the values passed via an array option against the available names.
+     *
+     * Returns null when the option was not passed, so the caller can fall back to its usual defaults.
+     *
+     * @param  Collection<int, string>  $available
+     * @return Collection<int, string>|null
+     */
+    protected function preselectFromOption(string $option, Collection $available, bool $allowWildcards = false): ?Collection
+    {
+        $values = collect((array) $this->option($option))
+            ->filter(fn (mixed $value): bool => is_string($value) && $value !== '')
+            ->unique()
+            ->values();
+
+        if ($values->isEmpty()) {
+            return null;
+        }
+
+        $matches = fn (string $value, string $name): bool => $allowWildcards ? Str::is($value, $name) : $value === $name;
+
+        $unmatched = $values->reject(
+            fn (string $value): bool => $available->contains(fn (string $name): bool => $matches($value, $name))
+        );
+
+        if ($unmatched->isNotEmpty()) {
+            $this->warn(sprintf(
+                'Ignoring --%s %s that %s not available: %s',
+                $option,
+                Str::plural('value', $unmatched->count()),
+                $unmatched->count() === 1 ? 'is' : 'are',
+                $unmatched->implode(', '),
+            ));
+        }
+
+        return $available
+            ->filter(fn (string $name): bool => $values->contains(fn (string $value): bool => $matches($value, $name)))
             ->values();
     }
 

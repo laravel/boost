@@ -69,7 +69,7 @@ it('does not prompt for integrations when none are available', function (): void
 
     $command = $this->app->make(InstallCommand::class);
 
-    $input = new ArrayInput([]);
+    $input = new ArrayInput([], $command->getDefinition());
     $input->setInteractive(true);
 
     $reflection = new ReflectionClass($command);
