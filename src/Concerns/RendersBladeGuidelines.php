@@ -36,6 +36,8 @@ trait RendersBladeGuidelines
             '<x-' => '___BLADE_COMPONENT_OPEN___',
         ];
 
+        $escapes = [];
+
         // Hiding literal ampersands in fenced code before rendering leaves only Blade's own escaping to decode.
         $content = preg_replace_callback(
             '/(?<fence>`{3,}|~{3,}).*?\k<fence>/s',
@@ -44,6 +46,8 @@ trait RendersBladeGuidelines
         ) ?? $content;
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
+
+        $content = $this->extractBladeEscapes($content, $escapes);
 
         $rendered = rescue(
             fn (): string => Blade::render($content, [
@@ -61,8 +65,34 @@ trait RendersBladeGuidelines
 
         $rendered = html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5);
         $rendered = str_replace('___AMPERSAND___', '&', $rendered);
+        $rendered = str_replace(array_keys($escapes), array_values($escapes), $rendered);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
+    }
+
+    protected function extractBladeEscapes(string $content, array &$escapes): string
+    {
+        // The content may be empty, as in `@{{ }}`, but must not run past a blank line or a
+        // fence. Without that bound a short escape in prose would match a later code example.
+        $bounded = '(?:(?!\n[ \t]*\n|\n[ \t]*`{3,}|\n[ \t]*~{3,}).)*?';
+
+        $patterns = [
+            '/(?<!@)@\{!!'.$bounded.'!!\}/s',
+            '/(?<!@)@\{\{'.$bounded.'\}\}/s',
+            '/(?<!@)@@(?=\S)/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            $content = preg_replace_callback($pattern, function (array $matches) use (&$escapes): string {
+                $placeholder = '___BLADE_ESCAPE_'.count($escapes).'___';
+
+                $escapes[$placeholder] = substr($matches[0], 1);
+
+                return $placeholder;
+            }, $content) ?? $content;
+        }
+
+        return $content;
     }
 
     protected function processBoostSnippets(string $content, string $path = '', array $data = []): string

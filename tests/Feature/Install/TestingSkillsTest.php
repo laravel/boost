@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
+use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -50,6 +51,55 @@ function renderTestingSkill(bool $pest, array $extraPackages = [], ?string $vers
         ->map(fn (string $path): string => $renderer->render($path))
         ->implode("\n");
 }
+
+function renderLaravelBestPracticeRules(): string
+{
+    $renderer = new class
+    {
+        use RendersBladeGuidelines;
+
+        public function render(string $path): string
+        {
+            return $this->renderBladeFile($path);
+        }
+    };
+
+    $skillDir = __DIR__.'/../../../.ai/laravel/skill/laravel-best-practices';
+
+    return collect([
+        ...(glob($skillDir.'/rules/*.blade.php') ?: []),
+        ...(glob($skillDir.'/rules/*.md') ?: []),
+    ])
+        ->map(fn (string $path): string => $renderer->render($path))
+        ->implode("\n");
+}
+
+it('renders best-practice commands with platform-aware executables', function (bool $usesSail, ?string $php, ?string $composer, string $expectedArtisan, string $expectedComposer): void {
+    config([
+        'boost.executable_paths.php' => $php,
+        'boost.executable_paths.composer' => $composer,
+    ]);
+
+    bootProject([rosterPackage('laravel/framework', '12.0.0')]);
+
+    $guidelineConfig = new GuidelineConfig;
+    $guidelineConfig->usesSail = $usesSail;
+
+    app()->instance(GuidelineConfig::class, $guidelineConfig);
+
+    $rules = renderLaravelBestPracticeRules();
+
+    expect($rules)
+        ->toContain($expectedArtisan.' env:encrypt --env=production --readable')
+        ->toContain($expectedComposer.' audit')
+        ->toContain("Blade's `{{ }}` syntax")
+        ->toContain('{!! $user->bio !!}')
+        ->toContain('    @csrf');
+})->with([
+    'default' => [false, null, null, 'php artisan', 'composer'],
+    'Sail' => [true, null, null, 'vendor/bin/sail artisan', 'vendor/bin/sail composer'],
+    'configured executables' => [true, '/usr/local/bin/php8.3', '/usr/local/bin/composer', '/usr/local/bin/php8.3 artisan', '/usr/local/bin/composer'],
+]);
 
 it('teaches Pest syntax to a Pest project and never PHPUnit syntax', function (): void {
     expect(renderTestingSkill(pest: true))
@@ -178,8 +228,11 @@ it('resolves every rule file a skill index points at, and references every rule 
     preg_match_all('/\[`(rules\/[a-z-]+)\.md`\]/', $index, $matches);
 
     $referenced = collect($matches[1])->unique()->sort()->values();
-    $onDisk = collect(glob($skillDir.'/rules/*.'.$extension) ?: [])
-        ->map(fn (string $path): string => 'rules/'.str_replace('.'.$extension, '', basename($path)))
+    $onDisk = collect([
+        ...(glob($skillDir.'/rules/*.blade.php') ?: []),
+        ...(glob($skillDir.'/rules/*.md') ?: []),
+    ])
+        ->map(fn (string $path): string => 'rules/'.preg_replace('/\.(?:blade\.php|md)$/', '', basename($path)))
         ->sort()
         ->values();
 
