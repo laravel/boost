@@ -1,12 +1,15 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 # Migration Best Practices
 
 ## Generate Migrations with Artisan
 
-Use `php artisan make:migration` to generate the timestamped filename and migration structure.
+Use `{{ $assist->artisanCommand('make:migration') }}` to generate the timestamped filename and migration structure.
 
 ```bash
-php artisan make:migration create_posts_table
-php artisan make:migration add_slug_to_posts_table
+{{ $assist->artisanCommand('make:migration create_posts_table') }}
+{{ $assist->artisanCommand('make:migration add_slug_to_posts_table') }}
 ```
 
 ## Define Foreign-Key Constraints Deliberately

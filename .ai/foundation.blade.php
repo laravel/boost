@@ -9,7 +9,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application running on PHP {{ PHP_MAJOR_VERSION }}.{{ PHP_MINOR_VERSION }}. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
 Before relying on a package's API, confirm its installed version:
-- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
+- PHP packages: run `{{ $assist->composerCommand('show --direct') }}` to list direct dependencies with versions, or `{{ $assist->composerCommand('show <vendor/package>') }}` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
 @if (! empty(config('boost.purpose')))
