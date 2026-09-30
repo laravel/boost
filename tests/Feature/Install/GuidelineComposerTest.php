@@ -8,6 +8,7 @@ use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\Npm;
 use Laravel\Boost\Support\RenderFailures;
@@ -32,6 +33,29 @@ beforeEach(function (): void {
 afterEach(function (): void {
     clearStagedPackages();
 });
+
+test('foundation package commands use the configured composer executable', function (bool $usesSail, ?string $composer, string $expectedComposer): void {
+    config(['boost.executable_paths.composer' => $composer]);
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '12.0.0'),
+    ]));
+
+    $guidelineConfig = new GuidelineConfig;
+    $guidelineConfig->usesSail = $usesSail;
+
+    $guidelines = $this->composer
+        ->config($guidelineConfig)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain($expectedComposer.' show --direct')
+        ->toContain($expectedComposer.' show <vendor/package>');
+})->with([
+    'default' => [false, null, 'composer'],
+    'Sail' => [true, null, Sail::DEFAULT_BINARY_PATH.' composer'],
+    'configured executable' => [true, '/usr/local/bin/composer', '/usr/local/bin/composer'],
+]);
 
 test('versionless packages do not emit a duplicate versioned guideline', function (): void {
     config(['boost.rules.enabled' => false]);

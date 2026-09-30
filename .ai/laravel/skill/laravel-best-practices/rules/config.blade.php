@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 # Configuration Best Practices
 
 ## Read Environment Variables in Configuration Files
@@ -37,8 +40,8 @@ AWS_SECRET_ACCESS_KEY=<your-aws-secret>
 Encrypted environment file:
 
 ```bash
-php artisan env:encrypt --env=production --readable
-php artisan env:decrypt --env=production
+{{ $assist->artisanCommand('env:encrypt --env=production --readable') }}
+{{ $assist->artisanCommand('env:decrypt --env=production') }}
 ```
 
 For hosted deployments, consider the platform's native secret store, such as AWS Secrets Manager or Vault, and inject secrets at runtime.
