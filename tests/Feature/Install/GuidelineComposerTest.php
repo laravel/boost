@@ -8,6 +8,7 @@ use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\Npm;
 use Laravel\Boost\Support\RenderFailures;
@@ -52,7 +53,7 @@ test('foundation package commands use the configured composer executable', funct
         ->toContain($expectedComposer.' show <vendor/package>');
 })->with([
     'default' => [false, null, 'composer'],
-    'Sail' => [true, null, 'vendor/bin/sail composer'],
+    'Sail' => [true, null, Sail::DEFAULT_BINARY_PATH.' composer'],
     'configured executable' => [true, '/usr/local/bin/composer', '/usr/local/bin/composer'],
 ]);
 

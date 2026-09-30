@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Boost\BoostServiceProvider;
+use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Mcp\Prompts\UpgradeLivewirev4\UpgradeLivewireV4;
 
 beforeEach(function (): void {
@@ -60,9 +61,9 @@ test('it uses sail executables when boost.json enables sail', function (): void 
     unlink(base_path('boost.json'));
 
     expect($text)
-        ->toContain('vendor/bin/sail composer require livewire/livewire:^4.0')
-        ->toContain('vendor/bin/sail artisan optimize:clear')
-        ->toContain('vendor/bin/sail artisan make:livewire create-post');
+        ->toContain(Sail::composerCommand().' require livewire/livewire:^4.0')
+        ->toContain(Sail::artisanCommand().' optimize:clear')
+        ->toContain(Sail::artisanCommand().' make:livewire create-post');
 });
 
 test('it properly compiles blade assist helpers', function (): void {

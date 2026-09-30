@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\GuidelineConfig;
+use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -104,7 +105,7 @@ it('renders best-practice commands with platform-aware executables', function (b
         ->toContain('    @csrf');
 })->with([
     'default' => [false, null, null, 'php artisan', 'composer'],
-    'Sail' => [true, null, null, 'vendor/bin/sail artisan', 'vendor/bin/sail composer'],
+    'Sail' => [true, null, null, Sail::DEFAULT_BINARY_PATH.' artisan', Sail::DEFAULT_BINARY_PATH.' composer'],
     'configured executables' => [true, '/usr/local/bin/php8.3', '/usr/local/bin/composer', '/usr/local/bin/php8.3 artisan', '/usr/local/bin/composer'],
 ]);
 
