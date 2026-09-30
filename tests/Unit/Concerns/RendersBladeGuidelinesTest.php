@@ -235,6 +235,54 @@ test('escaped directive in prose is restored to a single at sign', function (): 
     expect($result)->toBe('Include `@csrf` in forms.');
 });
 
+test('escaped echo inside a fenced code block keeps its ampersands', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+    ```blade
+    @{{ $a && $b }}
+    ```
+    MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('{{ $a && $b }}')
+        ->not->toContain('___AMPERSAND___');
+});
+
+test('escapes inside verbatim blocks are left untouched', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $result = $this->renderer->render("@verbatim\n@{{ x }} and @@csrf\n@endverbatim", '/path/to/guide.blade.php');
+
+    expect(trim($result))->toBe('@{{ x }} and @@csrf');
+});
+
+test('unterminated escaped echo in prose does not swallow a following code example', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+    Use `@{{` to escape.
+
+    ```blade
+    {{ 1 + 1 }}
+    ```
+    MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('Use `{{` to escape.')
+        ->toContain("```blade\n2\n```");
+});
+
+test('double at sign inside a word is left for blade', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $result = $this->renderer->render('Mail foo@@bar.com', '/path/to/guide.blade.php');
+
+    expect($result)->toBe('Mail foo@@bar.com');
+});
+
 test('escaped echo inside a fenced code block is restored to a single at sign', function (): void {
     $this->mock(GuidelineAssist::class);
 

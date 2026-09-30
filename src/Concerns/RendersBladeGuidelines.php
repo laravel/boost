@@ -36,7 +36,7 @@ trait RendersBladeGuidelines
             '<x-' => '___BLADE_COMPONENT_OPEN___',
         ];
 
-        $escapes = [];
+        [$content, $escapes] = $this->extractBladeEscapes($content);
 
         // Hiding literal ampersands in fenced code before rendering leaves only Blade's own escaping to decode.
         $content = preg_replace_callback(
@@ -46,8 +46,6 @@ trait RendersBladeGuidelines
         ) ?? $content;
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
-
-        $content = $this->extractBladeEscapes($content, $escapes);
 
         $rendered = rescue(
             fn (): string => Blade::render($content, [
@@ -70,16 +68,21 @@ trait RendersBladeGuidelines
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
 
-    protected function extractBladeEscapes(string $content, array &$escapes): string
+    /**
+     * @return array{string, array<string, string>}
+     */
+    protected function extractBladeEscapes(string $content): array
     {
-        // The content may be empty, as in `@{{ }}`, but must not run past a blank line or a
-        // fence. Without that bound a short escape in prose would match a later code example.
+        $escapes = [];
+        $skipVerbatim = '@verbatim.*?@endverbatim(*SKIP)(*FAIL)|';
+        // Stop at a blank line or fence so an escape in prose cannot swallow a later code block.
         $bounded = '(?:(?!\n[ \t]*\n|\n[ \t]*`{3,}|\n[ \t]*~{3,}).)*?';
 
         $patterns = [
-            '/(?<!@)@\{!!'.$bounded.'!!\}/s',
-            '/(?<!@)@\{\{'.$bounded.'\}\}/s',
-            '/(?<!@)@@(?=\S)/',
+            '/'.$skipVerbatim.'(?<!@)@\{!!'.$bounded.'!!\}/s',
+            '/'.$skipVerbatim.'(?<!@)@\{\{'.$bounded.'\}\}/s',
+            '/'.$skipVerbatim.'(?<!@)@(?:\{!!|\{\{)/s',
+            '/'.$skipVerbatim.'(?<![\w@])@@(?=\w)/s',
         ];
 
         foreach ($patterns as $pattern) {
@@ -92,7 +95,7 @@ trait RendersBladeGuidelines
             }, $content) ?? $content;
         }
 
-        return $content;
+        return [$content, $escapes];
     }
 
     protected function processBoostSnippets(string $content, string $path = '', array $data = []): string
@@ -112,10 +115,6 @@ trait RendersBladeGuidelines
 
     protected function renderSnippetAssistExpressions(string $content, string $path, array $data): string
     {
-        if (! str_ends_with($path, '.blade.php')) {
-            return $content;
-        }
-
         return preg_replace_callback('/(?<!@)\{\{.*?\}\}/s', function (array $matches) use ($path, $data): string {
             if (! str_contains($matches[0], '$assist->')) {
                 return $matches[0];

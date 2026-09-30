@@ -34,27 +34,17 @@ function renderTestingSkill(bool $pest, array $extraPackages = [], ?string $vers
             : rosterPackage('phpunit/phpunit', $version, true),
     ], $extraPackages));
 
-    $renderer = new class
-    {
-        use RendersBladeGuidelines;
-
-        public function render(string $path): string
-        {
-            return $this->renderBladeFile($path);
-        }
-    };
-
     $skillDir = __DIR__.'/../../../.ai/laravel/skill/testing-best-practices';
 
     return collect(glob($skillDir.'/rules/*.blade.php') ?: [])
         ->prepend($skillDir.'/SKILL.blade.php')
-        ->map(fn (string $path): string => $renderer->render($path))
+        ->map(fn (string $path): string => bladeGuidelineRenderer()->render($path))
         ->implode("\n");
 }
 
-function renderLaravelBestPracticeRules(): string
+function bladeGuidelineRenderer(): object
 {
-    $renderer = new class
+    return new class
     {
         use RendersBladeGuidelines;
 
@@ -63,14 +53,25 @@ function renderLaravelBestPracticeRules(): string
             return $this->renderBladeFile($path);
         }
     };
+}
 
-    $skillDir = __DIR__.'/../../../.ai/laravel/skill/laravel-best-practices';
-
-    return collect([
+/**
+ * @return array<int, string>
+ */
+function skillRuleFiles(string $skillDir): array
+{
+    return [
         ...(glob($skillDir.'/rules/*.blade.php') ?: []),
         ...(glob($skillDir.'/rules/*.md') ?: []),
-    ])
-        ->map(fn (string $path): string => $renderer->render($path))
+    ];
+}
+
+function renderLaravelBestPracticeRules(): string
+{
+    $skillDir = __DIR__.'/../../../.ai/laravel/skill/laravel-best-practices';
+
+    return collect(skillRuleFiles($skillDir))
+        ->map(fn (string $path): string => bladeGuidelineRenderer()->render($path))
         ->implode("\n");
 }
 
@@ -92,6 +93,12 @@ it('renders best-practice commands with platform-aware executables', function (b
     expect($rules)
         ->toContain($expectedArtisan.' env:encrypt --env=production --readable')
         ->toContain($expectedComposer.' audit')
+        ->toContain($expectedArtisan.' event:cache')
+        ->toContain($expectedArtisan.' make:mail OrderShipped --markdown=mail.orders.shipped')
+        ->toContain($expectedArtisan.' make:migration create_posts_table')
+        ->toContain($expectedArtisan.' schedule:clear-cache')
+        ->not->toContain('$assist->')
+        ->not->toContain('___')
         ->toContain("Blade's `{{ }}` syntax")
         ->toContain('{!! $user->bio !!}')
         ->toContain('    @csrf');
@@ -221,17 +228,14 @@ it('ships one testing skill to every project, whichever test framework and major
     'phpunit' => [['phpunit/phpunit', '11.0.0', true]],
 ]);
 
-it('resolves every rule file a skill index points at, and references every rule file on disk', function (string $skill, string $extension): void {
+it('resolves every rule file a skill index points at, and references every rule file on disk', function (string $skill, string $indexExtension): void {
     $skillDir = __DIR__.'/../../../.ai/laravel/skill/'.$skill;
-    $index = (string) file_get_contents($skillDir.'/SKILL.'.$extension);
+    $index = (string) file_get_contents($skillDir.'/SKILL.'.$indexExtension);
 
     preg_match_all('/\[`(rules\/[a-z-]+)\.md`\]/', $index, $matches);
 
     $referenced = collect($matches[1])->unique()->sort()->values();
-    $onDisk = collect([
-        ...(glob($skillDir.'/rules/*.blade.php') ?: []),
-        ...(glob($skillDir.'/rules/*.md') ?: []),
-    ])
+    $onDisk = collect(skillRuleFiles($skillDir))
         ->map(fn (string $path): string => 'rules/'.preg_replace('/\.(?:blade\.php|md)$/', '', basename($path)))
         ->sort()
         ->values();
