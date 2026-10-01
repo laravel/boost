@@ -22,6 +22,7 @@ Before making any changes:
 
 - Check `composer.json` for the current `laravel/ai` version constraint
 - Run `{{ $assist->composerCommand('show laravel/ai') }}` to confirm the installed version
+- If 1.0 is already installed, skip the `laravel/ai` bump in step 5 but still apply every code change below
 - Review `config/ai.php` for current configuration
 - Identify every agent, tool, middleware, and custom provider in the application
 - Determine whether conversations are persisted, because that decides whether the backfill migration is required
@@ -38,6 +39,7 @@ Before making any changes:
 Search the codebase for patterns affected by 1.0 changes:
 
 **High Priority Searches:**
+- `laravel/mcp` in `composer.json`, or `Laravel\Mcp\` imports - Laravel AI 1.0 requires `laravel/mcp` 1.0
 - `tool_calls` or `tool_results` - Columns replaced by a single `steps` column
 - `approval_state` or `approvalState` - Column and property replaced by a `status` enum
 - `->toolCalls` or `->toolResults` on `StoredMessage` - Now methods, not properties
@@ -80,7 +82,8 @@ For each category of changes:
 
 After code changes are complete:
 
-- `{{ $assist->composerCommand('require laravel/ai:^1.0') }}`
+- `{{ $assist->composerCommand('require laravel/ai:^1.0 laravel/mcp:^1.0 -W') }}` - Laravel AI 1.0 conflicts with `laravel/mcp` below 1.0, so both must move together
+- If `laravel/mcp` was below 1.0 and the application defines its own MCP servers, tools, resources, prompts, or clients, follow the [Laravel MCP upgrade guide](https://github.com/laravel/mcp/blob/main/UPGRADE.md). Skip it otherwise, because Boost handles its own MCP usage
 - `{{ $assist->composerCommand('require aws/aws-sdk-php') }}` (only if the application uses the Bedrock provider)
 - Write and run the backfill migration below if conversations are already persisted
 
@@ -105,6 +108,10 @@ When upgrading, maximize efficiency by:
 # Upgrading To 1.0 From 0.11
 
 ## High-impact changes
+
+### Laravel MCP 1.0 Is Required
+
+Laravel AI 1.0 conflicts with `laravel/mcp` versions below 1.0. If your application uses `laravel/mcp` directly, update it to `^1.0` and review the [Laravel MCP upgrade guide](https://github.com/laravel/mcp/blob/main/UPGRADE.md).
 
 ### Conversation Messages Now Store Steps
 

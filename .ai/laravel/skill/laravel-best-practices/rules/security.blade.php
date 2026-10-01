@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 # Security Best Practices
 
 ## Control Mass Assignment
@@ -62,27 +65,27 @@ User::whereRaw('LOWER(name) = ?', [$request->string('name')->lower()->toString()
 
 ## Escape Output in Its Context
 
-Blade's `{{ }}` syntax HTML-escapes output. Use `{!! !!}` only for content that has been sanitized for the exact HTML context in which it is rendered. Escaping rules differ for HTML, URLs, JavaScript, and Cascading Style Sheets.
+Blade's `@{{ }}` syntax HTML-escapes output. Use `@{!! !!}` only for content that has been sanitized for the exact HTML context in which it is rendered. Escaping rules differ for HTML, URLs, JavaScript, and Cascading Style Sheets.
 
 Incorrect for untrusted content:
 
 ```blade
-{!! $user->bio !!}
+@{!! $user->bio !!}
 ```
 
 Correct:
 
 ```blade
-{{ $user->bio }}
+@{{ $user->bio }}
 ```
 
 ## Apply Cross-Site Request Forgery Protection
 
-Include `@csrf` in state-changing Blade forms handled by Laravel's `web` middleware. Routes intentionally excluded from cross-site request forgery (CSRF) verification, such as validated third-party webhooks, need their own authenticity check.
+Include `@@csrf` in state-changing Blade forms handled by Laravel's `web` middleware. Routes intentionally excluded from cross-site request forgery (CSRF) verification, such as validated third-party webhooks, need their own authenticity check.
 
 ```blade
 <form method="POST" action="/posts">
-    @csrf
+    @@csrf
     <input type="text" name="title">
 </form>
 ```
@@ -130,10 +133,10 @@ Do not commit populated environment files or hard-code credentials. Read environ
 
 ## Audit Dependencies
 
-Run `composer audit` regularly and in continuous integration. Review findings for exploitability and update or mitigate affected packages promptly.
+Run `{{ $assist->composerCommand('audit') }}` regularly and in continuous integration. Review findings for exploitability and update or mitigate affected packages promptly.
 
 ```bash
-composer audit
+{{ $assist->composerCommand('audit') }}
 ```
 
 ## Encrypt Sensitive Attributes When Appropriate

@@ -204,4 +204,9 @@ class GuidelineAssist
     {
         return $this->config->hasMcp;
     }
+
+    public function hasCloudEnabled(): bool
+    {
+        return $this->config->usesCloud;
+    }
 }

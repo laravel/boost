@@ -71,7 +71,7 @@ Commands follow a CRUD pattern: `resource:list`, `resource:get`, `resource:creat
 
 Available resources: `application`, `environment`, `instance`, `database-cluster`, `database`, `cache`, `bucket`, `domain`, `websocket-cluster`, `background-process`, `secret`, `command`, `deployment`.
 
-Some resources have additional commands (e.g., `domain:verify`, `database:open`, `instance:sizes`, `cache:types`). Discover these via `cloud -h`.
+Some resources have additional commands (e.g., `domain:verify`, `database:open`, `instance:sizes`, `cache:types`, `<resource>:metrics`). Discover these via `cloud -h`.
 
 Never hardcode command signatures. Always run `cloud <command> -h` to discover options at runtime.
 
@@ -134,6 +134,7 @@ Delegate these to a subagent:
 - `cloud deploy:monitor -n` — deployment logs can be very long
 - `cloud deployment:get --json -n` — full deployment details
 - `cloud <resource>:list --json -n` — listing many resources produces large JSON
+- `cloud <resource>:metrics --json -n` — every data point is included; narrow it with `--fields` (e.g. `--fields=period,cpuUsage.average`)
 - `cloud command:run` — when output may be long
 - `cloud usage --detailed --json -n` — the payload includes details for every database, cache, bucket, websocket, and application
 - Fetching docs from https://cloud.laravel.com/docs/llms.txt via `WebFetch`

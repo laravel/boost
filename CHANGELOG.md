@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.10.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.10.1...main)
+
+## [v2.10.1](https://github.com/laravel/boost/compare/v2.10.0...v2.10.1) - 2026-10-01
+
+### What's Changed
+
+* Keep syncing CLAUDE.md for existing Claude Code projects by [@gldrenthe89](https://github.com/gldrenthe89) in https://github.com/laravel/boost/pull/1043
+* Render Best Practice guidelines and skill commands with Sail's executable when needed by [@wilsenhc](https://github.com/wilsenhc) in https://github.com/laravel/boost/pull/1046
+* Slim always-loaded guidelines where evals show no behavior change by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1042
+* Only mention the deploying-to-cloud skill when Cloud is enabled by [@cyppe](https://github.com/cyppe) in https://github.com/laravel/boost/pull/1040
+* Keep the Laravel AI upgrade prompt usable alongside older Laravel MCP by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1047
+
+### New Contributors
+
+* [@gldrenthe89](https://github.com/gldrenthe89) made their first contribution in https://github.com/laravel/boost/pull/1043
+* [@wilsenhc](https://github.com/wilsenhc) made their first contribution in https://github.com/laravel/boost/pull/1046
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.10.0...v2.10.1
 
 ## [v2.10.0](https://github.com/laravel/boost/compare/v2.9.1...v2.10.0) - 2026-09-23
 
@@ -666,11 +683,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -767,12 +786,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 

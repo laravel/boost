@@ -1,3 +1,6 @@
+@php
+/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
+@endphp
 # Events and Notifications Best Practices
 
 ## Rely on Event Discovery
@@ -6,7 +9,7 @@ Laravel discovers listeners in the configured listener directories by inspecting
 
 ## Cache Event Discovery During Production Deployment
 
-Cache discovered listeners during production deployment with `php artisan optimize` or `php artisan event:cache`. Rebuild the cache whenever listener definitions change.
+Cache discovered listeners during production deployment with `{{ $assist->artisanCommand('optimize') }}` or `{{ $assist->artisanCommand('event:cache') }}`. Rebuild the cache whenever listener definitions change.
 
 ## Use `ShouldDispatchAfterCommit` Inside Transactions
 

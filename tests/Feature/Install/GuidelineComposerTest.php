@@ -9,6 +9,7 @@ use Laravel\Boost\Install\GuidelineAssist;
 use Laravel\Boost\Install\GuidelineComposer;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Herd;
+use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\Npm;
 use Laravel\Boost\Support\RenderFailures;
@@ -33,6 +34,29 @@ beforeEach(function (): void {
 afterEach(function (): void {
     clearStagedPackages();
 });
+
+test('foundation package commands use the configured composer executable', function (bool $usesSail, ?string $composer, string $expectedComposer): void {
+    config(['boost.executable_paths.composer' => $composer]);
+
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '12.0.0'),
+    ]));
+
+    $guidelineConfig = new GuidelineConfig;
+    $guidelineConfig->usesSail = $usesSail;
+
+    $guidelines = $this->composer
+        ->config($guidelineConfig)
+        ->compose();
+
+    expect($guidelines)
+        ->toContain($expectedComposer.' show --direct')
+        ->toContain($expectedComposer.' show <vendor/package>');
+})->with([
+    'default' => [false, null, 'composer'],
+    'Sail' => [true, null, Sail::DEFAULT_BINARY_PATH.' composer'],
+    'configured executable' => [true, '/usr/local/bin/composer', '/usr/local/bin/composer'],
+]);
 
 test('versionless packages do not emit a duplicate versioned guideline', function (): void {
     config(['boost.rules.enabled' => false]);
@@ -216,6 +240,27 @@ test('excludes Herd guidelines when Sail is configured', function (): void {
 
 });
 
+test('mentions the deploying-to-cloud skill only when Cloud is enabled', function (bool $usesCloud): void {
+    $packages = new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]);
+
+    mockProjectPackages($this->project, $packages);
+
+    $config = new GuidelineConfig;
+    $config->usesCloud = $usesCloud;
+
+    $guidelines = $this->composer
+        ->config($config)
+        ->compose();
+
+    expect($guidelines)->toContain('=== deployments rules ===')
+        ->and(str_contains($guidelines, 'deploying-to-cloud'))->toBe($usesCloud);
+})->with([
+    'cloud enabled' => true,
+    'cloud disabled' => false,
+]);
+
 test('excludes Sail guidelines when Herd is configured', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
@@ -308,7 +353,6 @@ test('includes the project rules pointer when rules are enabled and MCP is on', 
     expect($guidelines)
         ->toContain('## Project Rules')
         ->toContain('@.ai/rules/index.md')
-        ->toContain('record-rule')
         ->toContain('.ai/rules');
 });
 
