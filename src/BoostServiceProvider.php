@@ -18,6 +18,7 @@ use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Services\BrowserLogger;
+use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Mcp\Facades\Mcp;
@@ -43,7 +44,12 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->app->singleton(ProjectManager::class, fn (): ProjectManager => new ProjectManager);
 
-        $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
+        $this->app->singleton(GuidelineConfig::class, function (): GuidelineConfig {
+            $config = new GuidelineConfig;
+            $config->usesSail = (new Config)->getSail();
+
+            return $config;
+        });
 
         $this->app->singleton(RuleRepository::class, fn (): RuleRepository => new RuleRepository(base_path('.ai/rules')));
 

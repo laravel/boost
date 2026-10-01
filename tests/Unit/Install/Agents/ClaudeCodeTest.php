@@ -26,6 +26,40 @@ test('returns configured mcp config path', function (): void {
     expect($agent->mcpConfigPath())->toBe('../.mcp.json');
 });
 
+test('guidelinesPath returns AGENTS.md when CLAUDE.md does not exist', function (): void {
+    $agent = new ClaudeCode($this->strategyFactory);
+
+    expect($agent->guidelinesPath())->toBe('AGENTS.md');
+});
+
+test('guidelinesPath prefers CLAUDE.md when it exists', function (): void {
+    $agent = new ClaudeCode($this->strategyFactory);
+    $claudePath = base_path('CLAUDE.md');
+
+    touch($claudePath);
+
+    try {
+        expect($agent->guidelinesPath())->toBe('CLAUDE.md');
+    } finally {
+        unlink($claudePath);
+    }
+});
+
+test('guidelinesPath returns configured path even when CLAUDE.md exists', function (): void {
+    config()->set('boost.agents.claude_code.guidelines_path', '.custom/AGENTS.md');
+
+    $agent = new ClaudeCode($this->strategyFactory);
+    $claudePath = base_path('CLAUDE.md');
+
+    touch($claudePath);
+
+    try {
+        expect($agent->guidelinesPath())->toBe('.custom/AGENTS.md');
+    } finally {
+        unlink($claudePath);
+    }
+});
+
 test('uses relative paths for MCP', function (): void {
     $agent = new ClaudeCode($this->strategyFactory);
 

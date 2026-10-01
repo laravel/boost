@@ -1,5 +1,8 @@
 {
     "preset": "laravel",
+    "exclude": [
+        "evals"
+    ],
     "rules": {
         "global_namespace_import": {
             "import_classes": true,
