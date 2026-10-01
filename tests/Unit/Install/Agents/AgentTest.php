@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Agents;
 
+use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use JMac\Testing\Double;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Install\Agents\Agent;
@@ -16,13 +18,31 @@ use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
-    $this->strategy = Mockery::mock(DetectionStrategy::class);
+    $this->strategyFactory = Double::for(DetectionStrategyFactory::class);
+    $this->strategy = Double::for(DetectionStrategy::class);
 });
 
 // Create a concrete test implementation for testing abstract methods
 class TestAgent extends Agent
 {
+    public function __construct(
+        DetectionStrategyFactory $strategyFactory,
+        private readonly McpInstallationStrategy $mcpStrategy = McpInstallationStrategy::FILE,
+        private readonly ?string $shellCommand = null,
+    ) {
+        parent::__construct($strategyFactory);
+    }
+
+    public function mcpInstallationStrategy(): McpInstallationStrategy
+    {
+        return $this->mcpStrategy;
+    }
+
+    public function shellMcpCommand(): ?string
+    {
+        return $this->shellCommand;
+    }
+
     public function name(): string
     {
         return 'test';
@@ -69,17 +89,9 @@ test('detectOnSystem delegates to strategy factory and detection strategy', func
     $platform = Platform::Darwin;
     $config = ['paths' => ['/test/path']];
 
-    $this->strategyFactory
-        ->shouldReceive('makeFromConfig')
-        ->once()
-        ->with($config)
-        ->andReturn($this->strategy);
+    $this->strategyFactory->expects('makeFromConfig')->with($config)->returns($this->strategy);
 
-    $this->strategy
-        ->shouldReceive('detect')
-        ->once()
-        ->with($config, $platform)
-        ->andReturn(true);
+    $this->strategy->expects('detect')->with($config, $platform)->returns(true);
 
     $environment = new TestAgent($this->strategyFactory);
     $result = $environment->detectOnSystem($platform);
@@ -92,17 +104,9 @@ test('detectInProject merges config with basePath and delegates to strategy', fu
     $projectConfig = ['files' => ['test.config']];
     $mergedConfig = ['files' => ['test.config'], 'basePath' => $basePath];
 
-    $this->strategyFactory
-        ->shouldReceive('makeFromConfig')
-        ->once()
-        ->with($mergedConfig)
-        ->andReturn($this->strategy);
+    $this->strategyFactory->expects('makeFromConfig')->with($mergedConfig)->returns($this->strategy);
 
-    $this->strategy
-        ->shouldReceive('detect')
-        ->once()
-        ->with($mergedConfig)
-        ->andReturn(false);
+    $this->strategy->expects('detect')->with($mergedConfig)->returns(false);
 
     $environment = new TestAgent($this->strategyFactory);
     $result = $environment->detectInProject($basePath);
@@ -111,16 +115,9 @@ test('detectInProject merges config with basePath and delegates to strategy', fu
 });
 
 test('installMcp uses Shell strategy when configured', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = Double::for(TestAgent::class)->passthru(new TestAgent($this->strategyFactory, McpInstallationStrategy::SHELL));
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
-
-    $environment->shouldReceive('installShellMcp')
-        ->once()
-        ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])
-        ->andReturn(true);
+    $environment->expects('installShellMcp')->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])->returns(true);
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
@@ -128,16 +125,9 @@ test('installMcp uses Shell strategy when configured', function (): void {
 });
 
 test('installMcp uses File strategy when configured', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = Double::for(TestAgent::class)->passthru(new TestAgent($this->strategyFactory));
 
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
-
-    $environment->shouldReceive('installFileMcp')
-        ->once()
-        ->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])
-        ->andReturn(true);
+    $environment->expects('installFileMcp')->with('test-key', 'test-command', ['arg1'], ['ENV' => 'value'])->returns(true);
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1'], ['ENV' => 'value']);
 
@@ -145,10 +135,7 @@ test('installMcp uses File strategy when configured', function (): void {
 });
 
 test('installMcp returns false for None strategy', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::NONE);
+    $environment = new TestAgent($this->strategyFactory, McpInstallationStrategy::NONE);
 
     $result = $environment->installMcp('test-key', 'test-command');
 
@@ -164,63 +151,33 @@ test('installShellMcp returns false when shellMcpCommand is null', function (): 
 });
 
 test('installShellMcp executes command with placeholders replaced', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestAgent($this->strategyFactory, McpInstallationStrategy::SHELL, 'install {key} {command} {args} {env}');
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key} {command} {args} {env}');
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
-
-    $mockResult = Mockery::mock();
-    $mockResult->shouldReceive('successful')->andReturn(true);
-    $mockResult->shouldReceive('errorOutput')->andReturn('');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key test-command "arg1" "arg2"') &&
-               str_contains((string) $command, '-e ENV1="value1"') &&
-               str_contains((string) $command, '-e ENV2="value2"')))
-        ->andReturn($mockResult);
+    Process::fake();
 
     $result = $environment->installMcp('test-key', 'test-command', ['arg1', 'arg2'], ['env1' => 'value1', 'env2' => 'value2']);
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => str_contains($process->command, 'install test-key test-command "arg1" "arg2"') &&
+               str_contains($process->command, '-e ENV1="value1"') &&
+               str_contains($process->command, '-e ENV2="value2"'));
 
     expect($result)->toBe(true);
 });
 
 test('installShellMcp returns true when process fails but has already exists error', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestAgent($this->strategyFactory, McpInstallationStrategy::SHELL, 'install {key}');
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key}');
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
-
-    $mockResult = Mockery::mock();
-    $mockResult->shouldReceive('successful')->andReturn(false);
-    $mockResult->shouldReceive('errorOutput')->andReturn('Error: already exists');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->andReturn($mockResult);
+    Process::fake(['*' => Process::result(errorOutput: 'Error: already exists', exitCode: 1)]);
 
     $result = $environment->installMcp('test-key', 'test-command');
+
+    Process::assertRanTimes('install test-key');
 
     expect($result)->toBe(true);
 });
 
 test('installShellMcp returns false when the process is signaled', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
-
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('php -r "posix_kill(posix_getpid(), 5);"');
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
+    $environment = new TestAgent($this->strategyFactory, McpInstallationStrategy::SHELL, 'php -r "posix_kill(posix_getpid(), 5);"');
 
     $result = $environment->installMcp('test-key', 'test-command');
 
@@ -236,8 +193,7 @@ test('installFileMcp returns false when mcpConfigPath is null', function (): voi
 });
 
 test('installFileMcp creates new config file when none exists', function (): void {
-    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestSupportsMcp($this->strategyFactory);
 
     $capturedContent = '';
     $expectedContent = <<<'JSON'
@@ -255,9 +211,6 @@ test('installFileMcp creates new config file when none exists', function (): voi
     }
 }
 JSON;
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -281,14 +234,10 @@ JSON;
 });
 
 test('installFileMcp updates existing config file', function (): void {
-    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestSupportsMcp($this->strategyFactory);
 
     $capturedPath = '';
     $capturedContent = '';
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
 
     $existingConfig = json_encode(['mcpServers' => ['existing' => ['command' => 'existing-cmd']]]);
 
@@ -449,65 +398,37 @@ test('preserves single commands without arguments', function (): void {
 });
 
 test('shell installation handles valet php commands', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestAgent($this->strategyFactory, McpInstallationStrategy::SHELL, 'install {key} {command} {args}');
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key} {command} {args}');
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
-
-    $mockResult = Mockery::mock();
-    $mockResult->shouldReceive('successful')->andReturn(true);
-    $mockResult->shouldReceive('errorOutput')->andReturn('');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key valet') &&
-               str_contains((string) $command, '"php"') &&
-               str_contains((string) $command, '"artisan"')))
-        ->andReturn($mockResult);
+    Process::fake();
 
     $result = $environment->installMcp('test-key', 'valet php', ['artisan', 'boost:mcp']);
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => str_contains($process->command, 'install test-key valet') &&
+               str_contains($process->command, '"php"') &&
+               str_contains($process->command, '"artisan"'));
 
     expect($result)->toBe(true);
 });
 
 test('shell installation handles herd php commands', function (): void {
-    $environment = Mockery::mock(TestAgent::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestAgent($this->strategyFactory, McpInstallationStrategy::SHELL, 'install {key} {command} {args}');
 
-    $environment->shouldReceive('shellMcpCommand')
-        ->andReturn('install {key} {command} {args}');
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::SHELL);
-
-    $mockResult = Mockery::mock();
-    $mockResult->shouldReceive('successful')->andReturn(true);
-    $mockResult->shouldReceive('errorOutput')->andReturn('');
-
-    Process::shouldReceive('run')
-        ->once()
-        ->with(Mockery::on(fn ($command): bool => str_contains((string) $command, 'install test-key herd') &&
-               str_contains((string) $command, '"php"') &&
-               str_contains((string) $command, '"artisan"')))
-        ->andReturn($mockResult);
+    Process::fake();
 
     $result = $environment->installMcp('test-key', 'herd php', ['artisan', 'boost:mcp']);
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => str_contains($process->command, 'install test-key herd') &&
+               str_contains($process->command, '"php"') &&
+               str_contains($process->command, '"artisan"'));
 
     expect($result)->toBe(true);
 });
 
 test('file installation handles valet php commands', function (): void {
-    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestSupportsMcp($this->strategyFactory);
 
     $capturedContent = '';
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -539,13 +460,9 @@ test('file installation handles valet php commands', function (): void {
 });
 
 test('file installation handles herd php commands', function (): void {
-    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestSupportsMcp($this->strategyFactory);
 
     $capturedContent = '';
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -577,13 +494,9 @@ test('file installation handles herd php commands', function (): void {
 });
 
 test('file installation handles docker exec commands', function (): void {
-    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestSupportsMcp($this->strategyFactory);
 
     $capturedContent = '';
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()
@@ -657,13 +570,9 @@ test('preserves absolute windows paths with spaces without splitting', function 
 });
 
 test('file installation handles absolute paths with spaces correctly', function (): void {
-    $environment = Mockery::mock(TestSupportsMcp::class)->makePartial();
-    $environment->shouldAllowMockingProtectedMethods();
+    $environment = new TestSupportsMcp($this->strategyFactory);
 
     $capturedContent = '';
-
-    $environment->shouldReceive('mcpInstallationStrategy')
-        ->andReturn(McpInstallationStrategy::FILE);
 
     File::shouldReceive('ensureDirectoryExists')
         ->once()

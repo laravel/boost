@@ -6,10 +6,9 @@ namespace Tests\Unit\Install\Agents;
 
 use Laravel\Boost\Install\Agents\ClaudeCode;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
-use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('returns default mcp config path', function (): void {

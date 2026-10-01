@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = mock(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
 });
 
 afterEach(function (): void {

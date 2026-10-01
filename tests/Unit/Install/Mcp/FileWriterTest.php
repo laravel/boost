@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Install\Mcp;
 
-use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Mcp\FileWriter;
@@ -77,8 +76,6 @@ test('save updates a plain JSON file that starts with a UTF-8 BOM', function ():
 });
 
 test('save rejects plain JSON files without an object root', function (string $content): void {
-    File::swap(Mockery::mock(Filesystem::class));
-
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->once()->andReturn(true);
     File::shouldReceive('get')->once()->andReturn($content);
@@ -378,11 +375,12 @@ test('injects into existing configKey preserving JSON5 features', function (): v
 test("injecting twice into existing JSON 5 doesn't cause duplicates", function (): void {
     $capturedContent = '';
 
-    File::swap(Mockery::mock(Filesystem::class));
-
-    File::shouldReceive('ensureDirectoryExists')->once();
+    File::shouldReceive('ensureDirectoryExists')->twice();
     File::shouldReceive('exists')->andReturn(true);
-    File::shouldReceive('get')->andReturn(fixtureContent('mcp.json5'));
+    File::shouldReceive('get')->andReturnUsing(
+        fn (): string => fixtureContent('mcp.json5'),
+        fn (): string => $capturedContent,
+    );
     File::shouldReceive('put')
         ->with(
             Mockery::capture($capturedPath),
@@ -408,14 +406,6 @@ test("injecting twice into existing JSON 5 doesn't cause duplicates", function (
         '// Here are comments within my JSON', // Comments preserved
         '// Ooo, pretty cool' // Inline comments preserved
     );
-
-    $newContent = $capturedContent;
-
-    File::swap(Mockery::mock(Filesystem::class));
-
-    File::shouldReceive('ensureDirectoryExists')->once();
-    File::shouldReceive('exists')->andReturn(true);
-    File::shouldReceive('get')->andReturn($newContent);
 
     $result = (new FileWriter('/path/to/mcp.json'))
         ->configKey('servers')
@@ -797,9 +787,6 @@ test('updated JSON5 file ends with a single trailing newline', function (): void
 
 function mockFileOperations(bool $fileExists = false, string $content = '{}', bool $writeSuccess = true, ?string &$capturedPath = null, ?string &$capturedContent = null): void
 {
-    // Clear any existing File facade mock
-    File::swap(Mockery::mock(Filesystem::class));
-
     File::shouldReceive('ensureDirectoryExists')->once();
     File::shouldReceive('exists')->andReturn($fileExists);
 

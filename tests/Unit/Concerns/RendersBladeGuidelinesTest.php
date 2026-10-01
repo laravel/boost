@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\GuidelineAssist;
 
@@ -128,7 +129,7 @@ test('non-blade files bypass blade rendering entirely', function (): void {
 });
 
 test('backticks are preserved through blade rendering for inline code documentation', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Run `composer install` then `php artisan migrate`';
 
@@ -139,7 +140,7 @@ test('backticks are preserved through blade rendering for inline code documentat
 });
 
 test('php opening tags are preserved through blade rendering for code examples', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Example: <?php echo $greeting; ?>';
 
@@ -149,7 +150,7 @@ test('php opening tags are preserved through blade rendering for code examples',
 });
 
 test('volt directives are preserved through blade rendering for livewire documentation', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = '@volt("counter") component code @endvolt';
 
@@ -160,7 +161,7 @@ test('volt directives are preserved through blade rendering for livewire documen
 });
 
 test('html entities from blade expressions are decoded back to plain text for markdown output', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Run {{ "tinker --execute \"your code here\"" }}';
 
@@ -171,7 +172,7 @@ test('html entities from blade expressions are decoded back to plain text for ma
 });
 
 test('all common html entities are decoded', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Use {{ "a < b & c > d" }}';
 
@@ -184,7 +185,7 @@ test('all common html entities are decoded', function (): void {
 });
 
 test('html entities written literally inside fenced code blocks are preserved', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = <<<'MARKDOWN'
 ```php
@@ -312,7 +313,7 @@ test('an unescaped blade directive inside a fenced code block still executes', f
 });
 
 test('html entities from blade expressions inside fenced code blocks are decoded', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = <<<'MARKDOWN'
 ```bash
@@ -329,7 +330,7 @@ MARKDOWN;
 });
 
 test('renderBladeFile preserves literal entities while decoding blade output', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $result = $this->renderer->renderFile(fixture('entities-in-code-blocks.blade.php'));
 
@@ -346,7 +347,7 @@ test('renderBladeFile returns empty string for non-existent file', function (): 
 });
 
 test('renderBladeFile processes snippets and renders blade in single pipeline', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $tempFile = sys_get_temp_dir().'/boost_test_'.uniqid().'.blade.php';
     file_put_contents($tempFile, "@boostsnippet('Query', 'php')User::all()@endboostsnippet\n\nVersion: {{ \"1.0\" }}");
@@ -366,7 +367,7 @@ test('renderBladeFile processes snippets and renders blade in single pipeline', 
 });
 
 test('renderBladeFile clears stored snippets after rendering to prevent leakage between files', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $tempFile = sys_get_temp_dir().'/boost_test_'.uniqid().'.blade.php';
     file_put_contents($tempFile, "@boostsnippet('Test')content@endboostsnippet");
