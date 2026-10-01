@@ -39,6 +39,7 @@ Before making any changes:
 Search the codebase for patterns affected by 1.0 changes:
 
 **High Priority Searches:**
+- `laravel/mcp` in `composer.json`, or `Laravel\Mcp\` imports - Laravel AI 1.0 requires `laravel/mcp` 1.0
 - `tool_calls` or `tool_results` - Columns replaced by a single `steps` column
 - `approval_state` or `approvalState` - Column and property replaced by a `status` enum
 - `->toolCalls` or `->toolResults` on `StoredMessage` - Now methods, not properties
@@ -107,6 +108,10 @@ When upgrading, maximize efficiency by:
 # Upgrading To 1.0 From 0.11
 
 ## High-impact changes
+
+### Laravel MCP 1.0 Is Required
+
+Laravel AI 1.0 conflicts with `laravel/mcp` versions below 1.0. If your application uses `laravel/mcp` directly, update it to `^1.0` and review the [Laravel MCP upgrade guide](https://github.com/laravel/mcp/blob/main/UPGRADE.md).
 
 ### Conversation Messages Now Store Steps
 
