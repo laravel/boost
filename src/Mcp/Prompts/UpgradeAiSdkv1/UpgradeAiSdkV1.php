@@ -22,7 +22,7 @@ class UpgradeAiSdkV1 extends Prompt
 
     public function shouldRegister(ProjectManager $project): bool
     {
-        return $project->php()->uses(PackageRegistry::AI, '<1.0.0');
+        return $project->php()->uses(PackageRegistry::AI);
     }
 
     public function handle(): Response

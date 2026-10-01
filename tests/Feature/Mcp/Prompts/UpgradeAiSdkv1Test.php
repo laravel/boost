@@ -14,14 +14,24 @@ test('it has the correct name', function (): void {
     expect($this->prompt->name())->toBe('upgrade-ai-sdk-v1');
 });
 
-test('it registers only for pre-1.0 installations', function (): void {
+test('it registers whenever laravel/ai is installed', function (): void {
     $project = Mockery::mock(ProjectManager::class);
     mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '0.11.2')]));
 
     expect($this->prompt->shouldRegister($project))->toBeTrue();
 
     $project = Mockery::mock(ProjectManager::class);
-    mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '1.0.0')]));
+    mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '1.0.1')]));
+
+    expect($this->prompt->shouldRegister($project))->toBeTrue();
+
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([rosterPackage('laravel/ai', '1.1.0')]));
+
+    expect($this->prompt->shouldRegister($project))->toBeTrue();
+
+    $project = Mockery::mock(ProjectManager::class);
+    mockProjectPackages($project, new PackageCollection([]));
 
     expect($this->prompt->shouldRegister($project))->toBeFalse();
 });
@@ -44,14 +54,15 @@ test('it contains core upgrade content', function (): void {
         ->toolTextContains('Latest Conversations Are Scoped To The Agent')
         ->toolTextContains('Gemini Uses The Interactions API')
         ->toolTextContains('usingVercelDataProtocol')
-        ->toolTextContains('MessageStatus');
+        ->toolTextContains('MessageStatus')
+        ->toolTextContains('https://github.com/laravel/mcp/blob/main/UPGRADE.md');
 });
 
 test('it properly compiles blade assist helpers', function (): void {
     $text = (string) $this->prompt->handle()->content();
 
     expect($text)
-        ->toContain('composer require laravel/ai:^1.0')
+        ->toContain('composer require laravel/ai:^1.0 laravel/mcp:^1.0 -W')
         ->toContain('composer show laravel/ai')
         ->toContain('composer require aws/aws-sdk-php')
         ->toContain('php artisan migrate')
