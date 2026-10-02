@@ -93,6 +93,11 @@ class FileWriter
     protected function updateJson5File(string $content): bool
     {
         $masked = $this->maskUnquotedComments($content);
+
+        if (! str_starts_with(ltrim($masked), '{')) {
+            return false;
+        }
+
         $quotedConfigKey = '["\']'.preg_quote($this->configKey, '/').'["\']';
         $unquotedConfigKey = '(?<=^|\\s|,|{)'.preg_quote($this->configKey, '/');
         $configKeyPattern = '/(?:'.$quotedConfigKey.'|'.$unquotedConfigKey.')\\s*:\\s*\\{/m';
