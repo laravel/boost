@@ -97,6 +97,27 @@ test('save rejects plain JSON files without an object root', function (string $c
     'array' => '[]',
 ]);
 
+test('save rejects JSON5 files without an object root', function (string $content): void {
+    File::swap(Mockery::mock(Filesystem::class));
+
+    File::shouldReceive('ensureDirectoryExists')->once();
+    File::shouldReceive('exists')->once()->andReturn(true);
+    File::shouldReceive('get')->once()->andReturn($content);
+    File::shouldReceive('put')->never();
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('laravel-boost', ['command' => 'php artisan boost:mcp'])
+        ->save();
+
+    expect($result)->toBeFalse();
+})->with([
+    'null' => 'null // comment',
+    'boolean' => 'true // comment',
+    'number' => '1 /* comment */',
+    'string' => "'config'",
+    'array' => '[{ unquoted: true, }]',
+]);
+
 test('written data is correct for brand new file', function (string $configKey, array $servers, string $expectedJson): void {
     $writtenPath = '';
     $writtenContent = '';
