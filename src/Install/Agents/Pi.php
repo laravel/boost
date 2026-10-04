@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Laravel\Boost\Install\Agents;
 
 use Laravel\Boost\Contracts\SupportsGuidelines;
+use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
-class Pi extends Agent implements SupportsGuidelines, SupportsSkills
+class Pi extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
     {
@@ -38,6 +39,11 @@ class Pi extends Agent implements SupportsGuidelines, SupportsSkills
             'paths' => ['.pi'],
             'files' => ['.pi/settings.json'],
         ];
+    }
+
+    public function mcpConfigPath(): string
+    {
+        return config('boost.agents.pi.mcp_config_path', '.pi/mcp.json');
     }
 
     public function guidelinesPath(): string
