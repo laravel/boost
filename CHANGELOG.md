@@ -1,6 +1,20 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.10.1...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.10.2...main)
+
+## [v2.10.2](https://github.com/laravel/boost/compare/v2.10.1...v2.10.2) - 2026-10-05
+
+### What's Changed
+
+* Add MCP support for Pi by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1049
+* Reject non-object JSON5 MCP configuration roots by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1048
+* Migration from Mockery to Double by [@jasonmccreary](https://github.com/jasonmccreary) in https://github.com/laravel/boost/pull/1039
+
+### New Contributors
+
+* [@jasonmccreary](https://github.com/jasonmccreary) made their first contribution in https://github.com/laravel/boost/pull/1039
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.10.1...v2.10.2
 
 ## [v2.10.1](https://github.com/laravel/boost/compare/v2.10.0...v2.10.1) - 2026-10-01
 
@@ -684,11 +698,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -787,12 +803,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
