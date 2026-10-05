@@ -14,6 +14,7 @@ declare(strict_types=1);
 */
 
 use Illuminate\Filesystem\Filesystem;
+use JMac\Testing\OverriddenDouble;
 use Laravel\Mcp\Response;
 use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
@@ -160,6 +161,7 @@ function mockProjectPackages(ProjectManager $project, PackageCollection $package
         fn (Package $package): bool => $package->source() === PackageSource::Npm,
     )->values()->all());
 
-    $project->shouldReceive('php')->andReturn(new Ecosystem($php));
-    $project->shouldReceive('js')->andReturn(new JsEcosystem($js, $packageManager));
+    $double = new OverriddenDouble($project);
+    $double->allows('php')->returns(new Ecosystem($php));
+    $double->allows('js')->returns(new JsEcosystem($js, $packageManager));
 }

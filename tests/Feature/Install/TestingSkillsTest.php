@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Sail;
@@ -15,7 +16,7 @@ use Laravel\Roster\ProjectManager;
  */
 function bootProject(array $packages): ProjectManager
 {
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection($packages));
     app()->instance(ProjectManager::class, $project);
 

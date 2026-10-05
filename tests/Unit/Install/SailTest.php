@@ -26,6 +26,8 @@ afterEach(function (): void {
     }
 
     $sailTempDir = null;
+
+    putenv('REMOTE_CONTAINERS');
 });
 
 function removeSailTestDirectory(string $dir): void
@@ -43,8 +45,9 @@ function removeSailTestDirectory(string $dir): void
 test('isActive returns true when LARAVEL_SAIL env var is set', function (): void {
     putenv('LARAVEL_SAIL=1');
 
-    $sail = Mockery::mock(Sail::class)->makePartial();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(false);
+    putenv('REMOTE_CONTAINERS');
+
+    $sail = new Sail;
 
     expect($sail->isActive())->toBeTrue();
 
@@ -54,8 +57,9 @@ test('isActive returns true when LARAVEL_SAIL env var is set', function (): void
 test('isActive returns false when running in devcontainer without LARAVEL_SAIL', function (): void {
     putenv('LARAVEL_SAIL=');
 
-    $sail = Mockery::mock(Sail::class)->makePartial();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(true);
+    putenv('REMOTE_CONTAINERS=true');
+
+    $sail = new Sail;
 
     expect($sail->isActive())->toBeFalse();
 });
@@ -63,8 +67,9 @@ test('isActive returns false when running in devcontainer without LARAVEL_SAIL',
 test('isActive returns false when LARAVEL_SAIL is set inside a devcontainer', function (): void {
     putenv('LARAVEL_SAIL=1');
 
-    $sail = Mockery::mock(Sail::class)->makePartial();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(true);
+    putenv('REMOTE_CONTAINERS=true');
+
+    $sail = new Sail;
 
     expect($sail->isActive())->toBeFalse();
 
@@ -74,8 +79,9 @@ test('isActive returns false when LARAVEL_SAIL is set inside a devcontainer', fu
 test('isActive returns false when not sail user and no env var and not in container', function (): void {
     putenv('LARAVEL_SAIL=');
 
-    $sail = Mockery::mock(Sail::class)->makePartial();
-    $sail->shouldReceive('isRunningInDevcontainer')->andReturn(false);
+    putenv('REMOTE_CONTAINERS');
+
+    $sail = new Sail;
 
     // get_current_user() won't return 'sail' in the test environment
     expect($sail->isActive())->toBeFalse();

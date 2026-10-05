@@ -6,10 +6,9 @@ namespace Tests\Unit\Install\Agents;
 
 use Laravel\Boost\Install\Agents\OpenCode;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
-use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('projectDetectionConfig checks for both opencode.jsonc and opencode.json', function (): void {

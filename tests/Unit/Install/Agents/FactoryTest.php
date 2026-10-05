@@ -8,10 +8,9 @@ use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\Agents\Factory;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
 use Laravel\Boost\Install\Enums\Platform;
-use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('name returns factory', function (): void {
