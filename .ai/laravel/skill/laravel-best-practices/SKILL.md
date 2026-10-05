@@ -18,12 +18,11 @@ Check sibling files, related controllers, models, or tests for established patte
 
 ## How to Apply
 
-1. Check the changed files, nearby code, project configuration, and relevant tests for established patterns. Deviate only for a correctness or security defect, and call the deviation out.
-2. Map every affected concern to the rule index below. Read each mapped rule file before editing. Skip unrelated rule files.
-3. Make the smallest coherent change. Keep the application's architecture and naming instead of introducing a second pattern for the same job.
-4. Verify version-sensitive Laravel APIs for the installed version with `search-docs`, or inspect the installed framework when it is unavailable.
-5. Run the narrowest relevant tests first, then the project's formatting and static-analysis checks when the change warrants them.
-6. Re-read the diff against every mapped rule before finishing.
+1. Check nearby code, configuration, and tests for established patterns. Deviate only for a correctness or security defect, and call it out.
+2. Map each affected concern to the rule index below and read those rule files before editing. Skip unrelated ones.
+3. Make the smallest coherent change, keeping the application's architecture and naming.
+4. Verify version-sensitive APIs with `search-docs`, or inspect the installed framework.
+5. Run the narrowest relevant tests, then formatting and static analysis when warranted. Re-read the diff against every mapped rule.
 
 ## Rule Index
 
@@ -54,6 +53,6 @@ Cross-cutting changes often need more than one rule file.
 
 ## Decision Rules
 
-- Prefer framework features and existing application abstractions over new helpers or dependencies.
-- Avoid speculative abstractions. Extract code when it creates a clear domain boundary, removes meaningful duplication, or makes behavior independently testable.
-- Keep database access out of Blade views and prevent hidden N+1 queries across controllers, resources, jobs, and serialization.
+- Prefer framework features and existing abstractions over new helpers or dependencies.
+- Extract code only for a clear domain boundary, meaningful duplication, or independent testability.
+- Keep database access out of Blade views and prevent hidden N+1 queries in controllers, resources, jobs, and serialization.

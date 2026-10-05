@@ -1,72 +1,23 @@
 # Collection Best Practices
 
-## Use Higher-Order Messages for Simple Operations
+## Higher-Order Messages
 
-Explicit closure:
-
-```php
-$users->each(function (User $user) {
-    $user->markAsVip();
-});
-```
-
-Concise equivalent:
-
-```php
-$users->each->markAsVip();
-```
-
-Higher-order messages are available for supported collection methods such as `each`, `map`, `filter`, and `sum`. Use an explicit closure when arguments or nontrivial logic would be clearer.
+`$users->each->markAsVip()` works for `each`, `map`, `filter`, `sum` and similar. Use an explicit closure when arguments or nontrivial logic would be clearer.
 
 ## Choose Between `cursor()` and `lazy()`
 
-`cursor()` executes one query and hydrates models individually, but it cannot eager load relationships. The database driver's result buffering can still consume substantial memory for very large results. Use it for low-memory, attribute-only iteration when one long-running query is acceptable.
+`cursor()` runs one query and hydrates models one at a time, but cannot eager load relationships, and driver result buffering can still use substantial memory. Use it for attribute-only iteration where one long-running query is acceptable.
 
-`lazy()` executes multiple chunked queries and returns a flat `LazyCollection`. It supports eager loading relationships for each chunk and avoids holding one database cursor open for the entire iteration.
+`lazy()` runs chunked queries, returns a `LazyCollection`, supports `with()` eager loading per chunk, and holds no open cursor. Prefer it when you touch relationships.
 
-With relationships:
+## Use `lazyById()` When Updating While Iterating
 
-```php
-User::with('roles')->lazy()->each(function (User $user) {
-    // The roles for this chunk have been eager loaded.
-});
-```
+`lazy()` paginates by offset, so updating columns that affect the query can skip or repeat rows. `lazyById()` paginates by a monotonic key and is safe for that case. Never change the key itself while iterating.
 
-Without relationships:
+## Use `toQuery()` for Bulk Operations
 
-```php
-User::cursor()->each(function (User $user) {
-    // Process model attributes.
-});
-```
+`$users->toQuery()->update([...])` replaces a manual `whereIn('id', $users->modelKeys())`. It requires a non-empty collection of one model type, and like any bulk update it fires no per-model events.
 
-## Use `lazyById()` When Updating Records While Iterating
+## Custom Collection Classes
 
-`lazy()` uses offset pagination, so updates to columns that affect the query can shift rows and cause records to be skipped or processed twice. `lazyById()` paginates by a monotonic key and is safer when updating other columns during iteration. Do not change the pagination key itself while iterating.
-
-## Use `toQuery()` for Bulk Operations on Collections
-
-Use `toQuery()` to build a query from the models in an Eloquent collection instead of manually constructing a `whereIn` clause.
-
-Manual query:
-
-```php
-User::whereIn('id', $users->modelKeys())->update(['active' => false]);
-```
-
-Collection query:
-
-```php
-$users->toQuery()->update(['active' => false]);
-```
-
-`toQuery()` requires a non-empty Eloquent collection whose models are of the same type. Like other bulk Eloquent updates, it does not dispatch per-model update events, so use it only when those events are not required.
-
-## Use `#[CollectedBy]` for Custom Collection Classes
-
-The `#[CollectedBy]` attribute declares the custom collection class without requiring a `newCollection()` override.
-
-```php
-#[CollectedBy(UserCollection::class)]
-class User extends Model {}
-```
+Declare them with `#[CollectedBy(UserCollection::class)]` on the model instead of overriding `newCollection()`.
