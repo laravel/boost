@@ -1,39 +1,8 @@
 # Livewire 4 JavaScript Integration
 
-## Interceptor System (v4)
+Use `search-docs` for the full interceptor API.
 
-### Intercept Messages
-
-```js
-Livewire.interceptMessage(({ component, message, onFinish, onSuccess, onError }) => {
-    onFinish(() => { /* After response, before processing */ });
-    onSuccess(({ payload }) => { /* payload.snapshot, payload.effects */ });
-    onError(() => { /* Server errors */ });
-});
-```
-
-### Intercept Requests
-
-```js
-Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure }) => {
-    onResponse(({ response }) => { /* When received */ });
-    onSuccess(({ response, responseJson }) => { /* Success */ });
-    onError(({ response, responseBody, preventDefault }) => { /* 4xx/5xx */ });
-    onFailure(({ error }) => { /* Network failures */ });
-});
-```
-
-### Component-Scoped Interceptors
-
-```blade
-<script>
-    this.$intercept('save', ({ component, onSuccess }) => {
-        onSuccess(() => console.log('Saved!'));
-    });
-</script>
-```
-
-## Magic Properties
-
-- `$errors` - Access validation errors from JavaScript
-- `$intercept` - Component-scoped interceptors
+- `Livewire.interceptMessage()` hooks a component's message lifecycle: `onFinish` (after response, before processing), `onSuccess` (`payload.snapshot`, `payload.effects`), `onError` (server errors).
+- `Livewire.interceptRequest()` hooks the HTTP request: `onResponse`, `onSuccess`, `onError` (4xx/5xx, offers `preventDefault`), `onFailure` (network errors).
+- Inside a component's `<script>`, `this.$intercept('save', ...)` scopes an interceptor to one action.
+- `$errors` exposes validation errors to JavaScript.

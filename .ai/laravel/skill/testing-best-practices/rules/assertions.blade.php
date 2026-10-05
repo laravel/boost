@@ -9,92 +9,79 @@ $phpunitDocs = 'the PHPUnit '.($phpunit ? $phpunit->version().' ' : '').'documen
 
 ## Arrange, Act, Assert
 
-Write each test in three parts: setup, one action, and assertions. Put one blank line between them so readers can identify each part without comments.
+Setup, one action, assertions, separated by blank lines. Keep each test self-contained; never reuse values from another test.
 
-Keep each test self-contained. Do not use values created by another test.
+## Finding the Right Assertion
 
-## How to Find the Correct Assertion
+Identify the subject, then find an assertion designed for it so a failure names the wrong value.
 
-First identify the subject of the check, then find an assertion designed for it. A subject-specific assertion identifies the incorrect value when the test fails.
-
-1. Search Laravel's assertions for framework subjects such as responses, the database, sessions, models, queues, events, mail, and notifications.
-2. Fetch {{ $pest ? '`https://pestphp.com/docs/expectations.md` for the expectations of Pest' : $phpunitDocs.' for the assertions of PHPUnit' }} for a plain value, a type, a format, or a shape.
-3. Build the check by hand only if no assertion exists for the subject.
-4. Confirm the name in the documentation before you use it. Do not write an assertion that you did not confirm.
-
-Use the assertion in this table for each subject.
+1. Search Laravel's assertions for framework subjects (responses, database, session, models, queues, events, mail, notifications).
+2. Fetch {{ $pest ? '`https://pestphp.com/docs/expectations.md` for Pest expectations' : $phpunitDocs.' for PHPUnit assertions' }} for values, types, formats, and shapes.
+3. Hand-build a check only if none exists.
+4. Confirm the name in the docs; never use an unconfirmed assertion.
 
 @if($pest)
 | Subject | Assertion to use |
 | --- | --- |
-| A return value, the state of an object, or a transformation of a value | an `expect()` chain |
-| An HTTP status, JSON, a session, or Inertia | a Laravel response assertion |
-| The state in the database | a Laravel database assertion |
-| The existence of a model | `assertModelExists($model)` rather than `assertDatabaseHas('users', ['id' => $user->id])` |
+| Return value, object state, transformation | an `expect()` chain |
+| HTTP status, JSON, session, Inertia | a Laravel response assertion |
+| Database state | a Laravel database assertion |
+| Model existence | `assertModelExists($model)` over `assertDatabaseHas('users', ['id' => $user->id])` |
 
-Use a PHPUnit assertion only if no Pest expectation and no Laravel assertion exists for the subject.
+Use a PHPUnit assertion only when no Pest expectation or Laravel assertion fits.
 @else
 | Subject | Assertion to use |
 | --- | --- |
-| A return value, the state of an object, or a transformation of a value | `assertSame()`, or the assertion for the type |
-| An HTTP status, JSON, a session, or Inertia | a Laravel response assertion |
-| The state in the database | a Laravel database assertion |
-| The existence of a model | `assertModelExists($model)` rather than `assertDatabaseHas('users', ['id' => $user->id])` |
+| Return value, object state, transformation | `assertSame()` or the type's assertion |
+| HTTP status, JSON, session, Inertia | a Laravel response assertion |
+| Database state | a Laravel database assertion |
+| Model existence | `assertModelExists($model)` over `assertDatabaseHas('users', ['id' => $user->id])` |
 
-Use `assertSame()` and not `assertEquals()`, because `assertSame()` also compares the type.
+Prefer `assertSame()` to `assertEquals()`; it compares type too.
 @endif
 
-Assert each fact once. Do not assert a 200 status before `assertSee`, because `assertSee` already shows that the page rendered.
+Assert each fact once; skip a 200 check before `assertSee`, which already proves the page rendered.
 
 ## Named Response Assertions
 
-Use a named response assertion, such as `assertNotFound()`, rather than `assertStatus(404)`. A failure then identifies the broken contract. Laravel provides named assertions for commonly tested status codes.
+Use `assertNotFound()` rather than `assertStatus(404)`; the failure names the broken contract.
 
 @if($pest)
-Keep one `expect()` chain on one subject. Start a new chain when the subject changes, or when the chain is difficult to read.
+Keep an `expect()` chain on one subject; start a new chain when the subject changes.
 @else
-Group the assertions for one subject together. Start a new group when the subject changes.
+Group assertions by subject; start a new group when it changes.
 @endif
 
 @if($pest5)
 ## Format Expectations
 
-Use Pest's format expectations rather than regular expressions because they provide clearer failure messages. Pest covers email addresses, URLs, UUIDs, IP addresses, and other common formats, and each expectation supports `not` for the negative case.
+Prefer Pest's format expectations (email, URL, UUID, IP, and others, each with `not`) over regular expressions for clearer failures.
 
 @endif
 ## Assert a Known Value
 
-Write the expected value in the test, or calculate the expected value by a different method. Do not calculate the expected value with the logic of the implementation, because the test then passes when that logic is wrong.
+Write the expected value literally or derive it differently. Computing it with the implementation's logic passes when that logic is wrong.
 
 @if($pest)
 ```php
-// The test calculates the value with the logic of the implementation...
 $expected = now()->subHours(24)->floorSeconds(30)->toJson();
 expect($from)->toBe($expected);
 
-// The test sets a fixed input and asserts a known value...
 travelTo('2025-01-01 00:00:00');
 expect($from)->toBe('2024-12-31T00:00:00.000000Z');
 ```
 @else
 ```php
-// The test calculates the value with the logic of the implementation...
 $expected = now()->subHours(24)->floorSeconds(30)->toJson();
 $this->assertSame($expected, $from);
 
-// The test sets a fixed input and asserts a known value...
 $this->travelTo('2025-01-01 00:00:00');
 $this->assertSame('2024-12-31T00:00:00.000000Z', $from);
 ```
 @endif
 
+The first pair mirrors the implementation; the second fixes input and asserts a known value.
+
 ## Assert the Complete Result
 
-A status code is not the complete result of a write operation. Assert each of the following if the operation changes it:
-
-- The response or the return value.
-- The state in the database.
-- The jobs and the events that the operation dispatches.
-- The notifications and the mail that the operation sends.
-
-On the failure path, assert that the operation makes none of these changes. A test that asserts only `assertOk()` passes even when the application saves no record.
+A status code is not a write's full result. Also assert what changed: response or return value, database state, dispatched jobs and events, sent notifications and mail. On the failure path, assert none of these happened. A bare `assertOk()` passes even when nothing was saved.
