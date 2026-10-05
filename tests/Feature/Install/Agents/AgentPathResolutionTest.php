@@ -112,7 +112,7 @@ test('Junie uses config when configured', function (): void {
     expect($junie->getPhpPath(false))->toBe('/custom/php');
 });
 
-test('Pi uses AGENTS.md and .pi/skills defaults', function (): void {
+test('Pi uses AGENTS.md, .pi/skills, and .pi/mcp.json defaults', function (): void {
     config(['boost.executable_paths.php' => null]);
     $strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
     $pi = new Pi($strategyFactory);
@@ -120,5 +120,6 @@ test('Pi uses AGENTS.md and .pi/skills defaults', function (): void {
     expect($pi->getPhpPath())->toBe('php')
         ->and($pi->getArtisanPath())->toBe('artisan')
         ->and($pi->guidelinesPath())->toBe('AGENTS.md')
-        ->and($pi->skillsPath())->toBe('.pi/skills');
+        ->and($pi->skillsPath())->toBe('.pi/skills')
+        ->and($pi->mcpConfigPath())->toBe('.pi/mcp.json');
 });
