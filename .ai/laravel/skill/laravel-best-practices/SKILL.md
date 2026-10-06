@@ -21,7 +21,7 @@ Check sibling files, related controllers, models, or tests for established patte
 1. Check nearby code, configuration, and tests for established patterns. Deviate only for a correctness or security defect, and call it out.
 2. Map each affected concern to the rule index below and read those rule files before editing. Skip unrelated ones.
 3. Make the smallest coherent change, keeping the application's architecture and naming.
-4. Verify version-sensitive APIs with `search-docs`, or inspect the installed framework.
+4. Before using a framework feature that no nearby code already shows, call `search-docs` with 2-3 short keyword queries (for example `debounce job`, `unique jobs`) and `packages: ["laravel/framework"]`. Do not rely on memory or grep `vendor/` first.
 5. Run the narrowest relevant tests, then formatting and static analysis when warranted. Re-read the diff against every mapped rule.
 
 ## Rule Index
