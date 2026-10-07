@@ -1,5 +1,5 @@
 ---
-name: inertia-svelte-development
+name: inertia-vue-development
 description: "Develops Inertia.js v2 Svelte client-side applications. Activates when creating Svelte pages, forms, or navigation; using Link, Form, or router; working with deferred props, prefetching, or polling; or when user mentions Svelte with Inertia, Svelte pages, Svelte forms, or Svelte navigation."
 license: MIT
 metadata:
@@ -10,301 +10,46 @@ metadata:
 @endphp
 # Inertia Svelte Development
 
-## Documentation
+Follow the project's existing conventions first: match how current pages, forms, and navigation are already written before applying anything below.
 
-Use `search-docs` for detailed Inertia v2 Svelte patterns and documentation.
+Use `search-docs` for Inertia v2 Svelte syntax and APIs.
 
-## Basic Usage
+## Pages
 
-### Page Components Location
+Svelte page components live in `{{ $assist->inertia()->pagesDirectory() }}`. Server-side patterns (`Inertia::render`, props, middleware) are covered in inertia-laravel guidelines.
 
-Svelte page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+## Navigation
 
-### Page Component Structure
+- Use `<Link>` from `@inertiajs/svelte` instead of `<a>`; plain anchors cause full page reloads and break SPA behavior.
+- `<Link method="post">` for non-GET actions such as logout; `prefetch` on a link to load the page ahead of the click.
+- Use `router.visit` (or `router.post` and friends) only for programmatic navigation that is not a link.
 
-@boostsnippet("Basic Svelte Page Component", "svelte")
-<script>
-export let users
-</script>
-
-<div>
-    <h1>Users</h1>
-    <ul>
-        {#each users as user (user.id)}
-            <li>{user.name}</li>
-        {/each}
-    </ul>
-</div>
-@endboostsnippet
-
-## Client-Side Navigation
-
-### Basic Link Component
-
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
-
-@boostsnippet("Inertia Svelte Navigation", "svelte")
-<script>
-import { Link } from '@inertiajs/svelte'
-</script>
-
-<Link href="/">Home</Link>
-<Link href="/users">Users</Link>
-<Link href={`/users/${user.id}`}>View User</Link>
-@endboostsnippet
-
-### Link With Method
-
-@boostsnippet("Link With POST Method", "svelte")
-<script>
-import { Link } from '@inertiajs/svelte'
-</script>
-
-<Link href="/logout" method="post">Logout</Link>
-@endboostsnippet
-
-### Prefetching
-
-Prefetch pages to improve perceived performance:
-
-@boostsnippet("Prefetch on Hover", "svelte")
-<script>
-import { Link } from '@inertiajs/svelte'
-</script>
-
-<Link href="/users" prefetch>Users</Link>
-@endboostsnippet
-
-### Programmatic Navigation
-
-@boostsnippet("Router Visit", "svelte")
-<script>
-import { router } from '@inertiajs/svelte'
-
-function handleClick() {
-    router.visit('/users')
-}
-
-// Or with options
-function createUser() {
-    router.visit('/users', {
-        method: 'post',
-        data: { name: 'John' },
-        onSuccess: () => console.log('Success!'),
-    })
-}
-</script>
-@endboostsnippet
-
-## Form Handling
+## Forms
 
 @if($assist->inertia()->hasFormComponent())
-### Form Component (Recommended)
-
-The recommended way to build forms is with the `<Form>` component:
-
-@boostsnippet("Form Component Example", "svelte")
-<script>
-import { Form } from '@inertiajs/svelte'
-</script>
-
-<Form action="/users" method="post" let:errors let:processing let:wasSuccessful>
-    <input type="text" name="name" />
-    {#if errors.name}
-        <div>{errors.name}</div>
-    {/if}
-
-    <input type="email" name="email" />
-    {#if errors.email}
-        <div>{errors.email}</div>
-    {/if}
-
-    <button type="submit" disabled={processing}>
-        {processing ? 'Creating...' : 'Create User'}
-    </button>
-
-    {#if wasSuccessful}
-        <div>User created!</div>
-    {/if}
-</Form>
-@endboostsnippet
+Prefer `<Form>` for new forms unless the project already uses `useForm` everywhere. It exposes `errors`, `processing`, `progress`, `wasSuccessful`, `recentlySuccessful`, `isDirty`, `reset`, and `clearErrors` through its `let:` bindings; use `search-docs` for the exact syntax.
 
 @if($assist->inertia()->hasFormComponentResets())
-### Form Component Reset Props
-
-The `<Form>` component supports automatic resetting:
-
-- `resetOnError` - Reset form data when the request fails
-- `resetOnSuccess` - Reset form data when the request succeeds
-- `setDefaultsOnSuccess` - Update default values on success
-
-Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
-
-@boostsnippet("Form With Reset Props", "svelte")
-<script>
-import { Form } from '@inertiajs/svelte'
-</script>
-
-<Form
-    action="/users"
-    method="post"
-    resetOnSuccess
-    setDefaultsOnSuccess
-    let:errors
-    let:processing
-    let:wasSuccessful
->
-    <input type="text" name="name" />
-    {#if errors.name}
-        <div>{errors.name}</div>
-    {/if}
-
-    <button type="submit" disabled={processing}>
-        Submit
-    </button>
-</Form>
-@endboostsnippet
+`resetOnError`, `resetOnSuccess`, and `setDefaultsOnSuccess` control automatic resetting; search docs for `form component resetting`.
 @else
-Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
+This Inertia version does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on `<Form>` and using them will error. Upgrade to Inertia v2.2.0+ to use them.
 @endif
 
-Forms can also be built using the `useForm` hook for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
-
-@endif
-
-### `useForm` Hook
-
-@if($assist->inertia()->hasFormComponent() === false)
-For Inertia v2.0.x: Build forms using the `useForm` hook as the `<Form>` component is not available until v2.1.0+.
+Use `useForm` when you need programmatic control (transforming data, submitting from code) or when the project already follows that convention. Search docs for `useForm helper`.
 @else
-For more programmatic control or to follow existing conventions, use the `useForm` hook:
+Inertia v2.0.x has no `<Form>` component (added in v2.1.0). Build forms with `useForm`.
 @endif
 
-@boostsnippet("useForm Example", "svelte")
-<script>
-import { useForm } from '@inertiajs/svelte'
-
-const form = useForm({
-    name: '',
-    email: '',
-    password: '',
-})
-
-function submit() {
-    $form.post('/users', {
-        onSuccess: () => $form.reset('password'),
-    })
-}
-</script>
-
-<form on:submit|preventDefault={submit}>
-    <input type="text" bind:value={$form.name} />
-    {#if $form.errors.name}
-        <div>{$form.errors.name}</div>
-    {/if}
-
-    <input type="email" bind:value={$form.email} />
-    {#if $form.errors.email}
-        <div>{$form.errors.email}</div>
-    {/if}
-
-    <input type="password" bind:value={$form.password} />
-    {#if $form.errors.password}
-        <div>{$form.errors.password}</div>
-    {/if}
-
-    <button type="submit" disabled={$form.processing}>
-        Create User
-    </button>
-</form>
-@endboostsnippet
+Always show `errors` per field and disable submit while `processing`. Use `<Form>` or `on:submit|preventDefault`.
 
 ## Inertia v2 Features
 
-### Deferred Props
-
-Use deferred props to load data after initial page render:
-
-@boostsnippet("Deferred Props with Empty State", "svelte")
-<script>
-export let users
-</script>
-
-<div>
-    <h1>Users</h1>
-    {#if !users}
-        <div class="animate-pulse">
-            <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-    {:else}
-        <ul>
-            {#each users as user (user.id)}
-                <li>{user.name}</li>
-            {/each}
-        </ul>
-    {/if}
-</div>
-@endboostsnippet
-
-### Polling
-
-Use the `usePoll` hook to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
-
-@boostsnippet("Basic Polling", "svelte")
-<script>
-import { usePoll } from '@inertiajs/svelte'
-
-export let stats
-
-usePoll(5000)
-</script>
-
-<div>
-    <h1>Dashboard</h1>
-    <div>Active Users: {stats.activeUsers}</div>
-</div>
-@endboostsnippet
-
-@boostsnippet("Polling With Request Options and Manual Control", "svelte")
-<script>
-import { usePoll } from '@inertiajs/svelte'
-
-export let stats
-
-const { start, stop } = usePoll(5000, {
-    only: ['stats'],
-    onStart() {
-        console.log('Polling request started')
-    },
-    onFinish() {
-        console.log('Polling request finished')
-    },
-}, {
-    autoStart: false,
-    keepAlive: true,
-})
-</script>
-
-<div>
-    <h1>Dashboard</h1>
-    <div>Active Users: {stats.activeUsers}</div>
-    <button on:click={start}>Start Polling</button>
-    <button on:click={stop}>Stop Polling</button>
-</div>
-@endboostsnippet
-
-- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
-- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
-
-## Server-Side Patterns
-
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
+- **Deferred props**: the prop is `undefined` until loaded, so render a skeleton or empty state first; guard with `{#if}`.
+- **Polling**: `usePoll(ms)` cleans up on unmount and throttles in inactive tabs. Pass `only` to limit refreshed props, `autoStart: false` for manual `start()`/`stop()`, `keepAlive: true` to keep polling in background tabs.
 
 ## Common Pitfalls
 
-- Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
-- Forgetting to add loading states (skeleton screens) when using deferred props
-- Not handling the `undefined` state of deferred props before data loads
-- Using `<form>` without preventing default submission (use `<Form>` component or `on:submit|preventDefault`)
-- Forgetting to check if `<Form>` component is available in your Inertia version
+- Using `<a>` instead of `<Link>`
+- No loading state for deferred props, or reading them while `undefined`
+- Submitting a plain form without preventing default (use `<Form>` or the framework prevent-default handler)
+- Using `<Form>` or reset props without checking the installed Inertia version

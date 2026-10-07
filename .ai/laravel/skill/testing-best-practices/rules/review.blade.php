@@ -4,59 +4,59 @@ $pest = $assist->hasPackage('pestphp/pest');
 @endphp
 # Reviewing Tests
 
-Check every item in this file. A passing test may still provide no value. For each test, identify the defect it would catch.
+Check every item. A passing test may still have no value: for each, name the defect it would catch.
 
-Report each finding. Do not delete or rewrite a test without the user's approval. When an issue appears throughout the suite as a convention, report the pattern once rather than every affected file.
+Report findings; do not delete or rewrite a test without the user's approval. Report a suite-wide pattern once, not per file.
 
 ## Test Value
 
 @if($pest)
-Apply this section to behavioral tests. An architecture test states a convention for a directory, so these items do not apply to it.
+Applies to behavioral tests. Architecture tests state a directory convention and are exempt.
 
 @endif
-- [ ] Each test covers observable behavior or an application contract, and passes after a change to the implementation that keeps the behavior.
-- [ ] Each tested declaration is exercised through behavior, and no test asserts the behavior of the framework. A test of what this project configures, such as a relation with a constraint, a cast, or a scope, belongs to this project.
-- [ ] Each test detects a distinct defect that no other test covers. A duplicate shrinks at the higher layer to the one case that proves the wiring.
-- [ ] Every changed decision and each applicable high-value failure mode has coverage.
+- [ ] Each test covers observable behavior or a contract and survives a behavior-preserving refactor.
+- [ ] No test asserts framework behavior. Project configuration (a constrained relation, cast, or scope) is the project's to test.
+- [ ] Each test catches a distinct defect. A higher-layer duplicate shrinks to the one case proving the wiring.
+- [ ] Every changed decision and applicable high-value failure mode has coverage.
 
 ## Names and Structure
 
-- [ ] Each file has the name `{ClassName}Test.php` and the relative path of the class under test.
-- [ ] Each name states a result, the condition that causes it, and the status code for an API error.
+- [ ] Files are named `{ClassName}Test.php` and mirror the class path.
+- [ ] Names state the result, its cause, and the status code for API errors.
 @if($pest)
-- [ ] Each file uses one declaration style consistently, and each `describe()` group holds separate behavior.
+- [ ] One declaration style per file; each `describe()` holds separate behavior.
 @else
-- [ ] Each test class extends the base `TestCase` of the project, and each file uses either the prefix `test_` or the `#[Test]` attribute consistently.
+- [ ] Classes extend the project's base `TestCase`; each file uses `test_` prefix or `#[Test]` consistently.
 @endif
 
 ## Coverage
 
-- [ ] HTTP tests cover authentication, authorization, role, scope, and validation when applicable.
-- [ ] A request for a record of a different tenant gets a status code that does not confirm that the record exists.
-- [ ] The complete permission matrix belongs in policy tests, not controller tests.
-- [ ] Each validation rule has one test that asserts the user-visible message. When a unit test owns a matrix, reduce duplicate higher-level coverage to one case rather than deleting it.
-- [ ] Rendered user input and each dynamic part of a query have a security test.
+- [ ] HTTP tests cover authentication, authorization, role, scope, and validation where applicable.
+- [ ] Other-tenant requests get a status that does not confirm the record exists.
+- [ ] The permission matrix lives in policy tests, not controller tests.
+- [ ] Each validation rule has one test asserting the user-visible message; reduce duplicate matrices to one case, not zero.
+- [ ] Rendered user input and dynamic query parts have security tests.
 
 ## Data and Determinism
 
-- [ ] Each test creates its mutable records directly or through a helper that it calls, and every created record arranges the behavior or supports an assertion.
+- [ ] Each test creates its mutable records, and every record arranges behavior or supports an assertion.
 @if($pest)
-- [ ] Each `beforeEach()` holds configuration only.
+- [ ] `beforeEach()` holds configuration only.
 @else
 - [ ] `setUp()` holds configuration only.
 @endif
-- [ ] Each factory state and each relationship gives the meaning of the data.
-- [ ] Each call to `make()` is in a test that does not need the database.
+- [ ] Factory states and relationships convey the data's meaning.
+- [ ] `make()` is used only where the database is not needed.
 - [ ] Time, randomness, sleep, and outbound HTTP are controlled.
-- [ ] Each test passes alone, and passes in the complete suite in any order.
+- [ ] Each test passes alone and in any order.
 
 ## Assertions
 
-- [ ] Each expected value is a known value, and the test does not calculate the value with the logic of the implementation.
-- [ ] Each test of a write operation asserts the response, the state in the database, and the side effects.
-- [ ] Each fake has one assertion, and gives the class names unless the test asserts the complete result.
+- [ ] Expected values are known literals, not computed with the implementation's logic.
+- [ ] Write tests assert the response, database state, and side effects.
+- [ ] Each fake has one assertion and names classes unless asserting the complete result.
 @if($pest)
 - [ ] Each `expect()` chain stays on one subject.
 @else
-- [ ] Each group of assertions stays on one subject, and each comparison uses `assertSame()`.
+- [ ] Assertion groups stay on one subject and comparisons use `assertSame()`.
 @endif

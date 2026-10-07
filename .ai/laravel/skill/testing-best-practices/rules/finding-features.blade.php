@@ -6,63 +6,57 @@ $pest5 = $assist->hasPackage('pestphp/pest', '>=5.0');
 # How to Find Test Framework Features
 
 @if($pest)
-Pest adds features faster than this skill can list them. Find an existing feature before implementing the behavior by hand.
+Pest adds features faster than this skill lists them. Look for an existing feature before hand-building behavior.
 
-- Give `search-docs` the capability you need rather than the name of a function you remember. It returns features available in the installed version.
-- Fetch `https://pestphp.com/llms.txt` for the complete feature list and additions in each release.
-- If a search returns no results, tell the user that the installed version does not provide the feature. Do not write an API that you have not confirmed.
-
-Search for a feature in this table before you write the code by hand.
+- Give `search-docs` the capability you need, not a function name you remember.
+- Fetch `https://pestphp.com/llms.txt` for the full feature list and release additions.
+- If nothing is found, tell the user the installed version lacks it. Never write an API you have not confirmed.
 
 | Work that you need | Term to search for |
 | --- | --- |
-| Run one test with many input values | datasets, bound datasets |
-| Assert over many values or over a collection | higher-order expectations |
-| Remove the same setup from each test in a file | hooks, higher-order tests |
-| Apply a convention to the complete codebase | architecture testing |
-| Measure if the suite finds a defect | mutation testing |
-| Find code with no types | type coverage |
-| Reduce the time of a slow suite | parallel, profiling |
+| One test with many inputs | datasets, bound datasets |
+| Assert over many values or a collection | higher-order expectations |
+| Remove shared setup from a file | hooks, higher-order tests |
+| Enforce a convention across the codebase | architecture testing |
+| Check the suite catches defects | mutation testing |
+| Find untyped code | type coverage |
+| Speed up a slow suite | parallel, profiling |
 @if($pest5)
 | Split the suite across CI jobs | sharding, `--update-shards` |
-| Run only the tests that a change affects | Test Impact Analysis, `--tia` |
-| Assert that a value has a known format | validation expectations |
+| Run only tests a change affects | Test Impact Analysis, `--tia` |
+| Assert a value has a known format | validation expectations |
 @endif
-| Run one test while you debug | filtering, `--bail`, `--dirty` |
+| Run one test while debugging | filtering, `--bail`, `--dirty` |
 @else
-PHPUnit and Laravel provide features for most testing needs. Find an existing feature before implementing the behavior by hand.
+PHPUnit and Laravel cover most needs. Look for an existing feature before hand-building behavior.
 
-- Give `search-docs` the capability you need rather than the name of a method you remember. It returns Laravel testing documentation for the installed version.
-- Fetch `https://phpunit.de/documentation.html` for version-specific PHPUnit attributes, assertions, and command-line options.
-- If a search returns no results, tell the user that the installed version does not provide the feature. Do not write an API that you have not confirmed.
-
-Search for a feature in this table before you write the code by hand.
+- Give `search-docs` the capability you need, not a method name you remember.
+- Fetch `https://phpunit.de/documentation.html` for version-specific attributes, assertions, and CLI options.
+- If nothing is found, tell the user the installed version lacks it. Never write an API you have not confirmed.
 
 | Work that you need | Term to search for |
 | --- | --- |
-| Run one test method with many input values | data provider, `#[DataProvider]`, `#[TestWith]` |
-| Run one test only after another test passes | `#[Depends]` |
-| Select or skip a set of tests in one run | `#[Group]`, `--group`, `--exclude-group` |
-| Skip a test on a version or on a missing extension | `#[RequiresPhp]`, `#[RequiresPhpExtension]` |
-| Find a test that depends on the order of the run | `--order-by=random` |
-| Reduce the time of a slow suite | ParaTest, `--cache-result` |
-| Stop the run at the first failure while you debug | `--stop-on-failure`, `--filter` |
+| One test with many inputs | data provider, `#[DataProvider]`, `#[TestWith]` |
+| Run a test only after another passes | `#[Depends]` |
+| Select or skip sets of tests | `#[Group]`, `--group`, `--exclude-group` |
+| Skip on version or missing extension | `#[RequiresPhp]`, `#[RequiresPhpExtension]` |
+| Find order-dependent tests | `--order-by=random` |
+| Speed up a slow suite | ParaTest, `--cache-result` |
+| Stop at first failure while debugging | `--stop-on-failure`, `--filter` |
 @endif
 
-## Built-in Laravel Assertion Methods
+## Built-in Laravel Assertions
 
-Laravel provides assertions for each part of the framework. Fetch `https://laravel.com/framework/docs/testing` for the complete list, and search for an assertion before building a check by hand. Examples include `assertDatabaseHas()`, `assertModelExists()`, `assertSoftDeleted()`, response assertions such as `assertRedirectToRoute()` and `assertJsonPath()`, and fake assertions such as `Queue::assertPushed()` and `Notification::assertSentTo()`.
+Fetch `https://laravel.com/framework/docs/testing` and search for an assertion before hand-building a check, e.g. `assertDatabaseHas()`, `assertModelExists()`, `assertSoftDeleted()`, `assertRedirectToRoute()`, `assertJsonPath()`, `Queue::assertPushed()`, `Notification::assertSentTo()`.
 
-A hand-built check fails with `false is not true`, which identifies nothing. A framework assertion names the incorrect table, value, or response, so the failure indicates what to fix.
+A hand-built check fails with `false is not true`; a framework assertion names the wrong table, value, or response.
 
 ```php
-// The failure says that false is not true. Instead of this...
 @if($pest)
 expect(User::where('email', 'taylor@laravel.com')->exists())->toBeTrue();
 @else
 $this->assertTrue(User::where('email', 'taylor@laravel.com')->exists());
 @endif
 
-// Use this... the failure names the table and the attributes that it did not find...
 $this->assertDatabaseHas('users', ['email' => 'taylor@laravel.com']);
 ```

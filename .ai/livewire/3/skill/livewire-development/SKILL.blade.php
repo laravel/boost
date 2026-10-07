@@ -10,105 +10,35 @@ metadata:
 @endphp
 # Livewire Development
 
-## Documentation
+Use `search-docs` for Livewire 3 syntax and patterns. Create components with `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}`.
 
-Use `search-docs` for detailed Livewire 3 patterns and documentation.
+## Consistency First
 
-## Basic Usage
+Follow the project's existing component structure, namespace, layout, and event conventions over anything here. The v2-to-v3 changes below may not have been applied in this application, so verify first.
 
-### Creating Components
+## Core Concepts
 
-Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Artisan command to create new components.
+- State lives on the server; the UI reflects it.
+- Livewire requests are HTTP requests: validate and authorize inside actions.
+- Components need a single root element.
 
-### Fundamental Concepts
+## Livewire 3 Gotchas
 
-- State should live on the server, with the UI reflecting it.
-- All Livewire requests hit the Laravel backend; they're like regular HTTP requests. Always validate form data and run authorization checks in Livewire actions.
-
-## Livewire 3 Specifics
-
-### Key Changes From Livewire 2
-
-These things changed in Livewire 3, but may not have been updated in this application. Verify this application's setup to ensure you follow existing conventions.
-- Use `wire:model.live` for real-time updates, `wire:model` is now deferred by default.
-- Components now use the `App\Livewire` namespace (not `App\Http\Livewire`).
-- Use `$this->dispatch()` to dispatch events (not `emit` or `dispatchBrowserEvent`).
-- Use the `components.layouts.app` view as the typical layout path (not `layouts.app`).
-
-### New Directives
-
-- `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target` are available for use.
-
-### Alpine Integration
-
-- Alpine is now included with Livewire; don't manually include Alpine.js.
-- Plugins included with Alpine: persist, intersect, collapse, and focus.
-
-## Best Practices
-
-### Component Structure
-
-- Livewire components require a single root element.
-- Use `wire:loading` and `wire:dirty` for delightful loading states.
-
-### Using Keys in Loops
-@boostsnippet("Wire Key in Loops", "blade")
-@foreach ($items as $item)
-    <div wire:key="item-{{ $item->id }}">
-        {{ $item->name }}
-    </div>
-@endforeach
-@endboostsnippet
-
-### Lifecycle Hooks
-
-Prefer lifecycle hooks like `mount()`, `updatedFoo()` for initialization and reactive side effects:
-
-@boostsnippet("Lifecycle Hook Examples", "php")
-public function mount(User $user) { $this->user = $user; }
-public function updatedSearch() { $this->resetPage(); }
-@endboostsnippet
-
-## JavaScript Hooks
-
-You can listen for `livewire:init` to hook into Livewire initialization:
-
-@boostsnippet("Livewire Init Hook Example", "js")
-document.addEventListener('livewire:init', function () {
-    Livewire.hook('request', ({ fail }) => {
-        fail(({ status, preventDefault }) => {
-            if (status === 419) {
-                preventDefault();
-                alert('Your session expired');
-            }
-        });
-    });
-
-    Livewire.hook('commit', ({ fail }) => {
-        fail(() => console.error('Livewire commit failed'));
-    });
-});
-@endboostsnippet
+- `wire:model` is deferred; use `wire:model.live` for real-time updates.
+- Namespace is `App\Livewire`, not `App\Http\Livewire`; the layout is typically `components.layouts.app`.
+- Dispatch events with `$this->dispatch()`, not `emit` or `dispatchBrowserEvent`.
+- Alpine is bundled with its persist, intersect, collapse, and focus plugins; do not include it separately.
+- Available: `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target`; use `wire:loading` and `wire:dirty` for UI states.
+- Use `mount()` and `updatedFoo()` hooks for initialization and reactive side effects (e.g. `resetPage()` in `updatedSearch()`).
+- Hook JS in a `livewire:init` listener with `Livewire.hook('request' | 'commit', ...)`; search docs for `fail` and `preventDefault` usage.
 
 ## Testing
 
-@boostsnippet("Example Livewire Component Test", "php")
-Livewire::test(Counter::class)
-    ->assertSet('count', 0)
-    ->call('increment')
-    ->assertSet('count', 1)
-    ->assertSee(1)
-    ->assertStatus(200);
-@endboostsnippet
-
-@boostsnippet("Testing Livewire Component Exists on Page", "php")
-$this->get('/posts/create')
-    ->assertSeeLivewire(CreatePost::class);
-@endboostsnippet
+Use `Livewire::test()` for components and `assertSeeLivewire()` to check a component is on a page.
 
 ## Common Pitfalls
 
-- Forgetting `wire:key` in loops causes unexpected behavior when items change
-- Using `wire:model` expecting real-time updates (use `wire:model.live` instead in v3)
-- Not validating/authorizing in Livewire actions (treat them like HTTP requests)
-- Including Alpine.js separately when it's already bundled with Livewire 3
+- Missing `wire:key` in loops causes unexpected behavior when items change.
+- Expecting `wire:model` to be real-time.
+- Skipping validation or authorization in actions.
+- Including Alpine separately.

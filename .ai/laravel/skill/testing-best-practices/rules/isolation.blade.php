@@ -4,65 +4,61 @@ $pest = $assist->hasPackage('pestphp/pest');
 @endphp
 # Fakes, Mocks, and Determinism
 
-Tests that depend on actual time, randomness, sleeping, or network calls can fail for reasons unrelated to the code under test. Control all four.
+Control time, randomness, sleeping, and network calls, or tests fail for reasons unrelated to the code.
 
-## How to Isolate a Dependency
+## Choosing How to Isolate
 
-Fetch `https://laravel.com/framework/docs/mocking` for Laravel's fakes, facade doubles, and fake assertions. Confirm each name before using it.
+Fetch `https://laravel.com/framework/docs/mocking` for fakes, facade doubles, and fake assertions. Confirm each name before using it.
 
-Identify the dependency, then choose the first applicable option. A framework fake preserves the real code path, while a mock replaces the dependency.
+Pick the first that applies. A framework fake keeps the real code path; a mock replaces the dependency.
 
-1. Always use framework fakes for facades such as events, queues, mail, notifications, storage, the HTTP client, time, and sleep.
-2. Use a developer-defined fake implementation of a service if the application provides one.
-3. Use a mock for a container-resolved contract only when the real implementation leaves the process or is nondeterministic.
-4. Use the real implementation for everything else, including the database.
+1. Framework fakes for facades (events, queues, mail, notifications, storage, HTTP client, time, sleep).
+2. A fake implementation the project already provides.
+3. A mock for a container-resolved contract only when the real one leaves the process or is nondeterministic.
+4. The real implementation for everything else, including the database.
 
 ## Framework Fakes
 
 @if($pest)
-- Create each fake inside the test that needs it. Do not create fakes in a file-level `beforeEach()`.
+- Create fakes inside the test that needs them, not in a file-level `beforeEach()`.
 @else
-- Create each fake inside the test method that needs it. Do not create fakes in `setUp()`.
+- Create fakes inside the test method that needs them, not in `setUp()`.
 @endif
-- Pass class names to `Event::fake()` and `Queue::fake()` when you know which classes the code dispatches. A fake without class names can hide an unexpected dispatch.
-- Use a fake without class names only when the test asserts the complete result, including a call to `assertNothingPushed()`.
-- Write one assertion for each fake. The assertion states that the code dispatches the item, or that the code does not dispatch the item.
-- Assert the data of a job or of an event if that data is part of the behavior.
-- Use `Exceptions::fake()` to assert that the application reports the correct exception. Do not use `withoutExceptionHandling()`, because it changes the response under test.
+- Pass class names to `Event::fake()` and `Queue::fake()` when known; a bare fake can hide unexpected dispatches. Use a bare fake only when asserting the complete result, including `assertNothingPushed()`.
+- One assertion per fake: dispatched, or not dispatched. Assert job or event data when it is part of the behavior.
+- Use `Exceptions::fake()` to assert a reported exception. Avoid `withoutExceptionHandling()`, which changes the response under test.
 
-Create prerequisite factory records before calling `Event::fake()`. Factories use model events, such as a `creating` hook that generates a UUID, and a fake without class names suppresses those events and can produce an invalid model. Call the fake first only when a factory event is under test, and pass that event's class name.
+Create prerequisite factory records before `Event::fake()`: a bare fake suppresses model events such as a `creating` hook that generates a UUID, producing an invalid model. Fake first only when a factory event is under test, naming that event's class.
 
 ## Mocking
 
-Use `shouldReceive()` before the action to declare an expectation. Use `shouldHaveReceived()` after the action for a spy. Use `Mockery::on()` or `withArgs()` if an equality check cannot state the expected argument, such as a check of one field of a value object.
+Use `shouldReceive()` before the action, `shouldHaveReceived()` after it for a spy. Use `Mockery::on()` or `withArgs()` when equality cannot express the argument, such as one field of a value object.
 
 @if($pest)
-Import the mock function before you use it: `use function Pest\Laravel\mock;`.
+Import the helper: `use function Pest\Laravel\mock;`.
 @else
-Use `$this->mock(Contract::class)` to put a mock in the container. Do not build a PHPUnit mock for a class that Mockery can double, because the project uses Mockery.
+Use `$this->mock(Contract::class)` to bind a mock in the container. Do not build PHPUnit mocks for classes Mockery can double.
 @endif
 
-## Outbound HTTP Testing
+## Outbound HTTP
 
-Call `Http::preventStrayRequests()`. Any request without a matching fake then fails without reaching the network.
-
-Fake the exact endpoint used by each test. Do not call `Http::fake()` without an endpoint because it accepts unexpected requests and can hide defects.
+Call `Http::preventStrayRequests()` so unfaked requests fail instead of reaching the network. Fake the exact endpoint per test; a bare `Http::fake()` accepts anything and hides defects.
 
 ## Time and Randomness
 
-- Freeze the time or move the time in each test that depends on a date, a period, or a timestamp.
+- Freeze or move time in every test depending on a date, period, or timestamp.
 @if($pest)
-- Use the framework helpers `freezeTime()`, `travelTo()`, `travel()`, and `travelBack()`. Do not call `Carbon::setTestNow()`.
+- Use `freezeTime()`, `travelTo()`, `travel()`, `travelBack()`, not `Carbon::setTestNow()`.
 @else
-- Use the framework helpers `$this->freezeTime()`, `$this->travelTo()`, `$this->travel()`, and `$this->travelBack()`. Do not call `Carbon::setTestNow()`.
+- Use `$this->freezeTime()`, `$this->travelTo()`, `$this->travel()`, `$this->travelBack()`, not `Carbon::setTestNow()`.
 @endif
-- Use `Str::createRandomStringsUsing()` to fix a generated string, if the test asserts an identifier or a slug.
-- Use `Sleep::fake()` instead of a real sleep, and assert the sleeps that the code requests.
-- Restore the time and the randomness after each test, if the suite does not restore them for every test.
+- Use `Str::createRandomStringsUsing()` to fix generated identifiers or slugs.
+- Use `Sleep::fake()` and assert the requested sleeps.
+- Restore time and randomness after each test unless the suite already does.
 
 ## Database
 
-- Run real queries against the real records in the test database. Do not mock the query builder, because the test then asserts the mock.
-- Assert the exact keys of `toArray()` if the shape of the serialized model is a contract. The test then fails when the model exposes a new attribute.
-- Test application behavior caused by the schema, such as deleting dependent records through a cascade. Do not test the database engine's cascade implementation.
-- Use `LazilyRefreshDatabase` instead of `RefreshDatabase`. A test that does not use the database then does not run the migrations.
+- Run real queries against the test database; mocking the query builder tests the mock.
+- Assert exact `toArray()` keys only when the serialized shape is a contract.
+- Test app behavior caused by the schema (e.g. dependents deleted by cascade), not the database engine.
+- Prefer `LazilyRefreshDatabase` so tests without the database skip migrations.
