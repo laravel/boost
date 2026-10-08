@@ -44,6 +44,16 @@ Use these checklists when performing complex setups. Copy the relevant checklist
 - [ ] Redeploy if the app needs to pick up new config
 ```
 
+## Sending email with Resend
+
+```
+- [ ] Check for verified sending domains (`resend:domains --status=verified --json -n`)
+- [ ] If there are none, send the user to the dashboard to connect Resend and verify a domain
+- [ ] Attach Resend (`resend:attach {environment} --from-address=... --json -n`)
+- [ ] Install `resend/resend-php` in the project if it is missing
+- [ ] Commit and redeploy (`deploy` then `deploy:monitor`)
+```
+
 ## Custom domain setup
 
 ```
