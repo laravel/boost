@@ -8,11 +8,11 @@ use Illuminate\Console\Command;
 use Laravel\Boost\Rules\RuleRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand('boost:rules-index', 'Regenerate the project rules index from the rule files in .ai/rules')]
+#[AsCommand('boost:index-rules', 'Regenerate the project rules index from the rule files in .ai/rules')]
 class RulesIndexCommand extends Command
 {
     /** @var string */
-    protected $signature = 'boost:rules-index';
+    protected $signature = 'boost:index-rules';
 
     public function handle(RuleRepository $repository): int
     {
@@ -32,6 +32,10 @@ class RulesIndexCommand extends Command
             }
 
             return self::FAILURE;
+        }
+
+        foreach ($repository->unindexedFiles() as $file) {
+            $this->warn('Skipped '.$repository->relativePath($file).': no valid `paths` frontmatter.');
         }
 
         $path = $repository->writeIndex();

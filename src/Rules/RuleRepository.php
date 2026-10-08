@@ -178,6 +178,21 @@ class RuleRepository
             ->all();
     }
 
+    /**
+     * Rule files the index skips because their frontmatter declares no paths.
+     *
+     * @return array<int, string>
+     */
+    public function unindexedFiles(): array
+    {
+        return $this->parsedFiles()
+            ->merge($this->parsedManagedFiles())
+            ->filter(fn (array $parsed): bool => $parsed['paths'] === [])
+            ->map(fn (array $parsed): string => $parsed['file'])
+            ->values()
+            ->all();
+    }
+
     public function normalizeGlob(string $glob): string
     {
         return $this->relativePath(trim($glob));
