@@ -51,7 +51,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, fileinfo, pdo, sqlite, pdo_sqlite
           ini-values: error_reporting=E_ALL
-          tools: composer:v2.8
+          tools: composer:v2
           coverage: none
 
       - name: Install dependencies
