@@ -64,23 +64,25 @@ Write the expected value literally or derive it differently. Computing it with t
 
 @if($pest)
 ```php
+// Avoid: mirrors the implementation
 $expected = now()->subHours(24)->floorSeconds(30)->toJson();
 expect($from)->toBe($expected);
 
+// Prefer: fixed input, known value
 travelTo('2025-01-01 00:00:00');
 expect($from)->toBe('2024-12-31T00:00:00.000000Z');
 ```
 @else
 ```php
+// Avoid: mirrors the implementation
 $expected = now()->subHours(24)->floorSeconds(30)->toJson();
 $this->assertSame($expected, $from);
 
+// Prefer: fixed input, known value
 $this->travelTo('2025-01-01 00:00:00');
 $this->assertSame('2024-12-31T00:00:00.000000Z', $from);
 ```
 @endif
-
-The first pair mirrors the implementation; the second fixes input and asserts a known value.
 
 ## Assert the Complete Result
 

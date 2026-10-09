@@ -25,6 +25,7 @@ Check `config/livewire.php` for `make_command.type`, `make_command.emoji`, `comp
 | Single-file (SFC, default) | `{{ $assist->artisanCommand('make:livewire create-post') }}` | `resources/views/components/⚡create-post.blade.php` |
 | Full-page SFC | `{{ $assist->artisanCommand('make:livewire pages::create-post') }}` | `resources/views/pages/⚡create-post.blade.php` |
 | Multi-file (MFC) | `{{ $assist->artisanCommand('make:livewire create-post --mfc') }}` | `⚡create-post/create-post.php` and `.blade.php` under `resources/views/components/` |
+| View-based (Blade only, no PHP class) | search docs for `view-based components` | Blade file under `resources/views/components/` |
 | Class-based | `{{ $assist->artisanCommand('make:livewire create-post --class') }}` | `{{ $assist->appPath('Livewire/CreatePost.php') }}` and `resources/views/livewire/create-post.blade.php` |
 
 Namespaces map to subdirectories: `Posts/CreatePost` becomes `components/posts/⚡create-post.blade.php`.
@@ -40,6 +41,8 @@ These changed from v3 but the application may not be updated, so verify its setu
 - Component tags must be closed. `wire:transition` uses the View Transitions API and its modifiers are gone.
 - JS: `$wire.$js('name', fn)` is now `$wire.$js.name = fn`; `commit`/`request` hooks are now `interceptMessage()`/`interceptRequest()`. See [reference/javascript-hooks.md](reference/javascript-hooks.md).
 - Alpine is bundled; do not include it separately.
+- `smart_wire_keys` (default `true`) generates `wire:key` for you; `csp_safe` is needed under a strict Content Security Policy. Search docs for `livewire config`.
+- `wire:poll` is non-blocking and parallel `wire:model.live` updates no longer queue.
 
 ## New in v4
 

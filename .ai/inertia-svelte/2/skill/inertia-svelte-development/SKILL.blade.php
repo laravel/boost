@@ -1,5 +1,5 @@
 ---
-name: inertia-vue-development
+name: inertia-svelte-development
 description: "Develops Inertia.js v2 Svelte client-side applications. Activates when creating Svelte pages, forms, or navigation; using Link, Form, or router; working with deferred props, prefetching, or polling; or when user mentions Svelte with Inertia, Svelte pages, Svelte forms, or Svelte navigation."
 license: MIT
 metadata:
@@ -27,7 +27,7 @@ Svelte page components live in `{{ $assist->inertia()->pagesDirectory() }}`. Ser
 ## Forms
 
 @if($assist->inertia()->hasFormComponent())
-Prefer `<Form>` for new forms unless the project already uses `useForm` everywhere. It exposes `errors`, `processing`, `progress`, `wasSuccessful`, `recentlySuccessful`, `isDirty`, `reset`, and `clearErrors` through its `let:` bindings; use `search-docs` for the exact syntax.
+Prefer `<Form>` for new forms unless the project already uses `useForm` everywhere. It exposes `errors`, `processing`, `progress`, `wasSuccessful`, `recentlySuccessful`, `isDirty`, `reset`, and `clearErrors`; syntax differs between Svelte 4 (`let:`, `on:`) and Svelte 5 (snippets, `onsubmit`), so check the project's Svelte version and use `search-docs` for the exact syntax.
 
 @if($assist->inertia()->hasFormComponentResets())
 `resetOnError`, `resetOnSuccess`, and `setDefaultsOnSuccess` control automatic resetting; search docs for `form component resetting`.
@@ -40,7 +40,7 @@ Use `useForm` when you need programmatic control (transforming data, submitting 
 Inertia v2.0.x has no `<Form>` component (added in v2.1.0). Build forms with `useForm`.
 @endif
 
-Always show `errors` per field and disable submit while `processing`. Use `<Form>` or `on:submit|preventDefault`.
+Always show `errors` per field and disable submit while `processing`. Use `<Form>` or the prevent-default handler for the project's Svelte version.
 
 ## Inertia v2 Features
 

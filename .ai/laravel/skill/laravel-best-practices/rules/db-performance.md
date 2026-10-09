@@ -4,7 +4,7 @@
 
 Use `with()` when a relationship is accessed for many models, to avoid N+1 queries. Lazy loading is fine for a single model or a relationship that may not be needed.
 
-When constraining eager loads or selecting columns, keep every key Eloquent needs for matching: the parent's local key and the related foreign key (`posts.user_id`), plus the related primary key.
+When constraining eager loads or selecting columns, keep every key Eloquent needs for matching: for `belongsTo`, the parent's foreign key and the owner's key; for `hasMany`, the parent's local key and the related foreign key (`posts.user_id`).
 
 ```php
 Post::select('id', 'title', 'user_id')->with(['author:id,name'])->get();

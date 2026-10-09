@@ -52,11 +52,13 @@ Fetch `https://laravel.com/framework/docs/testing` and search for an assertion b
 A hand-built check fails with `false is not true`; a framework assertion names the wrong table, value, or response.
 
 ```php
+// Avoid
 @if($pest)
 expect(User::where('email', 'taylor@laravel.com')->exists())->toBeTrue();
 @else
 $this->assertTrue(User::where('email', 'taylor@laravel.com')->exists());
 @endif
 
+// Prefer
 $this->assertDatabaseHas('users', ['email' => 'taylor@laravel.com']);
 ```
