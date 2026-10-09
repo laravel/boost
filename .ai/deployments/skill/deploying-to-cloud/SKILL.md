@@ -112,6 +112,8 @@ Determine the task and follow the matching path:
 
 - Edge cache: `cloud environment:purge-edge-cache {environment} -n` purges everything; pass one of `--path=/blog/post`, `--prefix=/blog/`, or `--tag=<cache-tag>` to purge less. Tags need a dedicated edge network.
 
+- Laravel Cloud domain: `cloud environment:vanity-domain {environment} --name=<subdomain> --deploy -n --force`. Pass only the first part of the domain. The new domain takes effect on the next deploy, which `--deploy` starts and monitors. It can change only once every 30 minutes, so confirm with the user first.
+
 - Repository defaults: `cloud repo:config {application} -n` sets repository-local application and organization defaults. Pass `--organization=<id|name|slug>` when the user has multiple organizations.
 
 For multi-step operations, see [reference/checklists.md](reference/checklists.md).
