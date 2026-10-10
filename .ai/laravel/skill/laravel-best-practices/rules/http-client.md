@@ -14,7 +14,7 @@ Retry connection failures, 429s, and 5xx with delays (`retry([100, 500, 1000], 0
 
 ## Pool Independent Requests
 
-`Http::pool(fn (Pool $pool) => [$pool->as('users')->get(...), ...])` runs requests concurrently. It changes timing, not error handling: apply timeouts to each request and `throw()` or inspect each response (`$responses['users']->throw()->json()`).
+`Http::pool(fn (Pool $pool) => [$pool->as('users')->get(...), ...])` runs requests concurrently (`Pool` is `Illuminate\Http\Client\Pool`). It changes timing, not error handling: apply timeouts to each request and `throw()` or inspect each response (`$responses['users']->throw()->json()`).
 
 ## Fake in Tests
 

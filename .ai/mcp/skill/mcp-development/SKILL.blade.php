@@ -30,14 +30,14 @@ Follow the project's existing MCP conventions first (server layout, naming, attr
 - **Tools**: descriptions are never generated, so always write a `#[Description]` saying when and why to use the tool. Define `schema()` for parameters; add `outputSchema()` only when clients must parse structured content. Validate with `$request->validate()` and actionable messages. Override `#[Name]`/`#[Title]` only when the class-derived value is wrong.
 - **Resources**: have no input schema. `#[Uri]` and `#[MimeType]` are optional for static resources. Templates implement `HasUriTemplate`, and URI variables arrive in the `Request`.
 - **Prompts**: arguments via `Argument`; may return several responses; `asAssistant()` marks assistant messages.
-- **Responses**: use `Response::text()`, `error()`, `structured()`, etc., never `new Response()`. Tools may return arrays or yield a `Generator` to stream. `Response::make(...)->withStructuredContent()` combines text with structured data; `Response::notification()` yielded from a `Generator` streams over SSE on web servers. Metadata: `->withMeta()` on content, `Response::make(...)->withMeta()` for result-level, `protected ?array $meta` for primitives.
-- **Apps**: link a tool to an app resource with `#[RendersApp]`, render with `Response::view()`, use `#[AppMeta]` and `Visibility` for CSP and tool visibility. Search docs before touching the app SDK.
+- **Responses**: use `Response::text()`, `error()`, `structured()`, `image()`, `audio()`, `blob()`, `fromStorage()`, `resourceLink()`, never `new Response()`. Tools may return arrays or yield a `Generator` to stream. `Response::make(...)->withStructuredContent()` combines text with structured data; `Response::notification()` yielded from a `Generator` streams over SSE on web servers. Metadata: `->withMeta()` on content, `Response::make(...)->withMeta()` for result-level, `protected ?array $meta` for primitives.
+- **Apps**: link a tool to an app resource with `#[RendersApp(resource: AppResource::class)]`, render with `Response::view(...)`, use `#[AppMeta]` for CSP, permissions, and bundled libraries, and `Visibility::App` / `Visibility::Model` to show app tools to the app, the model, or both. The public docs do not cover Apps, so read the installed `laravel/mcp` source before editing the app SDK integration.
 
 Also available, each with its own docs: tool annotations (`#[IsReadOnly]`, `#[IsDestructive]`, `#[IsIdempotent]`, `#[IsOpenWorld]`), `#[Icon]`, resource annotations (audience, priority, last modified), and dependency injection in `handle()`. Search docs for the one you need.
 
 ## Imports
 
-`Laravel\Mcp\Request` and `Laravel\Mcp\Response` (NOT `Laravel\Mcp\Server\Request` / `Response`); `Laravel\Mcp\Server\{Tool,Resource,Prompt}`; `Illuminate\Contracts\JsonSchema\JsonSchema`.
+`Laravel\Mcp\Request` and `Laravel\Mcp\Response` (NOT `Laravel\Mcp\Server\Request` / `Response`); `Laravel\Mcp\Server\{Tool,Resource,Prompt}`; `Illuminate\Contracts\JsonSchema\JsonSchema`; attributes live in `Laravel\Mcp\Server\Attributes\*` (`Description`, `Uri`, `MimeType`, ...), the route facade is `Laravel\Mcp\Facades\Mcp`, and the client is `Laravel\Mcp\Client`.
 
 ## Testing
 
@@ -52,7 +52,7 @@ Also available, each with its own docs: tool annotations (`#[IsReadOnly]`, `#[Is
 
 ## Client
 
-`Client::web($url)` or `Client::local(...)` connects to external servers; named clients use `Mcp::registerClient()` / `Mcp::client()`. Search docs for OAuth and result APIs.
+`Client::web($url)` or `Client::local('php', ['artisan', 'mcp:start'])` connects to external servers; named clients use `Mcp::registerClient(...)` / `Mcp::client(...)`. Besides `tools()` / `callTool()`, the client has `prompts()` / `getPrompt()` and `resources()` / `readResource()`; listing methods paginate automatically. The public docs do not cover the client, so read the installed `laravel/mcp` source for OAuth flows and result APIs.
 
 ## Pitfalls
 

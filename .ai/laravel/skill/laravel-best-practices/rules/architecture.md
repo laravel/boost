@@ -37,7 +37,7 @@ For lightweight work that needs no retries or crash durability, `defer(fn () => 
 
 ## Use `Concurrency::run()` for Parallel Execution
 
-`Concurrency::run([fn () => ..., fn () => ...])` returns results in order. With a process-based driver each closure boots the application in a separate process, so use it only when independent queries, HTTP calls, or computations save more than the process and serialization overhead. The `sync` driver runs sequentially and is mainly for tests.
+`Concurrency::run([fn () => ..., fn () => ...])` (facade `Illuminate\Support\Facades\Concurrency`) returns results in order. With a process-based driver each closure boots the application in a separate process, so use it only when independent queries, HTTP calls, or computations save more than the process and serialization overhead. The `sync` driver runs sequentially and is mainly for tests.
 
 ## Follow Framework Conventions
 
