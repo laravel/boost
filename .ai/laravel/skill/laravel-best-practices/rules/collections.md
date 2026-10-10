@@ -20,4 +20,4 @@
 
 ## Custom Collection Classes
 
-Declare them with `#[CollectedBy(UserCollection::class)]` on the model instead of overriding `newCollection()`.
+Declare them with `#[CollectedBy(UserCollection::class)]` (`Illuminate\Database\Eloquent\Attributes\CollectedBy`) on the model instead of overriding `newCollection()`.

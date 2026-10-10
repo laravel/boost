@@ -8,7 +8,7 @@ Default-handling rules differ. An exception's `report()` method suppresses defau
 
 ## Exceptions Not to Report
 
-Implement `ShouldntReport` (or use `dontReport()`) to keep the policy visible on the class. Explicit logging in application code is unaffected.
+Implement `Illuminate\Contracts\Debug\ShouldntReport` (or use `dontReport()`) to keep the policy visible on the class. Explicit logging in application code is unaffected.
 
 ## Throttle High-Volume Reports
 

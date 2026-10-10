@@ -6,7 +6,7 @@ Use the relationship that matches the database association and declare its concr
 
 ## Use Local Scopes for Reusable Queries
 
-Extract repeated constraints into local scopes with the `#[Scope]` attribute on a protected method, and reuse them in `whereHas('user', fn ($q) => $q->active())`.
+Extract repeated constraints into local scopes with the `#[Scope]` attribute (`Illuminate\Database\Eloquent\Attributes\Scope`) on a protected method, and reuse them in `whereHas('user', fn ($q) => $q->active())`.
 
 ```php
 #[Scope]

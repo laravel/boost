@@ -33,11 +33,11 @@ For lightweight work that needs no retries or crash durability, `defer(fn () => 
 
 ## Use `Context` for Request-Scoped Data
 
-`Context::add('tenant_id', ...)` makes data available across the current execution without passing arguments through every layer. Visible context is added to log entries; visible and hidden context are both restored in queued jobs. Use `Context::addHidden()` to propagate to jobs without logging, and never put secrets in context unless that propagation is intended.
+`Context::add('tenant_id', ...)` (facade `Illuminate\Support\Facades\Context`, read with `Context::get('tenant_id')`; typically set in middleware) makes data available across the current execution without passing arguments through every layer. Visible context is added to log entries; visible and hidden context are both restored in queued jobs. Use `Context::addHidden()` to propagate to jobs without logging, and never put secrets in context unless that propagation is intended.
 
 ## Use `Concurrency::run()` for Parallel Execution
 
-`Concurrency::run([fn () => ..., fn () => ...])` (facade `Illuminate\Support\Facades\Concurrency`) returns results in order. With a process-based driver each closure boots the application in a separate process, so use it only when independent queries, HTTP calls, or computations save more than the process and serialization overhead. The `sync` driver runs sequentially and is mainly for tests.
+`Concurrency::run([fn () => ..., fn () => ...])` (facade `Illuminate\Support\Facades\Concurrency`) returns results in order, e.g. `[$users, $orders] = Concurrency::run([fn () => ..., fn () => ...])`. With a process-based driver each closure boots the application in a separate process, so use it only when independent queries, HTTP calls, or computations save more than the process and serialization overhead. The `sync` driver runs sequentially and is mainly for tests.
 
 ## Follow Framework Conventions
 

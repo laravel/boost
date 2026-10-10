@@ -11,7 +11,7 @@ Cache discovery in production deploys with `{{ $assist->artisanCommand('optimize
 
 ## `ShouldDispatchAfterCommit`
 
-Implement it on events dispatched inside transactions. Dispatch waits for the commit and is discarded on rollback. This affects synchronous and queued listeners alike, not just queue timing.
+Implement `Illuminate\Contracts\Events\ShouldDispatchAfterCommit` on events dispatched inside transactions. Dispatch waits for the commit and is discarded on rollback. This affects synchronous and queued listeners alike, not just queue timing. For model observers, implement `Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit`.
 
 ## Queue Slow Notifications
 
