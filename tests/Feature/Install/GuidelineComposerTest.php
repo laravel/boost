@@ -1440,3 +1440,102 @@ test('excludes first-party npm packages from third-party guideline discovery', f
 
     expect($this->composer->guidelines()->has('@laravel/some-package/core'))->toBeFalse();
 });
+
+function useAppendGuidelinesBasePath(array $files): string
+{
+    $root = sys_get_temp_dir().DIRECTORY_SEPARATOR.'boost-append-guidelines-'.uniqid();
+
+    foreach ($files as $relativePath => $content) {
+        File::ensureDirectoryExists(dirname($root.'/.ai/guidelines/'.$relativePath));
+        File::put($root.'/.ai/guidelines/'.$relativePath, $content);
+    }
+
+    app()->setBasePath($root);
+
+    return $root;
+}
+
+test('appends a user .append file to the matching Boost guideline', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $root = useAppendGuidelinesBasePath([
+        'php/core.append.md' => "## Project PHP Rules\n\n- Use `final` classes by default.",
+    ]);
+
+    try {
+        $guidelines = $this->composer->guidelines();
+
+        expect($guidelines->get('php')['content'])
+            ->toStartWith('# PHP')
+            ->toContain('Use explicit return type declarations')
+            ->toEndWith("## Project PHP Rules\n\n- Use `final` classes by default.")
+            ->and($guidelines->keys())->not->toContain('.ai/php/core.append');
+    } finally {
+        File::deleteDirectory($root);
+    }
+});
+
+test('appends a user .append file to the matching third-party guideline', function (): void {
+    $root = useAppendGuidelinesBasePath([
+        'acme/widgets/core.append.blade.php' => '- Register widgets in `App\Widgets` only.',
+    ]);
+
+    try {
+        $package = stagedPackage('acme/widgets', 'guidelines');
+        File::put($package->path().'/resources/boost/guidelines/core.md', "# Acme Widgets\n\n- Widgets are immutable.");
+
+        mockProjectPackages($this->project, new PackageCollection([
+            rosterPackage('laravel/framework', '11.0.0'),
+            $package,
+        ]));
+
+        expect($this->composer->guidelines()->get('acme/widgets/core')['content'])
+            ->toBe("# Acme Widgets\n\n- Widgets are immutable.\n\n- Register widgets in `App\Widgets` only.");
+    } finally {
+        File::deleteDirectory($root);
+    }
+});
+
+test('an override still replaces the guideline it is appended to, and an empty override still excludes it', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    $root = useAppendGuidelinesBasePath([
+        'php/core.blade.php' => '# Our PHP',
+        'php/core.append.md' => '- Appended rule.',
+        'deployments/core.blade.php' => '',
+        'deployments/core.append.md' => '- Appended deployment rule.',
+    ]);
+
+    try {
+        $guidelines = $this->composer->guidelines();
+
+        expect($guidelines->get('php')['content'])->toBe("# Our PHP\n\n- Appended rule.")
+            ->and($guidelines->has('deployments'))->toBeFalse()
+            ->and($this->composer->compose())->not->toContain('Appended deployment rule');
+    } finally {
+        File::deleteDirectory($root);
+    }
+});
+
+test('excluded guidelines stay excluded when they have a .append file', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    config(['boost.guidelines.exclude' => ['php']]);
+
+    $root = useAppendGuidelinesBasePath([
+        'php/core.append.md' => '- Appended rule.',
+    ]);
+
+    try {
+        expect($this->composer->guidelines()->has('php'))->toBeFalse()
+            ->and($this->composer->compose())->not->toContain('Appended rule');
+    } finally {
+        File::deleteDirectory($root);
+    }
+});
