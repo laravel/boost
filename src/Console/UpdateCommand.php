@@ -7,6 +7,9 @@ namespace Laravel\Boost\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Laravel\Boost\Concerns\ReportsSkillParseFailures;
+use Laravel\Boost\Concerns\WarnsAboutStaleGuidelines;
+use Laravel\Boost\Install\Agents\Agent;
+use Laravel\Boost\Install\AgentsDetector;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\SkillParseFailures;
@@ -19,6 +22,7 @@ use function Laravel\Prompts\multiselect;
 class UpdateCommand extends Command
 {
     use ReportsSkillParseFailures;
+    use WarnsAboutStaleGuidelines;
 
     /** @var string */
     protected $signature = 'boost:update
@@ -60,6 +64,12 @@ class UpdateCommand extends Command
         ]);
 
         $this->reportSkillParseFailures();
+
+        if ($guidelines) {
+            $this->warnAboutStaleGuidelines(app(AgentsDetector::class)->getAgents()->filter(
+                fn (Agent $agent): bool => in_array($agent->name(), $config->getAgents(), true)
+            ));
+        }
 
         $this->info('Boost guidelines and skills updated successfully.');
 

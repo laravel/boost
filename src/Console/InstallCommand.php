@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
 use Laravel\Boost\Concerns\ReportsSkillParseFailures;
+use Laravel\Boost\Concerns\WarnsAboutStaleGuidelines;
 use Laravel\Boost\Contracts\SupportsGuidelines;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
@@ -45,6 +46,7 @@ class InstallCommand extends Command
 {
     use DisplayHelper;
     use ReportsSkillParseFailures;
+    use WarnsAboutStaleGuidelines;
 
     protected $signature = 'boost:install
         {--guidelines : Install AI guidelines}
@@ -431,6 +433,8 @@ class InstallCommand extends Command
             beforeProcess: fn () => grid($guidelines->map(fn ($guideline, string $key): string => $key.($guideline['custom'] ? '*' : ''))->sort()->values()->toArray()),
             withDelay: true,
         );
+
+        $this->warnAboutStaleGuidelines($guidelinesAgents);
     }
 
     protected function syncRuleFiles(GuidelineComposer $composer): void
