@@ -26,7 +26,7 @@ Apply this section to behavioral tests. An architecture test states a convention
 @if($pest)
 - [ ] Each file uses one declaration style consistently, and each `describe()` group holds separate behavior.
 @else
-- [ ] Each test class extends the base `TestCase` of the project, and each file uses either the prefix `test_` or the `#[Test]` attribute consistently.
+- [ ] Each feature test class extends the base `TestCase` of the project, each unit test class extends `PHPUnit\Framework\TestCase`, and each file uses either the prefix `test_` or the `#[Test]` attribute consistently.
 @endif
 
 ## Coverage

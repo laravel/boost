@@ -134,6 +134,15 @@ it('teaches PHPUnit syntax to a PHPUnit project and never Pest syntax', function
         ->not->toContain('pestphp.com');
 });
 
+it('lets a PHPUnit unit test extend the TestCase from the make:test --unit stub', function (): void {
+    expect(renderTestingSkill(pest: false))
+        ->toContain('Extend the base `TestCase` of the project in each feature test class.')
+        ->toContain('Extend `PHPUnit\Framework\TestCase` in each unit test class, as the stub of `php artisan make:test --unit` does.')
+        ->toContain('Each feature test class extends the base `TestCase` of the project, each unit test class extends `PHPUnit\Framework\TestCase`,')
+        ->not->toContain('Extend the base `TestCase` of the project in each test class.')
+        ->not->toContain('Each test class extends the base `TestCase` of the project');
+});
+
 it('names the installed PHPUnit version instead of pinning a documentation edition', function (string $version): void {
     expect(renderTestingSkill(pest: false, version: $version))
         ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit API syntax")

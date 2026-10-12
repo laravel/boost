@@ -37,7 +37,8 @@ it('falls back to the default region when none is configured', function () { ...
 @else
 ## Test Class and Methods
 
-- Extend the base `TestCase` of the project in each test class.
+- Extend the base `TestCase` of the project in each feature test class.
+- Extend `PHPUnit\Framework\TestCase` in each unit test class, as the stub of `{{ $assist->artisanCommand('make:test --unit') }}` does. A unit test covers logic that does not use the framework, so it does not boot the application.
 - Give each test method the prefix `test_`, or add the `#[Test]` attribute to the method. Use the convention of the other files in the same directory.
 
 ## Naming Tests
