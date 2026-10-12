@@ -152,7 +152,7 @@ class GuidelineComposer
             $this->customGuidelinePath(),
             false,
             fn (SplFileInfo $file): string => '.ai/'.$this->relativeGuidelineKey($file),
-        ));
+        ))->reject(fn (array $guideline, string $key): bool => str_ends_with($key, '.append'));
     }
 
     /**
@@ -350,6 +350,7 @@ class GuidelineComposer
      */
     protected function guideline(string $path, bool $thirdParty = false, ?string $overrideKey = null): array
     {
+        $appendPath = $this->guidelineAppendPath($path, $overrideKey);
         $path = $this->guidelinePath($path, $overrideKey);
 
         if ($path === null) {
@@ -366,6 +367,13 @@ class GuidelineComposer
 
         $result = $this->renderBladeFileWithScopedBlocks($path, [], $this->rulesExtractionEnabled());
         $rendered = $result['content'];
+
+        // An empty override still excludes the guideline, so there is nothing to append to.
+        if ($appendPath !== null && trim($rendered) !== '') {
+            $appended = $this->renderBladeFileWithScopedBlocks($appendPath, [], $this->rulesExtractionEnabled());
+            $rendered = rtrim($rendered)."\n\n".trim($appended['content']);
+            $result['blocks'] = [...$result['blocks'], ...$appended['blocks']];
+        }
 
         $description = Str::of($rendered)
             ->after('# ')
@@ -448,6 +456,31 @@ class GuidelineComposer
         $customPath = $this->prependUserGuidelinePath($relativePath);
 
         return file_exists($customPath) ? realpath($customPath) : $path;
+    }
+
+    /**
+     * Find the user's `.append` file for a Boost or third-party guideline, next to where its override would be.
+     */
+    protected function guidelineAppendPath(string $path, ?string $overrideKey = null): ?string
+    {
+        if ($this->isCustomGuideline($path)) {
+            return null;
+        }
+
+        $key = $overrideKey ?? (string) preg_replace('/\.(blade\.php|md)$/', '', Str::of($path)
+            ->replace([(string) realpath(__DIR__.'/../../'), '.ai'.DIRECTORY_SEPARATOR, '.ai/'], '')
+            ->ltrim('/\\')
+            ->toString());
+
+        foreach (['.blade.php', '.md'] as $ext) {
+            $appendPath = $this->prependUserGuidelinePath($key.'.append'.$ext);
+
+            if (file_exists($appendPath)) {
+                return realpath($appendPath);
+            }
+        }
+
+        return null;
     }
 
     protected function getGuidelineAssist(): GuidelineAssist
