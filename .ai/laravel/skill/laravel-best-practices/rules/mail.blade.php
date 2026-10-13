@@ -3,55 +3,22 @@
 @endphp
 # Mail Best Practices
 
-## Queue Slow Mail Delivery
+## Queue Slow Delivery
 
-Implement `ShouldQueue` on a mailable when delivery should normally happen in the background. Laravel queues that mailable even when the call site uses `Mail::send()`.
+Implement `ShouldQueue` (with `Queueable, SerializesModels`) on the mailable; it queues even when called via `Mail::send()`. Keep mail synchronous when the caller must know whether delivery was accepted, or no worker is available.
 
-```php
-class OrderShipped extends Mailable implements ShouldQueue
-{
-    use Queueable, SerializesModels;
-}
-```
+## Queued Mail After Commit
 
-Keep mail synchronous when the caller must know immediately whether delivery was accepted, or when no queue worker is available.
-
-## Dispatch Queued Mail After Commit
-
-A queued mailable dispatched during a database transaction can be processed before the transaction commits. Call `afterCommit()` on the mailable, or enable the queue connection's `after_commit` option, when the mail depends on committed records.
-
-```php
-Mail::to($user)->send(
-    (new OrderShipped($order))->afterCommit()
-);
-```
-
-If the transaction rolls back, an after-commit mailable is not dispatched. This setting affects queued mail only; it does not defer synchronous delivery.
+A queued mailable dispatched inside a transaction can be processed before commit. Use `->afterCommit()` on the mailable, or the connection's `after_commit` option, when the mail depends on committed records. On rollback it is not dispatched. It does not defer synchronous delivery.
 
 ## Assert the Delivery Mode
 
-Use `Mail::assertQueued()` for queued mailables and `Mail::assertSent()` for synchronously sent mailables.
+A mailable implementing `ShouldQueue` needs `Mail::assertQueued()`; `Mail::assertSent()` fails for it. Use `assertSent()` only for synchronous mail.
 
-Incorrect for a mailable that implements `ShouldQueue`:
+## Markdown Mailables
 
-```php
-Mail::assertSent(OrderShipped::class);
-```
-
-Correct:
-
-```php
-Mail::assertQueued(OrderShipped::class);
-```
-
-## Use Markdown Mailables When They Fit
-
-Markdown mailables render HTML and plain-text versions from Laravel's mail components and support publishable themes. They are useful for conventional transactional messages, but a custom HTML and text pair may be more appropriate for a specialized design.
-
-```bash
-{{ $assist->artisanCommand('make:mail OrderShipped --markdown=mail.orders.shipped') }}
-```
+Good for conventional transactional messages (HTML plus plain text, publishable themes): `{{ $assist->artisanCommand('make:mail OrderShipped --markdown=mail.orders.shipped') }}`. Use a custom HTML/text pair for specialized designs.
 
 ## Separate Content and Delivery Tests
 
-Test rendered content by instantiating the mailable and using assertions such as `assertSeeInHtml()` and `assertSeeInText()`. Test delivery separately with `Mail::fake()` and `assertSent()` or `assertQueued()` so failures identify the affected behavior.
+Test content by instantiating the mailable with `assertSeeInHtml()` / `assertSeeInText()`. Test delivery separately with `Mail::fake()` so failures identify the cause.

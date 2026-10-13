@@ -3,62 +3,26 @@
 @endphp
 # Task Scheduling Best Practices
 
-## Prevent Unwanted Overlap
+## Prevent Overlap
 
-Use `withoutOverlapping()` when a second run must not begin while the previous run holds the lock. This is appropriate for variable-duration tasks that are not safe to run concurrently.
+Use `withoutOverlapping()` for variable-duration tasks that are unsafe to run concurrently. The optional argument is the lock expiry in minutes, not a task timeout. The default is 24 hours, and too short an expiry permits overlap while the first run continues. Clear stale locks with `{{ $assist->artisanCommand('schedule:clear-cache') }}`. Tasks should still tolerate retries and partial execution.
 
-```php
-Schedule::command('reports:generate')
-    ->everyFifteenMinutes()
-    ->withoutOverlapping(30);
-```
+## One Server
 
-The optional value is the lock expiration time in minutes, not the task timeout. Choose it carefully: the default is 24 hours, stale locks can be cleared with `{{ $assist->artisanCommand('schedule:clear-cache') }}`, and an expiration that is too short can permit overlap while the first task still runs. The task itself should still tolerate retries and partial execution where practical.
+`onOneServer()` requires all scheduler nodes to share the default cache store, and it must support atomic locks (`database`, `memcached`, `dynamodb`, `redis`). Name scheduled closures first, especially the same closure with different parameters, so each has a distinct lock identity.
 
-## Run a Task on One Server
+## Background Execution
 
-Use `onOneServer()` when only one scheduler node should run an eligible task. Scheduler nodes must use the same default cache store, and that store must support atomic locks. Supported stores include `database`, `memcached`, `dynamodb`, and `redis`.
+Tasks due together run sequentially. `runInBackground()` stops a long independent task delaying later ones, but works only for `command()` and `exec()`, not closures. Ensure logging and failure monitoring for background processes.
 
-```php
-Schedule::command('billing:charge')->daily()->onOneServer();
-```
+## Environments
 
-Name scheduled closures before applying `onOneServer()`, especially when scheduling the same closure with different parameters, so each task has a distinct lock identity.
+`environments(['production'])` is an operational safeguard, not authorization.
 
-## Run Eligible Commands in the Background
+## Groups
 
-Tasks due at the same time run sequentially by default. Use `runInBackground()` when an independent, long-running scheduled command should not delay later tasks.
-
-```php
-Schedule::command('analytics:process')->hourly()->runInBackground();
-```
-
-Laravel restricts `runInBackground()` to tasks scheduled with `command()` and `exec()`; it is not available for scheduled closures. Ensure background processes have appropriate logging and failure monitoring.
-
-## Restrict Tasks by Environment
-
-Use `environments()` when a task should run only in named application environments. Treat this as an operational safeguard, not an authorization control.
-
-```php
-Schedule::command('billing:charge')
-    ->monthly()
-    ->environments(['production']);
-```
-
-## Group Shared Configuration
-
-Use schedule groups when several tasks genuinely share frequency or constraints.
-
-```php
-Schedule::daily()
-    ->onOneServer()
-    ->timezone('America/New_York')
-    ->group(function () {
-        Schedule::command('emails:send --force');
-        Schedule::command('emails:prune');
-    });
-```
+Use `Schedule::daily()->onOneServer()->group(fn () => ...)` only when tasks genuinely share frequency or constraints.
 
 ## Bound Work Inside the Task
 
-The scheduler does not provide a `takeUntilTimeout()` event method or terminate arbitrary tasks at a deadline. Bound work in the command or job itself by processing finite chunks, checking a deadline, or dispatching queue jobs with suitable timeouts. Use operating-system or process controls when hard termination is required.
+There is no `takeUntilTimeout()` scheduler method, and the scheduler does not kill tasks at a deadline. Bound work in the command or job: finite chunks, deadline checks, or queue jobs with timeouts. Use OS or process controls for hard termination.

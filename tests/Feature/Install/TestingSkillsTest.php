@@ -97,13 +97,13 @@ it('renders best-practice commands with platform-aware executables', function (b
         ->toContain($expectedComposer.' audit')
         ->toContain($expectedArtisan.' event:cache')
         ->toContain($expectedArtisan.' make:mail OrderShipped --markdown=mail.orders.shipped')
-        ->toContain($expectedArtisan.' make:migration create_posts_table')
+        ->toContain($expectedArtisan.' make:migration add_slug_to_posts_table')
         ->toContain($expectedArtisan.' schedule:clear-cache')
         ->not->toContain('$assist->')
         ->not->toContain('___')
-        ->toContain("Blade's `{{ }}` syntax")
+        ->toContain("Blade's `{{ }}` HTML-escapes")
         ->toContain('{!! $user->bio !!}')
-        ->toContain('    @csrf');
+        ->toContain('Include `@csrf`');
 })->with([
     'default' => [false, null, null, 'php artisan', 'composer'],
     'Sail' => [true, null, null, Sail::DEFAULT_BINARY_PATH.' artisan', Sail::DEFAULT_BINARY_PATH.' composer'],
