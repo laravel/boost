@@ -10,131 +10,27 @@ metadata:
 @endphp
 # Inertia Svelte Development
 
-## Documentation
+Follow the project's existing conventions first: match how current pages, forms, and navigation are already written before applying anything below.
 
-Use `search-docs` for detailed Inertia v1 Svelte patterns and documentation.
+Use `search-docs` for Inertia v1 Svelte syntax and APIs.
 
-## Basic Usage
+## Pages
 
-### Page Components Location
+Svelte page components live in `{{ $assist->inertia()->pagesDirectory() }}`. Server-side patterns (`Inertia::render`, props, middleware) are covered in inertia-laravel guidelines.
 
-Svelte page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+## Navigation and Forms
 
-### Page Component Structure
+- Use `<Link>` from `@inertiajs/svelte` instead of `<a>`; plain anchors cause full page reloads. Use `method="post"` for actions like logout.
+- Use `router.visit` only for programmatic navigation.
+- Forms: keep local state, submit with `router.post`, track `processing` yourself via `onFinish`, and prevent default with `on:submit|preventDefault`.
 
-@boostsnippet("Basic Svelte Page Component", "svelte")
-<script>
-export let users
-</script>
+## v1 Limitations
 
-<div>
-    <h1>Users</h1>
-    <ul>
-        {#each users as user (user.id)}
-            <li>{user.name}</li>
-        {/each}
-    </ul>
-</div>
-@endboostsnippet
-
-## Client-Side Navigation
-
-### Basic Link Component
-
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
-
-@boostsnippet("Inertia Svelte Navigation", "svelte")
-<script>
-import { Link } from '@inertiajs/svelte'
-</script>
-
-<Link href="/">Home</Link>
-<Link href="/users">Users</Link>
-<Link href={`/users/${user.id}`}>View User</Link>
-@endboostsnippet
-
-### Link with Method
-
-@boostsnippet("Link with POST Method", "svelte")
-<script>
-import { Link } from '@inertiajs/svelte'
-</script>
-
-<Link href="/logout" method="post">Logout</Link>
-@endboostsnippet
-
-### Programmatic Navigation
-
-@boostsnippet("Router Visit", "svelte")
-<script>
-import { router } from '@inertiajs/svelte'
-
-function handleClick() {
-    router.visit('/users')
-}
-
-// Or with options
-function createUser() {
-    router.visit('/users', {
-        method: 'post',
-        data: { name: 'John' },
-        onSuccess: () => console.log('Success!'),
-    })
-}
-</script>
-@endboostsnippet
-
-## Form Handling
-
-### Using `router.post`
-
-@boostsnippet("Form with router.post", "svelte")
-<script>
-import { router } from '@inertiajs/svelte'
-
-let form = {
-    name: '',
-    email: '',
-}
-let processing = false
-
-function handleSubmit() {
-    processing = true
-
-    router.post('/users', form, {
-        onFinish: () => processing = false,
-    })
-}
-</script>
-
-<form on:submit|preventDefault={handleSubmit}>
-    <input type="text" bind:value={form.name} />
-    <input type="email" bind:value={form.email} />
-    <button type="submit" disabled={processing}>
-        Create User
-    </button>
-</form>
-@endboostsnippet
-
-## Inertia v1 Limitations
-
-Inertia v1 does not support these v2 features:
-- `<Form>` component
-- Deferred props
-- Prefetching
-- Polling
-- Infinite scrolling with `WhenVisible`
-- Merging props
-
-Do not use these features in v1 projects.
-
-## Server-Side Patterns
-
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
+Do not use v2 features in v1 projects: `<Form>`, deferred props, prefetching, polling, `WhenVisible`, or merging props.
 
 ## Common Pitfalls
 
-- Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
-- Trying to use Inertia v2 features (deferred props, `<Form>` component, etc.) in v1 projects
-- Using `<form>` without preventing default submission (use `on:submit|preventDefault`)
-- Not handling loading states during form submission
+- Using `<a>` instead of `<Link>`
+- Using v2 features in a v1 project
+- Submitting a form without preventing default
+- No loading state during form submission
