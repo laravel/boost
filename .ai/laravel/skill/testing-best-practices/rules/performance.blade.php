@@ -7,77 +7,70 @@ $phpunitDocs = 'the PHPUnit '.($phpunit ? $phpunit->version().' ' : '').'documen
 @endphp
 # Test Suite Performance
 
-These settings apply to the project and CI, not to individual tests. Read `rules/isolation.md` for choices within a test.
+These are project and CI settings, not per-test choices (see `rules/isolation.md` for those). Measure first: find the slow tests, then apply project-wide settings.
 
 @if($pest)
-Fetch `https://pestphp.com/docs/optimizing-tests` for Pest options that make test runs faster.
+Fetch `https://pestphp.com/docs/optimizing-tests` for speed options.
 @else
-Fetch {{ $phpunitDocs }} for PHPUnit options that make test runs faster.
+Fetch {{ $phpunitDocs }} for speed options.
 @endif
-Verify each flag in the documentation before adding it to CI.
-
-Measure before changing a setting. Find the slow test first, and apply a project-wide setting only after identifying the costly work.
+Verify each flag in the docs before adding it to CI.
 
 ## Test Environment
 
-- Set `BCRYPT_ROUNDS=4` in `.env.testing` or in `phpunit.xml`. The default value is 12, and the hash then takes most of the time of each test that signs a user in.
-- Disable XDebug. Disable pcov also, unless the run needs the coverage.
-- Disable packages that perform work on every request in the test environment. Examples are Pulse, Telescope, and Nightwatch.
-- Use the `WithCachedConfig` and `WithCachedRoutes` traits, so the run does not parse the configuration and the routes for every test.
-- Call `withoutVite()`, or `withoutMix()`, so the framework does not resolve a built asset.
+- Set `BCRYPT_ROUNDS=4` in `.env.testing` or `phpunit.xml`; the default 12 dominates tests that sign users in.
+- Disable XDebug, and pcov unless coverage is needed.
+- Disable per-request packages (Pulse, Telescope, Nightwatch) in testing.
+- Use `WithCachedConfig` and `WithCachedRoutes` so config and routes are not parsed per test.
+- Call `withoutVite()` or `withoutMix()` to skip asset resolution.
 
 ## Global Fakes
 
 @if($pest)
-Put these three calls in the base `Pest.php` of the project:
+Put these in the base `Pest.php`:
 @else
-Put these three calls in the `setUp()` of the base `TestCase` of the project:
+Put these in the base `TestCase`'s `setUp()`:
 @endif
 
-- `Http::preventStrayRequests()`, because one request that reaches the network can slow the suite. This catches requests made through Laravel's HTTP client. Check direct Guzzle and cURL usage separately.
-- `Sleep::fake(syncWithCarbon: true)`, so a retry and a backoff do not sleep.
-- `Exceptions::fake()`, so the suite does not report an exception to an external service.
+- `Http::preventStrayRequests()` catches Laravel HTTP client calls; check direct Guzzle and cURL separately.
+- `Sleep::fake(syncWithCarbon: true)` so retries and backoff do not sleep.
+- `Exceptions::fake()` so exceptions are not reported externally.
 
-## How to Run the Suite in Parallel
+## Parallel Runs
 
 @if($pest)
-Run `{{ $assist->binCommand('pest --parallel') }}` to spread tests across the machine's CPU cores. Add `--processes=N` if the default count is unsuitable for the machine or CI.
+Run `{{ $assist->binCommand('pest --parallel') }}`; add `--processes=N` to override the default count.
 @else
-Run `{{ $assist->artisanCommand('test --parallel') }}`, which uses ParaTest, to spread tests across the machine's CPU cores. Add `--processes=N` if the default count is unsuitable for the machine or CI.
+Run `{{ $assist->artisanCommand('test --parallel') }}` (ParaTest); add `--processes=N` to override the default count.
 @endif
 
-A parallel run gives each process a separate database. Tests must meet these conditions; a test that fails only in parallel breaks one of them:
+Each process gets its own database. A test failing only in parallel violates one of these:
 
-- The test creates each record that it reads. It does not read a record that another test creates.
-- The test does not depend on the order of the run.
-- The test does not share a file, a cache key, or a queue with another test. Give each process a separate name for such a resource.
+- It creates every record it reads.
+- It does not depend on run order.
+- It shares no file, cache key, or queue with other tests; name such resources per process.
 
 @if($pest5)
-## How to Run Fewer Tests
+## Running Fewer Tests
 
-Run `{{ $assist->binCommand('pest --parallel --tia') }}` to run only the tests that the recent changes affect. Pest replays the cached result of each other test.
+`{{ $assist->binCommand('pest --parallel --tia') }}` runs only tests affected by recent changes and replays cached results for the rest (including values and covered lines). Laravel, Symfony, Livewire, and Inertia tests are detected without configuration.
 
-Pest replays cached results rather than skipping unaffected tests. The cache includes each produced value and the covered lines and branches. Pest finds affected Laravel, Symfony, Livewire, and Inertia tests without configuration.
+## Splitting Across CI
 
-## How to Split Tests Across CI
-
-Run `{{ $assist->binCommand('pest --update-shards') }}` to measure the time of each test. Run `{{ $assist->binCommand('pest --shard=1/4') }}` in each CI job, and change the first number for each job.
-
-Commit `tests/.pest/shards.json` so each CI job gets the same shard and the shards remain balanced by runtime rather than test count.
+Run `{{ $assist->binCommand('pest --update-shards') }}` to record test times, then `{{ $assist->binCommand('pest --shard=1/4') }}` per CI job. Commit `tests/.pest/shards.json` so shards stay balanced by runtime, not test count.
 
 @endif
-## How to Find a Slow Test
+## Finding Slow Tests
 
 @if($pest)
-Run `{{ $assist->binCommand('pest --profile') }}` to list the slowest tests. Start with the ten slowest tests, because the same cause often applies to the complete suite.
+Run `{{ $assist->binCommand('pest --profile') }}` and start with the ten slowest; the same cause often applies suite-wide.
 @else
-Run `{{ $assist->artisanCommand('test --profile') }}` to list the slowest tests. Start with the ten slowest tests, because the same cause often applies to the complete suite.
+Run `{{ $assist->artisanCommand('test --profile') }}` and start with the ten slowest; the same cause often applies suite-wide.
 @endif
-
-If the cause of a slow test is unclear, add an event listener or temporary log entry to identify its work.
+If the cause is unclear, add a temporary listener or log entry.
 
 ## Common Errors
 
-- The run loads XDebug for a test that does not need it.
-- `BCRYPT_ROUNDS` keeps the default value, because the project has no `.env.testing`.
-- The code under test calls the real `sleep()`, and `Sleep::fake()` then does not help.
+- XDebug loaded when not needed.
+- Default `BCRYPT_ROUNDS` because there is no `.env.testing`.
+- Code calling real `sleep()`, which `Sleep::fake()` does not cover.
