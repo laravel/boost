@@ -10,362 +10,47 @@ metadata:
 @endphp
 # Inertia React Development
 
-## Documentation
+Follow the project's existing conventions first: match how current pages, forms, and navigation are already written before applying anything below.
 
-Use `search-docs` for detailed Inertia v2 React patterns and documentation.
+Use `search-docs` for Inertia v2 React syntax and APIs.
 
-## Basic Usage
+## Pages
 
-### Page Components Location
+React page components live in `{{ $assist->inertia()->pagesDirectory() }}`. Server-side patterns (`Inertia::render`, props, middleware) are covered in inertia-laravel guidelines.
 
-React page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+## Navigation
 
-### Page Component Structure
+- Use `<Link>` from `@inertiajs/react` instead of `<a>`; plain anchors cause full page reloads and break SPA behavior.
+- `<Link method="post" as="button">` for non-GET actions such as logout; `prefetch` on a link to load the page ahead of the click.
+- Use `router.visit` (or `router.post` and friends) only for programmatic navigation that is not a link.
 
-@boostsnippet("Basic React Page Component", "react")
-export default function UsersIndex({ users }) {
-    return (
-        <div>
-            <h1>Users</h1>
-            <ul>
-                {users.map(user => <li key={user.id}>{user.name}</li>)}
-            </ul>
-        </div>
-    )
-}
-@endboostsnippet
-
-## Client-Side Navigation
-
-### Basic Link Component
-
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
-
-@boostsnippet("Inertia React Navigation", "react")
-import { Link, router } from '@inertiajs/react'
-
-<Link href="/">Home</Link>
-<Link href="/users">Users</Link>
-<Link href={`/users/${user.id}`}>View User</Link>
-@endboostsnippet
-
-### Link with Method
-
-@boostsnippet("Link with POST Method", "react")
-import { Link } from '@inertiajs/react'
-
-<Link href="/logout" method="post" as="button">
-    Logout
-</Link>
-@endboostsnippet
-
-### Prefetching
-
-Prefetch pages to improve perceived performance:
-
-@boostsnippet("Prefetch on Hover", "react")
-import { Link } from '@inertiajs/react'
-
-<Link href="/users" prefetch>
-    Users
-</Link>
-@endboostsnippet
-
-### Programmatic Navigation
-
-@boostsnippet("Router Visit", "react")
-import { router } from '@inertiajs/react'
-
-function handleClick() {
-    router.visit('/users')
-}
-
-// Or with options
-router.visit('/users', {
-    method: 'post',
-    data: { name: 'John' },
-    onSuccess: () => console.log('Success!'),
-})
-@endboostsnippet
-
-## Form Handling
+## Forms
 
 @if($assist->inertia()->hasFormComponent())
-### Form Component (Recommended)
-
-The recommended way to build forms is with the `<Form>` component:
-
-@boostsnippet("Form Component Example", "react")
-import { Form } from '@inertiajs/react'
-
-export default function CreateUser() {
-    return (
-        <Form action="/users" method="post">
-            {({ errors, processing, wasSuccessful }) => (
-                <>
-                    <input type="text" name="name" />
-                    {errors.name && <div>{errors.name}</div>}
-
-                    <input type="email" name="email" />
-                    {errors.email && <div>{errors.email}</div>}
-
-                    <button type="submit" disabled={processing}>
-                        {processing ? 'Creating...' : 'Create User'}
-                    </button>
-
-                    {wasSuccessful && <div>User created!</div>}
-                </>
-            )}
-        </Form>
-    )
-}
-@endboostsnippet
-
-### Form Component With All Props
-
-@boostsnippet("Form Component Full Example", "react")
-import { Form } from '@inertiajs/react'
-
-<Form action="/users" method="post">
-    {({
-        errors,
-        hasErrors,
-        processing,
-        progress,
-        wasSuccessful,
-        recentlySuccessful,
-        clearErrors,
-        resetAndClearErrors,
-        defaults,
-        isDirty,
-        reset,
-        submit
-    }) => (
-        <>
-            <input type="text" name="name" defaultValue={defaults.name} />
-            {errors.name && <div>{errors.name}</div>}
-
-            <button type="submit" disabled={processing}>
-                {processing ? 'Saving...' : 'Save'}
-            </button>
-
-            {progress && (
-                <progress value={progress.percentage} max="100">
-                    {progress.percentage}%
-                </progress>
-            )}
-
-            {wasSuccessful && <div>Saved!</div>}
-        </>
-    )}
-</Form>
-@endboostsnippet
+Prefer `<Form>` for new forms unless the project already uses `useForm` everywhere. It exposes `errors`, `processing`, `progress`, `wasSuccessful`, `recentlySuccessful`, `isDirty`, `reset`, and `clearErrors` through its slot/render props; use `search-docs` for the exact syntax.
 
 @if($assist->inertia()->hasFormComponentResets())
-### Form Component Reset Props
-
-The `<Form>` component supports automatic resetting:
-
-- `resetOnError` - Reset form data when the request fails
-- `resetOnSuccess` - Reset form data when the request succeeds
-- `setDefaultsOnSuccess` - Update default values on success
-
-Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
-
-@boostsnippet("Form with Reset Props", "react")
-import { Form } from '@inertiajs/react'
-
-<Form
-    action="/users"
-    method="post"
-    resetOnSuccess
-    setDefaultsOnSuccess
->
-    {({ errors, processing, wasSuccessful }) => (
-        <>
-            <input type="text" name="name" />
-            {errors.name && <div>{errors.name}</div>}
-
-            <button type="submit" disabled={processing}>
-                Submit
-            </button>
-        </>
-    )}
-</Form>
-@endboostsnippet
+`resetOnError`, `resetOnSuccess`, and `setDefaultsOnSuccess` control automatic resetting; search docs for `form component resetting`.
 @else
-Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
+This Inertia version does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on `<Form>` and using them will error. Upgrade to Inertia v2.2.0+ to use them.
 @endif
 
-Forms can also be built using the `useForm` helper for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
-
-@endif
-
-### `useForm` Hook
-
-@if($assist->inertia()->hasFormComponent() === false)
-For Inertia v2.0.x: Build forms using the `useForm` helper as the `<Form>` component is not available until v2.1.0+.
+Use `useForm` when you need programmatic control (transforming data, submitting from code) or when the project already follows that convention. Search docs for `useForm helper`.
 @else
-For more programmatic control or to follow existing conventions, use the `useForm` hook:
+Inertia v2.0.x has no `<Form>` component (added in v2.1.0). Build forms with `useForm`.
 @endif
 
-@boostsnippet("useForm Hook Example", "react")
-import { useForm } from '@inertiajs/react'
-
-export default function CreateUser() {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
-        email: '',
-        password: '',
-    })
-
-    function submit(e) {
-        e.preventDefault()
-        post('/users', {
-            onSuccess: () => reset('password'),
-        })
-    }
-
-    return (
-        <form onSubmit={submit}>
-            <input
-                type="text"
-                value={data.name}
-                onChange={e => setData('name', e.target.value)}
-            />
-            {errors.name && <div>{errors.name}</div>}
-
-            <input
-                type="email"
-                value={data.email}
-                onChange={e => setData('email', e.target.value)}
-            />
-            {errors.email && <div>{errors.email}</div>}
-
-            <input
-                type="password"
-                value={data.password}
-                onChange={e => setData('password', e.target.value)}
-            />
-            {errors.password && <div>{errors.password}</div>}
-
-            <button type="submit" disabled={processing}>
-                Create User
-            </button>
-        </form>
-    )
-}
-@endboostsnippet
+Always show `errors` per field and disable submit while `processing`. Use `<Form>` or `e.preventDefault()` in `onSubmit`.
 
 ## Inertia v2 Features
 
-### Deferred Props
-
-Use deferred props to load data after initial page render:
-
-@boostsnippet("Deferred Props with Empty State", "react")
-export default function UsersIndex({ users }) {
-    // users will be undefined initially, then populated
-    return (
-        <div>
-            <h1>Users</h1>
-            {!users ? (
-                <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-            ) : (
-                <ul>
-                    {users.map(user => (
-                        <li key={user.id}>{user.name}</li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    )
-}
-@endboostsnippet
-
-### Polling
-
-Use the `usePoll` hook to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
-
-@boostsnippet("Basic Polling", "react")
-import { usePoll } from '@inertiajs/react'
-
-export default function Dashboard({ stats }) {
-    usePoll(5000)
-
-    return (
-        <div>
-            <h1>Dashboard</h1>
-            <div>Active Users: {stats.activeUsers}</div>
-        </div>
-    )
-}
-@endboostsnippet
-
-@boostsnippet("Polling With Request Options and Manual Control", "react")
-import { usePoll } from '@inertiajs/react'
-
-export default function Dashboard({ stats }) {
-    const { start, stop } = usePoll(5000, {
-        only: ['stats'],
-        onStart() {
-            console.log('Polling request started')
-        },
-        onFinish() {
-            console.log('Polling request finished')
-        },
-    }, {
-        autoStart: false,
-        keepAlive: true,
-    })
-
-    return (
-        <div>
-            <h1>Dashboard</h1>
-            <div>Active Users: {stats.activeUsers}</div>
-            <button onClick={start}>Start Polling</button>
-            <button onClick={stop}>Stop Polling</button>
-        </div>
-    )
-}
-@endboostsnippet
-
-- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
-- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
-
-### WhenVisible (Infinite Scroll)
-
-Load more data when user scrolls to a specific element:
-
-@boostsnippet("Infinite Scroll with WhenVisible", "react")
-import { WhenVisible } from '@inertiajs/react'
-
-export default function UsersList({ users }) {
-    return (
-        <div>
-            {users.data.map(user => (
-                <div key={user.id}>{user.name}</div>
-            ))}
-
-            {users.next_page_url && (
-                <WhenVisible
-                    data="users"
-                    params={{ page: users.current_page + 1 }}
-                    fallback={<div>Loading more...</div>}
-                />
-            )}
-        </div>
-    )
-}
-@endboostsnippet
+- **Deferred props**: the prop is `undefined` until loaded, so render a skeleton or empty state first; wrap access in a check.
+- **Polling**: `usePoll(ms)` cleans up on unmount and throttles in inactive tabs. Pass `only` to limit refreshed props, `autoStart: false` for manual `start()`/`stop()`, `keepAlive: true` to keep polling in background tabs.
+- **WhenVisible**: loads a prop only when its element scrolls into view; for infinite scroll pass `data` and the next `page` param, plus a fallback, and render it only while a next page exists.
 
 ## Common Pitfalls
 
-- Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
-- Forgetting to add loading states (skeleton screens) when using deferred props
-- Not handling the `undefined` state of deferred props before data loads
-- Using `<form>` without preventing default submission (use `<Form>` component or `e.preventDefault()`)
-- Forgetting to check if `<Form>` component is available in your Inertia version
+- Using `<a>` instead of `<Link>`
+- No loading state for deferred props, or reading them while `undefined`
+- Submitting a plain form without preventing default (use `<Form>` or the framework prevent-default handler)
+- Using `<Form>` or reset props without checking the installed Inertia version
