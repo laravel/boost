@@ -59,6 +59,6 @@ Call `Http::preventStrayRequests()` so unfaked requests fail instead of reaching
 ## Database
 
 - Run real queries against the test database; mocking the query builder tests the mock.
-- Assert exact `toArray()` keys only when the serialized shape is a contract.
+- Assert exact `toArray()` keys when the serialized shape is a contract, so the test fails when the model exposes a new attribute.
 - Test app behavior caused by the schema (e.g. dependents deleted by cascade), not the database engine.
 - Prefer `LazilyRefreshDatabase` so tests without the database skip migrations.

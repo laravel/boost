@@ -7,9 +7,9 @@ $pest = $assist->hasPackage('pestphp/pest');
 ## Each Test Makes Its Own Data
 
 @if($pest)
-Create mutable records inside the test, so setup is visible and each test picks its factory state. Use `beforeEach()` only for configuration, never records.
+Create mutable records inside the test, so setup is visible and each test picks its factory state. Use `beforeEach()` only for configuration that applies to every test in the file, never records.
 @else
-Create mutable records inside the test or a private helper it calls. Use `setUp()` only for configuration, never records, since they stay in memory until the suite ends.
+Create mutable records inside the test or a private helper it calls. Use `setUp()` only for configuration that applies to every test in the class, never records, since its objects stay in memory until the suite ends.
 @endif
 
 ## Record Construction

@@ -15,7 +15,7 @@ Applies to behavioral tests. Architecture tests state a directory convention and
 
 @endif
 - [ ] Each test covers observable behavior or a contract and survives a behavior-preserving refactor.
-- [ ] No test asserts framework behavior. Project configuration (a constrained relation, cast, or scope) is the project's to test.
+- [ ] Each tested declaration is exercised through behavior, and no test asserts framework behavior. Project configuration (a constrained relation, cast, or scope) is the project's to test.
 - [ ] Each test catches a distinct defect. A higher-layer duplicate shrinks to the one case proving the wiring.
 - [ ] Every changed decision and applicable high-value failure mode has coverage.
 
@@ -39,7 +39,7 @@ Applies to behavioral tests. Architecture tests state a directory convention and
 
 ## Data and Determinism
 
-- [ ] Each test creates its mutable records, and every record arranges behavior or supports an assertion.
+- [ ] Each test creates its mutable records directly or through a helper it calls, and every record arranges behavior or supports an assertion.
 @if($pest)
 - [ ] `beforeEach()` holds configuration only.
 @else
@@ -52,7 +52,7 @@ Applies to behavioral tests. Architecture tests state a directory convention and
 
 ## Assertions
 
-- [ ] Expected values are known literals, not computed with the implementation's logic.
+- [ ] Expected values are known values, not computed with the implementation's logic.
 - [ ] Write tests assert the response, database state, and side effects.
 - [ ] Each fake has one assertion and names classes unless asserting the complete result.
 @if($pest)

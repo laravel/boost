@@ -19,16 +19,18 @@ Write a test for each applicable case:
 - Failed validation.
 - A valid request. Assert both the response and the persisted state.
 
-Assert the app's actual behavior, not a generic status: an API returns `401`, a browser endpoint redirects to sign-in.
+Assert the app's actual behavior, not a generic status: for a missing or invalid token, an API returns `401` while a browser endpoint redirects to sign-in.
 
-For cross-tenant requests, use `404` rather than `403` when the tenant must not learn the record exists.
+## Tenant Isolation
+
+Assert the status a cross-tenant request returns. Use `404` rather than `403` when the tenant must not learn the record exists, because `403` confirms it.
 
 ## Authorization Belongs at the Policy Level
 
 An HTTP test proves the endpoint authorizes, but not which mechanism refused: middleware, a policy, and `abort()` can all return `403`.
 
 - Assert the full permission matrix against the policy or gate, so a failure names the broken rule.
-- Keep one HTTP test for one refused role.
+- Keep one HTTP test for one refused role, which proves the endpoint calls the authorization.
 - Reuse the project's helper for asserting gate ability and arguments, if one exists.
 
 @if($browserPlugin || $dusk)
@@ -52,7 +54,7 @@ Only for JavaScript behavior HTTP tests cannot reach (modals, drag-and-drop, liv
 
 - Element waits default to five seconds. Raise with `pest()->browser()->timeout(10000)` in `Pest.php`, not sleeps.
 - Apply `RefreshDatabase` to browser tests in `Pest.php`, since leftover records break later tests.
-- Add `tests/Browser/Screenshots` to `.gitignore`.
+- Add `tests/Browser/Screenshots` to `.gitignore`; failures write screenshots that do not belong in the repository.
 - Give `withKeyDown()` a key code such as `KeyA`; `'a'` yields the lowercase character regardless of modifier.
 - Interact inside the `withinFrame()` callback; outside it does not reach the frame.
 @else

@@ -7,7 +7,7 @@ $phpunitDocs = 'the PHPUnit '.($phpunit ? $phpunit->version().' ' : '').'documen
 @endphp
 # Test Suite Performance
 
-These are project and CI settings, not per-test choices (see `rules/isolation.md` for those). Measure first: find the slow tests, then apply project-wide settings.
+These are project and CI settings, not per-test choices (see `rules/isolation.md` for those). Measure first: apply a project-wide setting only after finding the slow tests and the costly work.
 
 @if($pest)
 Fetch `https://pestphp.com/docs/optimizing-tests` for speed options.
@@ -32,7 +32,7 @@ Put these in the base `Pest.php`:
 Put these in the base `TestCase`'s `setUp()`:
 @endif
 
-- `Http::preventStrayRequests()` catches Laravel HTTP client calls; check direct Guzzle and cURL separately.
+- `Http::preventStrayRequests()`, since one request reaching the network slows the suite. It catches Laravel HTTP client calls; check direct Guzzle and cURL separately.
 - `Sleep::fake(syncWithCarbon: true)` so retries and backoff do not sleep.
 - `Exceptions::fake()` so exceptions are not reported externally.
 
