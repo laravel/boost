@@ -5,66 +5,34 @@
 
 ## Generate Migrations with Artisan
 
-Use `{{ $assist->artisanCommand('make:migration') }}` to generate the timestamped filename and migration structure.
+Use `{{ $assist->artisanCommand('make:migration') }}` (e.g. `{{ $assist->artisanCommand('make:migration add_slug_to_posts_table') }}`) for the timestamped filename and structure.
 
-```bash
-{{ $assist->artisanCommand('make:migration create_posts_table') }}
-{{ $assist->artisanCommand('make:migration add_slug_to_posts_table') }}
-```
+## Define Foreign Keys Deliberately
 
-## Define Foreign-Key Constraints Deliberately
-
-Use `constrained()` when its naming conventions and default actions match the relationship. Specify the table or delete behavior when they do not.
-
-```php
-$table->foreignId('user_id')->constrained()->cascadeOnDelete();
-$table->foreignId('author_id')->constrained('users');
-```
-
-Do not add a duplicate single-column index without checking the database driver's treatment of foreign-key indexes and the indexes already created by the migration.
+Use `foreignId('user_id')->constrained()` when naming conventions and default actions fit; pass the table (`constrained('users')`) or add `cascadeOnDelete()` when they do not. Check whether the driver already indexes foreign keys before adding a duplicate index.
 
 ## Treat Deployed Migrations as Immutable
 
-After a migration has run in a shared or production environment, create a new migration for subsequent changes. Editing the old file makes fresh installations differ from upgraded installations.
-
-For a local migration that has not been shared or deployed, editing and rerunning it may be simpler.
+Once a migration has run in a shared or production environment, add a new migration instead of editing it; otherwise fresh installs differ from upgraded ones. Unshared local migrations can be edited and rerun.
 
 ## Design Indexes for Real Queries
 
-Add indexes based on query patterns, selectivity, write cost, and the database's ability to use composite indexes. A column appearing in `WHERE`, `ORDER BY`, or `JOIN` does not automatically need its own index.
-
-Declare each selected index in the schema migration that creates or changes the relevant table. Confirm important indexes with representative data and the database's query plan, and avoid redundant indexes whose leading columns duplicate an existing index without serving a distinct query. See the database performance and advanced query rules for index selection and column-order guidance.
+Index for query patterns, selectivity, and write cost, not every column in `WHERE`, `ORDER BY`, or `JOIN`. Declare indexes in the migration that creates or changes the table, verify with the query plan, and avoid redundant indexes sharing leading columns without serving a distinct query. See the database performance and advanced query rules.
 
 ## Stage Changes That Affect Existing Rows
 
-Adding a required or unique column to a populated table often needs multiple deployment-safe steps. Add a nullable column, deploy code that can handle both states, backfill existing rows in bounded chunks, then add the required constraint or index after the data is valid.
+Adding a required or unique column such as `$table->string('slug')->unique()` to a populated table is unsafe in one step. Add it nullable, deploy code handling both states, backfill in bounded chunks, then add the constraint or index.
 
-Do not assume this migration is safe on a populated table:
-
-```php
-$table->string('slug')->unique();
-```
-
-Large backfills are usually better implemented as an observable, restartable command or job than inside a schema migration. Small deterministic data changes may be reasonable in a migration when their locking, transaction, and deployment behavior is understood.
+Prefer an observable, restartable command or job for large backfills. Small deterministic data changes in a migration are fine when locking, transaction, and deployment behavior are understood.
 
 ## Mirror Defaults Only When Unsaved Models Need Them
 
-A database default is applied when a row is inserted, not when a model is instantiated. Mirror the value in the model's `$attributes` only when application code must observe that default before persistence, and keep both definitions synchronized.
-
-```php
-// Migration
-$table->string('status')->default('pending');
-
-// Model
-protected $attributes = [
-    'status' => 'pending',
-];
-```
+A database default applies on insert, not on instantiation. Mirror it in the model's `$attributes` only when code must see the value before saving, and keep both in sync.
 
 ## Make Rollbacks Honest
 
-Implement `down()` when the change can be safely reversed. A rollback that drops populated columns or cannot restore transformed data is destructive even if it is syntactically reversible; document that limitation and prefer a forward-fix migration in production.
+Implement `down()` when the change is safely reversible. Dropping populated columns or untransformable data is destructive even if reversible in code; document it and prefer forward-fix migrations in production.
 
 ## Keep Migrations Focused
 
-Keep each migration small enough to reason about, deploy, and reverse. Separate long-running backfills from schema changes when doing so reduces locks and supports phased deployment, but do not split related operations merely to enforce a blanket separation between data definition and data manipulation.
+Keep each migration small enough to reason about, deploy, and reverse. Separate long-running backfills from schema changes when that reduces locking, but do not split related operations just to separate schema from data.
