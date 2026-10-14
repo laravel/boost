@@ -6,7 +6,7 @@ $dusk = $assist->hasPackage('laravel/dusk');
 @endphp
 # Endpoint Tests
 
-Fetch `https://laravel.com/framework/docs/http-tests` for request helpers, authentication helpers, and response assertions. Confirm an assertion's name before using it. Pick the named assertion that matches the subject (status, header, redirect, JSON, session, validation error, view) so a failure identifies the wrong value.
+Fetch `https://laravel.com/framework/docs/http-tests` only for a request helper, authentication helper, or response assertion that nearby tests do not use. Pick the named assertion that matches the subject (status, header, redirect, JSON, session, validation error, view) so a failure identifies the wrong value.
 
 ## Coverage
 
@@ -20,6 +20,8 @@ Write a test for each applicable case:
 - A valid request. Assert both the response and the persisted state.
 
 Assert the app's actual behavior, not a generic status: for a missing or invalid token, an API returns `401` while a browser endpoint redirects to sign-in.
+
+When you test sort order, create records in an order different from the expected result, so a sort that does nothing fails.
 
 ## Tenant Isolation
 

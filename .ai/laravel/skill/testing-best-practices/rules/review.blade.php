@@ -4,6 +4,8 @@ $pest = $assist->hasPackage('pestphp/pest');
 @endphp
 # Reviewing Tests
 
+Use this file only when the user asks you to review existing tests. When you write tests, the checklist in SKILL.md is enough.
+
 Check every item. A passing test may still have no value: for each, name the defect it would catch.
 
 Report findings; do not delete or rewrite a test without the user's approval. Report a suite-wide pattern once, not per file.

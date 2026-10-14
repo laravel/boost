@@ -1,6 +1,6 @@
 ---
 name: testing-best-practices
-description: "Laravel test design and review. Use when selecting coverage, naming or structuring tests, choosing assertions or test data, isolating dependencies, testing HTTP or security boundaries, improving suite performance, or reviewing test value. Use framework guidance or search-docs for Pest and PHPUnit syntax."
+description: "Use when writing, adding, or reviewing Laravel tests (Pest or PHPUnit), including a whole test suite. Covers choosing coverage, naming and structure, assertions, test data, isolating dependencies, HTTP and security boundaries, suite performance, and test value."
 license: MIT
 metadata:
   author: laravel
@@ -13,7 +13,9 @@ $phpunitDocs = 'the PHPUnit '.($phpunit ? $phpunit->version().' ' : '').'documen
 @endphp
 # Testing Best Practices
 
-This skill provides rules for designing Laravel tests. Each rule file explains what to do and why. Use `search-docs` for {{ $pest ? 'Laravel and Pest API syntax' : 'Laravel API syntax' }}.@if(! $pest) Fetch {{ $phpunitDocs }} for PHPUnit API syntax.@endif
+This file holds what most tests need. Each rule file covers one subject in depth; read one only when the rule index says it applies.
+
+Use `search-docs` only when you are unsure of a specific {{ $pest ? 'Laravel or Pest' : 'Laravel' }} API, not to confirm syntax that nearby tests already use.@if(! $pest) Fetch {{ $phpunitDocs }} for PHPUnit API syntax under the same condition.@endif
 
 This project uses {{ $pest ? 'Pest' : 'PHPUnit' }}. Follow the corresponding guidance in each rule.
 
@@ -50,23 +52,32 @@ Read this section before you write a test.
 ## How to Apply
 
 1. Read the code under test. Read the tests in the same directory. Identify every decision in the code.
-2. Select every applicable branch in the rule index. Read every selected rule file.
+2. Read at most the two or three rule files in the index that match the code under test. Do not read a file the index tells you to skip.
 3. Report each defect in the code before you write a test. Examples are a method with no body, a policy that no action calls, and a write action with no validation. Test the actual behavior. Report the defect to the user.
 4. Write the tests. Run the smallest set of tests that covers the change. The tests must pass.
-5. Check every applicable item in `rules/review.md` and every selected rule file. Resolve every mismatch before completion.
+5. Check the tests against the checklist below and the rule files you read. Resolve every mismatch before completion.
+
+## Checklist
+
+- Every changed decision and applicable failure path has a test, and each test catches a distinct defect.
+- An endpoint test covers authentication, authorization, other tenants, and validation where they apply.
+- Each test creates its own mutable records with factory states that convey their meaning. {{ $pest ? '`beforeEach()`' : '`setUp()`' }} holds configuration only.
+- Expected values are known values, not computed with the implementation's logic.
+- A sort test creates records in an order different from the expected result.
+- A write test asserts the response, database state, and side effects. A failure path asserts that none of them happened.
+- Each fake names its classes. Time, randomness, sleep, and outbound HTTP are controlled.
+- Each test passes alone and in any order.
 
 ## Rule Index
 
-Most changes need more than one rule file.
-
-| Subject | Rule File |
-| --- | --- |
-| Test framework features that may already do the work | [`rules/finding-features.md`](rules/finding-features.md) |
-| File layout, test names, and groups | [`rules/naming.md`](rules/naming.md) |
-| Arrange-act-assert and choosing the correct assertion | [`rules/assertions.md`](rules/assertions.md) |
-| Endpoint coverage, authentication, authorization, tenant isolation, validation, and browser tests | [`rules/endpoint-tests.md`](rules/endpoint-tests.md) |
-| Factories, test data ownership, and repeated input values | [`rules/test-data.md`](rules/test-data.md) |
-| Fakes, mocks, outbound HTTP, time, randomness, and databases | [`rules/isolation.md`](rules/isolation.md) |
-| Escaping, injection, cross-tenant access, and privilege checks | [`rules/security.md`](rules/security.md) |
-| Environment and CI settings for a slow suite | [`rules/performance.md`](rules/performance.md) |
-| Reviewing a test or suite | [`rules/review.md`](rules/review.md) |
+| Rule File | Read It When | Skip It When |
+| --- | --- | --- |
+| [`rules/endpoint-tests.md`](rules/endpoint-tests.md) | The code is reached through a route: authentication, authorization, tenants, validation, sorting, or browser tests | The code has no route |
+| [`rules/test-data.md`](rules/test-data.md) | You create records with factories, states, relationships, or {{ $pest ? 'datasets' : 'data providers' }} | The test needs no records, or nearby tests show the factory states |
+| [`rules/isolation.md`](rules/isolation.md) | The code sends mail, notifications, events, jobs, or HTTP requests, or depends on time or randomness | The code does none of these |
+| [`rules/assertions.md`](rules/assertions.md) | You must choose an assertion that nearby tests do not show | Nearby tests already assert the same kind of subject |
+| [`rules/naming.md`](rules/naming.md) | You create a test file with no neighboring tests to copy | Neighboring tests show the layout and names |
+| [`rules/finding-features.md`](rules/finding-features.md) | You need a test framework feature that nearby tests do not use | Nearby tests already use what you need |
+| [`rules/security.md`](rules/security.md) | The code renders user input, builds a query from input, or checks a privilege | The test has no escaping, injection, or privilege check |
+| [`rules/performance.md`](rules/performance.md) | The user asks about suite speed or CI time | Any other time |
+| [`rules/review.md`](rules/review.md) | The user asks you to review existing tests | You are writing tests; use the checklist above |

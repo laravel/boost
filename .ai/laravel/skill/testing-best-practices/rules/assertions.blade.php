@@ -15,10 +15,12 @@ Setup, one action, assertions, separated by blank lines. Keep each test self-con
 
 Identify the subject, then find an assertion designed for it so a failure names the wrong value.
 
-1. Search Laravel's assertions for framework subjects (responses, database, session, models, queues, events, mail, notifications).
-2. Fetch {{ $pest ? '`https://pestphp.com/docs/expectations.md` for Pest expectations' : $phpunitDocs.' for PHPUnit assertions' }} for values, types, formats, and shapes.
-3. Hand-build a check only if none exists.
-4. Confirm the name in the docs; never use an unconfirmed assertion.
+1. Reuse an assertion that nearby tests already use for the same subject.
+2. Otherwise search Laravel's assertions for framework subjects (responses, database, session, models, queues, events, mail, notifications).
+3. Fetch {{ $pest ? '`https://pestphp.com/docs/expectations.md` for Pest expectations' : $phpunitDocs.' for PHPUnit assertions' }} for values, types, formats, and shapes.
+4. Hand-build a check only if none exists.
+
+Never use an assertion that you have not seen in nearby tests or the docs.
 
 @if($pest)
 | Subject | Assertion to use |

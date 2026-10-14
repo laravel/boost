@@ -8,7 +8,7 @@ Control time, randomness, sleeping, and network calls, or tests fail for reasons
 
 ## Choosing How to Isolate
 
-Fetch `https://laravel.com/framework/docs/mocking` for fakes, facade doubles, and fake assertions. Confirm each name before using it.
+Fetch `https://laravel.com/framework/docs/mocking` only for a fake, facade double, or fake assertion that nearby tests do not use.
 
 Pick the first that applies. A framework fake keeps the real code path; a mock replaces the dependency.
 
