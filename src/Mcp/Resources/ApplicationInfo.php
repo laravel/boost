@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Resources;
 
-use Laravel\Boost\Mcp\ToolExecutor;
-use Laravel\Boost\Mcp\Tools\ApplicationInfo as ApplicationInfoTool;
+use Illuminate\Support\Facades\DB;
+use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Resource;
+use Laravel\Roster\Package;
+use Laravel\Roster\ProjectManager;
 
 class ApplicationInfo extends Resource
 {
-    public function __construct(protected ToolExecutor $toolExecutor)
+    public function __construct(protected ProjectManager $project)
     {
         //
     }
@@ -36,18 +38,17 @@ class ApplicationInfo extends Resource
      */
     public function handle(): Response
     {
-        $response = $this->toolExecutor->execute(ApplicationInfoTool::class);
-
-        if ($response->isError()) {
-            return $response;
-        }
-
-        $data = json_decode((string) $response->content(), true);
-
-        if (! $data) {
-            return Response::error('Error parsing application information');
-        }
-
-        return Response::json($data);
+        return Response::json([
+            'php_version' => PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
+            'laravel_version' => app()->version(),
+            'database_engine' => DB::connection()->getDriverName(),
+            'packages' => $this->project->php()->packages()
+                ->concat($this->project->js()->packages())
+                ->map(fn (Package $package): array => [
+                    'roster_name' => PackageRegistry::rosterName($package->name()),
+                    'version' => $package->version(),
+                    'package_name' => $package->name(),
+                ]),
+        ]);
     }
 }

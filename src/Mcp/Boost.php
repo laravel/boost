@@ -10,7 +10,6 @@ use Laravel\Boost\Mcp\Prompts\UpgradeAiSdkv1\UpgradeAiSdkV1;
 use Laravel\Boost\Mcp\Prompts\UpgradeInertiav3\UpgradeInertiaV3;
 use Laravel\Boost\Mcp\Prompts\UpgradeLaravelv13\UpgradeLaravelV13;
 use Laravel\Boost\Mcp\Prompts\UpgradeLivewirev4\UpgradeLivewireV4;
-use Laravel\Boost\Mcp\Tools\ApplicationInfo;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\DatabaseConnections;
 use Laravel\Boost\Mcp\Tools\DatabaseQuery;
@@ -100,7 +99,6 @@ class Boost extends Server
     protected function discoverTools(): array
     {
         return $this->filterPrimitives([
-            ApplicationInfo::class,
             BrowserLogs::class,
             DatabaseConnections::class,
             DatabaseQuery::class,
