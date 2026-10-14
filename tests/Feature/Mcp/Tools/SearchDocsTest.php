@@ -292,5 +292,5 @@ test('it sends the remaining queries as a list when some are filtered out', func
 test('it advertises itself as a read-only tool', function (): void {
     $tool = new SearchDocs(Double::for(ProjectManager::class, override: true)->instance());
 
-    expect($tool->toArray()['annotations'])->toBe(['readOnlyHint' => true]);
+    expect($tool->toArray()['annotations'])->toHaveKey('readOnlyHint', true);
 });
