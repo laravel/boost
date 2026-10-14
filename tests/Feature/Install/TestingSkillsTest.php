@@ -146,8 +146,8 @@ it('lets a PHPUnit unit test extend the TestCase from the make:test --unit stub'
 it('names the installed PHPUnit version instead of pinning a documentation edition', function (string $version): void {
     expect(renderTestingSkill(pest: false, version: $version))
         ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit API syntax")
-        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for the assertions of PHPUnit")
-        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit options")
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit assertions")
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for speed options")
         ->not->toContain('docs.phpunit.de');
 })->with([
     'PHPUnit 11' => ['11.5.3'],
@@ -184,7 +184,7 @@ it('puts a convention of the project above its own rules, and never deletes a te
     expect(renderTestingSkill($pest))
         ->toContain('project conventions take precedence over this skill')
         ->toContain('Do not delete or rewrite it.')
-        ->toContain("Do not delete or rewrite a test without the user's approval");
+        ->toContain("do not delete or rewrite a test without the user's approval");
 })->with([
     'pest' => true,
     'phpunit' => false,
@@ -193,8 +193,8 @@ it('puts a convention of the project above its own rules, and never deletes a te
 it('keeps one case at the endpoint when a unit test owns the matrix', function (bool $pest): void {
     expect(renderTestingSkill($pest))
         ->toContain('### Which Layer Owns Which Case')
-        ->toContain('Never remove the last case')
-        ->toContain('reduce duplicate higher-level coverage to one case rather than deleting it')
+        ->toContain('keep one endpoint case')
+        ->toContain('reduce duplicate matrices to one case, not zero')
         ->toContain('trim the higher-layer test to one case')
         ->toContain('Testing project configuration is not testing the framework.');
 })->with([
@@ -205,7 +205,7 @@ it('keeps one case at the endpoint when a unit test owns the matrix', function (
 it('exempts an architecture test from the value rules, which only Pest can write', function (): void {
     expect(renderTestingSkill(pest: true))
         ->toContain('Judge an architecture test by the convention it protects')
-        ->toContain('these items do not apply to it');
+        ->toContain('Architecture tests state a directory convention and are exempt');
 
     expect(renderTestingSkill(pest: false))
         ->not->toContain('architecture test');
