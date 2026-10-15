@@ -8,50 +8,50 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Livewire Development
+# Livewire development
 
 ## Documentation
 
 Use `search-docs` for detailed Livewire 3 patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Creating Components
+### Creating components
 
 Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Artisan command to create new components.
 
-### Fundamental Concepts
+### Fundamental concepts
 
-- State should live on the server, with the UI reflecting it.
-- All Livewire requests hit the Laravel backend; they're like regular HTTP requests. Always validate form data and run authorization checks in Livewire actions.
+- Keep state on the server, and let the UI reflect it.
+- Every Livewire request hits the Laravel backend, like a regular HTTP request. Always validate form data and run authorization checks in Livewire actions.
 
-## Livewire 3 Specifics
+## Livewire 3 specifics
 
-### Key Changes From Livewire 2
+### Key changes from Livewire 2
 
-These things changed in Livewire 3, but may not have been updated in this application. Verify this application's setup to ensure you follow existing conventions.
-- Use `wire:model.live` for real-time updates, `wire:model` is now deferred by default.
+These things changed in Livewire 3, but this application may not use them yet. Check the application's setup and follow its existing conventions.
+- For real-time updates, use `wire:model.live`. `wire:model` is now deferred by default.
 - Components now use the `App\Livewire` namespace (not `App\Http\Livewire`).
 - Use `$this->dispatch()` to dispatch events (not `emit` or `dispatchBrowserEvent`).
 - Use the `components.layouts.app` view as the typical layout path (not `layouts.app`).
 
-### New Directives
+### New directives
 
-- `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target` are available for use.
+- `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, and `wire:target` are available.
 
-### Alpine Integration
+### Alpine integration
 
-- Alpine is now included with Livewire; don't manually include Alpine.js.
+- Livewire now includes Alpine. Don't include Alpine.js manually.
 - Plugins included with Alpine: persist, intersect, collapse, and focus.
 
-## Best Practices
+## Best practices
 
-### Component Structure
+### Component structure
 
 - Livewire components require a single root element.
-- Use `wire:loading` and `wire:dirty` for delightful loading states.
+- Use `wire:loading` and `wire:dirty` for loading states.
 
-### Using Keys in Loops
+### Using keys in loops
 @boostsnippet("Wire Key in Loops", "blade")
 @foreach ($items as $item)
     <div wire:key="item-{{ $item->id }}">
@@ -60,18 +60,18 @@ These things changed in Livewire 3, but may not have been updated in this applic
 @endforeach
 @endboostsnippet
 
-### Lifecycle Hooks
+### Lifecycle hooks
 
-Prefer lifecycle hooks like `mount()`, `updatedFoo()` for initialization and reactive side effects:
+For initialization and reactive side effects, prefer lifecycle hooks such as `mount()` and `updatedFoo()`:
 
 @boostsnippet("Lifecycle Hook Examples", "php")
 public function mount(User $user) { $this->user = $user; }
 public function updatedSearch() { $this->resetPage(); }
 @endboostsnippet
 
-## JavaScript Hooks
+## JavaScript hooks
 
-You can listen for `livewire:init` to hook into Livewire initialization:
+To hook into Livewire initialization, listen for `livewire:init`:
 
 @boostsnippet("Livewire Init Hook Example", "js")
 document.addEventListener('livewire:init', function () {
@@ -106,9 +106,9 @@ $this->get('/posts/create')
     ->assertSeeLivewire(CreatePost::class);
 @endboostsnippet
 
-## Common Pitfalls
+## Common pitfalls
 
 - Forgetting `wire:key` in loops causes unexpected behavior when items change
-- Using `wire:model` expecting real-time updates (use `wire:model.live` instead in v3)
-- Not validating/authorizing in Livewire actions (treat them like HTTP requests)
-- Including Alpine.js separately when it's already bundled with Livewire 3
+- Using `wire:model` and expecting real-time updates (in v3, use `wire:model.live` instead)
+- Not validating or authorizing in Livewire actions (treat them like HTTP requests)
+- Including Alpine.js separately when Livewire 3 already bundles it

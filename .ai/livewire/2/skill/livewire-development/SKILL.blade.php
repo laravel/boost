@@ -8,38 +8,38 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Livewire Development
+# Livewire development
 
 ## Documentation
 
 Use `search-docs` for detailed Livewire 2 patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Creating Components
+### Creating components
 
 Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Artisan command to create new components.
 
-### Fundamental Concepts
+### Fundamental concepts
 
-- State should live on the server, with the UI reflecting it.
-- All Livewire requests hit the Laravel backend; they're like regular HTTP requests. Always validate form data and run authorization checks in Livewire actions.
+- Keep state on the server, and let the UI reflect it.
+- Every Livewire request hits the Laravel backend, like a regular HTTP request. Always validate form data and run authorization checks in Livewire actions.
 
-## Livewire 2 Specifics
+## Livewire 2 specifics
 
-- `wire:model` is live by default (real-time updates without modifier).
-- Components typically exist in the `App\Http\Livewire` namespace.
+- `wire:model` is live by default, so it updates in real time without a modifier.
+- Components usually live in the `App\Http\Livewire` namespace.
 - Use `emit()`, `emitTo()`, `emitSelf()`, and `dispatchBrowserEvent()` for events.
 - Alpine is included separately from Livewire.
 
-## Best Practices
+## Best practices
 
-### Component Structure
+### Component structure
 
 - Livewire components require a single root element.
-- Use `wire:loading` and `wire:dirty` for delightful loading states.
+- Use `wire:loading` and `wire:dirty` for loading states.
 
-### Using Keys in Loops
+### Using keys in loops
 
 @boostsnippet("Wire Key in Loops", "blade")
 @foreach ($items as $item)
@@ -49,18 +49,18 @@ Use the `{{ $assist->artisanCommand('make:livewire [Posts\\CreatePost]') }}` Art
 @endforeach
 @endboostsnippet
 
-### Lifecycle Hooks
+### Lifecycle hooks
 
-Prefer lifecycle hooks like `mount()`, `updatedFoo()` for initialization and reactive side effects:
+For initialization and reactive side effects, prefer lifecycle hooks such as `mount()` and `updatedFoo()`:
 
 @boostsnippet("Lifecycle Hook Examples", "php")
 public function mount(User $user) { $this->user = $user; }
 public function updatedSearch() { $this->resetPage(); }
 @endboostsnippet
 
-## JavaScript Hooks
+## JavaScript hooks
 
-You can listen for `livewire:load` to hook into Livewire initialization:
+To hook into Livewire initialization, listen for `livewire:load`:
 
 @boostsnippet("Livewire Load Hook Example", "js")
 document.addEventListener('livewire:load', function () {
@@ -88,8 +88,8 @@ $this->get('/posts/create')
     ->assertSeeLivewire(CreatePost::class);
 @endboostsnippet
 
-## Common Pitfalls
+## Common pitfalls
 
 - Forgetting `wire:key` in loops causes unexpected behavior when items change
-- Not validating/authorizing in Livewire actions (treat them like HTTP requests)
-- Forgetting that `wire:model` is live by default in v2 (may cause performance issues)
+- Not validating or authorizing in Livewire actions (treat them like HTTP requests)
+- Forgetting that `wire:model` is live by default in v2 (live updates may cause performance issues)

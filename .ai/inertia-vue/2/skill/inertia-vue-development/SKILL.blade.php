@@ -8,19 +8,19 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Inertia Vue Development
+# Inertia Vue development
 
 ## Documentation
 
 Use `search-docs` for detailed Inertia v2 Vue patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Page Components Location
+### Page components location
 
-Vue page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+Place Vue page components in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
 
-### Page Component Structure
+### Page component structure
 
 Important: Vue components must have a single root element.
 
@@ -45,11 +45,11 @@ defineProps({
 @endboostsnippet
 @endverbatim
 
-## Client-Side Navigation
+## Client-side navigation
 
-### Basic Link Component
+### Basic Link component
 
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
+Use `<Link>` for client-side navigation instead of `<a>` tags:
 
 @boostsnippet("Inertia Vue Navigation", "vue")
 <script setup>
@@ -65,7 +65,7 @@ import { Link } from '@inertiajs/vue3'
 </template>
 @endboostsnippet
 
-### Link with Method
+### Link with method
 
 @boostsnippet("Link with POST Method", "vue")
 <script setup>
@@ -95,7 +95,7 @@ import { Link } from '@inertiajs/vue3'
 </template>
 @endboostsnippet
 
-### Programmatic Navigation
+### Programmatic navigation
 
 @boostsnippet("Router Visit", "vue")
 <script setup>
@@ -121,10 +121,10 @@ function createUser() {
 </template>
 @endboostsnippet
 
-## Form Handling
+## Form handling
 
 @if($assist->inertia()->hasFormComponent())
-### Form Component (Recommended)
+### Form component (recommended)
 
 The recommended way to build forms is with the `<Form>` component:
 
@@ -152,7 +152,7 @@ import { Form } from '@inertiajs/vue3'
 @endboostsnippet
 @endverbatim
 
-### Form Component With All Props
+### Form component with all props
 
 @verbatim
 @boostsnippet("Form Component Full Example", "vue")
@@ -198,15 +198,15 @@ import { Form } from '@inertiajs/vue3'
 @endverbatim
 
 @if($assist->inertia()->hasFormComponentResets())
-### Form Component Reset Props
+### Form component reset props
 
 The `<Form>` component supports automatic resetting:
 
-- `resetOnError` - Reset form data when the request fails
-- `resetOnSuccess` - Reset form data when the request succeeds
-- `setDefaultsOnSuccess` - Update default values on success
+- `resetOnError`: reset form data when the request fails
+- `resetOnSuccess`: reset form data when the request succeeds
+- `setDefaultsOnSuccess`: update default values on success
 
-Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
+For details, run the `search-docs` tool with the query `form component resetting`.
 
 @verbatim
 @boostsnippet("Form with Reset Props", "vue")
@@ -233,17 +233,17 @@ import { Form } from '@inertiajs/vue3'
 @endboostsnippet
 @endverbatim
 @else
-Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
+Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props causes errors. To use these props, upgrade to Inertia v2.2.0+.
 @endif
 
-Forms can also be built using the `useForm` composable for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
+For more programmatic control, you can also build forms with the `useForm` composable. For guidance, run the `search-docs` tool with the query `useForm helper`.
 
 @endif
 
-### `useForm` Composable
+### `useForm` composable
 
 @if($assist->inertia()->hasFormComponent() === false)
-For Inertia v2.0.x: Build forms using the `useForm` composable as the `<Form>` component is not available until v2.1.0+.
+In Inertia v2.0.x, build forms with the `useForm` composable. The `<Form>` component is not available until v2.1.0+.
 @else
 For more programmatic control or to follow existing conventions, use the `useForm` composable:
 @endif
@@ -285,11 +285,11 @@ function submit() {
 @endboostsnippet
 @endverbatim
 
-## Inertia v2 Features
+## Inertia v2 features
 
-### Deferred Props
+### Deferred props
 
-Use deferred props to load data after initial page render:
+Use deferred props to load data after the initial page render:
 
 @verbatim
 @boostsnippet("Deferred Props with Empty State", "vue")
@@ -318,7 +318,7 @@ defineProps({
 
 ### Polling
 
-Use the `usePoll` composable to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
+Use the `usePoll` composable to refresh data automatically at intervals. The composable cleans up on unmount and throttles polling when the browser tab is inactive.
 
 @boostsnippet("Basic Polling", "vue")
 <script setup>
@@ -371,12 +371,12 @@ const { start, stop } = usePoll(5000, {
 </template>
 @endboostsnippet
 
-- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
-- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
+- `autoStart` (default `true`): set to `false` to start polling manually with the returned `start()` function
+- `keepAlive` (default `false`): set to `true` to prevent throttling when the browser tab is inactive
 
-### WhenVisible (Infinite Scroll)
+### WhenVisible (infinite scroll)
 
-Load more data when user scrolls to a specific element:
+Load more data when the user scrolls to a specific element:
 
 @verbatim
 @boostsnippet("Infinite Scroll with WhenVisible", "vue")
@@ -408,15 +408,15 @@ defineProps({
 @endboostsnippet
 @endverbatim
 
-## Server-Side Patterns
+## Server-side patterns
 
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
+The inertia-laravel guidelines cover server-side patterns such as Inertia::render, props, and middleware.
 
-## Common Pitfalls
+## Common pitfalls
 
 - Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
 - Forgetting that Vue components must have a single root element
 - Forgetting to add loading states (skeleton screens) when using deferred props
 - Not handling the `undefined` state of deferred props before data loads
-- Using `<form>` without preventing default submission (use `<Form>` component or `@submit.prevent`)
-- Forgetting to check if `<Form>` component is available in your Inertia version
+- Using `<form>` without preventing default submission (use the `<Form>` component or `@submit.prevent`)
+- Forgetting to check whether the `<Form>` component is available in your Inertia version
