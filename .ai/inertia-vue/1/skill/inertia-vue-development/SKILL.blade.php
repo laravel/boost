@@ -8,19 +8,19 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Inertia Vue Development
+# Inertia Vue development
 
 ## Documentation
 
 Use `search-docs` for detailed Inertia v1 Vue patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Page Components Location
+### Page components location
 
-Vue page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+Place Vue page components in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
 
-### Page Component Structure
+### Page component structure
 
 Important: Vue components must have a single root element.
 
@@ -45,11 +45,11 @@ defineProps({
 @endboostsnippet
 @endverbatim
 
-## Client-Side Navigation
+## Client-side navigation
 
-### Basic Link Component
+### Basic Link component
 
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
+Use `<Link>` for client-side navigation instead of `<a>` tags:
 
 @boostsnippet("Inertia Vue Navigation", "vue")
 <script setup>
@@ -65,7 +65,7 @@ import { Link } from '@inertiajs/vue3'
 </template>
 @endboostsnippet
 
-### Link With Method
+### Link with method
 
 @boostsnippet("Link With POST Method", "vue")
 <script setup>
@@ -79,7 +79,7 @@ import { Link } from '@inertiajs/vue3'
 </template>
 @endboostsnippet
 
-### Programmatic Navigation
+### Programmatic navigation
 
 @boostsnippet("Router Visit", "vue")
 <script setup>
@@ -100,7 +100,7 @@ function createUser() {
 </script>
 @endboostsnippet
 
-## Form Handling
+## Form handling
 
 ### Using `router.post`
 
@@ -136,7 +136,7 @@ function handleSubmit() {
 </template>
 @endboostsnippet
 
-## Inertia v1 Limitations
+## Inertia v1 limitations
 
 Inertia v1 does not support these v2 features:
 
@@ -149,14 +149,14 @@ Inertia v1 does not support these v2 features:
 
 Do not use these features in v1 projects.
 
-## Server-Side Patterns
+## Server-side patterns
 
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
+The inertia-laravel guidelines cover server-side patterns such as Inertia::render, props, and middleware.
 
-## Common Pitfalls
+## Common pitfalls
 
 - Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
-- Using multiple root elements in Vue components (while Vue 3 supports this, a single root is recommended for Inertia v1 compatibility)
-- Trying to use Inertia v2 features (deferred props, `<Form>` component, etc.) in v1 projects
+- Using multiple root elements in Vue components (Vue 3 supports multiple roots, but a single root is recommended for Inertia v1 compatibility)
+- Using Inertia v2 features, such as deferred props or the `<Form>` component, in v1 projects
 - Using `<form>` without preventing default submission (use `@submit.prevent`)
 - Not handling loading states during form submission

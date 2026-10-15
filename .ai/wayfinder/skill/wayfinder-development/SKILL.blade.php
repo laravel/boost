@@ -8,29 +8,29 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Wayfinder Development
+# Wayfinder development
 
 ## Documentation
 
 Use `search-docs` for detailed Wayfinder patterns and documentation.
 
-## Quick Reference
+## Quick reference
 
-### Generate Routes
+### Generate routes
 
-Run after route changes if Vite plugin isn't installed:
+If the Vite plugin isn't installed, run this command after route changes:
 
 ```bash
 {{ $assist->artisanCommand('wayfinder:generate --no-interaction') }}
 ```
 
-For form helpers, use `--with-form` flag:
+To generate form helpers, add the `--with-form` flag:
 
 ```bash
 {{ $assist->artisanCommand('wayfinder:generate --with-form --no-interaction') }}
 ```
 
-### Import Patterns
+### Import patterns
 
 @boostsnippet("Controller Action Imports", "typescript")
 // Named imports for tree-shaking (preferred)...
@@ -40,7 +40,7 @@ import { show, store, update } from '@/actions/App/Http/Controllers/PostControll
 import { show as postShow } from '@/routes/post'
 @endboostsnippet
 
-### Common Methods
+### Common methods
 
 @boostsnippet("Wayfinder Methods", "typescript")
 // Get route object...
@@ -96,11 +96,11 @@ form.submit(store());
 
 ## Verification
 
-1. Run `{{ $assist->artisanCommand('wayfinder:generate') }}` to regenerate routes if Vite plugin isn't installed
-2. Check TypeScript imports resolve correctly
-3. Verify route URLs match expected paths
+1. If the Vite plugin isn't installed, run `{{ $assist->artisanCommand('wayfinder:generate') }}` to regenerate routes
+2. Check that TypeScript imports resolve
+3. Verify that route URLs match the expected paths
 
-## Common Pitfalls
+## Common pitfalls
 
 - Using default imports instead of named imports (breaks tree-shaking)
 - Forgetting to regenerate after route changes

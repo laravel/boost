@@ -8,29 +8,29 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Folio Routing
+# Folio routing
 
 ## Documentation
 
 Use `search-docs` for detailed Folio patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-Laravel Folio is a file-based router that creates a new route for every Blade file within the configured directory.
+Laravel Folio is a file-based router that creates a new route for every Blade file in the configured directory.
 
-Pages are usually in `resources/views/pages/` and the file structure determines routes:
+Pages are usually in `resources/views/pages/`, and the file structure determines the routes:
 
 - `pages/index.blade.php` → `/`
 - `pages/profile/index.blade.php` → `/profile`
 - `pages/auth/login.blade.php` → `/auth/login`
 
-### Listing Routes
+### Listing routes
 
-You may list available Folio routes using `{{ $assist->artisanCommand('folio:list') }}`.
+To list the Folio routes, run `{{ $assist->artisanCommand('folio:list') }}`.
 
-### Creating Pages
+### Creating pages
 
-Always create new `folio` pages and routes using `{{ $assist->artisanCommand('folio:page [name]') }}` following existing naming conventions.
+Always create new `folio` pages and routes with `{{ $assist->artisanCommand('folio:page [name]') }}`, and follow the existing naming conventions.
 
 @boostsnippet("Example folio:page Commands for Automatic Routing", "shell")
 // Creates: resources/views/pages/products.blade.php → /products
@@ -43,15 +43,15 @@ Always create new `folio` pages and routes using `{{ $assist->artisanCommand('fo
 {{ $assist->artisanCommand('folio:page "users/[User]"') }}
 @endboostsnippet
 
-## Route Parameters vs. Model Binding
+## Route parameters vs. model binding
 
-Use the correct filename token based on intent:
+Pick the filename token that matches your intent:
 
 - `[id]` (lowercase) captures a plain route parameter string
 - `[User]` (capitalized model class) enables implicit Eloquent model binding
 - `[Post:slug]` binds by a custom key instead of `id`
 
-Model binding is case-sensitive in the filename. Avoid `[user]` when you expect a `User` model instance.
+Model binding is case-sensitive in the filename. If you expect a `User` model instance, avoid `[user]`.
 
 @boostsnippet("Route Parameter vs Model Binding Example", "blade")
 {{-- pages/users/[id].blade.php --}}
@@ -61,7 +61,7 @@ Model binding is case-sensitive in the filename. Avoid `[user]` when you expect 
 <div>User ID: {{ $user->id }}</div>
 @endboostsnippet
 
-## Named Routes
+## Named routes
 
 Add a `name` at the top of each new Folio page to create a named route that other parts of the codebase can reference.
 
@@ -80,9 +80,9 @@ name('admin.products');
 middleware(['auth', 'verified']);
 @endboostsnippet
 
-## Page Content Patterns
+## Page content patterns
 
-Folio pages are normal Blade files. Include practical data-loading code when creating or editing pages.
+Folio pages are normal Blade files. When you create or edit a page, include practical data-loading code.
 
 @boostsnippet("Inline Query Example in a Folio Page", "blade")
 @php
@@ -115,18 +115,18 @@ render(function (View $view, Post $post) {
 
 ## Verification
 
-1. Run `{{ $assist->artisanCommand('folio:list') }}` to verify route registration
-2. Test page loads at expected URL
+1. Run `{{ $assist->artisanCommand('folio:list') }}` to verify that the route is registered
+2. Check that the page loads at the expected URL
 
-## Common Pitfalls
+## Common pitfalls
 
 - Forgetting to add named routes to new Folio pages
 - Using `[id]` or `[user]` when model binding requires `[User]`
 - Not following existing naming conventions when creating pages
 - Creating routes manually in `routes/web.php` instead of using Folio's file-based routing
 
-### Folio 404 Debug Checklist
+### Folio 404 debug checklist
 
 1. Run `{{ $assist->artisanCommand('folio:list') }}`
-2. If routes are missing, confirm Folio is mounted (`folio:install` + provider registration, or `Folio::path(...)`) and pages are under the mounted path
-3. Verify filename-to-route mapping (`index.blade.php`, nested paths, `[id]` vs `[Model]`), then rerun `{{ $assist->artisanCommand('folio:list') }}`
+2. If routes are missing, confirm that Folio is mounted (`folio:install` plus provider registration, or `Folio::path(...)`) and that the pages are under the mounted path
+3. Verify the filename-to-route mapping (`index.blade.php`, nested paths, and `[id]` versus `[Model]`), then rerun `{{ $assist->artisanCommand('folio:list') }}`

@@ -8,19 +8,19 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Inertia Svelte Development
+# Inertia Svelte development
 
 ## Documentation
 
 Use `search-docs` for detailed Inertia v1 Svelte patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Page Components Location
+### Page components location
 
-Svelte page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+Place Svelte page components in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
 
-### Page Component Structure
+### Page component structure
 
 @boostsnippet("Basic Svelte Page Component", "svelte")
 <script>
@@ -37,11 +37,11 @@ export let users
 </div>
 @endboostsnippet
 
-## Client-Side Navigation
+## Client-side navigation
 
-### Basic Link Component
+### Basic Link component
 
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
+Use `<Link>` for client-side navigation instead of `<a>` tags:
 
 @boostsnippet("Inertia Svelte Navigation", "svelte")
 <script>
@@ -53,7 +53,7 @@ import { Link } from '@inertiajs/svelte'
 <Link href={`/users/${user.id}`}>View User</Link>
 @endboostsnippet
 
-### Link with Method
+### Link with method
 
 @boostsnippet("Link with POST Method", "svelte")
 <script>
@@ -63,7 +63,7 @@ import { Link } from '@inertiajs/svelte'
 <Link href="/logout" method="post">Logout</Link>
 @endboostsnippet
 
-### Programmatic Navigation
+### Programmatic navigation
 
 @boostsnippet("Router Visit", "svelte")
 <script>
@@ -84,7 +84,7 @@ function createUser() {
 </script>
 @endboostsnippet
 
-## Form Handling
+## Form handling
 
 ### Using `router.post`
 
@@ -116,7 +116,7 @@ function handleSubmit() {
 </form>
 @endboostsnippet
 
-## Inertia v1 Limitations
+## Inertia v1 limitations
 
 Inertia v1 does not support these v2 features:
 - `<Form>` component
@@ -128,13 +128,13 @@ Inertia v1 does not support these v2 features:
 
 Do not use these features in v1 projects.
 
-## Server-Side Patterns
+## Server-side patterns
 
-Server-side patterns (Inertia::render, props, middleware) are covered in inertia-laravel guidelines.
+The inertia-laravel guidelines cover server-side patterns such as Inertia::render, props, and middleware.
 
-## Common Pitfalls
+## Common pitfalls
 
 - Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
-- Trying to use Inertia v2 features (deferred props, `<Form>` component, etc.) in v1 projects
+- Using Inertia v2 features, such as deferred props or the `<Form>` component, in v1 projects
 - Using `<form>` without preventing default submission (use `on:submit|preventDefault`)
 - Not handling loading states during form submission

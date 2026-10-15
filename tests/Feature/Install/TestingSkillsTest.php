@@ -157,7 +157,7 @@ it('names the installed PHPUnit version instead of pinning a documentation editi
 it('teaches browser testing when the project installs a browser tool the framework can run', function (bool $pest, string $package, string $docs): void {
     expect(renderTestingSkill($pest, [rosterPackage($package, '1.0.0', true)]))
         ->toContain('tests/Browser')
-        ->toContain('## Browser Tests')
+        ->toContain('## Browser tests')
         ->toContain($docs)
         ->not->toContain('neither of which this project installs');
 })->with([
@@ -173,7 +173,7 @@ it('names the missing package when the project installs no browser tool the fram
         ->toContain('neither of which this project installs')
         ->toContain($missing)
         ->not->toContain('tests/Browser')
-        ->not->toContain('## Browser Tests');
+        ->not->toContain('## Browser tests');
 })->with([
     'pest' => [true, [], 'pestphp/pest-plugin-browser'],
     'phpunit' => [false, [], 'laravel/dusk'],
@@ -192,9 +192,9 @@ it('puts a convention of the project above its own rules, and never deletes a te
 
 it('keeps one case at the endpoint when a unit test owns the matrix', function (bool $pest): void {
     expect(renderTestingSkill($pest))
-        ->toContain('### Which Layer Owns Which Case')
+        ->toContain('### Which layer owns which case')
         ->toContain('Never remove the last case')
-        ->toContain('reduce duplicate higher-level coverage to one case rather than deleting it')
+        ->toContain('reduce the duplicate higher-level coverage to one case rather than deleting it')
         ->toContain('trim the higher-layer test to one case')
         ->toContain('Testing project configuration is not testing the framework.');
 })->with([
@@ -215,12 +215,12 @@ it('teaches a Pest 5 command only to a project that installs Pest 5', function (
     expect(renderTestingSkill(pest: true, version: '5.0.0'))
         ->toContain('pest --parallel --tia')
         ->toContain('tests/.pest/shards.json')
-        ->toContain('Format Expectations');
+        ->toContain('Format expectations');
 
     expect(renderTestingSkill(pest: true, version: '4.1.0'))
         ->not->toContain('--tia')
         ->not->toContain('shards.json')
-        ->not->toContain('Format Expectations');
+        ->not->toContain('Format expectations');
 });
 
 it('ships one testing skill to every project, whichever test framework and major it installs', function (array $package): void {

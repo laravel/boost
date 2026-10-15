@@ -5,15 +5,15 @@ license: MIT
 metadata:
   author: laravel
 ---
-# Pennant Features
+# Pennant features
 
 ## Documentation
 
 Use `search-docs` for detailed Pennant patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Defining Features
+### Defining features
 
 <!-- Defining Features -->
 ```php
@@ -24,7 +24,7 @@ Feature::define('new-dashboard', function (User $user) {
 });
 ```
 
-### Checking Features
+### Checking features
 
 <!-- Checking Features -->
 ```php
@@ -38,7 +38,7 @@ if (Feature::for($user)->active('new-dashboard')) {
 }
 ```
 
-### Blade Directive
+### Blade directive
 
 <!-- Blade Directive -->
 ```blade
@@ -49,7 +49,7 @@ if (Feature::for($user)->active('new-dashboard')) {
 @endfeature
 ```
 
-### Activating / Deactivating
+### Activating and deactivating
 
 <!-- Activating Features -->
 ```php
@@ -59,10 +59,10 @@ Feature::for($user)->activate('new-dashboard');
 
 ## Verification
 
-1. Check feature flag is defined
-2. Test with different scopes/users
+1. Check that the feature flag is defined
+2. Test with different scopes and users
 
-## Common Pitfalls
+## Common pitfalls
 
-- Forgetting to scope features for specific users/entities
+- Forgetting to scope features for specific users or other entities
 - Not following existing naming conventions
