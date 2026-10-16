@@ -71,7 +71,7 @@ Commands follow a CRUD pattern: `resource:list`, `resource:get`, `resource:creat
 
 Available resources: `application`, `environment`, `instance`, `database-cluster`, `database`, `cache`, `bucket`, `domain`, `websocket-cluster`, `background-process`, `secret`, `command`, `deployment`.
 
-Some resources have additional commands (e.g., `domain:verify`, `database:open`, `instance:sizes`, `cache:types`, `<resource>:metrics`). Discover these via `cloud -h`.
+Some resources have additional commands (e.g., `domain:verify`, `database:open`, `instance:sizes`, `cache:types`, `database:types`, `<resource>:metrics`). Discover these via `cloud -h`.
 
 Never hardcode command signatures. Always run `cloud <command> -h` to discover options at runtime.
 
