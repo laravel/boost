@@ -5,58 +5,39 @@ declare(strict_types=1);
 use JMac\Testing\Double;
 use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Mcp\Resources\ApplicationInfo;
-use Laravel\Boost\Mcp\ToolExecutor;
-use Laravel\Boost\Mcp\Tools\ApplicationInfo as ApplicationInfoTool;
-use Laravel\Mcp\Response;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\ProjectManager;
 
-it('returns php version, laravel version, packages, and models when tool executes successfully', function (): void {
-    $mockData = [
-        'php_version' => '8.4.0',
-        'laravel_version' => '12.0.0',
-        'database_engine' => 'mysql',
-        'packages' => [
-            ['roster_name' => 'Laravel', 'version' => '12.0.0', 'package_name' => 'laravel/framework'],
-        ],
-        'models' => ['App\\Models\\User'],
-    ];
-
-    $executor = Double::for(ToolExecutor::class);
-    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::json($mockData));
-    $this->app->instance(ToolExecutor::class, $executor);
+it('returns php version, laravel version, database engine, and packages', function (): void {
+    $project = Double::for(ProjectManager::class, override: true)->instance();
+    mockProjectPackages($project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+        rosterPackage('pestphp/pest', '2.0.0'),
+    ]));
+    $this->app->instance(ProjectManager::class, $project);
 
     $response = Boost::resource(ApplicationInfo::class);
 
     $response
         ->assertOk()
-        ->assertSee(['php_version', '8.4.0', 'laravel_version', 'database_engine']);
+        ->assertSee([
+            'php_version', PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION,
+            'laravel_version', app()->version(),
+            'database_engine', 'sqlite',
+            'laravel/framework', '11.0.0',
+            'pestphp/pest', '2.0.0',
+        ]);
 });
 
-it('propagates tool executor error response directly to the client', function (): void {
-    $executor = Double::for(ToolExecutor::class);
-    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::error('Tool execution failed'));
-    $this->app->instance(ToolExecutor::class, $executor);
+it('reports the driver name when the default connection has a custom name', function (): void {
+    config()->set('database.connections.tenant', config('database.connections.testing'));
+    config()->set('database.default', 'tenant');
 
-    $response = Boost::resource(ApplicationInfo::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
+    mockProjectPackages($project, new PackageCollection([]));
+    $this->app->instance(ProjectManager::class, $project);
 
-    $response->assertHasErrors(['Tool execution failed']);
-});
-
-it('returns parsing error when tool response contains malformed json', function (): void {
-    $executor = Double::for(ToolExecutor::class);
-    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::text('not-valid-json'));
-    $this->app->instance(ToolExecutor::class, $executor);
-
-    $response = Boost::resource(ApplicationInfo::class);
-
-    $response->assertHasErrors(['Error parsing application information']);
-});
-
-it('returns a parsing error when tool response is empty string', function (): void {
-    $executor = Double::for(ToolExecutor::class);
-    $executor->expects('execute')->with(ApplicationInfoTool::class)->returns(Response::text(''));
-    $this->app->instance(ToolExecutor::class, $executor);
-
-    $response = Boost::resource(ApplicationInfo::class);
-
-    $response->assertHasErrors(['Error parsing application information']);
+    Boost::resource(ApplicationInfo::class)
+        ->assertOk()
+        ->assertSee(['database_engine', 'sqlite']);
 });

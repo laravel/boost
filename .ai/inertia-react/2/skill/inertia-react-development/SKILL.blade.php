@@ -8,19 +8,19 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Inertia React Development
+# Inertia React development
 
 ## Documentation
 
 Use `search-docs` for detailed Inertia v2 React patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Page Components Location
+### Page components location
 
-React page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+Place React page components in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
 
-### Page Component Structure
+### Page component structure
 
 @boostsnippet("Basic React Page Component", "react")
 export default function UsersIndex({ users }) {
@@ -35,11 +35,11 @@ export default function UsersIndex({ users }) {
 }
 @endboostsnippet
 
-## Client-Side Navigation
+## Client-side navigation
 
-### Basic Link Component
+### Basic Link component
 
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
+Use `<Link>` for client-side navigation instead of `<a>` tags:
 
 @boostsnippet("Inertia React Navigation", "react")
 import { Link, router } from '@inertiajs/react'
@@ -49,7 +49,7 @@ import { Link, router } from '@inertiajs/react'
 <Link href={`/users/${user.id}`}>View User</Link>
 @endboostsnippet
 
-### Link with Method
+### Link with method
 
 @boostsnippet("Link with POST Method", "react")
 import { Link } from '@inertiajs/react'
@@ -71,7 +71,7 @@ import { Link } from '@inertiajs/react'
 </Link>
 @endboostsnippet
 
-### Programmatic Navigation
+### Programmatic navigation
 
 @boostsnippet("Router Visit", "react")
 import { router } from '@inertiajs/react'
@@ -88,10 +88,10 @@ router.visit('/users', {
 })
 @endboostsnippet
 
-## Form Handling
+## Form handling
 
 @if($assist->inertia()->hasFormComponent())
-### Form Component (Recommended)
+### Form component (recommended)
 
 The recommended way to build forms is with the `<Form>` component:
 
@@ -121,7 +121,7 @@ export default function CreateUser() {
 }
 @endboostsnippet
 
-### Form Component With All Props
+### Form component with all props
 
 @boostsnippet("Form Component Full Example", "react")
 import { Form } from '@inertiajs/react'
@@ -162,15 +162,15 @@ import { Form } from '@inertiajs/react'
 @endboostsnippet
 
 @if($assist->inertia()->hasFormComponentResets())
-### Form Component Reset Props
+### Form component reset props
 
 The `<Form>` component supports automatic resetting:
 
-- `resetOnError` - Reset form data when the request fails
-- `resetOnSuccess` - Reset form data when the request succeeds
-- `setDefaultsOnSuccess` - Update default values on success
+- `resetOnError`: reset form data when the request fails
+- `resetOnSuccess`: reset form data when the request succeeds
+- `setDefaultsOnSuccess`: update default values on success
 
-Use the `search-docs` tool with a query of `form component resetting` for detailed guidance.
+For details, run the `search-docs` tool with the query `form component resetting`.
 
 @boostsnippet("Form with Reset Props", "react")
 import { Form } from '@inertiajs/react'
@@ -194,17 +194,17 @@ import { Form } from '@inertiajs/react'
 </Form>
 @endboostsnippet
 @else
-Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props will cause errors. Upgrade to Inertia v2.2.0+ to use these features.
+Note: This version of Inertia does not support `resetOnError`, `resetOnSuccess`, or `setDefaultsOnSuccess` on the `<Form>` component. Using these props causes errors. To use these props, upgrade to Inertia v2.2.0+.
 @endif
 
-Forms can also be built using the `useForm` helper for more programmatic control. Use the `search-docs` tool with a query of `useForm helper` for guidance.
+For more programmatic control, you can also build forms with the `useForm` hook. For guidance, run the `search-docs` tool with the query `useForm helper`.
 
 @endif
 
-### `useForm` Hook
+### `useForm` hook
 
 @if($assist->inertia()->hasFormComponent() === false)
-For Inertia v2.0.x: Build forms using the `useForm` helper as the `<Form>` component is not available until v2.1.0+.
+In Inertia v2.0.x, build forms with the `useForm` hook. The `<Form>` component is not available until v2.1.0+.
 @else
 For more programmatic control or to follow existing conventions, use the `useForm` hook:
 @endif
@@ -257,11 +257,11 @@ export default function CreateUser() {
 }
 @endboostsnippet
 
-## Inertia v2 Features
+## Inertia v2 features
 
-### Deferred Props
+### Deferred props
 
-Use deferred props to load data after initial page render:
+Use deferred props to load data after the initial page render:
 
 @boostsnippet("Deferred Props with Empty State", "react")
 export default function UsersIndex({ users }) {
@@ -288,7 +288,7 @@ export default function UsersIndex({ users }) {
 
 ### Polling
 
-Use the `usePoll` hook to automatically refresh data at intervals. It handles cleanup on unmount and throttles polling when the tab is inactive.
+Use the `usePoll` hook to refresh data automatically at intervals. The hook cleans up on unmount and throttles polling when the browser tab is inactive.
 
 @boostsnippet("Basic Polling", "react")
 import { usePoll } from '@inertiajs/react'
@@ -333,12 +333,12 @@ export default function Dashboard({ stats }) {
 }
 @endboostsnippet
 
-- `autoStart` (default `true`) — set to `false` to start polling manually via the returned `start()` function
-- `keepAlive` (default `false`) — set to `true` to prevent throttling when the browser tab is inactive
+- `autoStart` (default `true`): set to `false` to start polling manually with the returned `start()` function
+- `keepAlive` (default `false`): set to `true` to prevent throttling when the browser tab is inactive
 
-### WhenVisible (Infinite Scroll)
+### WhenVisible (infinite scroll)
 
-Load more data when user scrolls to a specific element:
+Load more data when the user scrolls to a specific element:
 
 @boostsnippet("Infinite Scroll with WhenVisible", "react")
 import { WhenVisible } from '@inertiajs/react'
@@ -362,10 +362,10 @@ export default function UsersList({ users }) {
 }
 @endboostsnippet
 
-## Common Pitfalls
+## Common pitfalls
 
 - Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
 - Forgetting to add loading states (skeleton screens) when using deferred props
 - Not handling the `undefined` state of deferred props before data loads
-- Using `<form>` without preventing default submission (use `<Form>` component or `e.preventDefault()`)
-- Forgetting to check if `<Form>` component is available in your Inertia version
+- Using `<form>` without preventing default submission (use the `<Form>` component or `e.preventDefault()`)
+- Forgetting to check whether the `<Form>` component is available in your Inertia version

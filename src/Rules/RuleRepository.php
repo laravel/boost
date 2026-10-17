@@ -160,6 +160,39 @@ class RuleRepository
         return $path;
     }
 
+    public function exists(): bool
+    {
+        return File::isDirectory($this->directory);
+    }
+
+    /**
+     * Rule files that still contain unresolved merge conflict markers.
+     *
+     * @return array<int, string>
+     */
+    public function conflictedFiles(): array
+    {
+        return collect([...$this->files(), ...$this->managedFiles()])
+            ->filter(fn (string $file): bool => preg_match('/^(<{7}|>{7})(\s|$)/m', (string) File::get($file)) === 1)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Rule files the index skips because their frontmatter declares no paths.
+     *
+     * @return array<int, string>
+     */
+    public function unindexedFiles(): array
+    {
+        return $this->parsedFiles()
+            ->merge($this->parsedManagedFiles())
+            ->filter(fn (array $parsed): bool => $parsed['paths'] === [])
+            ->map(fn (array $parsed): string => $parsed['file'])
+            ->values()
+            ->all();
+    }
+
     public function normalizeGlob(string $glob): string
     {
         return $this->relativePath(trim($glob));
