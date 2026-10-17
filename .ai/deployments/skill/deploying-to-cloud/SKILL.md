@@ -171,18 +171,19 @@ Secrets are encrypted values shared across the organization and attached to envi
 cloud secret:list --json -n
 echo "$VALUE" | cloud secret:create --name=STRIPE_KEY --json -n
 cloud environment-secret:attach {environment} {secretId} -n
+cloud environment-secret:detach {environment} {secretId} --force -n
 cloud environment-secret:list {environment} --json -n
 ```
 
 Pipe the value in. `--value=` works, but leaves the plaintext in shell history and the process list.
 
-`secret:update`, `secret:delete`, and `environment-secret:attach` take secret IDs, not names — names are not unique. Read IDs from `cloud secret:list --json -n`.
+`secret:update`, `secret:delete`, `environment-secret:attach`, and `environment-secret:detach` take secret IDs, not names — names are not unique. Read IDs from `cloud secret:list --json -n`.
 
-There is no `secret:get`, and no way to detach a secret from a single environment. `secret:delete` removes it and detaches it everywhere.
+There is no `secret:get`. `environment-secret:detach` removes a secret from one environment and keeps it; `secret:delete` deletes it and detaches it everywhere.
 
 Secrets need the `sodium` PHP extension. No other command does.
 
-Redeploy affected environments after creating, updating, attaching, or deleting a secret.
+Redeploy affected environments after creating, updating, attaching, detaching, or deleting a secret.
 
 ### Email (Resend)
 
