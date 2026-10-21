@@ -9,6 +9,8 @@ use Orchestra\Testbench\Concerns\InteractsWithPublishedFiles;
 uses(InteractsWithPublishedFiles::class);
 
 beforeEach(function (): void {
+    Http::preventStrayRequests();
+
     File::deleteDirectory(base_path('.ai/skills'));
 
     $this->files = [
@@ -18,12 +20,24 @@ beforeEach(function (): void {
     ];
 });
 
+/**
+ * @param  array<string, mixed>  $responses
+ */
+function fakeAddSkillHttp(array $responses): void
+{
+    Http::fake([
+        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+        'skills.laravel.cloud/api/v1/skills/audit*' => Http::response([]),
+        ...$responses,
+    ]);
+}
+
 it('throws exception for invalid repository format', function (): void {
     $this->artisan('boost:add-skill', ['repo' => 'invalid-format']);
 })->throws(InvalidArgumentException::class, 'Invalid repository format');
 
 it('lists available skills with --list option', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -41,7 +55,7 @@ it('lists available skills with --list option', function (): void {
 });
 
 it('shows error when no skills found', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [],
@@ -55,8 +69,7 @@ it('shows error when no skills found', function (): void {
 });
 
 it('does not offer Blade-only skills from remote repositories', function (): void {
-    Http::fake([
-        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -73,7 +86,7 @@ it('does not offer Blade-only skills from remote repositories', function (): voi
 });
 
 it('shows error when api request fails', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response(
             ['message' => 'Not Found'],
             404
@@ -86,7 +99,7 @@ it('shows error when api request fails', function (): void {
 });
 
 it('installs all skills with --all option', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -114,7 +127,7 @@ it('installs all skills with --all option', function (): void {
 });
 
 it('installs specific skills with --skill option', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -147,7 +160,7 @@ it('skips existing skills without --force flag', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
     File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
 
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -179,7 +192,7 @@ it('overwrites existing skills with --force flag', function (): void {
         # New Content
         YAML;
 
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -205,7 +218,7 @@ it('preserves an existing skill when a forced download fails', function (): void
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
     File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
 
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -233,7 +246,7 @@ it('keeps the existing skill and the download when the install move fails', func
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
     File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
 
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -261,7 +274,7 @@ it('keeps the existing skill and the download when the install move fails', func
 });
 
 it('installs nested skill files correctly', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -294,7 +307,7 @@ it('installs nested skill files correctly', function (): void {
 });
 
 it('shows success message after installing skills', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -321,7 +334,7 @@ it('shows success message after installing skills', function (): void {
 });
 
 it('shows available skill count when listing', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -340,7 +353,7 @@ it('shows available skill count when listing', function (): void {
 });
 
 it('displays audit results before installing skills when risk is medium or higher', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -377,7 +390,7 @@ it('displays audit results before installing skills when risk is medium or highe
 });
 
 it('skips audit display when all skills are safe or low risk', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -411,7 +424,7 @@ it('skips audit display when all skills are safe or low risk', function (): void
 });
 
 it('skips audit when --skip-audit flag is used', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -441,7 +454,7 @@ it('skips audit when --skip-audit flag is used', function (): void {
 });
 
 it('succeeds when audit api fails', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -472,7 +485,7 @@ it('succeeds when audit api fails', function (): void {
 });
 
 it('sends correct source and skills to audit api before download', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -509,8 +522,7 @@ it('sends correct source and skills to audit api before download', function (): 
 });
 
 it('audits a skill under its own parent whatever depth the given path is', function (string $repo): void {
-    Http::fake([
-        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -539,7 +551,7 @@ it('audits only skills that will be installed', function (): void {
     File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
     File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
 
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
@@ -577,7 +589,7 @@ it('audits only skills that will be installed', function (): void {
 });
 
 it('displays error when rate limit is exceeded', function (): void {
-    Http::fake([
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response(
             ['message' => 'API rate limit exceeded'],
             403,
@@ -597,8 +609,7 @@ it('does not wipe installed skills when the repository has a root level SKILL.md
     File::ensureDirectoryExists(base_path('.ai/skills/existing-skill'));
     File::put(base_path('.ai/skills/existing-skill/SKILL.md'), 'keep me');
 
-    Http::fake([
-        'api.github.com/repos/owner/repo' => Http::response(['default_branch' => 'main']),
+    fakeAddSkillHttp([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
             'sha' => 'abc123',
             'tree' => [
