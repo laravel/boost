@@ -1,6 +1,31 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.10.3...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.10.4...main)
+
+## [v2.10.4](https://github.com/laravel/boost/compare/v2.10.3...v2.10.4) - 2026-10-29
+
+### What's Changed
+
+* Add command to re-index rules by [@barryvdh](https://github.com/barryvdh) in https://github.com/laravel/boost/pull/1062
+* Let unit tests extend PHPUnit's TestCase in the testing skill by [@ericknyoto](https://github.com/ericknyoto) in https://github.com/laravel/boost/pull/1065
+* Remove security policy in favor of the org-wide default by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1075
+* Remove the application-info MCP tool by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1074
+* Tighten the prose of the bundled skills by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1076
+* Bump shivammathur/setup-php from 2.37.2 to 2.40.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/1077
+* Bump stefanzweifel/git-auto-commit-action from 7.2.0 to 7.2.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/1085
+* Only suggest `composer run dev` when the app defines a dev script by [@cjmellor](https://github.com/cjmellor) in https://github.com/laravel/boost/pull/1083
+* Preserve executable permissions on remote skill scripts by [@imsvidskiy](https://github.com/imsvidskiy) in https://github.com/laravel/boost/pull/1082
+* Remove the full suite instruction from the Pest guideline by [@cjmellor](https://github.com/cjmellor) in https://github.com/laravel/boost/pull/1084
+* Allow Pest 5 in development dependencies by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1078
+
+### New Contributors
+
+* [@barryvdh](https://github.com/barryvdh) made their first contribution in https://github.com/laravel/boost/pull/1062
+* [@ericknyoto](https://github.com/ericknyoto) made their first contribution in https://github.com/laravel/boost/pull/1065
+* [@cjmellor](https://github.com/cjmellor) made their first contribution in https://github.com/laravel/boost/pull/1083
+* [@imsvidskiy](https://github.com/imsvidskiy) made their first contribution in https://github.com/laravel/boost/pull/1082
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.10.3...v2.10.4
 
 ## [v2.10.3](https://github.com/laravel/boost/compare/v2.10.2...v2.10.3) - 2026-10-07
 
@@ -710,11 +735,13 @@ If you have custom overrides in:
 
 
 
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
 
 
 
@@ -817,12 +844,14 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
 
 
 
