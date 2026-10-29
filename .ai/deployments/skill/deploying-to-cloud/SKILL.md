@@ -100,7 +100,7 @@ Determine the task and follow the matching path:
   cloud deploy:monitor -n
   ```
 
-- Environment variables: `cloud environment:variables -n --force`
+- Environment variables: `cloud environment:variables -n --force`. To copy keys from the local `.env` and deploy in one step: `cloud deploy {app_name} {environment} -n --push-env-keys=KEY_ONE,KEY_TWO`
 
 - Secrets: `echo "$VALUE" | cloud secret:create --name=NAME --json -n`, then `cloud environment-secret:attach`
 
