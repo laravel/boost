@@ -155,6 +155,41 @@ it('downloads nested directory structure', function (): void {
     @rmdir($targetDir);
 });
 
+it('preserves executable permissions on downloaded scripts', function (): void {
+    if (PHP_OS_FAMILY === 'Windows') {
+        $this->markTestSkipped('POSIX executable permission bits are not available on Windows.');
+    }
+
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one', 'mode' => '040000', 'type' => 'tree', 'sha' => 'def'],
+            ['path' => 'skill-one/SKILL.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ['path' => 'skill-one/scripts', 'mode' => '040000', 'type' => 'tree', 'sha' => 'jkl'],
+            ['path' => 'skill-one/scripts/check.sh', 'mode' => '100755', 'type' => 'blob', 'sha' => 'mno', 'size' => 456],
+        ]),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# SKILL'),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/scripts/check.sh' => Http::response("#!/bin/sh\necho ok\n"),
+    ]);
+
+    $skill = new RemoteSkill(name: 'skill-one', repo: 'owner/repo', path: 'skill-one');
+
+    try {
+        $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+
+        expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
+            ->and(is_executable($targetDir.'/scripts/check.sh'))->toBeTrue()
+            ->and(is_executable($targetDir.'/SKILL.md'))->toBeFalse();
+    } finally {
+        @unlink($targetDir.'/scripts/check.sh');
+        @rmdir($targetDir.'/scripts');
+        @unlink($targetDir.'/SKILL.md');
+        @rmdir($targetDir);
+    }
+});
+
 it('returns false when skill path not in tree', function (): void {
     $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
 

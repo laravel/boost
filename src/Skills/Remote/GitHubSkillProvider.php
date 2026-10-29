@@ -228,6 +228,10 @@ class GitHubSkillProvider
             if (file_put_contents($localPath, $response->body()) === false) {
                 return false;
             }
+
+            if (($item['mode'] ?? null) === '100755' && PHP_OS_FAMILY !== 'Windows') {
+                @chmod($localPath, 0755 & ~umask());
+            }
         }
 
         return true;
