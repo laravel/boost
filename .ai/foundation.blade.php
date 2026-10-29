@@ -33,7 +33,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Do not change the application's dependencies without approval.
 
 ## Frontend Bundling
+@if($assist->hasComposerScript('dev'))
 - If a frontend change doesn't show in the UI or you get a "Unable to locate file in Vite manifest" error, run `{{ $assist->nodePackageManagerCommand('run build') }}` or ask the user to run `{{ $assist->nodePackageManagerCommand('run dev') }}` or `{{ $assist->composerCommand('run dev') }}`.
+@else
+- If a frontend change doesn't show in the UI or you get a "Unable to locate file in Vite manifest" error, run `{{ $assist->nodePackageManagerCommand('run build') }}` or ask the user to run `{{ $assist->nodePackageManagerCommand('run dev') }}`.
+@endif
 
 ## Documentation Files
 - You must only create documentation files if explicitly requested by the user.

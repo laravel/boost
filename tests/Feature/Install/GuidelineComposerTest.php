@@ -588,6 +588,29 @@ test('includes correct package manager commands in guidelines based on lockfile'
     'bun' => [JsPackageManager::Bun, 'bun'],
 ]);
 
+test('mentions composer run dev only when composer.json defines a dev script', function (?array $scripts, bool $expected): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '11.0.0'),
+    ]));
+
+    if ($scripts !== null) {
+        File::put(base_path('composer.json'), json_encode(['scripts' => $scripts]));
+    }
+
+    try {
+        $guidelines = $this->composer->compose();
+    } finally {
+        File::delete(base_path('composer.json'));
+    }
+
+    expect($guidelines)->toContain('npm run dev')
+        ->and(str_contains($guidelines, 'composer run dev'))->toBe($expected);
+})->with([
+    'dev script' => [['dev' => 'php artisan serve', 'test' => 'pest'], true],
+    'other scripts only' => [['test' => 'pest'], false],
+    'no composer.json' => [null, false],
+]);
+
 test('renderContent handles blade and markdown files correctly', function (): void {
     config(['boost.rules.enabled' => false]);
 
