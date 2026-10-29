@@ -33,6 +33,21 @@ class Composer
 
     public static function packages(): array
     {
+        $composerData = self::composerJson();
+
+        return collect($composerData['require'] ?? [])
+            ->merge($composerData['require-dev'] ?? [])
+            ->mapWithKeys(fn (string $key, string $package): array => [$package => $key])
+            ->toArray();
+    }
+
+    public static function hasScript(string $script): bool
+    {
+        return array_key_exists($script, self::composerJson()['scripts'] ?? []);
+    }
+
+    protected static function composerJson(): array
+    {
         $composerJsonPath = base_path('composer.json');
 
         if (! file_exists($composerJsonPath)) {
@@ -41,13 +56,6 @@ class Composer
 
         $composerData = json_decode(file_get_contents($composerJsonPath), true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return [];
-        }
-
-        return collect($composerData['require'] ?? [])
-            ->merge($composerData['require-dev'] ?? [])
-            ->mapWithKeys(fn (string $key, string $package): array => [$package => $key])
-            ->toArray();
+        return is_array($composerData) ? $composerData : [];
     }
 }
