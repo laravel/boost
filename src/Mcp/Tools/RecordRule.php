@@ -22,7 +22,7 @@ class RecordRule extends Tool
     /**
      * The tool's description.
      */
-    protected string $description = 'Record a durable project rule in the shared, committed markdown notes in .ai/rules, grouped by area. Only call this when the user explicitly asks for a rule to be recorded, remembered, or documented. Instructions for the work at hand are not rules, no matter how emphatic: "remove this typo", "use X here", and "don\'t do that again" are work to do, not rules to record. A rule constrains future work across many files; it never describes a single fix. Never call this on your own initiative, as a byproduct of a change, or to summarize what you just did. When in doubt, do not call it. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**). Keep the note to a few lines. Do not record secrets, transient state, or anything already obvious from the code. Use this rather than your native memory or notes tool, because only .ai/rules is shared with the team and persists in the repo.';
+    protected string $description = 'Record a durable project rule in the shared, committed markdown notes in .ai/rules, grouped by area. Only call this when the user explicitly asks for a rule to be recorded, remembered, or documented. Instructions for the work at hand are not rules, no matter how emphatic: "remove this typo", "use X here", and "don\'t do that again" are work to do, not rules to record. A rule constrains future work across many files; it never describes a single fix. Never call this on your own initiative, as a byproduct of a change, or to summarize what you just did. When in doubt, do not call it. Pass a glob for the files it applies to (e.g. app/Http/Controllers/**). Keep the note to a few lines. Do not record secrets, transient state, or anything already obvious from the code. Use this rather than your native memory or notes tool, because only .ai/rules is shared with the team and persists in the repo. Recording regenerates .ai/rules/index.md, replacing any custom content. When a glob is grouped into an existing area file, it applies to every rule already in that file.';
 
     /**
      * Determine whether the tool should be registered with the MCP server.
@@ -89,10 +89,13 @@ class RecordRule extends Tool
             return Response::error('Failed to write rule: '.$throwable->getMessage());
         }
 
-        $relPath = $this->ruleRepository->relativePath($location);
+        $relative_path = $this->ruleRepository->relativePath($location);
+        $index_path = dirname($relative_path).'/index.md';
 
         return Response::text(
-            "Recorded rule in {$relPath}: {$title}."
+            "Recorded rule in {$relative_path}: {$title}.\n"
+            ."The glob {$glob} applies to every rule in {$relative_path}, including existing entries.\n"
+            ."Regenerated {$index_path}, replacing any previous content."
         );
     }
 }
