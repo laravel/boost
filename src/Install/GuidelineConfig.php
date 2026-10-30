@@ -14,6 +14,8 @@ class GuidelineConfig
 
     public bool $usesCloud = false;
 
+    public bool $usesPlaywright = false;
+
     public bool $caresAboutLocalization = false;
 
     public bool $hasAnApi = false;
