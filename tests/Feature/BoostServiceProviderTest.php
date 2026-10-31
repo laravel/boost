@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Config;
 use Laravel\Boost\Boost;
 use Laravel\Boost\BoostManager;
 use Laravel\Boost\BoostServiceProvider;
+use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
@@ -91,6 +92,54 @@ describe('environment restrictions', function (): void {
 
             expect(config('logging.channels.browser'))->toBeNull();
         });
+    });
+});
+
+describe('browser logs middleware groups', function (): void {
+    beforeEach(function (): void {
+        Config::set('boost.enabled', true);
+        app()->detectEnvironment(fn (): string => 'local');
+
+        // The app has already booted Boost once, so start each test from an empty web group.
+        app('router')->middlewareGroup('web', []);
+    });
+
+    it('pushes InjectBoost onto the web group by default', function (): void {
+        $provider = new BoostServiceProvider(app());
+        $provider->register();
+        $provider->boot(app('router'));
+
+        $groups = app('router')->getMiddlewareGroups();
+
+        expect($groups['web'])->toContain(InjectBoost::class)
+            ->and($groups)->not->toHaveKey('admin');
+    });
+
+    it('pushes InjectBoost onto every configured group', function (): void {
+        Config::set('boost.browser_logs_middleware_groups', ['web', 'admin']);
+
+        $provider = new BoostServiceProvider(app());
+        $provider->register();
+        $provider->boot(app('router'));
+
+        $groups = app('router')->getMiddlewareGroups();
+
+        expect($groups['web'])->toContain(InjectBoost::class)
+            ->and($groups['admin'])->toContain(InjectBoost::class);
+    });
+
+    it('does not push InjectBoost onto any group when the watcher is disabled', function (): void {
+        Config::set('boost.browser_logs_watcher', false);
+        Config::set('boost.browser_logs_middleware_groups', ['web', 'admin']);
+
+        $provider = new BoostServiceProvider(app());
+        $provider->register();
+        $provider->boot(app('router'));
+
+        $groups = app('router')->getMiddlewareGroups();
+
+        expect($groups['web'])->not->toContain(InjectBoost::class)
+            ->and($groups)->not->toHaveKey('admin');
     });
 });
 

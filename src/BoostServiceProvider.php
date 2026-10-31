@@ -193,7 +193,9 @@ class BoostServiceProvider extends ServiceProvider
     protected function hookIntoResponses(Router $router): void
     {
         $this->app->booted(function () use ($router): void {
-            $router->pushMiddlewareToGroup('web', InjectBoost::class);
+            foreach ((array) config('boost.browser_logs_middleware_groups', ['web']) as $group) {
+                $router->pushMiddlewareToGroup($group, InjectBoost::class);
+            }
         });
     }
 
