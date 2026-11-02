@@ -6,6 +6,7 @@ namespace Laravel\Boost\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\DisplayHelper;
@@ -20,6 +21,7 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\McpWriter;
 use Laravel\Boost\Install\Nightwatch;
+use Laravel\Boost\Install\PestAgent;
 use Laravel\Boost\Install\RuleComposer;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\Skill;
@@ -40,6 +42,7 @@ use Throwable;
 use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
+use function Laravel\Prompts\spin;
 
 class InstallCommand extends Command
 {
@@ -134,6 +137,10 @@ class InstallCommand extends Command
 
     protected function performInstallation(): void
     {
+        if ($this->selectedBoostFeatures->contains('pest_agent')) {
+            $this->installPestAgent();
+        }
+
         app()->instance(GuidelineConfig::class, $this->buildGuidelineConfig());
 
         if ($this->selectedBoostFeatures->contains('guidelines')) {
@@ -149,6 +156,38 @@ class InstallCommand extends Command
         }
 
         $this->storeConfig();
+    }
+
+    protected function installPestAgent(): void
+    {
+        $pestAgent = $this->pestAgent();
+        $usesSail = $this->shouldUseSail();
+
+        $result = rescue(
+            fn (): ProcessResult => spin(fn (): ProcessResult => $pestAgent->install($usesSail), 'Installing '.PestAgent::PACKAGE.'...'),
+            report: false,
+        );
+
+        if ($result?->successful()) {
+            $this->selectedThirdPartyPackages->push(PestAgent::PACKAGE);
+
+            return;
+        }
+
+        $reason = $result instanceof ProcessResult
+            ? Str::of($result->errorOutput() ?: $result->output())->trim()->explode("\n")->take(-5)->implode("\n")
+            : 'Composer did not finish in time.';
+
+        $this->warn('Could not install '.PestAgent::PACKAGE.'. Install it manually with: '.$pestAgent->installCommand($usesSail));
+
+        if ($reason !== '') {
+            $this->line($reason);
+        }
+    }
+
+    protected function pestAgent(): PestAgent
+    {
+        return app(PestAgent::class);
     }
 
     protected function reportRenderFailures(): void
@@ -299,6 +338,13 @@ class InstallCommand extends Command
                 'label' => 'Laravel Nightwatch',
                 'available' => $this->nightwatch->isInstalled(),
                 'default' => $this->config->getNightwatch(),
+            ],
+            'pest_agent' => [
+                'label' => 'Pest Agent (installs '.PestAgent::PACKAGE.')',
+                'available' => $this->input->isInteractive()
+                    && ($this->selectedBoostFeatures->contains('guidelines') || $this->selectedBoostFeatures->contains('skills'))
+                    && $this->pestAgent()->isInstallable(),
+                'default' => false,
             ],
             'sail' => [
                 'label' => 'Laravel Sail',
