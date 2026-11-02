@@ -123,8 +123,6 @@ class RuleRepository
 
         if (! File::exists($target['path'])) {
             $this->createFile($target['path'], $target['heading'], [$glob]);
-        } else {
-            $this->ensureGlobApplied($target['path'], $glob, $target['parsed']);
         }
 
         $this->appendEntry($target['path'], $title, $note);
@@ -207,24 +205,18 @@ class RuleRepository
     }
 
     /**
-     * @return array{path: string, heading: string, parsed: array<string, mixed>|null}
+     * Only an exact glob match shares a file, since every rule in a file applies to all of its globs.
+     *
+     * @return array{path: string, heading: string}
      */
     protected function resolveTargetFile(string $glob): array
     {
         $allParsed = $this->parsedFiles();
-        $area = $this->areaKey($glob);
 
-        $existing = $allParsed->first(function (array $parsed) use ($glob, $area): bool {
-            if (in_array($glob, $parsed['paths'], true)) {
-                return true;
-            }
-
-            return collect($parsed['paths'])
-                ->contains(fn (string $path): bool => $this->areaKey($path) === $area);
-        });
+        $existing = $allParsed->first(fn (array $parsed): bool => in_array($glob, $parsed['paths'], true));
 
         if ($existing !== null) {
-            return ['path' => $existing['file'], 'heading' => '', 'parsed' => $existing];
+            return ['path' => $existing['file'], 'heading' => ''];
         }
 
         $path = $this->uniqueFilePath($glob, $allParsed);
@@ -232,7 +224,6 @@ class RuleRepository
         return [
             'path' => $path,
             'heading' => Str::headline(basename($path, '.md')),
-            'parsed' => null,
         ];
     }
 
@@ -245,16 +236,17 @@ class RuleRepository
         $taken = $allParsed->map(fn (array $parsed): string => $parsed['file'])->all();
         $reserved = $this->indexPath();
 
-        $candidates = [];
+        $slugs = [
+            $this->slugForSegments(array_slice($segments, -1)),
+            $this->slugForSegments(array_slice($this->segments($glob), -2)),
+        ];
         $counter = count($segments);
 
-        for ($take = 1; $take <= $counter; $take++) {
-            $slug = $this->slugForSegments(array_slice($segments, -$take));
-
-            if (filled($slug)) {
-                $candidates[] = $slug;
-            }
+        for ($take = 2; $take <= $counter; $take++) {
+            $slugs[] = $this->slugForSegments(array_slice($segments, -$take));
         }
+
+        $candidates = array_values(array_unique(array_filter($slugs, filled(...))));
 
         if ($candidates === []) {
             $candidates[] = 'general';
@@ -279,9 +271,16 @@ class RuleRepository
         return $path;
     }
 
-    protected function areaKey(string $glob): string
+    /**
+     * @return array<int, string>
+     */
+    protected function segments(string $glob): array
     {
-        return implode('/', $this->meaningfulSegments($glob));
+        return Str::of($glob)
+            ->explode('/')
+            ->filter(static fn (string $segment): bool => filled($segment))
+            ->values()
+            ->all();
     }
 
     /**
@@ -289,10 +288,7 @@ class RuleRepository
      */
     protected function meaningfulSegments(string $glob): array
     {
-        $segments = Str::of($glob)
-            ->explode('/')
-            ->filter(static fn (string $segment): bool => filled($segment))
-            ->values();
+        $segments = collect($this->segments($glob));
 
         $directories = $segments->reject(static fn (string $segment): bool => Str::contains($segment, ['*', '.']))->values();
 
@@ -320,29 +316,6 @@ class RuleRepository
         File::ensureDirectoryExists(dirname($path));
 
         File::put($path, $this->renderFrontmatter($paths).'# '.$heading."\n");
-    }
-
-    protected function ensureGlobApplied(string $path, string $glob, ?array $parsed = null): void
-    {
-        if ($parsed === null) {
-            try {
-                $parsed = $this->parse($path);
-            } catch (Throwable) {
-                $raw = str_replace(["\r\n", "\r"], "\n", (string) File::get($path));
-                $parsed = ['paths' => [], 'body' => $raw];
-            }
-        }
-
-        if (in_array($glob, $parsed['paths'], true)) {
-            return;
-        }
-
-        $paths = [...$parsed['paths'], $glob];
-        $frontmatter = $this->renderFrontmatter($paths);
-
-        $body = (string) preg_replace('/^---\r?\n.*?\r?\n---\r?\n?/s', '', (string) $parsed['body']);
-
-        File::put($path, $frontmatter.ltrim($body, "\n"));
     }
 
     protected function appendEntry(string $path, string $title, string $note): void

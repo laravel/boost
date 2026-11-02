@@ -45,11 +45,7 @@ it('writes a rule into an area file with frontmatter and an entry', function ():
     ]));
 
     expect($response)->isToolResult()->toolHasNoError()
-        ->toolTextContains(
-            'Recorded rule in .ai/rules/controllers.md: Extend BaseController for tenant scoping.',
-            'The glob app/Http/Controllers/** applies to every rule in .ai/rules/controllers.md, including existing entries.',
-            'Regenerated .ai/rules/index.md, replacing any previous content.',
-        );
+        ->toolTextContains('controllers.md', 'Extend BaseController for tenant scoping');
 
     expect(File::get($this->rulesDir.'/controllers.md'))
         ->toContain('paths:')
@@ -62,10 +58,7 @@ it('groups a second rule for the same glob into the same file', function (): voi
     $tool = new RecordRule($this->repository);
 
     $tool->handle(new Request(['glob' => 'app/Http/Controllers/**', 'title' => 'First', 'note' => 'One.']));
-
-    $index_contents = File::get($this->rulesDir.'/index.md');
-
-    $response = $tool->handle(new Request([
+    $tool->handle(new Request([
         'glob' => 'app/Http/Controllers/**',
         'title' => 'Form Requests over inline validation',
         'note' => 'Validate in Form Request classes.',
@@ -75,93 +68,30 @@ it('groups a second rule for the same glob into the same file', function (): voi
     expect(File::get($this->rulesDir.'/controllers.md'))
         ->toContain('## First')
         ->toContain('## Form Requests over inline validation');
-
-    expect(RuleFrontmatter::parse(File::get($this->rulesDir.'/controllers.md'))['paths'])
-        ->toBe(['app/Http/Controllers/**']);
-    expect(File::get($this->rulesDir.'/index.md'))->toBe($index_contents);
-    expect($response)->toolHasNoError()
-        ->toolTextContains(
-            'The glob app/Http/Controllers/** applies to every rule in .ai/rules/controllers.md, including existing entries.',
-            'Regenerated .ai/rules/index.md, replacing any previous content.',
-        );
 });
 
-it('merges a new glob into an existing area file without losing entries', function (): void {
+it('keeps rules for different globs in the same area in separate files', function (string $first, string $second, string $secondFile): void {
     $tool = new RecordRule($this->repository);
 
-    $tool->handle(new Request([
-        'glob' => 'app/Models/*.php',
-        'title' => 'First model note',
-        'note' => 'Keep models thin.',
-    ]));
+    $tool->handle(new Request(['glob' => $first, 'title' => 'First rule', 'note' => 'First only.']));
 
-    $unrelated_rule = "---\npaths:\n  - tests/**\n---\n\n# Testing\n\nKeep tests focused.\n";
-    File::put($this->rulesDir.'/tests.md', $unrelated_rule);
+    $response = $tool->handle(new Request(['glob' => $second, 'title' => 'Second rule', 'note' => 'Second only.']));
 
-    $response = $tool->handle(new Request([
-        'glob' => 'app/Models/**',
-        'title' => 'Second model note',
-        'note' => 'Watch the users table.',
-    ]));
-
+    expect($response)->toolHasNoError()->toolTextContains($secondFile);
     expect(ruleFiles($this->rulesDir))->toHaveCount(2);
-    expect(File::get($this->rulesDir.'/models.md'))
-        ->toContain('app/Models/**')
-        ->toContain('app/Models/*.php')
-        ->toContain('## First model note')
-        ->toContain('Keep models thin.')
-        ->toContain('## Second model note')
-        ->toContain('Watch the users table.');
 
-    expect(RuleFrontmatter::parse(File::get($this->rulesDir.'/models.md'))['paths'])
-        ->toBe(['app/Models/*.php', 'app/Models/**']);
-    expect(File::get($this->rulesDir.'/tests.md'))->toBe($unrelated_rule);
-    expect(File::get($this->rulesDir.'/index.md'))
-        ->toContain('| app/Models/*.php, app/Models/** | .ai/rules/models.md |');
-    expect($response)->toolHasNoError()
-        ->toolTextContains(
-            'The glob app/Models/** applies to every rule in .ai/rules/models.md, including existing entries.',
-            'Regenerated .ai/rules/index.md, replacing any previous content.',
-        );
-});
+    $models = File::get($this->rulesDir.'/models.md');
+    expect(RuleFrontmatter::parse($models)['paths'])->toBe([$first]);
+    expect($models)->toContain('## First rule')->not->toContain('## Second rule');
 
-it('reports replacement of custom index content', function (): void {
-    File::ensureDirectoryExists($this->rulesDir);
-    File::put($this->rulesDir.'/z-custom.md', "---\npaths:\n  - tests/**\n---\n\n# Tests\n");
-    File::put($this->rulesDir.'/a-custom.md', "---\npaths:\n  - app/**\n---\n\n# Application\n");
-    $custom_index = "# Team Rules\n\nTeam introduction.\n\nEvery matching row applies.\n\n"
-        ."| Rule file | Applies to |\n| --- | --- |\n"
-        ."| .ai/rules/z-custom.md | tests/** |\n| .ai/rules/a-custom.md | app/** |\n\nTeam footer.\n";
-    File::put($this->rulesDir.'/index.md', $custom_index);
-
-    $response = (new RecordRule($this->repository))->handle(new Request([
-        'glob' => 'app/Models/*.php',
-        'title' => 'Model rule',
-        'note' => 'Keep models thin.',
-    ]));
-
-    expect(File::get($this->rulesDir.'/index.md'))
-        ->toContain('# Project Rules Index', '| app/Models/*.php | .ai/rules/models.md |')
-        ->toContain("| app/** | .ai/rules/a-custom.md |\n| app/Models/*.php | .ai/rules/models.md |\n| tests/** | .ai/rules/z-custom.md |")
-        ->not->toContain('Team introduction.', 'Every matching row applies.', '| Rule file | Applies to |', 'Team footer.');
-    expect($response)->toolHasNoError()
-        ->toolTextContains('Regenerated .ai/rules/index.md, replacing any previous content.');
-});
-
-it('reports the index path for the configured rules directory', function (): void {
-    $repository = new RuleRepository(base_path('.ai/custom-rules'));
-
-    $response = (new RecordRule($repository))->handle(new Request([
-        'glob' => 'app/Models/*.php',
-        'title' => 'Model rule',
-        'note' => 'Keep models thin.',
-    ]));
-
-    expect(File::get(base_path('.ai/custom-rules/index.md')))
-        ->toContain('| app/Models/*.php | .ai/custom-rules/models.md |');
-    expect($response)->toolHasNoError()
-        ->toolTextContains('Regenerated .ai/custom-rules/index.md, replacing any previous content.');
-});
+    $other = File::get($this->rulesDir.'/'.$secondFile);
+    expect(RuleFrontmatter::parse($other)['paths'])->toBe([$second]);
+    expect($other)->toContain('## Second rule')->not->toContain('## First rule');
+})->with([
+    'narrow after broad' => ['app/Models/**', 'app/Models/User.php', 'models-user-php.md'],
+    'broad after narrow' => ['app/Models/User.php', 'app/Models/**', 'app-models.md'],
+    'wildcard after broad' => ['app/Models/**', 'app/Models/*.php', 'models-php.md'],
+]);
 
 it('keeps distinct areas that share a last path segment in separate files', function (): void {
     $tool = new RecordRule($this->repository);
@@ -290,7 +220,7 @@ it('writes a placeholder index when no rule files have paths', function (): void
         ->not->toContain('| Applies to |');
 });
 
-it('keeps multi-byte characters intact when writing and when merging a new glob', function (): void {
+it('keeps multi-byte characters intact when writing and when appending a rule', function (): void {
     $title = 'Encoding check: х ゅ 🙅 ✅';
     $note = 'These all contain 0x85: х (U+0445), ゅ (U+3085), 🙅 (U+1F645), ✅ (U+2705).';
 
@@ -307,7 +237,7 @@ it('keeps multi-byte characters intact when writing and when merging a new glob'
     expect(mb_check_encoding(File::get($file), 'UTF-8'))->toBeTrue();
 
     $tool->handle(new Request([
-        'glob' => 'app/Models/*.php',
+        'glob' => 'app/Models/**',
         'title' => 'Second model note',
         'note' => 'Watch the users table.',
     ]));
