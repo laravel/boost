@@ -93,6 +93,28 @@ it('keeps rules for different globs in the same area in separate files', functio
     'wildcard after broad' => ['app/Models/**', 'app/Models/*.php', 'models-php.md'],
 ]);
 
+it('does not append a new rule to a legacy file with multiple globs', function (): void {
+    File::makeDirectory($this->rulesDir, 0755, true);
+
+    $legacyFile = $this->rulesDir.'/models.md';
+    $legacyContents = "---\npaths:\n  - app/Models/**\n  - app/Models/User.php\n---\n\n# Models\n\n## Existing rule\nKeep models thin.\n";
+    File::put($legacyFile, $legacyContents);
+
+    $first = $this->repository->write('app/Models/User.php', 'User rule', 'Only for users.');
+    $second = $this->repository->write('app/Models/User.php', 'Another user rule', 'Also only for users.');
+
+    expect($first)->toBe($this->rulesDir.'/models-user-php.md');
+    expect($second)->toBe($first);
+    expect(ruleFiles($this->rulesDir))->toHaveCount(2);
+    expect(File::get($legacyFile))->toBe($legacyContents);
+
+    $dedicated = File::get($first);
+    expect(RuleFrontmatter::parse($dedicated)['paths'])->toBe(['app/Models/User.php']);
+    expect($dedicated)
+        ->toContain('## User rule', '## Another user rule')
+        ->not->toContain('## Existing rule');
+});
+
 it('keeps distinct areas that share a last path segment in separate files', function (): void {
     $tool = new RecordRule($this->repository);
 
@@ -193,6 +215,19 @@ it('regenerates index.md mapping globs to rule files on every write', function (
         ->toContain('.ai/rules/controllers.md')
         ->toContain('app/Models/*.php')
         ->toContain('.ai/rules/models.md');
+});
+
+it('instructs agents to read every rule file matching a path', function (): void {
+    $this->repository->write('app/Models/**', 'Model rule', 'Every model.');
+    $this->repository->write('app/Models/User.php', 'User rule', 'Only users.');
+
+    $index = File::get($this->rulesDir.'/index.md');
+
+    expect($index)
+        ->toContain("check every row for a glob matching the file's path and read every matching rule file")
+        ->toContain('A file may match multiple rows.')
+        ->toContain('| app/Models/** | .ai/rules/models.md |')
+        ->toContain('| app/Models/User.php | .ai/rules/models-user-php.md |');
 });
 
 it('excludes a rule file with no paths frontmatter from the index', function (): void {

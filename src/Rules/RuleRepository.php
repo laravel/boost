@@ -147,7 +147,7 @@ class RuleRepository
             : "| Applies to | Rule file |\n| --- | --- |\n".$rows;
 
         $body = "# Project Rules Index\n\n"
-            ."Before planning or editing, find the row whose globs match the file's path and read that rule file.\n\n"
+            ."Before planning or editing, check every row for a glob matching the file's path and read every matching rule file. A file may match multiple rows.\n\n"
             .$table."\n";
 
         $path = $this->indexPath();
@@ -205,7 +205,7 @@ class RuleRepository
     }
 
     /**
-     * Only an exact glob match shares a file, since every rule in a file applies to all of its globs.
+     * Only a file with the requested glob as its sole path can accept another rule.
      *
      * @return array{path: string, heading: string}
      */
@@ -213,7 +213,7 @@ class RuleRepository
     {
         $allParsed = $this->parsedFiles();
 
-        $existing = $allParsed->first(fn (array $parsed): bool => in_array($glob, $parsed['paths'], true));
+        $existing = $allParsed->first(fn (array $parsed): bool => $parsed['paths'] === [$glob]);
 
         if ($existing !== null) {
             return ['path' => $existing['file'], 'heading' => ''];
