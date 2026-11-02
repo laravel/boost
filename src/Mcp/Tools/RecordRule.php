@@ -41,7 +41,7 @@ class RecordRule extends Tool
     {
         return [
             'glob' => $schema->string()
-                ->description('Glob for the files this rule applies to, for example "app/Http/Controllers/**" or "app/Models/*.php". This routes the rule into a shared area file and is how agents find it later.')
+                ->description('Glob for the files this rule applies to, for example "app/Http/Controllers/**" or "app/Models/*.php". Rules with the same glob share a file, and the glob is how agents find them later.')
                 ->required(),
             'title' => $schema->string()
                 ->description('A short, specific heading, for example "Extend BaseController for tenant scoping".')
