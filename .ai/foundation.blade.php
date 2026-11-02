@@ -8,7 +8,9 @@ This application is a Laravel application running on PHP {{ PHP_MAJOR_VERSION }}
 
 Before relying on a package's API, confirm its installed version:
 - PHP packages: run `{{ $assist->composerCommand('show --direct') }}` to list direct dependencies with versions, or `{{ $assist->composerCommand('show <vendor/package>') }}` for a single package.
+@if (file_exists(base_path('package.json')))
 - JS packages: check `package.json` for the installed versions.
+@endif
 
 @if (! empty(config('boost.purpose')))
 Application purpose: {!! config('boost.purpose') !!}
@@ -32,6 +34,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Stick to existing directory structure; don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
 
+@if (file_exists(base_path('package.json')))
 ## Frontend Bundling
 @if($assist->hasComposerScript('dev'))
 - If a frontend change doesn't show in the UI or you get a "Unable to locate file in Vite manifest" error, run `{{ $assist->nodePackageManagerCommand('run build') }}` or ask the user to run `{{ $assist->nodePackageManagerCommand('run dev') }}` or `{{ $assist->composerCommand('run dev') }}`.
@@ -39,5 +42,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - If a frontend change doesn't show in the UI or you get a "Unable to locate file in Vite manifest" error, run `{{ $assist->nodePackageManagerCommand('run build') }}` or ask the user to run `{{ $assist->nodePackageManagerCommand('run dev') }}`.
 @endif
 
+@endif
 ## Documentation Files
 - You must only create documentation files if explicitly requested by the user.

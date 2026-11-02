@@ -638,7 +638,13 @@ test('includes correct package manager commands in guidelines based on lockfile'
     ]);
     mockProjectPackages($this->project, $packages, $packageManager);
 
-    $guidelines = $this->composer->compose();
+    File::put(base_path('package.json'), '{}');
+
+    try {
+        $guidelines = $this->composer->compose();
+    } finally {
+        File::delete(base_path('package.json'));
+    }
 
     expect($guidelines)
         ->toContain("{$expectedCommand} run build")
@@ -659,10 +665,12 @@ test('mentions composer run dev only when composer.json defines a dev script', f
         File::put(base_path('composer.json'), json_encode(['scripts' => $scripts]));
     }
 
+    File::put(base_path('package.json'), '{}');
+
     try {
         $guidelines = $this->composer->compose();
     } finally {
-        File::delete(base_path('composer.json'));
+        File::delete([base_path('composer.json'), base_path('package.json')]);
     }
 
     expect($guidelines)->toContain('npm run dev')
@@ -672,6 +680,25 @@ test('mentions composer run dev only when composer.json defines a dev script', f
     'other scripts only' => [['test' => 'pest'], false],
     'no composer.json' => [null, false],
 ]);
+
+test('omits frontend guidance when the project has no package.json', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('laravel/framework', '13.0.0'),
+    ]));
+
+    File::put(base_path('composer.json'), json_encode(['scripts' => ['dev' => 'php artisan dev']]));
+
+    try {
+        $guidelines = $this->composer->compose();
+    } finally {
+        File::delete(base_path('composer.json'));
+    }
+
+    expect($guidelines)
+        ->not->toContain('## Frontend Bundling')
+        ->not->toContain('Vite manifest')
+        ->not->toContain('check `package.json`');
+});
 
 test('renderContent handles blade and markdown files correctly', function (): void {
     config(['boost.rules.enabled' => false]);
