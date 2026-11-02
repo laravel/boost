@@ -6,10 +6,9 @@ namespace Tests\Unit\Install\Agents;
 
 use Laravel\Boost\Install\Agents\Kiro;
 use Laravel\Boost\Install\Detection\DetectionStrategyFactory;
-use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('guidelinesPath returns AGENTS.md by default', function (): void {

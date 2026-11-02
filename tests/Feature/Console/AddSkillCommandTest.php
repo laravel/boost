@@ -201,6 +201,65 @@ it('overwrites existing skills with --force flag', function (): void {
     $this->assertFileNotContains(['existing content'], '.ai/skills/skill-one/SKILL.md');
 });
 
+it('preserves an existing skill when a forced download fails', function (): void {
+    File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
+    File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
+
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response('Download failed', 500),
+    ]);
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo',
+        '--all' => true,
+        '--force' => true,
+        '--skip-audit' => true,
+    ])
+        ->expectsOutputToContain('Some skills failed to install')
+        ->assertSuccessful();
+
+    $this->assertFileContains(['existing content'], '.ai/skills/skill-one/SKILL.md');
+});
+
+it('keeps the existing skill and the download when the install move fails', function (): void {
+    File::ensureDirectoryExists(base_path('.ai/skills/skill-one'));
+    File::put(base_path('.ai/skills/skill-one/SKILL.md'), 'existing content');
+
+    Http::fake([
+        'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([
+            'sha' => 'abc123',
+            'tree' => [
+                ['path' => 'skill-one', 'type' => 'tree', 'sha' => 'def'],
+                ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'ghi', 'size' => 123],
+            ],
+            'truncated' => false,
+        ]),
+        'raw.githubusercontent.com/*' => Http::response('# New Content'),
+    ]);
+
+    File::partialMock()->shouldReceive('moveDirectory')->once()->andReturnFalse();
+
+    $this->artisan('boost:add-skill', [
+        'repo' => 'owner/repo',
+        '--all' => true,
+        '--force' => true,
+        '--skip-audit' => true,
+    ])
+        ->expectsOutputToContain('Some skills failed to install')
+        ->assertSuccessful();
+
+    $this->assertFileContains(['existing content'], '.ai/skills/skill-one/SKILL.md');
+    expect(glob(base_path('.ai/skills/.skill-one-*'), GLOB_ONLYDIR))->toHaveCount(1);
+});
+
 it('installs nested skill files correctly', function (): void {
     Http::fake([
         'api.github.com/repos/owner/repo/git/trees/main?recursive=1' => Http::response([

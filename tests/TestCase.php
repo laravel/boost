@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use JMac\Testing\Integrations\PHPUnit\VerifiesDoubles;
 use Laravel\Boost\BoostServiceProvider;
 use Laravel\Mcp\Server\Registrar;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    use VerifiesDoubles;
+
     protected function defineEnvironment($app)
     {
         $app['env'] = 'local';
@@ -17,16 +20,6 @@ abstract class TestCase extends OrchestraTestCase
         $app->singleton('mcp', Registrar::class);
 
         $app->useStoragePath(realpath(__DIR__.'/../workbench/storage'));
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
     }
 
     protected function getPackageProviders($app)

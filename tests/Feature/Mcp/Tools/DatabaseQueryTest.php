@@ -201,6 +201,8 @@ it('adds table prefix to queries', function (): void {
         'SELECT * FROM users JOIN posts ON users.id = posts.user_id JOIN comments ON posts.id = comments.post_id' => 'SELECT * FROM wp_users JOIN wp_posts ON users.id = posts.user_id JOIN wp_comments ON posts.id = comments.post_id',
         'SELECT * FROM "users"' => 'SELECT * FROM "wp_users"',
         'WITH cte AS (SELECT * FROM users) SELECT * FROM cte' => 'WITH cte AS (SELECT * FROM wp_users) SELECT * FROM cte',
+        'WITH RecentUsers AS (SELECT * FROM users) SELECT * FROM recentusers' => 'WITH RecentUsers AS (SELECT * FROM wp_users) SELECT * FROM recentusers',
+        'WITH RecentUsers AS (SELECT * FROM users) SELECT * FROM "RecentUsers"' => 'WITH RecentUsers AS (SELECT * FROM wp_users) SELECT * FROM "RecentUsers"',
         'WITH cte1 AS (SELECT * FROM users), cte2 AS (SELECT * FROM posts) SELECT * FROM cte1 JOIN cte2' => 'WITH cte1 AS (SELECT * FROM wp_users), cte2 AS (SELECT * FROM wp_posts) SELECT * FROM cte1 JOIN cte2',
         'WITH RECURSIVE cte AS (SELECT * FROM users) SELECT * FROM cte' => 'WITH RECURSIVE cte AS (SELECT * FROM wp_users) SELECT * FROM cte',
         'WITH cte (id, name) AS (SELECT id, name FROM users) SELECT * FROM cte' => 'WITH cte (id, name) AS (SELECT id, name FROM wp_users) SELECT * FROM cte',
@@ -223,6 +225,15 @@ it('adds table prefix to queries', function (): void {
         'SELECT * FROM public.users JOIN public.posts ON public.users.id = public.posts.user_id' => 'SELECT * FROM public.wp_users JOIN public.wp_posts ON public.users.id = public.posts.user_id',
         'SELECT * FROM "public"."users"' => 'SELECT * FROM "public"."wp_users"',
         'SELECT * FROM `mydb`.`users`' => 'SELECT * FROM `mydb`.`wp_users`',
+        "SELECT 'FROM users' AS label FROM users" => "SELECT 'FROM users' AS label FROM wp_users",
+        'SELECT "FROM users" AS label FROM users' => 'SELECT "FROM users" AS label FROM wp_users',
+        'SELECT * FROM users -- JOIN posts' => 'SELECT * FROM wp_users -- JOIN posts',
+        'SELECT * FROM users /* JOIN posts */' => 'SELECT * FROM wp_users /* JOIN posts */',
+        "SELECT 'users AS (' AS label FROM users" => "SELECT 'users AS (' AS label FROM wp_users",
+        "SELECT 'it''s FROM posts' AS label FROM users" => "SELECT 'it''s FROM posts' AS label FROM wp_users",
+        "SELECT * FROM users WHERE a = 'don\\'t' AND b IN (SELECT id FROM posts)" => "SELECT * FROM wp_users WHERE a = 'don\\'t' AND b IN (SELECT id FROM wp_posts)",
+        "SELECT * FROM users WHERE note = 'unterminated" => "SELECT * FROM wp_users WHERE note = 'unterminated",
+        "SELECT * FROM users -- JOIN posts\nJOIN comments ON 1 = 1" => "SELECT * FROM wp_users -- JOIN posts\nJOIN wp_comments ON 1 = 1",
     ];
 
     foreach ($testCases as $input => $expected) {
@@ -234,3 +245,22 @@ it('adds table prefix to queries', function (): void {
         expect($response)->isToolResult()->toolHasNoError();
     }
 });
+
+it('only treats backslashes as escapes on mysql', function (string $driver, string $expected): void {
+    DB::shouldReceive('connection')->andReturnSelf();
+    DB::shouldReceive('getTablePrefix')->andReturn('wp_');
+    DB::shouldReceive('getDriverName')->andReturn($driver);
+    DB::shouldReceive('beginTransaction');
+    DB::shouldReceive('statement')->andReturn(true);
+    DB::shouldReceive('rollBack');
+    DB::shouldReceive('select')->with($expected)->once()->andReturn([]);
+
+    $tool = new DatabaseQuery;
+    $response = $tool->handle(new Request(['query' => "SELECT 'a\\' AS x, 'b' AS y FROM users, 'c' AS z"]));
+
+    expect($response)->isToolResult()->toolHasNoError();
+})->with([
+    // On MySQL the escaped quote keeps the literal open, so "FROM users" sits inside one.
+    ['mysql', "SELECT 'a\\' AS x, 'b' AS y FROM users, 'c' AS z"],
+    ['pgsql', "SELECT 'a\\' AS x, 'b' AS y FROM wp_users, 'c' AS z"],
+]);

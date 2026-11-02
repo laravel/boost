@@ -116,6 +116,23 @@ it('keeps distinct areas that share a last path segment in separate files', func
         ->not->toContain('## Admin rule');
 });
 
+it('keeps distinct single-segment filename globs in separate files', function (): void {
+    $tool = new RecordRule($this->repository);
+
+    $tool->handle(new Request(['glob' => 'composer.json', 'title' => 'Composer rule', 'note' => 'Composer only.']));
+    $tool->handle(new Request(['glob' => '.env*', 'title' => 'Env rule', 'note' => 'Env only.']));
+    $tool->handle(new Request(['glob' => '**', 'title' => 'Global rule', 'note' => 'Global only.']));
+
+    expect(ruleFiles($this->rulesDir))->toHaveCount(3);
+
+    expect(File::get($this->rulesDir.'/composer-json.md'))
+        ->toContain('composer.json')
+        ->toContain('## Composer rule')
+        ->not->toContain('.env*')
+        ->not->toContain('## Env rule')
+        ->not->toContain('## Global rule');
+});
+
 it('normalizes an absolute path glob to the same area as its relative twin', function (): void {
     $tool = new RecordRule($this->repository);
 

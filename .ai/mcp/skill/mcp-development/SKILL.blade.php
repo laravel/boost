@@ -8,22 +8,22 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# MCP Development
+# MCP development
 
-## Documentation First
+## Documentation first
 
-**CRITICAL**: Always use `search-docs` BEFORE writing MCP code. The documentation is version-specific, comprehensive, and always up-to-date.
+**CRITICAL**: Always use `search-docs` BEFORE writing MCP code. The documentation is version-specific and up to date.
 
 @boostsnippet("Search MCP Documentation", "text")
 # Example searches
 search-docs(['mcp tool output schema', 'mcp resource templates', 'mcp client oauth'])
 @endboostsnippet
 
-## Quick Reference
+## Quick reference
 
-### Artisan Commands
+### Artisan commands
 
-Create MCP Servers and Primitives
+Create MCP servers and primitives:
 ```bash
 {{ $assist->artisanCommand('make:mcp-server ServerName') }}
 {{ $assist->artisanCommand('make:mcp-tool ToolName') }}
@@ -36,7 +36,7 @@ If `routes/ai.php` does not exist, publish it with `{{ $assist->artisanCommand('
 
 ### Registration
 
-Generators create classes, but primitives must be registered on a server and the server must be registered in `routes/ai.php`:
+Generators create the classes but do not register them. Register each primitive on a server, and register the server in `routes/ai.php`:
 
 @boostsnippet("Register MCP Servers", "php")
 use App\Mcp\Servers\MyServer;
@@ -48,7 +48,7 @@ Mcp::local('my-server', MyServer::class);
 
 Add tool, resource, and prompt classes to the server's `$tools`, `$resources`, and `$prompts` arrays. Use the `#[Name]`, `#[Version]`, and `#[Instructions]` attributes to configure server identity and instructions.
 
-### Basic Tool Implementation
+### Basic tool implementation
 
 @boostsnippet("Tool Example", "php")
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -76,9 +76,9 @@ class MyTool extends Tool
 }
 @endboostsnippet
 
-Descriptions are not generated automatically. Always add a meaningful `#[Description]`. Use `#[Name]` and `#[Title]` only when overriding the values derived from the class name. Define `outputSchema(JsonSchema $schema): array` when returning structured content that clients need to parse, and validate complex requirements with `$request->validate()` using actionable custom error messages.
+Laravel MCP does not generate descriptions. Always add a meaningful `#[Description]`. Use `#[Name]` and `#[Title]` only to override the values derived from the class name. If the tool returns structured content that clients need to parse, define `outputSchema(JsonSchema $schema): array`. Validate complex requirements with `$request->validate()` and actionable custom error messages.
 
-### Basic Resource Implementation
+### Basic resource implementation
 
 @boostsnippet("Resource Example", "php")
 use Laravel\Mcp\Response;
@@ -99,13 +99,13 @@ class MyResource extends Resource
 }
 @endboostsnippet
 
-`#[Uri]` and `#[MimeType]` are optional for static resources. Laravel derives a URI and defaults to `text/plain`. Resources do not define input schemas or arguments; URI-template variables are merged into the `Request`. For templates, implement `Laravel\Mcp\Server\Contracts\HasUriTemplate` and return a `Laravel\Mcp\Support\UriTemplate` from `uriTemplate()`.
+`#[Uri]` and `#[MimeType]` are optional for static resources. If you omit them, Laravel derives a URI and defaults the MIME type to `text/plain`. Resources do not define input schemas or arguments. Laravel merges URI-template variables into the `Request`. For resource templates, implement `Laravel\Mcp\Server\Contracts\HasUriTemplate` and return a `Laravel\Mcp\Support\UriTemplate` from `uriTemplate()`.
 
-### Prompt Guidance
+### Prompt guidance
 
 Prompts define arguments with `Laravel\Mcp\Server\Prompts\Argument`, may validate their request, and may return one response or an iterable of responses. Use `asAssistant()` to mark assistant messages.
 
-### Common Response Shapes
+### Common response shapes
 
 @boostsnippet("MCP Responses", "php")
 Response::text('Text content');
@@ -119,15 +119,15 @@ Response::blob($bytes);
 Response::view('mcp.dashboard', $data);
 @endboostsnippet
 
-Tools may return an array of responses. Stream by returning a `Generator` and yielding `Response::notification(...)` and content responses; web servers send yielded messages over SSE. Use `Response::make(Response::text(...))->withStructuredContent(...)` for custom text plus structured data.
+Tools may return an array of responses. To stream, return a `Generator` that yields `Response::notification(...)` and content responses. Web servers send the yielded messages over SSE. For custom text plus structured data, use `Response::make(Response::text(...))->withStructuredContent(...)`.
 
-Use `->withMeta()` directly on a content response for content metadata. Use `Response::make(...)->withMeta(...)` for result-level metadata. Primitive `_meta` is configured with the `protected ?array $meta` property.
+For content metadata, call `->withMeta()` directly on a content response. For result-level metadata, use `Response::make(...)->withMeta(...)`. To configure a primitive's `_meta`, set the `protected ?array $meta` property.
 
 ## MCP Apps
 
-Generate apps with `make:mcp-app-resource`, register the generated app resource in the server's `$resources` array, and render it with `Response::view(...)`. Link a tool to an app resource using `#[RendersApp(resource: AppResource::class)]`. Use `#[AppMeta]` for CSP, permissions, and bundled libraries, and `Visibility::App` / `Visibility::Model` to control whether app tools are visible to the app, the model, or both. Use `search-docs` before editing the app SDK integration.
+Generate apps with `make:mcp-app-resource`. Register the generated app resource in the server's `$resources` array, and render it with `Response::view(...)`. Link a tool to an app resource with `#[RendersApp(resource: AppResource::class)]`. Use `#[AppMeta]` for CSP, permissions, and bundled libraries. Use `Visibility::App` and `Visibility::Model` to control whether app tools are visible to the app, the model, or both. Before editing the app SDK integration, use `search-docs`.
 
-## Testing MCP Primitives
+## Testing MCP primitives
 
 Test tools, resources, and prompts directly on their server:
 
@@ -159,7 +159,7 @@ Use `$response->dump()` or `$response->dd()` while debugging.
 
 ### MCP Inspector
 
-Test interactively using the inspector:
+Test the server interactively with the inspector:
 
 ```bash
 # Mcp::web('/mcp/my-server', MyServer::class)
@@ -171,13 +171,13 @@ Test interactively using the inspector:
 
 For authenticated web servers, configure headers such as `Authorization: Bearer ...` in the inspector.
 
-## Authentication and Authorization
+## Authentication and authorization
 
 - Protect web servers with normal route middleware such as `auth:sanctum`, or configure Passport OAuth 2.1 with `Mcp::oauthRoutes()` and `auth:api`.
-- Route authentication and primitive authorization are separate. Check abilities or policies in the primitive and return `Response::error('Permission denied.')` when unauthorized.
-- `shouldRegister(Request $request)` controls discovery and availability, but should not be the only authorization check for sensitive operations.
+- Route authentication and primitive authorization are separate. Check abilities or policies in the primitive. If the check fails, return `Response::error('Permission denied.')`.
+- `shouldRegister(Request $request)` controls discovery and availability. For sensitive operations, do not make it the only authorization check.
 
-## MCP Client
+## MCP client
 
 Laravel MCP includes a client for connecting to external servers:
 
@@ -194,9 +194,9 @@ $result = $client->callTool('tool-name', ['key' => 'value']);
 $client->disconnect();
 @endboostsnippet
 
-Use `Client::local('php', ['artisan', 'mcp:start'])` for a local stdio server. Named clients may be registered with `Mcp::registerClient(...)` and resolved with `Mcp::client(...)`. The client also provides `prompts()` / `getPrompt()` and `resources()` / `readResource()`; listing methods automatically paginate. Use `search-docs` for OAuth flows and result object APIs.
+For a local stdio server, use `Client::local('php', ['artisan', 'mcp:start'])`. To use named clients, register them with `Mcp::registerClient(...)` and resolve them with `Mcp::client(...)`. The client also provides `prompts()`, `getPrompt()`, `resources()`, and `readResource()`. The listing methods paginate automatically. Use `search-docs` for OAuth flows and result object APIs.
 
-## Available Features
+## Available features
 
 The following features exist. **Use `search-docs` for implementation details**:
 
@@ -206,9 +206,9 @@ The following features exist. **Use `search-docs` for implementation details**:
 - **All primitives**: Dependency injection and `shouldRegister(Request $request)`
 - **Apps**: App resources, `#[RendersApp]`, visibility, `#[AppMeta]`, and the app SDK
 - **Presentation**: Repeatable `#[Icon]` attributes and runtime `icons()`
-- **Servers and clients**: Web/local transports, OAuth, named clients, and remote primitive invocation
+- **Servers and clients**: Web and local transports, OAuth, named clients, and remote primitive invocation
 
-## Critical Imports
+## Critical imports
 
 @boostsnippet("Correct Imports", "php")
 use Laravel\Mcp\Request;           // NOT Laravel\Mcp\Server\Request
@@ -219,13 +219,13 @@ use Laravel\Mcp\Server\Prompt;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 @endboostsnippet
 
-## Common Pitfalls
+## Common pitfalls
 
 - **Not using `search-docs` before implementation**
 - Wrong imports: `Laravel\Mcp\Server\Request` (wrong) vs `Laravel\Mcp\Request` (correct)
 - Forgetting to register primitives on the server or the server in `routes/ai.php`
 - Using legacy `$description`, `$uri`, or `$mimeType` properties instead of attributes
-- Omitting a meaningful `#[Description]`; descriptions are not generated automatically
+- Omitting a meaningful `#[Description]`. Laravel MCP does not generate descriptions
 - Forgetting `schema()` for tool parameters or using a resource input schema (resources have none)
 - Wrong response pattern: `new Response()` instead of `Response::text()`
-- Manually launching `mcp:start` and expecting interactive output; it is an stdio server that waits for an MCP client
+- Manually launching `mcp:start` and expecting interactive output. `mcp:start` is a stdio server that waits for an MCP client

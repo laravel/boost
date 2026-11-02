@@ -211,6 +211,36 @@ it('handles missing channel configuration gracefully', function (): void {
         ->toolTextContains('local.DEBUG: Fallback log');
 });
 
+it('does not serve a truncated entry when the chunk boundary lands inside a stack trace', function (): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $trace = implode("\n", array_map(
+        fn (int $i): string => "#{$i} /app/vendor/framework/src/Handler.php(42): padding trace frame for the boundary",
+        range(1, 900),
+    ));
+
+    createLogFile($logFile, implode("\n", [
+        '[2024-01-15 09:00:00] local.ERROR: Big exception',
+        $trace,
+        '[2024-01-15 10:00:00] local.INFO: First small entry',
+        '[2024-01-15 10:01:00] local.INFO: Second small entry',
+        '[2024-01-15 10:02:00] local.INFO: Third small entry',
+    ]));
+
+    $tool = new ReadLogEntries;
+    $response = $tool->handle(new Request(['entries' => 4]));
+
+    expect($response)->isToolResult()
+        ->toolHasNoError()
+        ->toolTextContains('local.ERROR: Big exception', 'Third small entry');
+});
+
 it('returns error when entries argument is invalid', function (): void {
     $tool = new ReadLogEntries;
 

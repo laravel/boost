@@ -8,19 +8,19 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Inertia React Development
+# Inertia React development
 
 ## Documentation
 
 Use `search-docs` for detailed Inertia v1 React patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Page Components Location
+### Page components location
 
-React page components should be placed in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
+Place React page components in the `{{ $assist->inertia()->pagesDirectory() }}` directory.
 
-### Page Component Structure
+### Page component structure
 
 @boostsnippet("Basic React Page Component", "react")
 export default function UsersIndex({ users }) {
@@ -35,9 +35,9 @@ export default function UsersIndex({ users }) {
 }
 @endboostsnippet
 
-### Client-Side Navigation
+### Client-side navigation
 
-Use `<Link>` for client-side navigation (not `<a>` tags):
+Use `<Link>` for client-side navigation instead of `<a>` tags:
 
 @boostsnippet("Inertia React Navigation", "react")
 import { Link } from '@inertiajs/react'
@@ -47,7 +47,7 @@ import { Link } from '@inertiajs/react'
 <Link href={`/users/${user.id}`}>View User</Link>
 @endboostsnippet
 
-### Link With Method
+### Link with method
 
 @boostsnippet("Link with POST Method", "react")
 import { Link } from '@inertiajs/react'
@@ -57,7 +57,7 @@ import { Link } from '@inertiajs/react'
 </Link>
 @endboostsnippet
 
-### Programmatic Navigation
+### Programmatic navigation
 
 @boostsnippet("Router Visit", "react")
 import { router } from '@inertiajs/react'
@@ -74,7 +74,7 @@ router.visit('/users', {
 })
 @endboostsnippet
 
-## Form Handling
+## Form handling
 
 ### Using `router.post`
 
@@ -118,9 +118,9 @@ export default function CreateUser() {
 }
 @endboostsnippet
 
-### Using `useForm` Hook (If Available)
+### Using the `useForm` hook (if available)
 
-Check the Inertia documentation to confirm if `useForm` is available in your version:
+Check the Inertia documentation to confirm whether `useForm` is available in your version:
 
 @boostsnippet("useForm Hook Example", "react")
 import { useForm } from '@inertiajs/react'
@@ -160,7 +160,7 @@ export default function CreateUser() {
 }
 @endboostsnippet
 
-## Inertia v1 Limitations
+## Inertia v1 limitations
 
 Inertia v1 does not support these v2 features:
 
@@ -173,9 +173,9 @@ Inertia v1 does not support these v2 features:
 
 Do not use these features in v1 projects.
 
-## Common Pitfalls
+## Common pitfalls
 
 - Using traditional `<a>` links instead of Inertia's `<Link>` component (breaks SPA behavior)
-- Trying to use Inertia v2 features (deferred props, `<Form>` component, etc.) in v1 projects
+- Using Inertia v2 features, such as deferred props or the `<Form>` component, in v1 projects
 - Using `<form>` without preventing default submission (use `e.preventDefault()`)
 - Not handling loading states during form submission

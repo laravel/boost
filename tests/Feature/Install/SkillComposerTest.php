@@ -2,18 +2,26 @@
 
 declare(strict_types=1);
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
+use JMac\Testing\Double;
 use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillComposer;
-use Laravel\Roster\Package;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Mockery::mock(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
 
     $this->app->instance(ProjectManager::class, $this->project);
+    app(SkillParseFailures::class)->flush();
+});
+
+afterEach(function (): void {
+    clearStagedPackages();
 });
 
 test('skills return a collection keyed by skill name', function (): void {
@@ -54,6 +62,19 @@ test('skills only includes skills for installed packages', function (): void {
     $skills = (new SkillComposer($this->project))->skills();
 
     expect($skills->has('livewire-development'))->toBeFalse();
+});
+
+test('the cloud skill is only included when the cloud integration is enabled', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([rosterPackage('laravel/framework', '11.0.0')]));
+
+    $composer = new SkillComposer($this->project);
+
+    expect($composer->skills()->has('deploying-to-cloud'))->toBeFalse();
+
+    $config = new GuidelineConfig;
+    $config->usesCloud = true;
+
+    expect($composer->config($config)->skills()->get('deploying-to-cloud')->package)->toBe('deployments');
 });
 
 test('skill has name, description, path, and package', function (): void {
@@ -159,19 +180,12 @@ test('includes livewire skills when directly required', function (): void {
 test('vendor skills override .ai/ skills with the same name', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        (rosterPackage('livewire/livewire', '3.0.0'))->setDirect(true),
+        (rosterPackage('livewire/livewire', '3.0.0', path: fixture('vendor-packages/skills')))->setDirect(true),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
-    expect($vendorFixture)->not->toBeFalse();
-
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === 'livewire/livewire' ? $vendorFixture : null);
+    $composer = new SkillComposer($this->project);
 
     $skills = $composer->skills();
 
@@ -187,10 +201,7 @@ test('falls back to .ai/ skills when vendor has none', function (): void {
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer = new SkillComposer($this->project);
 
     $skills = $composer->skills();
 
@@ -200,19 +211,12 @@ test('falls back to .ai/ skills when vendor has none', function (): void {
 test('node_modules skills override .ai/ skills for npm first-party packages', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),
-        rosterPackage('@inertiajs/react', '2.1.0'),
+        rosterPackage('@inertiajs/react', '2.1.0', path: fixture('vendor-packages/skills')),
     ]);
 
     mockProjectPackages($this->project, $packages);
 
-    $vendorFixture = realpath(\Pest\testDirectory('Fixtures/vendor-skills'));
-    expect($vendorFixture)->not->toBeFalse();
-
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')
-        ->andReturnUsing(fn (Package $package, string $subpath): ?string => $package->name() === '@inertiajs/react' ? $vendorFixture : null);
+    $composer = new SkillComposer($this->project);
 
     $skills = $composer->skills();
 
@@ -228,10 +232,7 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
 
     mockProjectPackages($this->project, $packages);
 
-    $composer = Mockery::mock(SkillComposer::class, [$this->project])
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-    $composer->shouldReceive('resolveFirstPartyBoostPath')->andReturn(null);
+    $composer = new SkillComposer($this->project);
 
     $skills = $composer->skills();
 
@@ -239,84 +240,51 @@ test('falls back to .ai/ skills when node_modules has none for npm package', fun
 });
 
 test('returns all third-party skills when aiGuidelines is uninitialized', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('some/third-party', 'skills');
+    stageSkill($package, 'third-party-skill', 'A vendor-provided skill');
 
-    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
-    try {
-        $skills = (new SkillComposer($this->project))->skills();
-
-        expect($skills->has('third-party-skill'))->toBeTrue();
-    } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    expect((new SkillComposer($this->project))->skills()->has('third-party-skill'))->toBeTrue();
 });
 
 test('filters third-party skills to matching packages when aiGuidelines is set', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('some/third-party', 'skills');
+    stageSkill($package, 'third-party-skill', 'A vendor-provided skill');
 
-    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
-    try {
-        $config = new GuidelineConfig;
-        $config->aiGuidelines = ['some/third-party'];
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = ['some/third-party'];
 
-        $skills = (new SkillComposer($this->project))->config($config)->skills();
-
-        expect($skills->has('third-party-skill'))->toBeTrue();
-    } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+    expect((new SkillComposer($this->project))->config($config)->skills()->has('third-party-skill'))->toBeTrue();
 });
 
 test('excludes third-party skills for packages not in aiGuidelines', function (): void {
-    mockProjectPackages($this->project, new PackageCollection([]));
+    $package = stagedPackage('some/third-party', 'skills');
+    stageSkill($package, 'third-party-skill', 'A vendor-provided skill');
 
-    $skillDir = base_path('vendor/some/third-party/resources/boost/skills/third-party-skill');
-    @mkdir($skillDir, 0755, true);
-    file_put_contents($skillDir.'/SKILL.md', "---\nname: third-party-skill\ndescription: A vendor-provided skill\n---\n\n# Content\n");
-    file_put_contents(base_path('composer.json'), json_encode(['require' => ['some/third-party' => '^1.0']]));
+    mockProjectPackages($this->project, new PackageCollection([$package]));
 
-    try {
-        $config = new GuidelineConfig;
-        $config->aiGuidelines = ['other/package'];
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = ['other/package'];
 
-        $skills = (new SkillComposer($this->project))->config($config)->skills();
+    expect((new SkillComposer($this->project))->config($config)->skills()->has('third-party-skill'))->toBeFalse();
+});
 
-        expect($skills->has('third-party-skill'))->toBeFalse();
-    } finally {
-        @unlink($skillDir.'/SKILL.md');
-        @rmdir($skillDir);
-        @rmdir(base_path('vendor/some/third-party/resources/boost/skills'));
-        @rmdir(base_path('vendor/some/third-party/resources/boost'));
-        @rmdir(base_path('vendor/some/third-party/resources'));
-        @rmdir(base_path('vendor/some/third-party'));
-        @rmdir(base_path('vendor/some'));
-        @rmdir(base_path('vendor'));
-        @unlink(base_path('composer.json'));
-    }
+test('does not parse invalid skills from excluded third-party packages', function (): void {
+    $package = stagedPackage('some/third-party', 'skills');
+    $skillDir = $package->path().'/resources/boost/skills/third-party-skill';
+    File::ensureDirectoryExists($skillDir);
+    File::put($skillDir.'/SKILL.md', fixtureContent('skills/broken-frontmatter/SKILL.md'));
+
+    mockProjectPackages($this->project, new PackageCollection([$package]));
+
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = ['other/package'];
+
+    expect((new SkillComposer($this->project))->config($config)->skills()->has('broken-frontmatter'))->toBeFalse()
+        ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
 });
 
 test('blade skills with code before frontmatter are parsed correctly', function (): void {
@@ -380,4 +348,96 @@ test('frontmatter parsing ignores HTML comments injected by third-party packages
     expect($result)
         ->toHaveKey('name', 'pest-testing')
         ->toHaveKey('description', 'Write and run tests with Pest');
+});
+
+test('returns third-party npm skills when aiGuidelines is uninitialized', function (): void {
+    $package = stagedPackage('@some-scope/third-party', 'skills');
+    stageSkill($package, 'npm-third-party-skill', 'An npm vendor-provided skill');
+
+    mockProjectPackages($this->project, new PackageCollection([$package]));
+
+    expect((new SkillComposer($this->project))->skills()->has('npm-third-party-skill'))->toBeTrue();
+});
+
+test('first-party npm skills load without the third-party opt-in', function (): void {
+    $firstParty = stagedPackage('@laravel/some-package', 'skills');
+    stageSkill($firstParty, 'laravel-skill', 'A first-party skill');
+
+    $thirdParty = stagedPackage('@some-scope/third-party', 'skills');
+    stageSkill($thirdParty, 'npm-third-party-skill', 'An npm vendor-provided skill');
+
+    mockProjectPackages($this->project, new PackageCollection([$firstParty, $thirdParty]));
+
+    $config = new GuidelineConfig;
+    $config->aiGuidelines = [];
+
+    $skills = (new SkillComposer($this->project))->config($config)->skills();
+
+    expect($skills->has('laravel-skill'))->toBeTrue()
+        ->and($skills->has('npm-third-party-skill'))->toBeFalse();
+});
+
+test('a skill with invalid YAML frontmatter is skipped and records the failure', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('broken-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('broken-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['broken-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])
+            ->toContain('A colon cannot be used in an unquoted mapping value')
+            ->toContain('description: Does a thing. Covers: the important bit.');
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+});
+
+test('a skill with unclosed frontmatter is skipped and records the failure', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('unclosed-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('unclosed-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['unclosed-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])->toContain('no closing delimiter');
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+});
+
+test('a skill whose frontmatter omits the name is skipped and records the failure', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('incomplete-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('incomplete-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->skillNames())->toBe(['incomplete-frontmatter'])
+            ->and(app(SkillParseFailures::class)->all()[0]['reason'])->toContain('[name] and [description]');
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
+});
+
+test('a skill without frontmatter is treated as absent', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([]));
+
+    $skillDir = stageCustomSkill('no-frontmatter');
+
+    try {
+        $skills = (new SkillComposer($this->project))->skills();
+
+        expect($skills->has('no-frontmatter'))->toBeFalse()
+            ->and(app(SkillParseFailures::class)->isEmpty())->toBeTrue();
+    } finally {
+        (new Filesystem)->deleteDirectory($skillDir);
+    }
 });

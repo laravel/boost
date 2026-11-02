@@ -6,6 +6,7 @@ namespace Laravel\Boost\Concerns;
 
 use Illuminate\Support\Facades\Blade;
 use Laravel\Boost\Install\GuidelineAssist;
+use Laravel\Boost\Support\Fences;
 use Laravel\Boost\Support\RenderFailures;
 
 trait RendersBladeGuidelines
@@ -35,6 +36,15 @@ trait RendersBladeGuidelines
             '<x-' => '___BLADE_COMPONENT_OPEN___',
         ];
 
+        [$content, $escapes] = $this->extractBladeEscapes($content);
+
+        // Hiding literal ampersands in fenced code before rendering leaves only Blade's own escaping to decode.
+        $content = preg_replace_callback(
+            '/(?<fence>`{3,}|~{3,}).*?\k<fence>/s',
+            fn (array $matches): string => str_replace('&', '___AMPERSAND___', $matches[0]),
+            $content,
+        ) ?? $content;
+
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $content);
 
         $rendered = rescue(
@@ -52,16 +62,48 @@ trait RendersBladeGuidelines
         }
 
         $rendered = html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5);
+        $rendered = str_replace('___AMPERSAND___', '&', $rendered);
+        $rendered = str_replace(array_keys($escapes), array_values($escapes), $rendered);
 
         return str_replace(array_values($placeholders), array_keys($placeholders), $rendered);
     }
 
-    protected function processBoostSnippets(string $content): string
+    /**
+     * @return array{string, array<string, string>}
+     */
+    protected function extractBladeEscapes(string $content): array
     {
-        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function (array $matches): string {
+        $escapes = [];
+        $skipVerbatim = '@verbatim.*?@endverbatim(*SKIP)(*FAIL)|';
+        // Stop at a blank line or fence so an escape in prose cannot swallow a later code block.
+        $bounded = '(?:(?!\n[ \t]*\n|\n[ \t]*`{3,}|\n[ \t]*~{3,}).)*?';
+
+        $patterns = [
+            '/'.$skipVerbatim.'(?<!@)@\{!!'.$bounded.'!!\}/s',
+            '/'.$skipVerbatim.'(?<!@)@\{\{'.$bounded.'\}\}/s',
+            '/'.$skipVerbatim.'(?<!@)@(?:\{!!|\{\{)/s',
+            '/'.$skipVerbatim.'(?<![\w@])@@(?=\w)/s',
+        ];
+
+        foreach ($patterns as $pattern) {
+            $content = preg_replace_callback($pattern, function (array $matches) use (&$escapes): string {
+                $placeholder = '___BLADE_ESCAPE_'.count($escapes).'___';
+
+                $escapes[$placeholder] = substr($matches[0], 1);
+
+                return $placeholder;
+            }, $content) ?? $content;
+        }
+
+        return [$content, $escapes];
+    }
+
+    protected function processBoostSnippets(string $content, string $path = '', array $data = []): string
+    {
+        return preg_replace_callback('/(?<!@)@boostsnippet\(\s*(?P<nameQuote>[\'"])(?P<name>[^\1]*?)\1(?:\s*,\s*(?P<langQuote>[\'"])(?P<lang>[^\3]*?)\3)?\s*\)(?P<content>.*?)@endboostsnippet/s', function (array $matches) use ($path, $data): string {
             $name = $matches['name'];
             $lang = empty($matches['lang']) ? 'html' : $matches['lang'];
-            $snippetContent = trim($matches['content']);
+            $snippetContent = $this->renderSnippetAssistExpressions(trim($matches['content']), $path, $data);
 
             $placeholder = '___BOOST_SNIPPET_'.count($this->storedSnippets).'___';
 
@@ -71,38 +113,28 @@ trait RendersBladeGuidelines
         }, $content);
     }
 
+    protected function renderSnippetAssistExpressions(string $content, string $path, array $data): string
+    {
+        return preg_replace_callback('/(?<!@)\{\{.*?\}\}/s', function (array $matches) use ($path, $data): string {
+            if (! str_contains($matches[0], '$assist->')) {
+                return $matches[0];
+            }
+
+            return $this->renderContent($matches[0], $path, $data);
+        }, $content) ?? $content;
+    }
+
     protected function markScopedBlocks(string $content): string
     {
-        $fences = [];
+        return Fences::outside($content, function (string $markdown): string {
+            $marked = preg_replace_callback(
+                '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
+                fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
+                $markdown
+            ) ?? $markdown;
 
-        $marked = preg_replace_callback('/(?<fence>`{3,}|~{3,}).*?\k<fence>/s', function (array $matches) use (&$fences): string {
-            $placeholder = '___SCOPED_FENCE_'.count($fences).'___';
-            $fences[$placeholder] = $matches[0];
-
-            return $placeholder;
-        }, $content);
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        $marked = preg_replace_callback(
-            '/(?<!@)@scoped\(\s*(?P<paths>\[(?:[\s,]|\'[^\']*\'|"[^"]*")*\])\s*\)/s',
-            fn (array $matches): string => '___SCOPED_START_'.base64_encode((string) json_encode($this->parseScopedPaths($matches['paths']))).'___',
-            $marked
-        );
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        $marked = preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked);
-
-        if ($marked === null) {
-            return $content;
-        }
-
-        return str_replace(array_keys($fences), array_values($fences), $marked);
+            return preg_replace('/(?<!@)@endscoped/', '___SCOPED_END___', $marked) ?? $marked;
+        });
     }
 
     /**
@@ -230,7 +262,7 @@ trait RendersBladeGuidelines
      */
     protected function renderBladeStringWithScopedBlocks(string $content, string $path, array $data = [], bool $stripScoped = false): array
     {
-        $content = $this->processBoostSnippets($content);
+        $content = $this->processBoostSnippets($content, $path, $data);
         $content = $this->markScopedBlocks($content);
 
         $rendered = $this->renderContent($content, $path, $data);

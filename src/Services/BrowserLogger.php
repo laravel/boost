@@ -62,23 +62,40 @@ class BrowserLogger
         table: console.table
     };
 
+    // Walk own enumerable keys so JSON.stringify cannot auto-invoke a proxy fake toJSON (e.g. Livewire's `\$wire`) and fire a real request.
+    function toSafeValue(value, seen) {
+        if (value === null || typeof value !== 'object') {
+            return value;
+        }
+        if (value instanceof Error) {
+            return { name: value.name, message: value.message, stack: value.stack };
+        }
+        // Date has no own enumerable keys, so the walk below would collapse it to {}.
+        if (value instanceof Date) {
+            return value.toISOString();
+        }
+        if (seen.has(value)) {
+            return '[Circular]';
+        }
+        seen.add(value);
+        if (Array.isArray(value)) {
+            return value.map((item) => toSafeValue(item, seen));
+        }
+        const plain = {};
+        for (const key of Object.keys(value)) {
+            if (key === 'toJSON') continue;
+            try {
+                plain[key] = toSafeValue(value[key], seen);
+            } catch (e) {
+                plain[key] = '[Unreadable]';
+            }
+        }
+        return plain;
+    }
+
     // Helper to safely stringify values
     function safeStringify(obj) {
-        const seen = new WeakSet();
-        return JSON.stringify(obj, (key, value) => {
-            if (typeof value === 'object' && value !== null) {
-                if (seen.has(value)) return '[Circular]';
-                seen.add(value);
-            }
-            if (value instanceof Error) {
-                return {
-                    name: value.name,
-                    message: value.message,
-                    stack: value.stack
-                };
-            }
-            return value;
-        });
+        return JSON.stringify(toSafeValue(obj, new WeakSet()));
     }
 
     // Normalize log type for consistency (e.g., 'warn' to 'warning')
@@ -230,11 +247,7 @@ class BrowserLogger
                 timestamp: new Date().toISOString(),
                 data: [{
                     message: 'Unhandled Promise Rejection',
-                    reason: event.reason instanceof Error ? {
-                        name: event.reason.name,
-                        message: event.reason.message,
-                        stack: event.reason.stack
-                    } : event.reason
+                    reason: toSafeValue(event.reason, new WeakSet())
                 }],
                 url: window.location.href,
                 userAgent: navigator.userAgent

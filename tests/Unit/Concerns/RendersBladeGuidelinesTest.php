@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Install\GuidelineAssist;
 
@@ -94,6 +95,31 @@ test('boostsnippet preserves multiline content', function (): void {
         ->toContain("\$user = User::find(1);\n\$user->name = 'John';\n\$user->save();");
 });
 
+test('boostsnippet renders assist expressions without rendering other blade examples', function (): void {
+    $assist = Mockery::mock(GuidelineAssist::class);
+    $assist->shouldReceive('artisanCommand')
+        ->once()
+        ->with('optimize:clear')
+        ->andReturn('vendor/bin/sail artisan optimize:clear');
+
+    app()->instance(GuidelineAssist::class, $assist);
+
+    $tempFile = sys_get_temp_dir().'/boost_test_'.uniqid().'.blade.php';
+    file_put_contents($tempFile, "@boostsnippet('Command', 'bash')\n{{ \$assist->artisanCommand('optimize:clear') }}\n\n{{ \$user->name }}\n@endboostsnippet");
+
+    try {
+        $result = $this->renderer->renderFile($tempFile);
+
+        expect($result)
+            ->toContain('<!-- Command -->')
+            ->toContain('vendor/bin/sail artisan optimize:clear')
+            ->toContain('{{ $user->name }}')
+            ->not->toContain('$assist->artisanCommand');
+    } finally {
+        @unlink($tempFile);
+    }
+});
+
 test('non-blade files bypass blade rendering entirely', function (): void {
     $bladeContent = '{{ $variable }} @if(true) test @endif';
 
@@ -103,7 +129,7 @@ test('non-blade files bypass blade rendering entirely', function (): void {
 });
 
 test('backticks are preserved through blade rendering for inline code documentation', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Run `composer install` then `php artisan migrate`';
 
@@ -114,7 +140,7 @@ test('backticks are preserved through blade rendering for inline code documentat
 });
 
 test('php opening tags are preserved through blade rendering for code examples', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Example: <?php echo $greeting; ?>';
 
@@ -124,7 +150,7 @@ test('php opening tags are preserved through blade rendering for code examples',
 });
 
 test('volt directives are preserved through blade rendering for livewire documentation', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = '@volt("counter") component code @endvolt';
 
@@ -135,7 +161,7 @@ test('volt directives are preserved through blade rendering for livewire documen
 });
 
 test('html entities from blade expressions are decoded back to plain text for markdown output', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Run {{ "tinker --execute \"your code here\"" }}';
 
@@ -146,7 +172,7 @@ test('html entities from blade expressions are decoded back to plain text for ma
 });
 
 test('all common html entities are decoded', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $content = 'Use {{ "a < b & c > d" }}';
 
@@ -158,6 +184,162 @@ test('all common html entities are decoded', function (): void {
         ->not->toContain('&gt;');
 });
 
+test('html entities written literally inside fenced code blocks are preserved', function (): void {
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
+
+    $content = <<<'MARKDOWN'
+```php
+$this->assertStringContainsString('&lt;script&gt;', $content);
+```
+MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toBe($content);
+});
+
+test('escaped echo in prose does not swallow a following code example', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+    Blade's `@{{ }}` syntax HTML-escapes output. Use `@{!! !!}` only when sanitized.
+
+    Incorrect:
+
+    ```blade
+    @{!! $user->bio !!}
+    ```
+
+    Correct:
+
+    ```blade
+    @{{ $user->bio }}
+    ```
+    MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain("Blade's `{{ }}` syntax")
+        ->toContain('Use `{!! !!}` only when sanitized.')
+        ->toContain('{!! $user->bio !!}')
+        ->toContain('{{ $user->bio }}')
+        ->not->toContain('@{!!')
+        ->not->toContain('@{{')
+        ->not->toContain('___BLADE_ESCAPE_');
+});
+
+test('escaped directive in prose is restored to a single at sign', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $result = $this->renderer->render('Include `@@csrf` in forms.', '/path/to/guide.blade.php');
+
+    expect($result)->toBe('Include `@csrf` in forms.');
+});
+
+test('escaped echo inside a fenced code block keeps its ampersands', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+    ```blade
+    @{{ $a && $b }}
+    ```
+    MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('{{ $a && $b }}')
+        ->not->toContain('___AMPERSAND___');
+});
+
+test('escapes inside verbatim blocks are left untouched', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $result = $this->renderer->render("@verbatim\n@{{ x }} and @@csrf\n@endverbatim", '/path/to/guide.blade.php');
+
+    expect(trim($result))->toBe('@{{ x }} and @@csrf');
+});
+
+test('unterminated escaped echo in prose does not swallow a following code example', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+    Use `@{{` to escape.
+
+    ```blade
+    {{ 1 + 1 }}
+    ```
+    MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('Use `{{` to escape.')
+        ->toContain("```blade\n2\n```");
+});
+
+test('double at sign inside a word is left for blade', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $result = $this->renderer->render('Mail foo@@bar.com', '/path/to/guide.blade.php');
+
+    expect($result)->toBe('Mail foo@@bar.com');
+});
+
+test('escaped echo inside a fenced code block is restored to a single at sign', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+    ```blade
+    @{{ $user->bio }}
+    ```
+    MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toBe("```blade\n{{ \$user->bio }}\n```");
+});
+
+test('an unescaped blade directive inside a fenced code block still executes', function (): void {
+    $this->mock(GuidelineAssist::class);
+
+    $content = <<<'MARKDOWN'
+    ```blade
+    @csrf
+    ```
+    MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('_token');
+});
+
+test('html entities from blade expressions inside fenced code blocks are decoded', function (): void {
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
+
+    $content = <<<'MARKDOWN'
+```bash
+php artisan tinker --execute {{ '"$a < $b && $c"' }}
+```
+MARKDOWN;
+
+    $result = $this->renderer->render($content, '/path/to/guide.blade.php');
+
+    expect($result)->toContain('--execute "$a < $b && $c"')
+        ->not->toContain('&quot;')
+        ->not->toContain('&lt;')
+        ->not->toContain('&amp;');
+});
+
+test('renderBladeFile preserves literal entities while decoding blade output', function (): void {
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
+
+    $result = $this->renderer->renderFile(fixture('entities-in-code-blocks.blade.php'));
+
+    expect($result)
+        ->toContain("assertStringContainsString('&lt;script&gt;', \$content)")
+        ->toContain('Run php artisan tinker --execute "User::count()" to check.')
+        ->toContain('--execute "$a < $b && $c"');
+});
+
 test('renderBladeFile returns empty string for non-existent file', function (): void {
     $result = $this->renderer->renderFile('/non/existent/guideline.blade.php');
 
@@ -165,7 +347,7 @@ test('renderBladeFile returns empty string for non-existent file', function (): 
 });
 
 test('renderBladeFile processes snippets and renders blade in single pipeline', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $tempFile = sys_get_temp_dir().'/boost_test_'.uniqid().'.blade.php';
     file_put_contents($tempFile, "@boostsnippet('Query', 'php')User::all()@endboostsnippet\n\nVersion: {{ \"1.0\" }}");
@@ -185,7 +367,7 @@ test('renderBladeFile processes snippets and renders blade in single pipeline', 
 });
 
 test('renderBladeFile clears stored snippets after rendering to prevent leakage between files', function (): void {
-    $this->mock(GuidelineAssist::class);
+    $this->app->instance(GuidelineAssist::class, Double::for(GuidelineAssist::class));
 
     $tempFile = sys_get_temp_dir().'/boost_test_'.uniqid().'.blade.php';
     file_put_contents($tempFile, "@boostsnippet('Test')content@endboostsnippet");

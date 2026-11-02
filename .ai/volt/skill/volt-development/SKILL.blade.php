@@ -8,19 +8,19 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Volt Development
+# Volt development
 
 ## Documentation
 
 Use `search-docs` for detailed Volt patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
 Create components with `{{ $assist->artisanCommand('make:volt [name] [--test] [--pest]') }}`.
 
-Important: Check existing Volt components to determine if they use functional or class-based style before creating new ones.
+Important: Before creating a Volt component, check whether the existing ones use the functional or class-based style.
 
-### Functional Components
+### Functional components
 
 @boostsnippet("Volt Functional Component", "php")
 @@volt
@@ -40,7 +40,7 @@ $double = computed(fn () => $this->count * 2);
 @@endvolt
 @endboostsnippet
 
-### Class-Based Components
+### Class-based components
 
 @boostsnippet("Volt Class-based Component", "php")
 <?php
@@ -64,7 +64,7 @@ new class extends Component {
 
 ## Testing
 
-Tests go in existing Volt test directory or `tests/Feature/Volt`:
+Put tests in the existing Volt test directory or in `tests/Feature/Volt`:
 
 @boostsnippet("Volt Test Example", "php")
 use Livewire\Volt\Volt;
@@ -79,11 +79,11 @@ test('counter increments', function () {
 
 ## Verification
 
-1. Check existing components for functional vs class-based style
-2. Test component with `Volt::test()`
+1. Check whether existing components use the functional or class-based style
+2. Test the component with `Volt::test()`
 
-## Common Pitfalls
+## Common pitfalls
 
-- Not checking existing style (functional vs class-based) before creating
-- Forgetting `@volt` directive wrapper
-- Missing `--test` or `--pest` flag when tests are needed
+- Not checking the existing style (functional or class-based) before creating a component
+- Forgetting the `@volt` directive wrapper
+- Omitting the `--test` or `--pest` flag when you need tests

@@ -41,14 +41,14 @@ trait ReadsLogs
     /**
      * Resolve the current log file path based on Laravel's logging configuration.
      */
-    protected function resolveLogFilePath(): string
+    protected function resolveLogFilePath(?string $channel = null, ?string $default = null): string
     {
-        $channel = Config::get('logging.default');
+        $channel ??= Config::get('logging.default');
         $channelConfig = Config::get("logging.channels.{$channel}");
 
         $channelConfig = $this->resolveChannelWithPath($channelConfig);
 
-        $baseLogPath = Arr::get($channelConfig, 'path', storage_path('logs/laravel.log'));
+        $baseLogPath = Arr::get($channelConfig, 'path') ?? $default ?? storage_path('logs/laravel.log');
 
         if (Arr::get($channelConfig, 'driver') === 'daily') {
             return $this->resolveDailyLogFilePath($baseLogPath);
@@ -250,6 +250,10 @@ trait ReadsLogs
 
             if (! $entries) {
                 return [];
+            }
+
+            if ($offset > 0 && preg_match('/^'.$this->getTimestampRegex().'/', $entries[0]) !== 1) {
+                array_shift($entries);
             }
 
             return $entries; // already in chronological order relative to chunk

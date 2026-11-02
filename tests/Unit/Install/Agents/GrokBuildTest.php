@@ -12,7 +12,7 @@ use Laravel\Boost\Install\Enums\Platform;
 use Mockery;
 
 beforeEach(function (): void {
-    $this->strategyFactory = Mockery::mock(DetectionStrategyFactory::class);
+    $this->strategyFactory = app(DetectionStrategyFactory::class);
 });
 
 test('returns correct name', function (): void {

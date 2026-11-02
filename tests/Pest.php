@@ -13,6 +13,8 @@ declare(strict_types=1);
 |
 */
 
+use Illuminate\Filesystem\Filesystem;
+use JMac\Testing\OverriddenDouble;
 use Laravel\Mcp\Response;
 use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
@@ -85,6 +87,15 @@ function fixtureContent(string $name): string
     return file_get_contents(fixture($name));
 }
 
+function stageCustomSkill(string $fixture): string
+{
+    $target = base_path('.ai/skills/'.basename($fixture));
+
+    (new Filesystem)->copyDirectory(fixture('skills/'.$fixture), $target);
+
+    return $target;
+}
+
 function rosterPackage(string $name, string $version, bool $dev = false, ?string $path = null): Package
 {
     $source = str_starts_with($name, '@') || ! str_contains($name, '/')
@@ -102,6 +113,45 @@ function rosterPackage(string $name, string $version, bool $dev = false, ?string
     };
 }
 
+/**
+ * Install a direct third-party package outside vendor/ and node_modules/, so discovery is
+ * driven by the Roster package's own path rather than a hard-coded manifest location.
+ */
+function stagedPackage(string $name, string ...$boostSubpaths): Package
+{
+    $path = stagedPackagesPath().DIRECTORY_SEPARATOR.str_replace(['@', '/'], ['', '-'], $name);
+    $files = new Filesystem;
+
+    $files->ensureDirectoryExists($path);
+
+    foreach ($boostSubpaths as $subpath) {
+        $files->ensureDirectoryExists($path.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'boost'.DIRECTORY_SEPARATOR.$subpath);
+    }
+
+    return rosterPackage($name, '1.0.0', path: $path)->setDirect();
+}
+
+function stageSkill(Package $package, string $name, string $description): string
+{
+    $dir = $package->path().DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, ['resources', 'boost', 'skills', $name]);
+    $files = new Filesystem;
+
+    $files->ensureDirectoryExists($dir);
+    $files->put($dir.DIRECTORY_SEPARATOR.'SKILL.md', "---\nname: {$name}\ndescription: {$description}\n---\n\n# Content\n");
+
+    return $dir;
+}
+
+function stagedPackagesPath(): string
+{
+    return base_path('staged-packages');
+}
+
+function clearStagedPackages(): void
+{
+    (new Filesystem)->deleteDirectory(stagedPackagesPath());
+}
+
 function mockProjectPackages(ProjectManager $project, PackageCollection $packages, ?JsPackageManager $packageManager = null): void
 {
     $php = new PackageCollection($packages->filter(
@@ -111,7 +161,7 @@ function mockProjectPackages(ProjectManager $project, PackageCollection $package
         fn (Package $package): bool => $package->source() === PackageSource::Npm,
     )->values()->all());
 
-    $project->shouldReceive('php')->andReturn(new Ecosystem($php));
-    $project->shouldReceive('js')->andReturn(new JsEcosystem($js, $packageManager));
-    $project->shouldReceive('starterKit')->andReturnNull()->byDefault();
+    $double = new OverriddenDouble($project);
+    $double->allows('php')->returns(new Ecosystem($php));
+    $double->allows('js')->returns(new JsEcosystem($js, $packageManager));
 }

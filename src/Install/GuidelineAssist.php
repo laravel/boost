@@ -7,6 +7,7 @@ namespace Laravel\Boost\Install;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
+use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\ProjectManager;
@@ -155,6 +156,11 @@ class GuidelineAssist
         return "composer {$command}";
     }
 
+    public function hasComposerScript(string $script): bool
+    {
+        return Composer::hasScript($script);
+    }
+
     public function binCommand(string $command): string
     {
         $vendorBinPrefix = config('boost.executable_paths.vendor_bin');
@@ -203,5 +209,10 @@ class GuidelineAssist
     public function hasMcpEnabled(): bool
     {
         return $this->config->hasMcp;
+    }
+
+    public function hasCloudEnabled(): bool
+    {
+        return $this->config->usesCloud;
     }
 }

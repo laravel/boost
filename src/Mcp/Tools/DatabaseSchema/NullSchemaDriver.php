@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Mcp\Tools\DatabaseSchema;
 
+use Exception;
+use Illuminate\Support\Facades\Schema;
+
 class NullSchemaDriver extends DatabaseSchemaDriver
 {
     public function getViews(): array
@@ -38,6 +41,10 @@ class NullSchemaDriver extends DatabaseSchemaDriver
 
     public function getTables(): array
     {
-        return [];
+        try {
+            return Schema::connection($this->connection)->getTables();
+        } catch (Exception) {
+            return [];
+        }
     }
 }

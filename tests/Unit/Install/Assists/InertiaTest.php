@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Roster\ProjectManager;
 
 beforeEach(function (): void {
-    $this->project = Mockery::mock(ProjectManager::class);
+    $this->project = Double::for(ProjectManager::class, override: true)->instance();
 
     $this->inertia = new Inertia($this->project);
 });

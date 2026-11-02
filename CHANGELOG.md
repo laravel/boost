@@ -1,6 +1,182 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/boost/compare/v2.7.0...main)
+## [Unreleased](https://github.com/laravel/boost/compare/v2.10.4...main)
+
+## [v2.10.4](https://github.com/laravel/boost/compare/v2.10.3...v2.10.4) - 2026-10-29
+
+### What's Changed
+
+* Add command to re-index rules by [@barryvdh](https://github.com/barryvdh) in https://github.com/laravel/boost/pull/1062
+* Let unit tests extend PHPUnit's TestCase in the testing skill by [@ericknyoto](https://github.com/ericknyoto) in https://github.com/laravel/boost/pull/1065
+* Remove security policy in favor of the org-wide default by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1075
+* Remove the application-info MCP tool by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1074
+* Tighten the prose of the bundled skills by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1076
+* Bump shivammathur/setup-php from 2.37.2 to 2.40.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/1077
+* Bump stefanzweifel/git-auto-commit-action from 7.2.0 to 7.2.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/1085
+* Only suggest `composer run dev` when the app defines a dev script by [@cjmellor](https://github.com/cjmellor) in https://github.com/laravel/boost/pull/1083
+* Preserve executable permissions on remote skill scripts by [@imsvidskiy](https://github.com/imsvidskiy) in https://github.com/laravel/boost/pull/1082
+* Remove the full suite instruction from the Pest guideline by [@cjmellor](https://github.com/cjmellor) in https://github.com/laravel/boost/pull/1084
+* Allow Pest 5 in development dependencies by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1078
+
+### New Contributors
+
+* [@barryvdh](https://github.com/barryvdh) made their first contribution in https://github.com/laravel/boost/pull/1062
+* [@ericknyoto](https://github.com/ericknyoto) made their first contribution in https://github.com/laravel/boost/pull/1065
+* [@cjmellor](https://github.com/cjmellor) made their first contribution in https://github.com/laravel/boost/pull/1083
+* [@imsvidskiy](https://github.com/imsvidskiy) made their first contribution in https://github.com/laravel/boost/pull/1082
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.10.3...v2.10.4
+
+## [v2.10.3](https://github.com/laravel/boost/compare/v2.10.2...v2.10.3) - 2026-10-07
+
+### What's Changed
+
+* List tables through the schema builder for unsupported database drivers by [@lazerg](https://github.com/lazerg) in https://github.com/laravel/boost/pull/1058
+* Terminate grep options in infer-conventions hints by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1059
+* Fix inaccurate guidance in four bundled skills by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1061
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.10.2...v2.10.3
+
+## [v2.10.2](https://github.com/laravel/boost/compare/v2.10.1...v2.10.2) - 2026-10-05
+
+### What's Changed
+
+* Add MCP support for Pi by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1049
+* Reject non-object JSON5 MCP configuration roots by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1048
+* Migration from Mockery to Double by [@jasonmccreary](https://github.com/jasonmccreary) in https://github.com/laravel/boost/pull/1039
+
+### New Contributors
+
+* [@jasonmccreary](https://github.com/jasonmccreary) made their first contribution in https://github.com/laravel/boost/pull/1039
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.10.1...v2.10.2
+
+## [v2.10.1](https://github.com/laravel/boost/compare/v2.10.0...v2.10.1) - 2026-10-01
+
+### What's Changed
+
+* Keep syncing CLAUDE.md for existing Claude Code projects by [@gldrenthe89](https://github.com/gldrenthe89) in https://github.com/laravel/boost/pull/1043
+* Render Best Practice guidelines and skill commands with Sail's executable when needed by [@wilsenhc](https://github.com/wilsenhc) in https://github.com/laravel/boost/pull/1046
+* Slim always-loaded guidelines where evals show no behavior change by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1042
+* Only mention the deploying-to-cloud skill when Cloud is enabled by [@cyppe](https://github.com/cyppe) in https://github.com/laravel/boost/pull/1040
+* Keep the Laravel AI upgrade prompt usable alongside older Laravel MCP by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1047
+
+### New Contributors
+
+* [@gldrenthe89](https://github.com/gldrenthe89) made their first contribution in https://github.com/laravel/boost/pull/1043
+* [@wilsenhc](https://github.com/wilsenhc) made their first contribution in https://github.com/laravel/boost/pull/1046
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.10.0...v2.10.1
+
+## [v2.10.0](https://github.com/laravel/boost/compare/v2.9.1...v2.10.0) - 2026-09-23
+
+### What's Changed
+
+* Use AGENTS.md for Claude Code guidelines by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1032
+* Preserve differently cased CTE references when applying table prefixes by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1035
+* Fix RuleRepository area key collapsing distinct single-segment globs by [@jwynharris](https://github.com/jwynharris) in https://github.com/laravel/boost/pull/1033
+* Preserve existing skills when forced downloads fail by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1031
+* Add an upgrade prompt for Laravel AI 1.0 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1036
+
+### New Contributors
+
+* [@jwynharris](https://github.com/jwynharris) made their first contribution in https://github.com/laravel/boost/pull/1033
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.9.1...v2.10.0
+
+## [v2.9.1](https://github.com/laravel/boost/compare/v2.9.0...v2.9.1) - 2026-09-17
+
+### What's Changed
+
+* Use scanner-safe placeholders in config skill example by [@reedmackayfr](https://github.com/reedmackayfr) in https://github.com/laravel/boost/pull/1027
+* Reject non-object Boost configuration by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1025
+* Handle unquoted JSON5 MCP config keys by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1023
+* Strip a leading BOM from TOML MCP config files so the existing server table is found instead of duplicated by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1022
+* Preserve executable permissions on bundled skill scripts by [@cyppe](https://github.com/cyppe) in https://github.com/laravel/boost/pull/1026
+* Report failed skill syncs during installation by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1016
+* Reject non-object MCP configuration roots by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1029
+
+### New Contributors
+
+* [@reedmackayfr](https://github.com/reedmackayfr) made their first contribution in https://github.com/laravel/boost/pull/1027
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.9.0...v2.9.1
+
+## [v2.9.0](https://github.com/laravel/boost/compare/v2.8.1...v2.9.0) - 2026-09-14
+
+### What's Changed
+
+* Bump the github-actions group with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/boost/pull/1020
+* Point the skill sync workflow at the renamed deploying-to-cloud folder in cloud-cli by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1021
+* Support laravel/mcp 1.x by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1028
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.8.1...v2.9.0
+
+## [v2.8.1](https://github.com/laravel/boost/compare/v2.8.0...v2.8.1) - 2026-09-10
+
+### What's Changed
+
+* Run test workflows on pushes to main by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1013
+* feat: support third-party NPM package guidelines and skills by [@calebdw](https://github.com/calebdw) in https://github.com/laravel/boost/pull/935
+* Reject backslash paths when downloading a skill so files cannot land outside the skill directory by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/963
+* Ignore commented-out entries when checking for existing MCP servers by [@lazerg](https://github.com/lazerg) in https://github.com/laravel/boost/pull/933
+* Treat a whitespace-only MCP config file as new instead of failing the install by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1018
+* Resolve the browser log path from the browser channel config instead of a hardcoded location by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1017
+* Preserve SQL literals when applying table prefixes by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1014
+* Record rules only when the user asks for them by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1019
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.8.0...v2.8.1
+
+## [v2.8.0](https://github.com/laravel/boost/compare/v2.7.1...v2.8.0) - 2026-09-08
+
+### What's Changed
+
+* Remove redundant test lifecycle overrides by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1004
+* Leave fenced code blocks alone when spacing markdown headings by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/961
+* Throw on invalid SKILL.md frontmatter instead of silently unregistering the skill by [@shoemoney](https://github.com/shoemoney) in https://github.com/laravel/boost/pull/965
+* Show repo-relative skill paths with forward slashes on Windows by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1011
+* Stop normalizing blank lines outside the Boost guidelines block by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/996
+* Use installed PHPUnit version in testing skill docs by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1008
+* Fix entity decoding in fenced code blocks by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/997
+* Fix: browser-logs watcher can crash any Livewire page via JSON.stringify auto-invoking $wire's fake toJSON by [@thealejandro](https://github.com/thealejandro) in https://github.com/laravel/boost/pull/1007
+* Drop the truncated leading fragment when the log chunk boundary lands inside an entry by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1009
+* Bundle the Laravel Cloud skill and sync it nightly from cloud-cli by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/boost/pull/1012
+* Key nested user guidelines by relative path so same-named files stop overwriting each other by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/1010
+
+### New Contributors
+
+* [@shoemoney](https://github.com/shoemoney) made their first contribution in https://github.com/laravel/boost/pull/965
+* [@thealejandro](https://github.com/thealejandro) made their first contribution in https://github.com/laravel/boost/pull/1007
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.7.1...v2.8.0
+
+## [v2.7.1](https://github.com/laravel/boost/compare/v2.7.0...v2.7.1) - 2026-09-07
+
+### What's Changed
+
+* Detect Livewire navigate requests by header presence since Livewire 3 sends an empty value by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/984
+* Ensure MCP config files end with a trailing newline by [@iitenkida7](https://github.com/iitenkida7) in https://github.com/laravel/boost/pull/990
+* Skip versioned guideline discovery for packages without a major version by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/988
+* Join TABLE_CONSTRAINTS for check constraints since MySQL's CHECK_CONSTRAINTS table has no TABLE_NAME column by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/980
+* Fix non-GitHub SSH remote validation by [@simonyang08](https://github.com/simonyang08) in https://github.com/laravel/boost/pull/986
+* Register the browser-logs route only when the browser logs watcher is enabled by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/993
+* Report the database driver name as database_engine instead of the connection name by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/994
+* Read the standard mcp_config_path config key for Junie instead of the never-documented mcp_path by [@sulimanbenhalim](https://github.com/sulimanbenhalim) in https://github.com/laravel/boost/pull/995
+* Declare search-docs read-only so agents in plan mode stop re-asking for it by [@humanik](https://github.com/humanik) in https://github.com/laravel/boost/pull/998
+* Align action examples to use handle() by [@bjoernzosel](https://github.com/bjoernzosel) in https://github.com/laravel/boost/pull/999
+* Remove deprecated Rector skips by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1000
+* Use unlimited memory for PHPStan type checks by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1003
+* Remove deprecated early return Rector set by [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) in https://github.com/laravel/boost/pull/1002
+
+### New Contributors
+
+* [@iitenkida7](https://github.com/iitenkida7) made their first contribution in https://github.com/laravel/boost/pull/990
+* [@simonyang08](https://github.com/simonyang08) made their first contribution in https://github.com/laravel/boost/pull/986
+* [@humanik](https://github.com/humanik) made their first contribution in https://github.com/laravel/boost/pull/998
+* [@bjoernzosel](https://github.com/bjoernzosel) made their first contribution in https://github.com/laravel/boost/pull/999
+* [@Mohammad-Ranjbar](https://github.com/Mohammad-Ranjbar) made their first contribution in https://github.com/laravel/boost/pull/1000
+
+**Full Changelog**: https://github.com/laravel/boost/compare/v2.7.0...v2.7.1
 
 ## [v2.7.0](https://github.com/laravel/boost/compare/v2.6.0...v2.7.0) - 2026-08-26
 
@@ -550,11 +726,31 @@ If you have custom overrides in:
 
 
 
+
+
+
+
+
+
+
+
+
+
 ```
 move them to:
 
 ```text
 .ai/guidelines/inertia-laravel/core.blade.php
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -639,12 +835,32 @@ This release introduces a small structural update to how Inertia guidelines are 
 
 
 
+
+
+
+
+
+
+
+
+
+
 ```
 **Now merged into individual version guideline**
 
 ```
 .ai/inertia-laravel/2/core.blade.php
 .ai/inertia-laravel/1/core.blade.php
+
+
+
+
+
+
+
+
+
+
 
 
 

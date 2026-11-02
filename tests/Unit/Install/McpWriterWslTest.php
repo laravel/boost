@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Install\McpWriter;
 
@@ -13,7 +14,7 @@ afterEach(function (): void {
 test('isRunningInsideWsl returns true when WSL_DISTRO_NAME is set', function (): void {
     putenv('WSL_DISTRO_NAME=Ubuntu');
 
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $writer = new McpWriter($agent);
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('isRunningInsideWsl');
@@ -24,7 +25,7 @@ test('isRunningInsideWsl returns true when WSL_DISTRO_NAME is set', function ():
 test('isRunningInsideWsl returns true when IS_WSL is set', function (): void {
     putenv('IS_WSL=1');
 
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $writer = new McpWriter($agent);
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('isRunningInsideWsl');
@@ -36,7 +37,7 @@ test('isRunningInsideWsl returns true when both WSL env vars are set', function 
     putenv('WSL_DISTRO_NAME=Ubuntu');
     putenv('IS_WSL=true');
 
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $writer = new McpWriter($agent);
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('isRunningInsideWsl');
@@ -48,7 +49,7 @@ test('isRunningInsideWsl returns false when no WSL env vars are set', function (
     putenv('WSL_DISTRO_NAME');
     putenv('IS_WSL');
 
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $writer = new McpWriter($agent);
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('isRunningInsideWsl');
@@ -60,7 +61,7 @@ test('isRunningInsideWsl returns false when WSL env vars are empty strings', fun
     putenv('WSL_DISTRO_NAME=');
     putenv('IS_WSL=');
 
-    $agent = Mockery::mock(SupportsMcp::class);
+    $agent = Double::for(SupportsMcp::class);
     $writer = new McpWriter($agent);
     $reflection = new ReflectionClass($writer);
     $method = $reflection->getMethod('isRunningInsideWsl');

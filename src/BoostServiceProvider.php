@@ -18,7 +18,9 @@ use Laravel\Boost\Mcp\Boost;
 use Laravel\Boost\Middleware\InjectBoost;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Boost\Services\BrowserLogger;
+use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
+use Laravel\Boost\Support\SkillParseFailures;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\ProjectManager;
 
@@ -32,6 +34,7 @@ class BoostServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(RenderFailures::class, fn (): RenderFailures => new RenderFailures);
+        $this->app->singleton(SkillParseFailures::class, fn (): SkillParseFailures => new SkillParseFailures);
 
         if (! $this->shouldRun()) {
             return;
@@ -41,7 +44,12 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->app->singleton(ProjectManager::class, fn (): ProjectManager => new ProjectManager);
 
-        $this->app->singleton(GuidelineConfig::class, fn (): GuidelineConfig => new GuidelineConfig);
+        $this->app->singleton(GuidelineConfig::class, function (): GuidelineConfig {
+            $config = new GuidelineConfig;
+            $config->usesSail = (new Config)->getSail();
+
+            return $config;
+        });
 
         $this->app->singleton(RuleRepository::class, fn (): RuleRepository => new RuleRepository(base_path('.ai/rules')));
 
@@ -61,9 +69,9 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->registerPublishing();
         $this->registerCommands();
-        $this->registerRoutes();
 
         if (config('boost.browser_logs_watcher', true)) {
+            $this->registerRoutes();
             $this->registerBrowserLogger();
             $this->callAfterResolving('blade.compiler', $this->registerBladeDirectives(...));
             $this->hookIntoResponses($router);
@@ -89,6 +97,7 @@ class BoostServiceProvider extends ServiceProvider
                 Console\ExecuteToolCommand::class,
                 Console\AddSkillCommand::class,
                 Console\ListSkillCommand::class,
+                Console\RulesIndexCommand::class,
             ]);
         }
     }

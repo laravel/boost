@@ -160,6 +160,39 @@ class RuleRepository
         return $path;
     }
 
+    public function exists(): bool
+    {
+        return File::isDirectory($this->directory);
+    }
+
+    /**
+     * Rule files that still contain unresolved merge conflict markers.
+     *
+     * @return array<int, string>
+     */
+    public function conflictedFiles(): array
+    {
+        return collect([...$this->files(), ...$this->managedFiles()])
+            ->filter(fn (string $file): bool => preg_match('/^(<{7}|>{7})(\s|$)/m', (string) File::get($file)) === 1)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Rule files the index skips because their frontmatter declares no paths.
+     *
+     * @return array<int, string>
+     */
+    public function unindexedFiles(): array
+    {
+        return $this->parsedFiles()
+            ->merge($this->parsedManagedFiles())
+            ->filter(fn (array $parsed): bool => $parsed['paths'] === [])
+            ->map(fn (array $parsed): string => $parsed['file'])
+            ->values()
+            ->all();
+    }
+
     public function normalizeGlob(string $glob): string
     {
         return $this->relativePath(trim($glob));
@@ -256,11 +289,14 @@ class RuleRepository
      */
     protected function meaningfulSegments(string $glob): array
     {
-        return Str::of($glob)
+        $segments = Str::of($glob)
             ->explode('/')
-            ->filter(static fn (string $segment): bool => filled($segment) && ! Str::contains($segment, ['*', '.']))
-            ->values()
-            ->all();
+            ->filter(static fn (string $segment): bool => filled($segment))
+            ->values();
+
+        $directories = $segments->reject(static fn (string $segment): bool => Str::contains($segment, ['*', '.']))->values();
+
+        return ($directories->isNotEmpty() ? $directories : $segments)->all();
     }
 
     /**
@@ -268,7 +304,12 @@ class RuleRepository
      */
     protected function slugForSegments(array $segments): string
     {
-        return Str::slug(Str::snake(implode(' ', $segments)));
+        $words = array_map(
+            static fn (string $segment): string => Str::contains($segment, ['*', '.']) ? Str::lower(str_replace('.', ' ', $segment)) : Str::snake($segment),
+            $segments,
+        );
+
+        return Str::slug(implode(' ', $words));
     }
 
     /**

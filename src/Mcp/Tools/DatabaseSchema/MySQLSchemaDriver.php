@@ -55,16 +55,28 @@ class MySQLSchemaDriver extends DatabaseSchemaDriver
 
     public function getCheckConstraints(string $table): array
     {
-        try {
-            return DB::connection($this->connection)->select('
-                SELECT CONSTRAINT_NAME, CHECK_CLAUSE
-                FROM information_schema.CHECK_CONSTRAINTS
-                WHERE CONSTRAINT_SCHEMA = DATABASE()
-                AND TABLE_NAME = ?
-            ', [$table]);
-        } catch (Exception) {
-            return [];
+        $mariaDbConstraints = rescue(fn (): array => DB::connection($this->connection)->select('
+            SELECT CONSTRAINT_NAME, CHECK_CLAUSE
+            FROM information_schema.CHECK_CONSTRAINTS
+            WHERE CONSTRAINT_SCHEMA = DATABASE()
+            AND TABLE_NAME = ?
+        ', [$table]), null, report: false);
+
+        if ($mariaDbConstraints !== null) {
+            return $mariaDbConstraints;
         }
+
+        // MySQL's CHECK_CONSTRAINTS has no TABLE_NAME column, so the table filter goes through TABLE_CONSTRAINTS.
+        return rescue(fn (): array => DB::connection($this->connection)->select("
+            SELECT cc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
+            FROM information_schema.CHECK_CONSTRAINTS cc
+            JOIN information_schema.TABLE_CONSTRAINTS tc
+                ON tc.CONSTRAINT_SCHEMA = cc.CONSTRAINT_SCHEMA
+                AND tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+            WHERE cc.CONSTRAINT_SCHEMA = DATABASE()
+            AND tc.TABLE_NAME = ?
+            AND tc.CONSTRAINT_TYPE = 'CHECK'
+        ", [$table]), [], report: false);
     }
 
     public function getSequences(): array

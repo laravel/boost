@@ -8,15 +8,15 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Livewire Development
+# Livewire development
 
 ## Documentation
 
 Use `search-docs` for detailed Livewire 4 patterns and documentation.
 
-## Basic Usage
+## Basic usage
 
-### Creating Components
+### Creating components
 
 ```bash
 # Single-file component (SFC - default in v4)
@@ -40,17 +40,17 @@ Use `search-docs` for detailed Livewire 4 patterns and documentation.
 {{ $assist->artisanCommand('make:livewire Posts/CreatePost') }}
 ```
 
-### Converting Between Formats
+### Converting between formats
 
 Use `{{ $assist->artisanCommand('livewire:convert create-post') }}` to convert between single-file, multi-file, and class-based formats.
 
-### Choosing a Component Format
+### Choosing a component format
 
-> **Always follow the project's existing conventions first.** Before creating any component, inspect the project's existing Livewire components to determine the established format (SFC, MFC, or class-based) and directory structure. Check `{{ $assist->appPath('Livewire/') }}`, `resources/views/components/`, and `resources/views/livewire/` for existing components. If the project already uses a consistent format, **use that same format** — even if it differs from the Livewire v4 defaults below. Only fall back to the v4 defaults (SFC in `resources/views/components/`) when no existing convention is established.
+> **Always follow the project's existing conventions first.** Before creating any component, inspect the project's existing Livewire components to find the established format (SFC, MFC, or class-based) and directory structure. Check `{{ $assist->appPath('Livewire/') }}`, `resources/views/components/`, and `resources/views/livewire/` for existing components. If the project already uses a consistent format, **use that same format**, even if it differs from the Livewire v4 defaults below. Fall back to the v4 defaults (SFC in `resources/views/components/`) only when the project has no established convention.
 
-Also check `config/livewire.php` for `make_command.type`, `make_command.emoji`, `component_locations`, and `component_namespaces` overrides, which change the default format and where files are stored.
+Also check `config/livewire.php` for `make_command.type`, `make_command.emoji`, `component_locations`, and `component_namespaces` overrides, which change the default format and where Livewire stores files.
 
-### Component Format Reference
+### Component format reference
 
 | Format | Flag | Class Path | View Path |
 |--------|------|------------|-----------|
@@ -60,11 +60,11 @@ Also check `config/livewire.php` for `make_command.type`, `make_command.emoji`, 
 | Class-based | `--class` | `{{ $assist->appPath('Livewire/CreatePost.php') }}` | `resources/views/livewire/create-post.blade.php` |
 | View-based | default (Blade-only) | — | `resources/views/components/⚡create-post.blade.php` (Blade-only with functional state) |
 
-> **Important:** The ⚡ prefix shown above is the **default** behavior in Livewire v4 — it is **configurable**. Check `config/livewire.php` for the `make_command.emoji` setting. When `true` (default), always include the ⚡ prefix in filenames you create. When `false`, omit the ⚡ prefix from all paths above.
+> **Important:** The ⚡ prefix shown above is the **default** behavior in Livewire v4. It is **configurable**. Check `config/livewire.php` for the `make_command.emoji` setting. When the setting is `true` (the default), always include the ⚡ prefix in filenames you create. When `false`, omit the ⚡ prefix from all paths above.
 
 Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates `resources/views/components/posts/⚡create-post.blade.php` (single-file by default). Use `make:livewire Posts/CreatePost --mfc` for multi-file output at `resources/views/components/posts/⚡create-post/create-post.php` and `resources/views/components/posts/⚡create-post/create-post.blade.php`.
 
-### Single-File Component Example
+### Single-file component example
 
 @boostsnippet("Single-File Component Example", "php")
 <?php
@@ -85,22 +85,22 @@ new class extends Component {
 </div>
 @endboostsnippet
 
-## Livewire 4 Specifics
+## Livewire 4 specifics
 
-### Key Changes From Livewire 3
+### Key changes from Livewire 3
 
-These things changed in Livewire 4, but may not have been updated in this application. Verify this application's setup to ensure you follow existing conventions.
+These things changed in Livewire 4, but this application may not use them yet. Check the application's setup and follow its existing conventions.
 
-- Use `Route::livewire()` for full-page components (e.g., `Route::livewire('/posts/create', CreatePost::class)`); config keys renamed: `layout` → `component_layout`, `lazy_placeholder` → `component_placeholder`.
-- `wire:model` now ignores child events by default (use `wire:model.deep` for old behavior); `wire:scroll` renamed to `wire:navigate:scroll`.
-- Component tags must be properly closed; `wire:transition` now uses View Transitions API (modifiers removed).
-- JavaScript: `$wire.$js('name', fn)` → `$wire.$js.name = fn`; `commit`/`request` hooks → `interceptMessage()`/`interceptRequest()`.
+- For full-page components, use `Route::livewire()`, for example `Route::livewire('/posts/create', CreatePost::class)`. Config keys are renamed: `layout` is now `component_layout`, and `lazy_placeholder` is now `component_placeholder`.
+- `wire:model` now ignores child events by default. For the old behavior, use `wire:model.deep`. `wire:scroll` is renamed to `wire:navigate:scroll`.
+- Component tags must be properly closed. `wire:transition` now uses the View Transitions API, and its modifiers are removed.
+- In JavaScript, `$wire.$js('name', fn)` becomes `$wire.$js.name = fn`, and the `commit` and `request` hooks become `interceptMessage()` and `interceptRequest()`.
 
-### New Features
+### New features
 
-- Component formats: single-file (SFC), multi-file (MFC), view-based components.
-- Islands (`@island`) for isolated updates; async actions (`wire:click.async`, `#[Async]`) for parallel execution.
-- Deferred/bundled loading: `defer`, `lazy.bundle` for optimized component loading.
+- Component formats: single-file (SFC), multi-file (MFC), and view-based components.
+- Islands (`@island`) for isolated updates. Async actions (`wire:click.async`, `#[Async]`) for parallel execution.
+- Deferred and bundled component loading with `defer` and `lazy.bundle`.
 
 | Feature | Usage | Purpose |
 |---------|-------|---------|
@@ -109,10 +109,10 @@ These things changed in Livewire 4, but may not have been updated in this applic
 | Deferred | `defer` attribute | Load after page render |
 | Bundled | `lazy.bundle` | Load multiple together |
 
-### New Directives
+### New directives
 
-- `wire:sort`, `wire:intersect`, `wire:ref`, `.renderless`, `.preserve-scroll` are available for use.
-- `data-loading` attribute automatically added to elements triggering network requests.
+- `wire:sort`, `wire:intersect`, `wire:ref`, `.renderless`, and `.preserve-scroll` are available.
+- Livewire adds a `data-loading` attribute to elements that trigger network requests.
 
 | Directive | Purpose |
 |-----------|---------|
@@ -122,20 +122,20 @@ These things changed in Livewire 4, but may not have been updated in this applic
 | `.renderless` | Component without rendering |
 | `.preserve-scroll` | Preserve scroll position |
 
-## Best Practices
+## Best practices
 
 - Always use `wire:key` in loops
 - Use `wire:loading` for loading states
-- Use `wire:model.live` for live updates; `wire:model` is deferred by default
-- Validate and authorize in actions (treat like HTTP requests)
+- Use `wire:model.live` for live updates. `wire:model` is deferred by default
+- Validate and authorize in actions (treat them like HTTP requests)
 
 ## Configuration
 
-- `smart_wire_keys` defaults to `true`; new configs: `component_locations`, `component_namespaces`, `make_command`, `csp_safe`.
+- `smart_wire_keys` defaults to `true`. New config keys: `component_locations`, `component_namespaces`, `make_command`, and `csp_safe`.
 
-## Alpine & JavaScript
+## Alpine and JavaScript
 
-- `wire:transition` uses browser View Transitions API; `$errors` and `$intercept` magic properties available.
+- `wire:transition` uses the browser View Transitions API. The `$errors` and `$intercept` magic properties are available.
 - Non-blocking `wire:poll` and parallel `wire:model.live` updates improve performance.
 
 For interceptors and hooks, see [reference/javascript-hooks.md](reference/javascript-hooks.md).
@@ -151,14 +151,14 @@ Livewire::test(Counter::class)
 
 ## Verification
 
-1. Browser console: Check for JS errors
-2. Network tab: Verify Livewire requests return 200
-3. Ensure `wire:key` on all `@foreach` loops
+1. Check the browser console for JS errors
+2. In the network tab, verify that Livewire requests return 200
+3. Confirm that every `@foreach` loop has a `wire:key`
 
-## Common Pitfalls
+## Common pitfalls
 
-- Missing `wire:key` in loops → unexpected re-rendering
-- Expecting `wire:model` real-time → use `wire:model.live`
-- Unclosed component tags → syntax errors in v4
+- Missing `wire:key` in loops, which causes unexpected re-rendering
+- Expecting real-time updates from `wire:model` instead of using `wire:model.live`
+- Unclosed component tags, which cause syntax errors in v4
 - Using deprecated config keys or JS hooks
-- Including Alpine.js separately (already bundled in Livewire 4)
+- Including Alpine.js separately, though Livewire 4 already bundles it

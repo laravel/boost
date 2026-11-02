@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use JMac\Testing\Double;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
+use Laravel\Boost\Install\GuidelineConfig;
+use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -13,7 +16,7 @@ use Laravel\Roster\ProjectManager;
  */
 function bootProject(array $packages): ProjectManager
 {
-    $project = Mockery::mock(ProjectManager::class);
+    $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection($packages));
     app()->instance(ProjectManager::class, $project);
 
@@ -23,16 +26,27 @@ function bootProject(array $packages): ProjectManager
 /**
  * @param  array<int, Package>  $extraPackages
  */
-function renderTestingSkill(bool $pest, array $extraPackages = [], string $version = '4.0.0'): string
+function renderTestingSkill(bool $pest, array $extraPackages = [], ?string $version = null): string
 {
+    $version ??= $pest ? '4.0.0' : '11.5.3';
     bootProject(array_merge([
         rosterPackage('laravel/framework', '12.0.0'),
         $pest
             ? rosterPackage('pestphp/pest', $version, true)
-            : rosterPackage('phpunit/phpunit', '11.0.0', true),
+            : rosterPackage('phpunit/phpunit', $version, true),
     ], $extraPackages));
 
-    $renderer = new class
+    $skillDir = __DIR__.'/../../../.ai/laravel/skill/testing-best-practices';
+
+    return collect(glob($skillDir.'/rules/*.blade.php') ?: [])
+        ->prepend($skillDir.'/SKILL.blade.php')
+        ->map(fn (string $path): string => bladeGuidelineRenderer()->render($path))
+        ->implode("\n");
+}
+
+function bladeGuidelineRenderer(): object
+{
+    return new class
     {
         use RendersBladeGuidelines;
 
@@ -41,14 +55,60 @@ function renderTestingSkill(bool $pest, array $extraPackages = [], string $versi
             return $this->renderBladeFile($path);
         }
     };
+}
 
-    $skillDir = __DIR__.'/../../../.ai/laravel/skill/testing-best-practices';
+/**
+ * @return array<int, string>
+ */
+function skillRuleFiles(string $skillDir): array
+{
+    return [
+        ...(glob($skillDir.'/rules/*.blade.php') ?: []),
+        ...(glob($skillDir.'/rules/*.md') ?: []),
+    ];
+}
 
-    return collect(glob($skillDir.'/rules/*.blade.php') ?: [])
-        ->prepend($skillDir.'/SKILL.blade.php')
-        ->map(fn (string $path): string => $renderer->render($path))
+function renderLaravelBestPracticeRules(): string
+{
+    $skillDir = __DIR__.'/../../../.ai/laravel/skill/laravel-best-practices';
+
+    return collect(skillRuleFiles($skillDir))
+        ->map(fn (string $path): string => bladeGuidelineRenderer()->render($path))
         ->implode("\n");
 }
+
+it('renders best-practice commands with platform-aware executables', function (bool $usesSail, ?string $php, ?string $composer, string $expectedArtisan, string $expectedComposer): void {
+    config([
+        'boost.executable_paths.php' => $php,
+        'boost.executable_paths.composer' => $composer,
+    ]);
+
+    bootProject([rosterPackage('laravel/framework', '12.0.0')]);
+
+    $guidelineConfig = new GuidelineConfig;
+    $guidelineConfig->usesSail = $usesSail;
+
+    app()->instance(GuidelineConfig::class, $guidelineConfig);
+
+    $rules = renderLaravelBestPracticeRules();
+
+    expect($rules)
+        ->toContain($expectedArtisan.' env:encrypt --env=production --readable')
+        ->toContain($expectedComposer.' audit')
+        ->toContain($expectedArtisan.' event:cache')
+        ->toContain($expectedArtisan.' make:mail OrderShipped --markdown=mail.orders.shipped')
+        ->toContain($expectedArtisan.' make:migration create_posts_table')
+        ->toContain($expectedArtisan.' schedule:clear-cache')
+        ->not->toContain('$assist->')
+        ->not->toContain('___')
+        ->toContain("Blade's `{{ }}` syntax")
+        ->toContain('{!! $user->bio !!}')
+        ->toContain('    @csrf');
+})->with([
+    'default' => [false, null, null, 'php artisan', 'composer'],
+    'Sail' => [true, null, null, Sail::DEFAULT_BINARY_PATH.' artisan', Sail::DEFAULT_BINARY_PATH.' composer'],
+    'configured executables' => [true, '/usr/local/bin/php8.3', '/usr/local/bin/composer', '/usr/local/bin/php8.3 artisan', '/usr/local/bin/composer'],
+]);
 
 it('teaches Pest syntax to a Pest project and never PHPUnit syntax', function (): void {
     expect(renderTestingSkill(pest: true))
@@ -74,10 +134,30 @@ it('teaches PHPUnit syntax to a PHPUnit project and never Pest syntax', function
         ->not->toContain('pestphp.com');
 });
 
+it('lets a PHPUnit unit test extend the TestCase from the make:test --unit stub', function (): void {
+    expect(renderTestingSkill(pest: false))
+        ->toContain('Extend the base `TestCase` of the project in each feature test class.')
+        ->toContain('Extend `PHPUnit\Framework\TestCase` in each unit test class, as the stub of `php artisan make:test --unit` does.')
+        ->toContain('Each feature test class extends the base `TestCase` of the project, each unit test class extends `PHPUnit\Framework\TestCase`,')
+        ->not->toContain('Extend the base `TestCase` of the project in each test class.')
+        ->not->toContain('Each test class extends the base `TestCase` of the project');
+});
+
+it('names the installed PHPUnit version instead of pinning a documentation edition', function (string $version): void {
+    expect(renderTestingSkill(pest: false, version: $version))
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit API syntax")
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for the assertions of PHPUnit")
+        ->toContain("the PHPUnit {$version} documentation at `https://phpunit.de/documentation.html` for PHPUnit options")
+        ->not->toContain('docs.phpunit.de');
+})->with([
+    'PHPUnit 11' => ['11.5.3'],
+    'PHPUnit 12' => ['12.5.0'],
+]);
+
 it('teaches browser testing when the project installs a browser tool the framework can run', function (bool $pest, string $package, string $docs): void {
     expect(renderTestingSkill($pest, [rosterPackage($package, '1.0.0', true)]))
         ->toContain('tests/Browser')
-        ->toContain('## Browser Tests')
+        ->toContain('## Browser tests')
         ->toContain($docs)
         ->not->toContain('neither of which this project installs');
 })->with([
@@ -93,7 +173,7 @@ it('names the missing package when the project installs no browser tool the fram
         ->toContain('neither of which this project installs')
         ->toContain($missing)
         ->not->toContain('tests/Browser')
-        ->not->toContain('## Browser Tests');
+        ->not->toContain('## Browser tests');
 })->with([
     'pest' => [true, [], 'pestphp/pest-plugin-browser'],
     'phpunit' => [false, [], 'laravel/dusk'],
@@ -112,9 +192,9 @@ it('puts a convention of the project above its own rules, and never deletes a te
 
 it('keeps one case at the endpoint when a unit test owns the matrix', function (bool $pest): void {
     expect(renderTestingSkill($pest))
-        ->toContain('### Which Layer Owns Which Case')
+        ->toContain('### Which layer owns which case')
         ->toContain('Never remove the last case')
-        ->toContain('reduce duplicate higher-level coverage to one case rather than deleting it')
+        ->toContain('reduce the duplicate higher-level coverage to one case rather than deleting it')
         ->toContain('trim the higher-layer test to one case')
         ->toContain('Testing project configuration is not testing the framework.');
 })->with([
@@ -135,12 +215,12 @@ it('teaches a Pest 5 command only to a project that installs Pest 5', function (
     expect(renderTestingSkill(pest: true, version: '5.0.0'))
         ->toContain('pest --parallel --tia')
         ->toContain('tests/.pest/shards.json')
-        ->toContain('Format Expectations');
+        ->toContain('Format expectations');
 
     expect(renderTestingSkill(pest: true, version: '4.1.0'))
         ->not->toContain('--tia')
         ->not->toContain('shards.json')
-        ->not->toContain('Format Expectations');
+        ->not->toContain('Format expectations');
 });
 
 it('ships one testing skill to every project, whichever test framework and major it installs', function (array $package): void {
@@ -159,15 +239,15 @@ it('ships one testing skill to every project, whichever test framework and major
     'phpunit' => [['phpunit/phpunit', '11.0.0', true]],
 ]);
 
-it('resolves every rule file a skill index points at, and references every rule file on disk', function (string $skill, string $extension): void {
+it('resolves every rule file a skill index points at, and references every rule file on disk', function (string $skill, string $indexExtension): void {
     $skillDir = __DIR__.'/../../../.ai/laravel/skill/'.$skill;
-    $index = (string) file_get_contents($skillDir.'/SKILL.'.$extension);
+    $index = (string) file_get_contents($skillDir.'/SKILL.'.$indexExtension);
 
     preg_match_all('/\[`(rules\/[a-z-]+)\.md`\]/', $index, $matches);
 
     $referenced = collect($matches[1])->unique()->sort()->values();
-    $onDisk = collect(glob($skillDir.'/rules/*.'.$extension) ?: [])
-        ->map(fn (string $path): string => 'rules/'.str_replace('.'.$extension, '', basename($path)))
+    $onDisk = collect(skillRuleFiles($skillDir))
+        ->map(fn (string $path): string => 'rules/'.preg_replace('/\.(?:blade\.php|md)$/', '', basename($path)))
         ->sort()
         ->values();
 

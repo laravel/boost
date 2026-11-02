@@ -74,11 +74,11 @@ it('may store and retrieve mcp status', function (): void {
 it('may store and retrieve nightwatch status', function (): void {
     $config = new Config;
 
-    expect($config->getNightwatch())->toBeFalse();
-
-    $config->setNightwatch(true);
-
     expect($config->getNightwatch())->toBeTrue();
+
+    $config->setNightwatch(false);
+
+    expect($config->getNightwatch())->toBeFalse();
 });
 
 it('reads the legacy nightwatch_mcp key when the new nightwatch key is absent', function (): void {
@@ -100,4 +100,10 @@ it('may store and retrieve packages', function (): void {
     $config->setPackages($packages);
 
     expect($config->getPackages())->toEqual($packages);
+});
+
+it('decodes nested objects as arrays', function (): void {
+    file_put_contents(base_path('boost.json'), '{"skills":{"a":"skill-one"}}');
+
+    expect((new Config)->getSkills())->toEqual(['a' => 'skill-one']);
 });
