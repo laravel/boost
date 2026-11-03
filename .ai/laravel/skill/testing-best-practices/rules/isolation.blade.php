@@ -22,7 +22,7 @@ Identify the dependency, then choose the first option that applies. A framework 
 @if($pest)
 - Create each fake inside the test that needs it. Do not create fakes in a file-level `beforeEach()`.
 @else
-- Create each fake inside the test method that needs it. Do not create fakes in `setUp()`.
+- Create each fake inside the test method that needs it. Do not create fakes in `setUp()`, except the global fakes of the base `TestCase` in `rules/performance.md`.
 @endif
 - Pass class names to `Event::fake()` and `Queue::fake()` when you know which classes the code dispatches. A fake without class names can hide an unexpected dispatch.
 - Use a fake without class names only when the test asserts the complete result, including a call to `assertNothingPushed()`.

@@ -41,9 +41,9 @@ Apply this section to behavioral tests. An architecture test states a convention
 
 - [ ] Each test creates its mutable records directly or through a helper that it calls, and every created record arranges the behavior or supports an assertion.
 @if($pest)
-- [ ] Each `beforeEach()` holds configuration only.
+- [ ] Each `beforeEach()` holds configuration only, apart from the global fakes in `Pest.php` from `rules/performance.md`.
 @else
-- [ ] `setUp()` holds configuration only.
+- [ ] `setUp()` holds configuration only, apart from the global fakes of the base `TestCase` from `rules/performance.md`.
 @endif
 - [ ] Each factory state and each relationship gives the meaning of the data.
 - [ ] Each call to `make()` is in a test that does not need the database.
