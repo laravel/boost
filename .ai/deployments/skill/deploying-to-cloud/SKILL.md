@@ -69,7 +69,7 @@ If a project-local installation is not available, install the CLI globally with 
 
 Commands follow a CRUD pattern: `resource:list`, `resource:get`, `resource:create`, `resource:update`, `resource:delete`.
 
-Available resources: `application`, `environment`, `instance`, `database-cluster`, `database`, `cache`, `bucket`, `domain`, `websocket-cluster`, `background-process`, `secret`, `command`, `deployment`.
+Available resources: `application`, `environment`, `instance`, `database-cluster`, `database`, `cache`, `bucket`, `domain`, `websocket-cluster`, `background-process`, `scheduled-command`, `secret`, `command`, `deployment`.
 
 Some resources have additional commands (e.g., `domain:verify`, `database:open`, `instance:sizes`, `cache:types`, `database:types`, `<resource>:metrics`). Discover these via `cloud -h`.
 
