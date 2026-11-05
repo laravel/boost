@@ -107,3 +107,19 @@ it('decodes nested objects as arrays', function (): void {
 
     expect((new Config)->getSkills())->toEqual(['a' => 'skill-one']);
 });
+
+it('writes boost.json with LF line endings on every platform', function (): void {
+    $config = new Config;
+
+    $config->setGuidelines(true);
+    $config->setAgents(['agent_1', 'agent_2']);
+
+    $contents = file_get_contents(base_path('boost.json'));
+
+    expect($contents)->not->toContain("\r\n")
+        ->and($contents)->toEndWith("}\n")
+        ->and(json_decode($contents, true))->toBe([
+            'agents' => ['agent_1', 'agent_2'],
+            'guidelines' => true,
+        ]);
+});

@@ -144,7 +144,7 @@ class Config
 
         $path = base_path(self::FILE);
 
-        file_put_contents($path, Str::of(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))->append(PHP_EOL));
+        file_put_contents($path, Str::of(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))->append("\n"));
     }
 
     protected function all(): array
