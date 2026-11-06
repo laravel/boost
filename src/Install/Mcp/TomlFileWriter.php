@@ -148,7 +148,7 @@ class TomlFileWriter
 
     protected function serverExists(string $content, string $key): bool
     {
-        $pattern = '/^\['.preg_quote($this->configKey, '/').'\.'.preg_quote($key, '/').'\]/m';
+        $pattern = '/^[ \t]*\['.preg_quote($this->configKey, '/').'\.'.preg_quote($key, '/').'\]/m';
 
         return (bool) preg_match($pattern, $content);
     }
@@ -158,10 +158,10 @@ class TomlFileWriter
         $escapedConfigKey = preg_quote($this->configKey, '/');
         $escapedKey = preg_quote($key, '/');
 
-        $envPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\.env\].*?(?=\r?\n\[|$)/s';
+        $envPattern = '/(\r?\n)*^[ \t]*\['.$escapedConfigKey.'\.'.$escapedKey.'\.env\].*?(?=\r?\n[ \t]*\[|\z)/ms';
         $content = preg_replace($envPattern, '', $content) ?? $content;
 
-        $mainPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\].*?(?=\r?\n\[|$)/s';
+        $mainPattern = '/(\r?\n)*^[ \t]*\['.$escapedConfigKey.'\.'.$escapedKey.'\].*?(?=\r?\n[ \t]*\[|\z)/ms';
 
         return preg_replace($mainPattern, '', $content) ?? $content;
     }

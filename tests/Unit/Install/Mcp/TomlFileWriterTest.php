@@ -536,6 +536,69 @@ it('keeps CRLF line endings when updating a CRLF file', function (): void {
         );
 });
 
+it('updates indented server and env tables without duplicating them', function (string $indent, string $eol): void {
+    $capturedContent = '';
+    $existingContent = implode($eol, [
+        'model = "o3"',
+        '',
+        $indent.'[mcp_servers.laravel-boost]',
+        'command = "old"',
+        '',
+        $indent.'[mcp_servers.laravel-boost.env]',
+        'OLD_ENV = "old"',
+        '',
+        '[mcp_servers.other]',
+        'command = "node"',
+        '',
+    ]);
+
+    mockTomlFileOperations(fileExists: true, content: $existingContent, capturedContent: $capturedContent);
+
+    $result = (new TomlFileWriter('/path/to/config.toml'))
+        ->addServerConfig('laravel-boost', ['command' => 'php', 'env' => ['APP_ENV' => 'local']])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and(substr_count($capturedContent, '[mcp_servers.laravel-boost]'))->toBe(1)
+        ->and(substr_count($capturedContent, '[mcp_servers.laravel-boost.env]'))->toBe(1)
+        ->and($capturedContent)->not->toContain('command = "old"', 'OLD_ENV')
+        ->and($capturedContent)->toContain('[mcp_servers.other]'.$eol.'command = "node"')
+        ->and($capturedContent)->toContain('[mcp_servers.laravel-boost.env]'.$eol.'APP_ENV = "local"');
+})->with([
+    'spaces and LF' => ['  ', "\n"],
+    'tabs and LF' => ["\t", "\n"],
+    'spaces and CRLF' => ['  ', "\r\n"],
+    'tabs and CRLF' => ["\t", "\r\n"],
+]);
+
+it('preserves following indented tables when replacing a server', function (string $indent, string $eol): void {
+    $capturedContent = '';
+    $otherServer = implode($eol, [
+        $indent.'[mcp_servers.other]',
+        'command = "node"',
+        '',
+        $indent.'[mcp_servers.other.env]',
+        'OTHER_ENV = "keep"',
+    ]);
+    $existingContent = '[mcp_servers.laravel-boost]'.$eol.'command = "old"'.$eol.$eol.$otherServer.$eol;
+
+    mockTomlFileOperations(fileExists: true, content: $existingContent, capturedContent: $capturedContent);
+
+    $result = (new TomlFileWriter('/path/to/config.toml'))
+        ->addServerConfig('laravel-boost', ['command' => 'php'])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($capturedContent)->toContain(ltrim($otherServer))
+        ->and($capturedContent)->toContain('[mcp_servers.laravel-boost]'.$eol.'command = "php"')
+        ->and($capturedContent)->not->toContain('command = "old"');
+})->with([
+    'spaces and LF' => ['  ', "\n"],
+    'tabs and LF' => ["\t", "\n"],
+    'spaces and CRLF' => ['  ', "\r\n"],
+    'tabs and CRLF' => ["\t", "\r\n"],
+]);
+
 function mockTomlFileOperations(
     bool $fileExists = false,
     string $content = '',
