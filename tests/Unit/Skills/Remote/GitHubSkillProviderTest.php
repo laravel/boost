@@ -54,6 +54,21 @@ it('discovers skills from repository directories', function (): void {
     Http::assertSentCount(2);
 });
 
+it('discovers skills from an encoded GitHub directory URL', function (): void {
+    Http::fake([
+        ...fakeTreeResponse([
+            ['path' => 'Agent Skills/my-skill/SKILL.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'other-skill/SKILL.md', 'type' => 'blob', 'sha' => 'bbb'],
+        ]),
+    ]);
+
+    $repository = GitHubRepository::fromInput('https://github.com/owner/repo/tree/main/Agent%20Skills/my-skill');
+    $skills = (new GitHubSkillProvider($repository))->discoverSkills();
+
+    expect($skills)->toHaveCount(1)
+        ->and($skills->get('my-skill')->path)->toBe('Agent Skills/my-skill');
+});
+
 it('skips directories without SKILL.md', function (): void {
     Http::fake([
         ...fakeGitHubRepo(),
