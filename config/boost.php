@@ -97,6 +97,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Browser Logs Middleware Groups
+    |--------------------------------------------------------------------------
+    |
+    | Boost injects its browser logger script into HTML responses served by the
+    | middleware groups listed here. Add any custom groups your pages use,
+    | such as "admin" or "public" to capture their logs too.
+    |
+    */
+
+    'browser_logs_middleware_groups' => [
+        'web',
+        //
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Browser Log Levels
     |--------------------------------------------------------------------------
     |

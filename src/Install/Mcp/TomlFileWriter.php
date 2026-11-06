@@ -14,6 +14,8 @@ class TomlFileWriter
     /** @var array<string, array<string, mixed>> */
     protected array $serversToAdd = [];
 
+    protected string $lineEnding = "\n";
+
     /** @param array<string, mixed> $baseConfig */
     public function __construct(protected string $filePath, protected array $baseConfig = [])
     {
@@ -43,6 +45,8 @@ class TomlFileWriter
 
         $content = File::exists($this->filePath) ? $this->normalizeContent(File::get($this->filePath)) : '';
 
+        $this->lineEnding = str_contains($content, "\r\n") ? "\r\n" : "\n";
+
         if ($content === '') {
             return $this->createNewFile();
         }
@@ -68,7 +72,7 @@ class TomlFileWriter
             $lines[] = $this->buildServerToml($key, $config);
         }
 
-        return $this->writeFile(implode(PHP_EOL, $lines).PHP_EOL);
+        return $this->writeFile(implode($this->lineEnding, $lines).$this->lineEnding);
     }
 
     protected function updateExistingFile(string $content): bool
@@ -79,8 +83,8 @@ class TomlFileWriter
             }
 
             $trimmed = rtrim($content);
-            $separator = $trimmed === '' ? '' : PHP_EOL.PHP_EOL;
-            $content = $trimmed.$separator.$this->buildServerToml($key, $config).PHP_EOL;
+            $separator = $trimmed === '' ? '' : $this->lineEnding.$this->lineEnding;
+            $content = $trimmed.$separator.$this->buildServerToml($key, $config).$this->lineEnding;
         }
 
         return $this->writeFile($content);
@@ -109,7 +113,7 @@ class TomlFileWriter
             }
         }
 
-        return implode(PHP_EOL, $lines);
+        return implode($this->lineEnding, $lines);
     }
 
     protected function formatValue(mixed $value): string

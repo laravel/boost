@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Mcp\Tools\RecordRule;
+use Laravel\Boost\Rules\RuleFrontmatter;
 use Laravel\Boost\Rules\RuleRepository;
 use Laravel\Mcp\Request;
 
@@ -69,30 +70,49 @@ it('groups a second rule for the same glob into the same file', function (): voi
         ->toContain('## Form Requests over inline validation');
 });
 
-it('merges a new glob into an existing area file without losing entries', function (): void {
+it('keeps rules for different globs in the same area in separate files', function (string $first, string $second, string $secondFile): void {
     $tool = new RecordRule($this->repository);
 
-    $tool->handle(new Request([
-        'glob' => 'app/Models/**',
-        'title' => 'First model note',
-        'note' => 'Keep models thin.',
-    ]));
+    $tool->handle(new Request(['glob' => $first, 'title' => 'First rule', 'note' => 'First only.']));
 
-    // A different glob that derives the same file name (models.md).
-    $tool->handle(new Request([
-        'glob' => 'app/Models/*.php',
-        'title' => 'Second model note',
-        'note' => 'Watch the users table.',
-    ]));
+    $response = $tool->handle(new Request(['glob' => $second, 'title' => 'Second rule', 'note' => 'Second only.']));
 
-    expect(ruleFiles($this->rulesDir))->toHaveCount(1);
-    expect(File::get($this->rulesDir.'/models.md'))
-        ->toContain('app/Models/**')
-        ->toContain('app/Models/*.php')
-        ->toContain('## First model note')
-        ->toContain('Keep models thin.')
-        ->toContain('## Second model note')
-        ->toContain('Watch the users table.');
+    expect($response)->toolHasNoError()->toolTextContains($secondFile);
+    expect(ruleFiles($this->rulesDir))->toHaveCount(2);
+
+    $models = File::get($this->rulesDir.'/models.md');
+    expect(RuleFrontmatter::parse($models)['paths'])->toBe([$first]);
+    expect($models)->toContain('## First rule')->not->toContain('## Second rule');
+
+    $other = File::get($this->rulesDir.'/'.$secondFile);
+    expect(RuleFrontmatter::parse($other)['paths'])->toBe([$second]);
+    expect($other)->toContain('## Second rule')->not->toContain('## First rule');
+})->with([
+    'narrow after broad' => ['app/Models/**', 'app/Models/User.php', 'models-user-php.md'],
+    'broad after narrow' => ['app/Models/User.php', 'app/Models/**', 'app-models.md'],
+    'wildcard after broad' => ['app/Models/**', 'app/Models/*.php', 'models-php.md'],
+]);
+
+it('does not append a new rule to a legacy file with multiple globs', function (): void {
+    File::makeDirectory($this->rulesDir, 0755, true);
+
+    $legacyFile = $this->rulesDir.'/models.md';
+    $legacyContents = "---\npaths:\n  - app/Models/**\n  - app/Models/User.php\n---\n\n# Models\n\n## Existing rule\nKeep models thin.\n";
+    File::put($legacyFile, $legacyContents);
+
+    $first = $this->repository->write('app/Models/User.php', 'User rule', 'Only for users.');
+    $second = $this->repository->write('app/Models/User.php', 'Another user rule', 'Also only for users.');
+
+    expect($first)->toBe($this->rulesDir.'/models-user-php.md');
+    expect($second)->toBe($first);
+    expect(ruleFiles($this->rulesDir))->toHaveCount(2);
+    expect(File::get($legacyFile))->toBe($legacyContents);
+
+    $dedicated = File::get($first);
+    expect(RuleFrontmatter::parse($dedicated)['paths'])->toBe(['app/Models/User.php']);
+    expect($dedicated)
+        ->toContain('## User rule', '## Another user rule')
+        ->not->toContain('## Existing rule');
 });
 
 it('keeps distinct areas that share a last path segment in separate files', function (): void {
@@ -197,6 +217,19 @@ it('regenerates index.md mapping globs to rule files on every write', function (
         ->toContain('.ai/rules/models.md');
 });
 
+it('instructs agents to read every rule file matching a path', function (): void {
+    $this->repository->write('app/Models/**', 'Model rule', 'Every model.');
+    $this->repository->write('app/Models/User.php', 'User rule', 'Only users.');
+
+    $index = File::get($this->rulesDir.'/index.md');
+
+    expect($index)
+        ->toContain("check every row for a glob matching the file's path and read every matching rule file")
+        ->toContain('A file may match multiple rows.')
+        ->toContain('| app/Models/** | .ai/rules/models.md |')
+        ->toContain('| app/Models/User.php | .ai/rules/models-user-php.md |');
+});
+
 it('excludes a rule file with no paths frontmatter from the index', function (): void {
     File::makeDirectory($this->rulesDir, 0755, true);
     File::put($this->rulesDir.'/global.md', "# Global\n\n## Always use transactions\nWrap DB writes in a transaction.\n");
@@ -222,7 +255,7 @@ it('writes a placeholder index when no rule files have paths', function (): void
         ->not->toContain('| Applies to |');
 });
 
-it('keeps multi-byte characters intact when writing and when merging a new glob', function (): void {
+it('keeps multi-byte characters intact when writing and when appending a rule', function (): void {
     $title = 'Encoding check: х ゅ 🙅 ✅';
     $note = 'These all contain 0x85: х (U+0445), ゅ (U+3085), 🙅 (U+1F645), ✅ (U+2705).';
 
@@ -239,7 +272,7 @@ it('keeps multi-byte characters intact when writing and when merging a new glob'
     expect(mb_check_encoding(File::get($file), 'UTF-8'))->toBeTrue();
 
     $tool->handle(new Request([
-        'glob' => 'app/Models/*.php',
+        'glob' => 'app/Models/**',
         'title' => 'Second model note',
         'note' => 'Watch the users table.',
     ]));
