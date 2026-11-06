@@ -155,6 +155,39 @@ it('downloads nested directory structure', function (): void {
     @rmdir($targetDir);
 });
 
+it('encodes remote file paths while preserving local filenames', function (string $filename, string $encodedFilename): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+    $fileUrl = 'https://raw.githubusercontent.com/owner/repo/main/skill-one/references/'.$encodedFilename;
+
+    Http::fake([
+        ...fakeGitHubRepo(),
+        ...fakeTreeResponse([
+            ['path' => 'skill-one/SKILL.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'skill-one/references/'.$filename, 'type' => 'blob', 'sha' => 'bbb'],
+        ]),
+        'raw.githubusercontent.com/owner/repo/main/skill-one/SKILL.md' => Http::response('# SKILL'),
+        $fileUrl => Http::response('# Reference'),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(new GitHubRepository('owner', 'repo'));
+    $skill = new RemoteSkill(name: 'skill-one', repo: 'owner/repo', path: 'skill-one');
+
+    try {
+        expect($fetcher->downloadSkill($skill, $targetDir))->toBeTrue()
+            ->and(file_get_contents($targetDir.'/references/'.$filename))->toBe('# Reference');
+
+        Http::assertSent(fn ($request): bool => (string) $request->url() === $fileUrl);
+    } finally {
+        @unlink($targetDir.'/references/'.$filename);
+        @rmdir($targetDir.'/references');
+        @unlink($targetDir.'/SKILL.md');
+        @rmdir($targetDir);
+    }
+})->with([
+    'hash' => ['c#-notes.md', 'c%23-notes.md'],
+    'literal percent escape' => ['notes%20draft.md', 'notes%2520draft.md'],
+]);
+
 it('preserves executable permissions on downloaded scripts', function (): void {
     if (PHP_OS_FAMILY === 'Windows') {
         $this->markTestSkipped('POSIX executable permission bits are not available on Windows.');
