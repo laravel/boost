@@ -103,7 +103,7 @@ it('does not append a new rule to a legacy file with multiple globs', function (
     $first = $this->repository->write('app/Models/User.php', 'User rule', 'Only for users.');
     $second = $this->repository->write('app/Models/User.php', 'Another user rule', 'Also only for users.');
 
-    expect($first)->toBe($this->rulesDir.'/models-user-php.md');
+    expect($first)->toBe($this->rulesDir.DIRECTORY_SEPARATOR.'models-user-php.md');
     expect($second)->toBe($first);
     expect(ruleFiles($this->rulesDir))->toHaveCount(2);
     expect(File::get($legacyFile))->toBe($legacyContents);
