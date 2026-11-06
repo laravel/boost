@@ -43,6 +43,26 @@ LOG);
         ->toolTextDoesNotContain('local.DEBUG: First log message');
 });
 
+it('keeps timestamps inside log messages in the same entry', function (string $eol): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $lastEntry = '[2024-01-15 10:01:00] local.ERROR: Import failed for record [2024-01-15 09:30:00]: invalid date'
+        .$eol.'#0 /app/Import.php(42): importRecord()';
+
+    createLogFile($logFile, '[2024-01-15 10:00:00] local.INFO: Import started'.$eol.$lastEntry);
+
+    $response = (new ReadLogEntries)->handle(new Request(['entries' => 1]));
+
+    expect($response)->toolHasNoError()
+        ->and((string) $response->content())->toBe($lastEntry);
+})->with(['LF' => ["\n"], 'CRLF' => ["\r\n"]]);
+
 it('detects a daily driver directly and reads a configured path', function (): void {
     $basePath = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
     $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel-'.date('Y-m-d').'.log');

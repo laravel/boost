@@ -58,6 +58,26 @@ LOG;
         ->toolTextContains('ERROR', 'File-based error message');
 });
 
+it('keeps timestamps and stack traces inside the last error', function (string $eol): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $errorEntry = '[2024-01-15 10:01:00] local.ERROR: Import failed for record [2024-01-15 09:30:00]: invalid date'
+        .$eol.'#0 /app/Import.php(42): importRecord()';
+
+    File::put($logFile, $errorEntry.$eol.'[2024-01-15 10:02:00] local.INFO: Import stopped');
+
+    $response = (new LastError)->handle(new Request([]));
+
+    expect($response)->toolHasNoError()
+        ->and((string) $response->content())->toBe($errorEntry);
+})->with(['LF' => ["\n"], 'CRLF' => ["\r\n"]]);
+
 it('it returns an error when a log file does not exist and no cache', function (): void {
     Config::set('logging.default', 'single');
     Config::set('logging.channels.single', [

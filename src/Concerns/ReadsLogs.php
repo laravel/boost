@@ -20,7 +20,7 @@ trait ReadsLogs
 
     protected function getEntrySplitRegex(): string
     {
-        return '/(?='.$this->getTimestampRegex().')/';
+        return '/(?=^'.$this->getTimestampRegex().')/m';
     }
 
     protected function getErrorEntryRegex(): string
