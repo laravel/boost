@@ -348,7 +348,7 @@ TOML;
         ])
         ->save();
 
-    $eol = PHP_EOL;
+    $eol = "\n";
     expect($result)->toBeTrue()
         ->and($capturedContent)->not->toMatch('/(\r?\n){3,}/')
         ->and($capturedContent)->toContain("model = \"o3\"{$eol}{$eol}[mcp_servers.laravel_boost]");
@@ -476,6 +476,64 @@ it('updates a file that starts with a UTF-8 BOM without duplicating the server t
         ->and($capturedContent)->not->toStartWith("\xEF\xBB\xBF")
         ->and(substr_count($capturedContent, '[mcp_servers.laravel-boost]'))->toBe(1)
         ->and($capturedContent)->toContain('args = ["artisan", "boost:mcp"]');
+});
+
+it('writes a new file with LF line endings on every platform', function (): void {
+    $capturedContent = '';
+    mockTomlFileOperations(capturedContent: $capturedContent);
+
+    $result = (new TomlFileWriter('/path/to/config.toml', ['model' => 'o3']))
+        ->configKey('mcp_servers')
+        ->addServerConfig('laravel_boost', [
+            'command' => 'php',
+            'env' => ['APP_ENV' => 'local'],
+        ])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($capturedContent)->not->toContain("\r\n")
+        ->and($capturedContent)->toBe(
+            "model = \"o3\"\n\n[mcp_servers.laravel_boost]\ncommand = \"php\"\n\n[mcp_servers.laravel_boost.env]\nAPP_ENV = \"local\"\n"
+        );
+});
+
+it('keeps LF line endings when updating an LF file', function (): void {
+    $capturedContent = '';
+    mockTomlFileOperations(
+        fileExists: true,
+        content: "model = \"o3\"\n\n[mcp_servers.other]\ncommand = \"node\"\n",
+        capturedContent: $capturedContent
+    );
+
+    $result = (new TomlFileWriter('/path/to/config.toml'))
+        ->configKey('mcp_servers')
+        ->addServerConfig('laravel_boost', ['command' => 'php', 'env' => ['APP_ENV' => 'local']])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($capturedContent)->not->toContain("\r\n")
+        ->and($capturedContent)->toContain("command = \"node\"\n\n[mcp_servers.laravel_boost]\ncommand = \"php\"\n");
+});
+
+it('keeps CRLF line endings when updating a CRLF file', function (): void {
+    $capturedContent = '';
+    mockTomlFileOperations(
+        fileExists: true,
+        content: "model = \"o3\"\r\n\r\n[mcp_servers.laravel_boost]\r\ncommand = \"php\"\r\ncwd = \"/old/path\"\r\n",
+        capturedContent: $capturedContent
+    );
+
+    $result = (new TomlFileWriter('/path/to/config.toml'))
+        ->configKey('mcp_servers')
+        ->addServerConfig('laravel_boost', ['command' => 'php', 'env' => ['APP_ENV' => 'local']])
+        ->save();
+
+    expect($result)->toBeTrue()
+        ->and($capturedContent)->not->toMatch('/(?<!\r)\n/')
+        ->and($capturedContent)->not->toContain('/old/path')
+        ->and($capturedContent)->toBe(
+            "model = \"o3\"\r\n\r\n[mcp_servers.laravel_boost]\r\ncommand = \"php\"\r\n\r\n[mcp_servers.laravel_boost.env]\r\nAPP_ENV = \"local\"\r\n"
+        );
 });
 
 function mockTomlFileOperations(
