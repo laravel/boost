@@ -309,10 +309,6 @@ class FileWriter
      */
     protected function isPlainJson(string $content): bool
     {
-        if ($this->hasJson5Features($content)) {
-            return false;
-        }
-
         json_decode($content);
 
         return json_last_error() === JSON_ERROR_NONE;
