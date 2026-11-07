@@ -131,6 +131,31 @@ it('calls install command with skills flag when skills are configured', function
     expect($command->handle($config, app(ProjectManager::class)))->toBe(0);
 });
 
+it('propagates installation failures instead of reporting a successful update', function (int $exitCode): void {
+    $config = new Config;
+    $config->setAgents(['claude_code']);
+    $config->setGuidelines(true);
+
+    $command = Double::for(UpdateCommand::class)->passthru();
+    $command->expects('callSilently')->with(InstallCommand::class, [
+        '--no-interaction' => true,
+        '--guidelines' => true,
+        '--skills' => false,
+    ])->returns($exitCode);
+
+    $input = new ArrayInput(['--no-discover' => true], (new UpdateCommand)->getDefinition());
+    $buffer = new BufferedOutput;
+
+    $command->setLaravel($this->app);
+    $command->setInput($input);
+    $command->setOutput(new OutputStyle($input, $buffer));
+
+    expect($command->handle($config, app(ProjectManager::class)))->toBe($exitCode)
+        ->and($buffer->fetch())
+        ->toContain('Boost guidelines and skills could not be updated.')
+        ->not->toContain('Boost guidelines and skills updated successfully.');
+})->with([1, 2]);
+
 it('preserves tracked skills with unusable frontmatter while completing the update', function (string $skill, string $reason): void {
     $project = Double::for(ProjectManager::class, override: true)->instance();
     mockProjectPackages($project, new PackageCollection([]));

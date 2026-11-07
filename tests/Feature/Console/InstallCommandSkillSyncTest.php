@@ -91,14 +91,14 @@ it('reports a failed skill sync instead of displaying success', function (): voi
 
     $this->artisan('boost:install', ['--skills' => true, '--no-interaction' => true])
         ->expectsOutputToContain('Failed to sync skills: first-failed-skill, second-failed-skill')
-        ->assertSuccessful();
+        ->assertFailed();
 })->skipOnWindows();
 
 it('does not track a skill that failed to sync', function (): void {
     mockSkillComposer(unwritableSkills($this->tempBasePath, ['failed-skill']));
 
     $this->artisan('boost:install', ['--skills' => true, '--no-interaction' => true])
-        ->assertSuccessful();
+        ->assertFailed();
 
     expect((new Config)->getSkills())->not->toContain('failed-skill');
 })->skipOnWindows();
@@ -116,7 +116,17 @@ it('reports a stale skill that could not be removed', function (): void {
 
     $this->artisan('boost:install', ['--skills' => true, '--no-interaction' => true])
         ->expectsOutputToContain('Failed to sync skills: stale-skill')
-        ->assertSuccessful();
+        ->assertFailed();
 
     expect($stale)->toBeDirectory();
+})->skipOnWindows();
+
+it('reports failure when updating skills that cannot be synced', function (): void {
+    (new Config)->setSkills(['failed-skill']);
+    mockSkillComposer(unwritableSkills($this->tempBasePath, ['failed-skill']));
+
+    $this->artisan('boost:update', ['--no-discover' => true, '--no-interaction' => true])
+        ->expectsOutputToContain('Boost guidelines and skills could not be updated.')
+        ->doesntExpectOutputToContain('Boost guidelines and skills updated successfully.')
+        ->assertFailed();
 })->skipOnWindows();
