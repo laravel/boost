@@ -70,6 +70,8 @@ class InstallCommand extends Command
 
     private bool $enforceTests = true;
 
+    private bool $hasInstallationFailures = false;
+
     /** @var array<int, string> */
     private array $installedSkillNames = [];
 
@@ -88,6 +90,7 @@ class InstallCommand extends Command
 
     public function handle(): int
     {
+        $this->hasInstallationFailures = false;
         app(SkillParseFailures::class)->flush();
 
         $this->terminal->initDimensions();
@@ -100,6 +103,10 @@ class InstallCommand extends Command
 
         $this->reportRenderFailures();
         $this->reportSkillParseFailures();
+
+        if ($this->hasInstallationFailures) {
+            return self::FAILURE;
+        }
 
         $this->noteInferConventions();
 
@@ -647,6 +654,7 @@ class InstallCommand extends Command
                 $processor($agent);
                 $this->line($this->green('✓'));
             } catch (Exception $e) {
+                $this->hasInstallationFailures = true;
                 $failed[$name] = $e->getMessage();
                 $this->line($this->red('✗'));
             }

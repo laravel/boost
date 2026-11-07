@@ -53,13 +53,19 @@ class UpdateCommand extends Command
             $this->discoverNewContent($config, $project);
         }
 
-        $this->callSilently(InstallCommand::class, [
+        $exitCode = $this->callSilently(InstallCommand::class, [
             '--no-interaction' => true,
             '--guidelines' => $guidelines,
             '--skills' => $hasSkills,
         ]);
 
         $this->reportSkillParseFailures();
+
+        if ($exitCode !== self::SUCCESS) {
+            $this->error('Boost guidelines and skills could not be updated.');
+
+            return $exitCode;
+        }
 
         $this->info('Boost guidelines and skills updated successfully.');
 
