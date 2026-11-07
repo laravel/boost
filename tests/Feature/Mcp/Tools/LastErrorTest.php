@@ -78,6 +78,65 @@ it('keeps timestamps and stack traces inside the last error', function (string $
         ->and((string) $response->content())->toBe($errorEntry);
 })->with(['LF' => ["\n"], 'CRLF' => ["\r\n"]]);
 
+it('ignores error level text inside later non-error messages', function (string $entry): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $errorEntry = '[2024-01-15 10:00:00] local.ERROR: Actual application failure';
+
+    File::put($logFile, $errorEntry."\n".$entry);
+
+    $response = (new LastError)->handle(new Request([]));
+
+    expect($response)->toolHasNoError()
+        ->and((string) $response->content())->toBe($errorEntry);
+})->with([
+    'info message' => ['[2024-01-15 10:01:00] local.INFO: Replayed production.ERROR: Historical failure'],
+    'warning message' => ['[2024-01-15 10:01:00] local.WARNING: Replayed production.ERROR: Historical failure'],
+    'context value' => ['[2024-01-15 10:01:00] local.DEBUG: Log imported {"original":"production.ERROR: Historical failure"}'],
+]);
+
+it('does not find an error when only message text contains an error level', function (): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    File::put($logFile, '[2024-01-15 10:00:00] local.INFO: Replayed production.ERROR: Historical failure');
+
+    $response = (new LastError)->handle(new Request([]));
+
+    expect($response)->toolHasError()
+        ->toolTextContains('Unable to find an ERROR entry');
+});
+
+it('recognizes error entries with custom channel names', function (string $channel): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    $errorEntry = "[2024-01-15 10:00:00] {$channel}.ERROR: Actual application failure";
+
+    File::put($logFile, $errorEntry);
+
+    $response = (new LastError)->handle(new Request([]));
+
+    expect($response)->toolHasNoError()
+        ->and((string) $response->content())->toBe($errorEntry);
+})->with(['dotted' => ['app.worker'], 'colon' => ['app:worker'], 'spaces' => ['App Worker']]);
+
 it('it returns an error when a log file does not exist and no cache', function (): void {
     Config::set('logging.default', 'single');
     Config::set('logging.channels.single', [

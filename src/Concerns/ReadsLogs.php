@@ -23,9 +23,9 @@ trait ReadsLogs
         return '/(?=^'.$this->getTimestampRegex().')/m';
     }
 
-    protected function getErrorEntryRegex(): string
+    protected function getEntryLevelRegex(): string
     {
-        return '/^'.$this->getTimestampRegex().'.*\\.ERROR:/';
+        return '/^'.$this->getTimestampRegex().'[^\\r\\n]*?\\.(?<level>[A-Z]+):/';
     }
 
     protected function getChunkSizeStart(): int
@@ -118,7 +118,8 @@ trait ReadsLogs
             return $this->isJsonErrorEntry($line);
         }
 
-        return preg_match($this->getErrorEntryRegex(), $line) === 1;
+        return preg_match($this->getEntryLevelRegex(), $line, $matches) === 1
+            && $matches['level'] === 'ERROR';
     }
 
     /**
