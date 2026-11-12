@@ -108,7 +108,10 @@ Determine the task and follow the matching path:
 
 - Monorepo (application in a subdirectory): add `--root-directory=<subdir>` to `cloud ship` or `cloud application:create`.
 
-- Custom domain: `cloud domain:create --json -n`, then `cloud domain:verify -n`.
+- Custom domain: `cloud domain:create --name=<domain> --www-redirect=<strategy> --json -n`, then `cloud domain:verify -n`. Always pass `--www-redirect`; under `-n` it defaults to `www_to_root`, which adds a www variant that needs its own DNS records.
+  - Subdomain (`app.example.com`): pass `--www-redirect=none`. Nobody serves `www.app.example.com`, so a www variant never validates.
+  - Apex (`example.com`): ask the user whether www redirects to the root (`www_to_root`) or the reverse (`root_to_www`).
+  - Leave `--wildcard-enabled` off unless the user asks for wildcard subdomains.
 
 - Edge cache: `cloud environment:purge-edge-cache {environment} -n` purges everything; pass one of `--path=/blog/post`, `--prefix=/blog/`, or `--tag=<cache-tag>` to purge less. Tags need a dedicated edge network.
 
