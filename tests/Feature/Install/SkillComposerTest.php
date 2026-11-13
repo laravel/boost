@@ -77,6 +77,70 @@ test('the cloud skill is only included when the cloud integration is enabled', f
     expect($composer->config($config)->skills()->get('deploying-to-cloud')->package)->toBe('deployments');
 });
 
+function playwrightConfig(): GuidelineConfig
+{
+    $config = new GuidelineConfig;
+    $config->usesPlaywright = true;
+
+    return $config;
+}
+
+test('the playwright skills are included when the playwright integration is enabled', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('@playwright/test', '1.64.1')->setDirect(),
+        rosterPackage('playwright-core', '1.64.1', path: fixture('vendor-packages/playwright-core')),
+    ]));
+
+    $composer = new SkillComposer($this->project);
+
+    expect($composer->skills()->has('playwright-cli'))->toBeFalse();
+
+    $skills = $composer->config(playwrightConfig())->skills();
+
+    expect($skills->only(['playwright-cli', 'playwright-trace'])->map->package->all())
+        ->toBe(['playwright-cli' => 'playwright', 'playwright-trace' => 'playwright'])
+        ->and($skills->get('playwright-cli')->path)
+        ->toBe(implode(DIRECTORY_SEPARATOR, [fixture('vendor-packages/playwright-core'), 'lib', 'tools', 'skills', 'playwright-cli']));
+});
+
+test('the playwright skills are excluded when playwright is only an indirect dependency', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('@playwright/test', '1.64.1')->setDirect(false),
+        rosterPackage('playwright-core', '1.64.1', path: fixture('vendor-packages/playwright-core')),
+    ]));
+
+    expect((new SkillComposer($this->project))->config(playwrightConfig())->skills()->has('playwright-cli'))->toBeFalse();
+});
+
+test('no playwright skills are included when the installed playwright does not ship them', function (): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        rosterPackage('@playwright/test', '1.40.0')->setDirect(),
+        rosterPackage('playwright-core', '1.40.0', path: fixture('vendor-packages/core-only')),
+    ]));
+
+    $skills = (new SkillComposer($this->project))->config(playwrightConfig())->skills();
+
+    expect($skills->where('package', 'playwright'))->toBeEmpty();
+});
+
+test('the playwright component testing skill is only included for component testing projects', function (array $packages, bool $expected): void {
+    mockProjectPackages($this->project, new PackageCollection([
+        ...$packages,
+        rosterPackage('playwright-core', '1.64.1', path: fixture('vendor-packages/playwright-core')),
+    ]));
+
+    $skills = (new SkillComposer($this->project))->config(playwrightConfig())->skills();
+
+    expect($skills->has('playwright-component-testing'))->toBe($expected)
+        ->and($skills->has('playwright-cli'))->toBeTrue();
+})->with([
+    'browser testing' => [fn (): array => [rosterPackage('@playwright/test', '1.64.1')->setDirect()], false],
+    'component testing' => [fn (): array => [
+        rosterPackage('@playwright/test', '1.64.1')->setDirect(),
+        rosterPackage('@playwright/experimental-ct-vue', '1.64.1')->setDirect(),
+    ], true],
+]);
+
 test('skill has name, description, path, and package', function (): void {
     $packages = new PackageCollection([
         rosterPackage('laravel/framework', '11.0.0'),

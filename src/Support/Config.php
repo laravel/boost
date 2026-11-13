@@ -103,6 +103,16 @@ class Config
         return $this->get('cloud', true);
     }
 
+    public function setPlaywright(bool $installed): void
+    {
+        $this->set('playwright', $installed);
+    }
+
+    public function getPlaywright(): bool
+    {
+        return $this->get('playwright', true);
+    }
+
     public function setSail(bool $useSail): void
     {
         $this->set('sail', $useSail);

@@ -75,11 +75,23 @@ class SkillComposer
     }
 
     /**
-     * Skills for opted-in integrations, discovered from `.ai/deployments/skill`.
+     * Skills for opted-in integrations.
      *
      * @return Collection<string, Skill>
      */
     protected function getIntegrationSkills(): Collection
+    {
+        return collect()
+            ->merge($this->getCloudSkills())
+            ->merge($this->getPlaywrightSkills());
+    }
+
+    /**
+     * Skills for Laravel Cloud, discovered from `.ai/deployments/skill`.
+     *
+     * @return Collection<string, Skill>
+     */
+    protected function getCloudSkills(): Collection
     {
         if (! $this->config->usesCloud) {
             return collect();
@@ -89,6 +101,31 @@ class SkillComposer
             $this->getBoostAiPath().DIRECTORY_SEPARATOR.'deployments'.DIRECTORY_SEPARATOR.'skill',
             'deployments',
         );
+    }
+
+    /**
+     * Skills Playwright ships in `playwright-core/lib/tools/skills`.
+     *
+     * @return Collection<string, Skill>
+     */
+    protected function getPlaywrightSkills(): Collection
+    {
+        if (! $this->config->usesPlaywright) {
+            return collect();
+        }
+
+        $playwright = new Playwright($this->project);
+        $skillsPath = $playwright->skillsPath();
+
+        if ($skillsPath === null || ! $playwright->isInstalled()) {
+            return collect();
+        }
+
+        return $this->discoverSkillsFromDirectory($skillsPath, 'playwright')
+            ->when(
+                ! $playwright->usesComponentTesting(),
+                fn (Collection $skills): Collection => $skills->forget(Playwright::COMPONENT_TESTING_SKILL),
+            );
     }
 
     /**
