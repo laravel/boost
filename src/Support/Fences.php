@@ -9,7 +9,7 @@ class Fences
     /**
      * Fenced code blocks per CommonMark, so inline backtick runs are not paired.
      */
-    private const PATTERN = '/^ {0,3}(?<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\k<fence>[`~]*[ \t]*$|\z)/ms';
+    private const PATTERN = '/^ {0,3}(?<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\k<fence>[`~]*[ \t]*\r?$|\z)/ms';
 
     /**
      * Run a transformation over the markdown outside its fenced code blocks.

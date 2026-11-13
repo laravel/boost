@@ -184,6 +184,46 @@ test('a scoped block from a third-party package guideline produces a managed rul
     });
 });
 
+test('extracts scoped rules after a closed code fence', function (string $fence, string $eol): void {
+    $content = implode($eol, [
+        '# Package guidelines',
+        '',
+        $fence.'text',
+        "@scoped(['app/Example/**'])",
+        'This is a literal example.',
+        '@endscoped',
+        $fence,
+        '',
+        "@scoped(['app/Widgets/**'])",
+        '## Widgets',
+        '',
+        'Use the widget factory.',
+        '@endscoped',
+        '',
+    ]);
+
+    withThirdPartyPackages([
+        'some/third-party' => ['core.md' => $content],
+    ], function (): void {
+        $rules = (new RuleComposer($this->guidelines))->rules();
+        $widgetRule = $rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Widgets/**']);
+
+        expect($widgetRule)->not->toBeNull()
+            ->and($widgetRule['content'])->toContain('Use the widget factory.')
+            ->and($rules->first(fn (array $rule): bool => $rule['paths'] === ['app/Example/**']))->toBeNull();
+
+        $inline = $this->guidelines->guidelines()->first(fn (array $guideline): bool => str_contains($guideline['content'], 'This is a literal example.'));
+
+        expect($inline['content'])->toContain("@scoped(['app/Example/**'])")
+            ->not->toContain('Use the widget factory.');
+    });
+})->with([
+    'backticks with LF' => ['```', "\n"],
+    'backticks with CRLF' => ['```', "\r\n"],
+    'tildes with LF' => ['~~~', "\n"],
+    'tildes with CRLF' => ['~~~', "\r\n"],
+]);
+
 test('two scoped guideline files from one third-party package each produce a rule', function (): void {
     withThirdPartyPackages([
         'some/multi' => [
