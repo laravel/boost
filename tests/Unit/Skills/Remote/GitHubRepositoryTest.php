@@ -54,6 +54,21 @@ it('returns full name from fullName method', function (): void {
     expect($repo->fullName())->toBe('owner/repo');
 });
 
+it('decodes URL paths without treating literal paths as URLs', function (string $input, string $path): void {
+    expect(GitHubRepository::fromInput($input)->path)->toBe($path);
+})->with([
+    'tree URL with spaces' => ['https://github.com/owner/repo/tree/main/Agent%20Skills/my-skill', 'Agent Skills/my-skill'],
+    'blob URL with a hash' => ['https://github.com/owner/repo/blob/main/skills/c%23/SKILL.md', 'skills/c#'],
+    'URL with a literal percent escape' => ['https://github.com/owner/repo/tree/main/skills/notes%2520draft', 'skills/notes%20draft'],
+    'plain URL with spaces' => ['https://github.com/owner/repo/Agent%20Skills', 'Agent Skills'],
+    'URL with a plus sign' => ['https://github.com/owner/repo/tree/main/skills/c++', 'skills/c++'],
+    'literal path with a percent escape' => ['owner/repo/skills/notes%20draft', 'skills/notes%20draft'],
+]);
+
+it('decodes the branch from a GitHub URL', function (): void {
+    expect(GitHubRepository::fromInput('https://github.com/owner/repo/tree/c%23/skills')->branch)->toBe('c#');
+});
+
 it('returns source with path when present', function (): void {
     $repo = new GitHubRepository('owner', 'repo', 'path/to/skills');
 
