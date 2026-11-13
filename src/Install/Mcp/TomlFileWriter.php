@@ -148,22 +148,24 @@ class TomlFileWriter
 
     protected function serverExists(string $content, string $key): bool
     {
-        $pattern = '/^\['.preg_quote($this->configKey, '/').'\.'.preg_quote($key, '/').'\]/m';
+        $pattern = '/^[ \t]*\['.preg_quote($this->configKey, '/').'\.'.preg_quote($key, '/').'\]/m';
 
         return (bool) preg_match($pattern, $content);
     }
 
     protected function removeExistingServer(string $content, string $key): string
     {
-        $escapedConfigKey = preg_quote($this->configKey, '/');
-        $escapedKey = preg_quote($key, '/');
+        $table = preg_quote($this->configKey, '/').'\.'.preg_quote($key, '/');
 
-        $envPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\.env\].*?(?=\r?\n\[|$)/s';
-        $content = preg_replace($envPattern, '', $content) ?? $content;
+        return $this->removeTable($this->removeTable($content, $table.'\.env'), $table);
+    }
 
-        $mainPattern = '/(\r?\n)*\['.$escapedConfigKey.'\.'.$escapedKey.'\].*?(?=\r?\n\[|$)/s';
+    protected function removeTable(string $content, string $escapedTable): string
+    {
+        $nextHeader = '\r?\n[ \t]*\[\[?[^\[\]\r\n,]+\]\]?[ \t]*(?:#[^\r\n]*)?\r?$';
+        $pattern = '/(\r?\n)*^[ \t]*\['.$escapedTable.'\].*?(?='.$nextHeader.'|\z)/ms';
 
-        return preg_replace($mainPattern, '', $content) ?? $content;
+        return preg_replace($pattern, '', $content) ?? $content;
     }
 
     protected function normalizeContent(string $content): string
