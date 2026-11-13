@@ -155,15 +155,17 @@ class TomlFileWriter
 
     protected function removeExistingServer(string $content, string $key): string
     {
-        $escapedConfigKey = preg_quote($this->configKey, '/');
-        $escapedKey = preg_quote($key, '/');
+        $table = preg_quote($this->configKey, '/').'\.'.preg_quote($key, '/');
 
-        $envPattern = '/(\r?\n)*^[ \t]*\['.$escapedConfigKey.'\.'.$escapedKey.'\.env\].*?(?=\r?\n[ \t]*\[|\z)/ms';
-        $content = preg_replace($envPattern, '', $content) ?? $content;
+        return $this->removeTable($this->removeTable($content, $table.'\.env'), $table);
+    }
 
-        $mainPattern = '/(\r?\n)*^[ \t]*\['.$escapedConfigKey.'\.'.$escapedKey.'\].*?(?=\r?\n[ \t]*\[|\z)/ms';
+    protected function removeTable(string $content, string $escapedTable): string
+    {
+        $nextHeader = '\r?\n[ \t]*\[\[?[^\[\]\r\n,]+\]\]?[ \t]*(?:#[^\r\n]*)?\r?$';
+        $pattern = '/(\r?\n)*^[ \t]*\['.$escapedTable.'\].*?(?='.$nextHeader.'|\z)/ms';
 
-        return preg_replace($mainPattern, '', $content) ?? $content;
+        return preg_replace($pattern, '', $content) ?? $content;
     }
 
     protected function normalizeContent(string $content): string
