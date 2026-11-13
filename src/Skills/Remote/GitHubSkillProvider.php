@@ -244,7 +244,7 @@ class GitHubSkillProvider
             $this->repository->owner,
             $this->repository->repo,
             $this->resolveBranch(),
-            ltrim($path, '/')
+            Str::of(ltrim($path, '/'))->explode('/')->map(rawurlencode(...))->implode('/')
         );
     }
 
