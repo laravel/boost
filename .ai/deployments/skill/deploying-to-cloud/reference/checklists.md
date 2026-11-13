@@ -57,7 +57,8 @@ Use these checklists when performing complex setups. Copy the relevant checklist
 ## Custom domain setup
 
 ```
-- [ ] Create the domain (`domain:create --json -n`)
+- [ ] Pick the www redirect: `none` for a subdomain; ask the user for an apex
+- [ ] Create the domain (`domain:create --name=<domain> --www-redirect=<strategy> --json -n`)
 - [ ] Get DNS records to configure (`domain:get --json -n`)
 - [ ] Tell the user to add the DNS records at their registrar
 - [ ] Verify the domain (`domain:verify -n`)

@@ -286,6 +286,38 @@ test('hasUnquotedComments detects comments correctly', function (string $content
     expect($result)->toBe($expected, $description);
 })->with(commentDetectionCases());
 
+test('updates existing servers when JSON strings contain trailing comma look-alikes', function (string $description): void {
+    $writtenContent = '';
+    $config = [
+        'inputs' => [['id' => 'example', 'description' => $description]],
+        'mcpServers' => [
+            'laravel-boost' => ['command' => 'old-php'],
+            'other' => ['command' => 'node'],
+        ],
+    ];
+
+    mockFileOperations(
+        fileExists: true,
+        content: json_encode($config, JSON_PRETTY_PRINT),
+        capturedContent: $writtenContent
+    );
+
+    $server = ['command' => 'php', 'args' => ['artisan', 'boost:mcp']];
+
+    $result = (new FileWriter('/path/to/mcp.json'))
+        ->addServerConfig('laravel-boost', $server)
+        ->save();
+
+    $config['mcpServers']['laravel-boost'] = $server;
+
+    expect($result)->toBeTrue()
+        ->and(json_decode($writtenContent, true))->toBe($config);
+})->with([
+    'object token' => ['Example syntax: ,}'],
+    'array token' => ['Example syntax: ,]'],
+    'whitespace before closing token' => ['Example syntax: , } or , ]'],
+]);
+
 test('trailing comma detection works across newlines', function (string $content, bool $expected, string $description): void {
     $writer = new FileWriter('/tmp/test.json');
     $reflection = new ReflectionClass($writer);

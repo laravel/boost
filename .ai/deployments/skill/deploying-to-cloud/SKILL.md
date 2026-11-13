@@ -69,9 +69,11 @@ If a project-local installation is not available, install the CLI globally with 
 
 Commands follow a CRUD pattern: `resource:list`, `resource:get`, `resource:create`, `resource:update`, `resource:delete`.
 
-Available resources: `application`, `environment`, `instance`, `database-cluster`, `database`, `cache`, `bucket`, `domain`, `websocket-cluster`, `background-process`, `scheduled-command`, `secret`, `command`, `deployment`.
+Available resources: `application`, `environment`, `instance`, `database-cluster`, `database`, `database-user`, `cache`, `bucket`, `domain`, `websocket-cluster`, `background-process`, `scheduled-command`, `secret`, `command`, `deployment`.
 
 Some resources have additional commands (e.g., `domain:verify`, `database:open`, `instance:sizes`, `cache:types`, `database:types`, `<resource>:metrics`). Discover these via `cloud -h`.
+
+`database-user:create` returns the new user's password once and never again. JSON output masks it unless you pass `--show-sensitive`, so pass it when the password is needed.
 
 Never hardcode command signatures. Always run `cloud <command> -h` to discover options at runtime.
 
@@ -106,9 +108,14 @@ Determine the task and follow the matching path:
 
 - Provision infrastructure: `cloud <resource>:create --json -n`
 
+- Brand new project (no code yet): `cloud new --starter-kit=<kit> --repository=<owner>/<new-repo> --path=<dir> -n` creates a private GitHub repository from the starter kit, deploys it (with a database for Laravel kits), and clones it to `<dir>`. The repository must not exist yet. Run `cloud new -h` for the kits.
+
 - Monorepo (application in a subdirectory): add `--root-directory=<subdir>` to `cloud ship` or `cloud application:create`.
 
-- Custom domain: `cloud domain:create --json -n`, then `cloud domain:verify -n`.
+- Custom domain: `cloud domain:create --name=<domain> --www-redirect=<strategy> --json -n`, then `cloud domain:verify -n`. Always pass `--www-redirect`; under `-n` it defaults to `www_to_root`, which adds a www variant that needs its own DNS records.
+  - Subdomain (`app.example.com`): pass `--www-redirect=none`. Nobody serves `www.app.example.com`, so a www variant never validates.
+  - Apex (`example.com`): ask the user whether www redirects to the root (`www_to_root`) or the reverse (`root_to_www`).
+  - Leave `--wildcard-enabled` off unless the user asks for wildcard subdomains.
 
 - Edge cache: `cloud environment:purge-edge-cache {environment} -n` purges everything; pass one of `--path=/blog/post`, `--prefix=/blog/`, or `--tag=<cache-tag>` to purge less. Tags need a dedicated edge network.
 
@@ -237,6 +244,7 @@ Review past commands:
 
 - `cloud command:list {environment} --json -n` — list command history
 - `cloud command:get {commandId} --json -n` — get details and output of a specific command
+- When `outputTruncated` is true, `output` holds only the tail (or is null). Download the full output from `outputUrl`, a JSON file with an `output` key. The link expires within minutes, so fetch it right away.
 
 ### Billing and Usage
 
