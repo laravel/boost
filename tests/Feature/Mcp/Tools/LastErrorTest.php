@@ -5,9 +5,23 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Laravel\Boost\Mcp\Tools\BrowserLogs;
 use Laravel\Boost\Mcp\Tools\LastError;
 use Laravel\Mcp\Request;
+
+function useSingleLogChannel(): string
+{
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    return $logFile;
+}
 
 beforeEach(function (): void {
     Cache::forget('boost:last_error');
@@ -34,13 +48,7 @@ it('returns a cached error when available', function (): void {
 });
 
 it('falls back to a log file when no cached error', function (): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $logContent = <<<'LOG'
 [2024-01-15 10:00:00] local.DEBUG: Debug message
@@ -59,13 +67,7 @@ LOG;
 });
 
 it('keeps timestamps and stack traces inside the last error', function (string $eol): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $errorEntry = '[2024-01-15 10:01:00] local.ERROR: Import failed for record [2024-01-15 09:30:00]: invalid date'
         .$eol.'#0 /app/Import.php(42): importRecord()';
@@ -79,13 +81,7 @@ it('keeps timestamps and stack traces inside the last error', function (string $
 })->with(['LF' => ["\n"], 'CRLF' => ["\r\n"]]);
 
 it('ignores error level text inside later non-error messages', function (string $entry): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $errorEntry = '[2024-01-15 10:00:00] local.ERROR: Actual application failure';
 
@@ -102,13 +98,7 @@ it('ignores error level text inside later non-error messages', function (string 
 ]);
 
 it('does not find an error when only message text contains an error level', function (): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     File::put($logFile, '[2024-01-15 10:00:00] local.INFO: Replayed production.ERROR: Historical failure');
 
@@ -119,13 +109,7 @@ it('does not find an error when only message text contains an error level', func
 });
 
 it('recognizes error entries with custom channel names', function (string $channel): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $errorEntry = "[2024-01-15 10:00:00] {$channel}.ERROR: Actual application failure";
 
@@ -136,6 +120,49 @@ it('recognizes error entries with custom channel names', function (string $chann
     expect($response)->toolHasNoError()
         ->and((string) $response->content())->toBe($errorEntry);
 })->with(['dotted' => ['app.worker'], 'colon' => ['app:worker'], 'spaces' => ['App Worker']]);
+
+it('finds entries logged above the error level', function (string $level): void {
+    $logFile = useSingleLogChannel();
+
+    $entry = "[2024-01-15 10:01:00] local.{$level}: Payment gateway unreachable";
+
+    File::put($logFile, '[2024-01-15 10:00:00] local.ERROR: Older failure'."\n".$entry."\n".'[2024-01-15 10:02:00] local.INFO: Retrying');
+
+    $response = (new LastError)->handle(new Request([]));
+
+    expect($response)->toolHasNoError()
+        ->and((string) $response->content())->toBe($entry);
+})->with(['CRITICAL', 'ALERT', 'EMERGENCY']);
+
+it('finds error entries with custom timestamp formats', function (string $timestamp): void {
+    $logFile = useSingleLogChannel();
+
+    $entry = "[{$timestamp}] local.ERROR: Payment gateway unreachable";
+
+    File::put($logFile, $entry."\n"."[{$timestamp}] local.INFO: Retrying");
+
+    $response = (new LastError)->handle(new Request([]));
+
+    expect($response)->toolHasNoError()
+        ->and((string) $response->content())->toBe($entry);
+})->with([
+    'microseconds' => ['2024-01-15 10:00:00.123456'],
+    'ISO 8601' => ['2024-01-15T10:00:00.123456+00:00'],
+    'UTC suffix' => ['2024-01-15T10:00:00Z'],
+]);
+
+it('caches entries logged above the error level', function (): void {
+    (new ReflectionProperty(LastError::class, 'listenerRegistered'))->setValue(null, false);
+
+    new LastError;
+
+    Log::critical('Payment gateway unreachable');
+
+    expect(Cache::get('boost:last_error'))->toMatchArray([
+        'level' => 'critical',
+        'message' => 'Payment gateway unreachable',
+    ]);
+});
 
 it('it returns an error when a log file does not exist and no cache', function (): void {
     Config::set('logging.default', 'single');
@@ -153,13 +180,7 @@ it('it returns an error when a log file does not exist and no cache', function (
 });
 
 it('returns an error when no error entry is found in a log file', function (): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $logContent = <<<'LOG'
 [2024-01-15 10:00:00] local.DEBUG: Debug message
@@ -202,13 +223,7 @@ it('falls back to log file when cache is unreachable', function (): void {
         ->with('boost:last_error')
         ->andThrow(new RuntimeException('Cache driver unreachable'));
 
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     File::put($logFile, '[2024-01-15 10:00:00] local.ERROR: Fallback error from log file');
 
@@ -221,13 +236,7 @@ it('falls back to log file when cache is unreachable', function (): void {
 });
 
 it('finds error in JSON-formatted log entries', function (): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $logContent = implode("\n", [
         '{"message":"Info message","context":{},"level":200,"level_name":"INFO","channel":"local","datetime":"2024-01-15T10:00:00+00:00"}',
@@ -247,13 +256,7 @@ it('finds error in JSON-formatted log entries', function (): void {
 });
 
 it('finds error in Logstash-formatted log entries', function (): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $logContent = implode("\n", [
         '{"@timestamp":"2024-01-15T10:00:00.000Z","@version":1,"host":"server","message":"Logstash info","type":"app","channel":"local","level":"INFO","monolog_level":200}',
@@ -272,14 +275,23 @@ it('finds error in Logstash-formatted log entries', function (): void {
         ->toolTextDoesNotContain('Logstash info', 'Logstash warning');
 });
 
-it('returns error when no error entry in JSON-formatted logs', function (): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+it('finds critical entries in Logstash-formatted logs', function (): void {
+    $logFile = useSingleLogChannel();
 
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    File::put($logFile, implode("\n", [
+        '{"@timestamp":"2024-01-15T10:00:00.000Z","message":"Logstash critical found","channel":"local","level":"CRITICAL","monolog_level":500}',
+        '{"@timestamp":"2024-01-15T10:01:00.000Z","message":"Logstash info","channel":"local","level":"INFO","monolog_level":200}',
+    ]));
+
+    $response = (new LastError)->handle(new Request([]));
+
+    expect($response)->toolHasNoError()
+        ->toolTextContains('Logstash critical found')
+        ->toolTextDoesNotContain('Logstash info');
+});
+
+it('returns error when no error entry in JSON-formatted logs', function (): void {
+    $logFile = useSingleLogChannel();
 
     $logContent = implode("\n", [
         '{"message":"Info message","context":{},"level":200,"level_name":"INFO","channel":"local","datetime":"2024-01-15T10:00:00+00:00"}',
@@ -297,13 +309,7 @@ it('returns error when no error entry in JSON-formatted logs', function (): void
 });
 
 it('does not return info or warning entries', function (): void {
-    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
-
-    Config::set('logging.default', 'single');
-    Config::set('logging.channels.single', [
-        'driver' => 'single',
-        'path' => $logFile,
-    ]);
+    $logFile = useSingleLogChannel();
 
     $logContent = <<<'LOG'
 [2024-01-15 10:00:00] local.INFO: This is an info message

@@ -9,13 +9,16 @@ use Illuminate\Support\Facades\Config;
 
 trait ReadsLogs
 {
+    /** @var list<string> */
+    protected const ERROR_LEVELS = ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'];
+
     /**
      * Regular expression fragments and default chunk-window sizes used when
      * scanning log files. Declaring them once keeps every consumer in sync.
      */
     protected function getTimestampRegex(): string
     {
-        return '\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\]';
+        return '\\[\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?\\]';
     }
 
     protected function getEntrySplitRegex(): string
@@ -119,7 +122,7 @@ trait ReadsLogs
         }
 
         return preg_match($this->getEntryLevelRegex(), $line, $matches) === 1
-            && $matches['level'] === 'ERROR';
+            && in_array($matches['level'], self::ERROR_LEVELS, true);
     }
 
     /**
@@ -203,9 +206,13 @@ trait ReadsLogs
             return false;
         }
 
-        $level = $decoded['level'] ?? $decoded['level_name'] ?? '';
+        $level = $decoded['level'] ?? $decoded['level_name'] ?? null;
 
-        return strtoupper((string) $level) === 'ERROR' || (int) ($decoded['level'] ?? 0) >= 400;
+        if (is_int($level) || (is_string($level) && ctype_digit($level))) {
+            return (int) $level >= 400;
+        }
+
+        return is_string($level) && in_array(strtoupper($level), self::ERROR_LEVELS, true);
     }
 
     /**

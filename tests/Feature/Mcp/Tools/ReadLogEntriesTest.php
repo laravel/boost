@@ -63,6 +63,27 @@ it('keeps timestamps inside log messages in the same entry', function (string $e
         ->and((string) $response->content())->toBe($lastEntry);
 })->with(['LF' => ["\n"], 'CRLF' => ["\r\n"]]);
 
+it('splits entries with custom timestamp formats', function (string $timestamp): void {
+    $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
+
+    Config::set('logging.default', 'single');
+    Config::set('logging.channels.single', [
+        'driver' => 'single',
+        'path' => $logFile,
+    ]);
+
+    createLogFile($logFile, "[{$timestamp}] local.INFO: Import started\n[{$timestamp}] local.ERROR: Import failed");
+
+    $response = (new ReadLogEntries)->handle(new Request(['entries' => 1]));
+
+    expect($response)->toolHasNoError()
+        ->and((string) $response->content())->toBe("[{$timestamp}] local.ERROR: Import failed");
+})->with([
+    'microseconds' => ['2024-01-15 10:00:00.123456'],
+    'ISO 8601' => ['2024-01-15T10:00:00.123456+00:00'],
+    'UTC suffix' => ['2024-01-15T10:00:00Z'],
+]);
+
 it('detects a daily driver directly and reads a configured path', function (): void {
     $basePath = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel.log');
     $logFile = storage_path('logs'.DIRECTORY_SEPARATOR.'laravel-'.date('Y-m-d').'.log');

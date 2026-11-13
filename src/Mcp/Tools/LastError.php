@@ -29,7 +29,7 @@ class LastError extends Tool
         // Register the listener only once per PHP process.
         if (! self::$listenerRegistered) {
             Log::listen(function (MessageLogged $event): void {
-                if ($event->level === 'error') {
+                if (in_array(strtoupper($event->level), self::ERROR_LEVELS, true)) {
                     rescue(fn () => Cache::forever('boost:last_error', [
                         'timestamp' => now()->toDateTimeString(),
                         'level' => $event->level,
