@@ -69,7 +69,7 @@ class GitHubRepository
 
         // ponytail: a branch name containing a slash is indistinguishable from the path after it.
         if (preg_match('#^(?P<repository>[^/]+/[^/]+)/(?:tree|blob)/(?P<branch>[^/]+)/?(?P<path>.*)$#', $path, $matches) === 1) {
-            return [rtrim($matches['repository'].'/'.rawurldecode($matches['path']), '/'), $matches['branch']];
+            return [rtrim($matches['repository'].'/'.rawurldecode($matches['path']), '/'), rawurldecode($matches['branch'])];
         }
 
         return [rawurldecode($path), ''];

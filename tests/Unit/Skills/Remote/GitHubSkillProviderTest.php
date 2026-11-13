@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Laravel\Boost\Skills\Remote\GitHubRepository;
 use Laravel\Boost\Skills\Remote\GitHubSkillProvider;
@@ -134,6 +135,29 @@ it('downloads skill files to target directory', function (): void {
 
     array_map(unlink(...), glob($targetDir.'/*'));
     rmdir($targetDir);
+});
+
+it('downloads skills whose branch and paths need URL encoding', function (): void {
+    $targetDir = sys_get_temp_dir().'/boost-test-'.uniqid();
+
+    Http::fake([
+        ...fakeTreeResponse([
+            ['path' => 'skills/c#/SKILL.md', 'type' => 'blob', 'sha' => 'aaa'],
+            ['path' => 'skills/notes%20draft/SKILL.md', 'type' => 'blob', 'sha' => 'bbb'],
+        ], 'c%23'),
+        'raw.githubusercontent.com/owner/repo/c%23/skills/c%23/SKILL.md' => Http::response('# C Sharp'),
+        'raw.githubusercontent.com/owner/repo/c%23/skills/notes%2520draft/SKILL.md' => Http::response('# Notes'),
+    ]);
+
+    $fetcher = new GitHubSkillProvider(GitHubRepository::fromInput('https://github.com/owner/repo/tree/c%23/skills'));
+    $skills = $fetcher->discoverSkills();
+
+    expect($fetcher->downloadSkill($skills->get('c#'), $targetDir.'/c'))->toBeTrue()
+        ->and($fetcher->downloadSkill($skills->get('notes%20draft'), $targetDir.'/notes'))->toBeTrue()
+        ->and(file_get_contents($targetDir.'/c/SKILL.md'))->toBe('# C Sharp')
+        ->and(file_get_contents($targetDir.'/notes/SKILL.md'))->toBe('# Notes');
+
+    File::deleteDirectory($targetDir);
 });
 
 it('downloads nested directory structure', function (): void {

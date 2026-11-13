@@ -243,9 +243,14 @@ class GitHubSkillProvider
             'https://raw.githubusercontent.com/%s/%s/%s/%s',
             $this->repository->owner,
             $this->repository->repo,
-            $this->resolveBranch(),
-            ltrim($path, '/')
+            self::encodePath($this->resolveBranch()),
+            self::encodePath(ltrim($path, '/'))
         );
+    }
+
+    protected static function encodePath(string $path): string
+    {
+        return implode('/', array_map(rawurlencode(...), explode('/', $path)));
     }
 
     protected function ensureDirectoryExists(string $path): bool
