@@ -86,3 +86,32 @@ it('does nothing when there are no project rules', function (): void {
 
     expect(File::isDirectory($this->rulesDir))->toBeFalse();
 });
+
+it('indexes rule files grouped in sub-folders', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/billing/providers');
+    File::ensureDirectoryExists($this->rulesDir.'/boost');
+    File::put($this->rulesDir.'/models.md', "---\npaths:\n  - app/Models/**\n---\n\n# Models\n");
+    File::put($this->rulesDir.'/billing/invoices.md', "---\npaths:\n  - app/Billing/Invoices/**\n---\n\n# Invoices\n");
+    File::put($this->rulesDir.'/billing/providers/stripe.md', "---\npaths:\n  - app/Billing/Stripe/**\n---\n\n# Stripe\n");
+    File::put($this->rulesDir.'/boost/tests.md', "---\npaths:\n  - tests/**\n---\n\n# Tests\n");
+
+    $this->artisan('boost:index-rules')->assertSuccessful();
+
+    $index = File::get($this->rulesDir.'/index.md');
+
+    expect($index)
+        ->toContain('| app/Models/** | .ai/rules/models.md |')
+        ->toContain('| app/Billing/Invoices/** | .ai/rules/billing/invoices.md |')
+        ->toContain('| app/Billing/Stripe/** | .ai/rules/billing/providers/stripe.md |')
+        ->toContain('| tests/** | .ai/rules/boost/tests.md |')
+        ->and(substr_count($index, '.ai/rules/boost/tests.md'))->toBe(1);
+});
+
+it('refuses to regenerate while a nested rule file contains conflict markers', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/billing');
+    File::put($this->rulesDir.'/billing/invoices.md', "---\npaths:\n  - app/Billing/**\n---\n\n# Invoices\n<<<<<<< HEAD\n");
+
+    $this->artisan('boost:index-rules')
+        ->assertFailed()
+        ->expectsOutputToContain('.ai/rules/billing/invoices.md');
+});

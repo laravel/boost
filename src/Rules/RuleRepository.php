@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
@@ -348,7 +349,7 @@ class RuleRepository
      */
     protected function files(): array
     {
-        return $this->markdownFilesIn($this->directory, excludeIndex: true);
+        return $this->projectMarkdownFilesIn($this->directory);
     }
 
     /**
@@ -388,14 +389,36 @@ class RuleRepository
     /**
      * @return array<int, string>
      */
-    protected function markdownFilesIn(string $dir, bool $excludeIndex = false): array
+    protected function markdownFilesIn(string $dir): array
     {
         if (! File::isDirectory($dir)) {
             return [];
         }
 
-        return collect(File::glob(join_paths($dir, '*.md')) ?: [])
-            ->when($excludeIndex, fn (Collection $files): Collection => $files->reject(fn (string $file): bool => basename($file) === self::INDEX_FILENAME))
+        return File::glob(join_paths($dir, '*.md')) ?: [];
+    }
+
+    /**
+     * Project rule files at any depth, so a team can group related rules in
+     * sub-folders (e.g. `.ai/rules/billing/stripe.md`). The index and the
+     * Boost-managed folder are not project rules.
+     *
+     * @return array<int, string>
+     */
+    protected function projectMarkdownFilesIn(string $dir): array
+    {
+        if (! File::isDirectory($dir)) {
+            return [];
+        }
+
+        $managedDir = Str::finish($this->managedDir(), DIRECTORY_SEPARATOR);
+        $indexPath = $this->indexPath();
+
+        return collect(File::allFiles($dir))
+            ->map(fn (SplFileInfo $file): string => $file->getPathname())
+            ->filter(fn (string $file): bool => str_ends_with($file, '.md'))
+            ->reject(fn (string $file): bool => $file === $indexPath || str_starts_with($file, $managedDir))
+            ->sort()
             ->values()
             ->all();
     }
