@@ -8,6 +8,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
@@ -344,11 +346,28 @@ class RuleRepository
     }
 
     /**
+     * Project rule files at any depth, excluding the index and the Boost-managed folder.
+     *
      * @return array<int, string>
      */
     protected function files(): array
     {
-        return $this->markdownFilesIn($this->directory, excludeIndex: true);
+        if (! File::isDirectory($this->directory)) {
+            return [];
+        }
+
+        $finder = Finder::create()
+            ->files()
+            ->in($this->directory)
+            ->name('*.md')
+            ->notPath(['#^'.self::MANAGED_DIRNAME.'/#', '#^'.preg_quote(self::INDEX_FILENAME, '#').'$#'])
+            ->ignoreUnreadableDirs()
+            ->sortByName();
+
+        return collect($finder)
+            ->map(fn (SplFileInfo $file): string => $file->getPathname())
+            ->values()
+            ->all();
     }
 
     /**
@@ -374,7 +393,7 @@ class RuleRepository
      */
     protected function managedFiles(): array
     {
-        return $this->markdownFilesIn($this->managedDir());
+        return File::glob(join_paths($this->managedDir(), '*.md')) ?: [];
     }
 
     /**
@@ -383,21 +402,6 @@ class RuleRepository
     protected function parsedManagedFiles(): Collection
     {
         return $this->parseAll($this->managedFiles());
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    protected function markdownFilesIn(string $dir, bool $excludeIndex = false): array
-    {
-        if (! File::isDirectory($dir)) {
-            return [];
-        }
-
-        return collect(File::glob(join_paths($dir, '*.md')) ?: [])
-            ->when($excludeIndex, fn (Collection $files): Collection => $files->reject(fn (string $file): bool => basename($file) === self::INDEX_FILENAME))
-            ->values()
-            ->all();
     }
 
     /**
