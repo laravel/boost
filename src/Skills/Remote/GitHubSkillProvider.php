@@ -250,7 +250,7 @@ class GitHubSkillProvider
 
     protected static function encodePath(string $path): string
     {
-        return implode('/', array_map(rawurlencode(...), explode('/', $path)));
+        return Str::of($path)->explode('/')->map(rawurlencode(...))->implode('/');
     }
 
     protected function ensureDirectoryExists(string $path): bool
