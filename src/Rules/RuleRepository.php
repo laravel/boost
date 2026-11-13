@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
@@ -345,11 +346,28 @@ class RuleRepository
     }
 
     /**
+     * Project rule files at any depth, excluding the index and the Boost-managed folder.
+     *
      * @return array<int, string>
      */
     protected function files(): array
     {
-        return $this->projectMarkdownFilesIn($this->directory);
+        if (! File::isDirectory($this->directory)) {
+            return [];
+        }
+
+        $finder = Finder::create()
+            ->files()
+            ->in($this->directory)
+            ->name('*.md')
+            ->notPath(['#^'.self::MANAGED_DIRNAME.'/#', '#^'.preg_quote(self::INDEX_FILENAME, '#').'$#'])
+            ->ignoreUnreadableDirs()
+            ->sortByName();
+
+        return collect($finder)
+            ->map(fn (SplFileInfo $file): string => $file->getPathname())
+            ->values()
+            ->all();
     }
 
     /**
@@ -375,7 +393,7 @@ class RuleRepository
      */
     protected function managedFiles(): array
     {
-        return $this->markdownFilesIn($this->managedDir());
+        return File::glob(join_paths($this->managedDir(), '*.md')) ?: [];
     }
 
     /**
@@ -384,43 +402,6 @@ class RuleRepository
     protected function parsedManagedFiles(): Collection
     {
         return $this->parseAll($this->managedFiles());
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    protected function markdownFilesIn(string $dir): array
-    {
-        if (! File::isDirectory($dir)) {
-            return [];
-        }
-
-        return File::glob(join_paths($dir, '*.md')) ?: [];
-    }
-
-    /**
-     * Project rule files at any depth, so a team can group related rules in
-     * sub-folders (e.g. `.ai/rules/billing/stripe.md`). The index and the
-     * Boost-managed folder are not project rules.
-     *
-     * @return array<int, string>
-     */
-    protected function projectMarkdownFilesIn(string $dir): array
-    {
-        if (! File::isDirectory($dir)) {
-            return [];
-        }
-
-        $managedDir = Str::finish($this->managedDir(), DIRECTORY_SEPARATOR);
-        $indexPath = $this->indexPath();
-
-        return collect(File::allFiles($dir))
-            ->map(fn (SplFileInfo $file): string => $file->getPathname())
-            ->filter(fn (string $file): bool => str_ends_with($file, '.md'))
-            ->reject(fn (string $file): bool => $file === $indexPath || str_starts_with($file, $managedDir))
-            ->sort()
-            ->values()
-            ->all();
     }
 
     /**
