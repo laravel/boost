@@ -45,7 +45,7 @@ Use the [Laravel Cloud documentation](https://cloud.laravel.com/docs/llms.txt) f
 - Managed queues are the recommended queue option. They provision dedicated workers and autoscale based on queued work.
 - Managed queues require a supported recent Laravel version and `aws/aws-sdk-php`; check the current Cloud documentation before changing dependencies.
 - Enable the scheduler on an App or Worker cluster to run `php artisan schedule:run` every minute. When an environment has multiple replicas, use Laravel's `onOneServer` for tasks that must run once.
-- Only Flex compute sizes can scale to zero. Scale-to-zero environments wake for Laravel scheduled tasks and queued jobs, but long-running jobs may be interrupted when the sleep timeout is reached. Use managed queues for workloads that must not be interrupted.
+- Only Flex compute sizes can scale to zero. Laravel scheduled tasks keep running while an environment sleeps, but queued jobs don't wake it, and a job still running when the sleep timeout is reached may be interrupted. Use managed queues for workloads that must not be interrupted.
 
 ## Domains and Storage
 
