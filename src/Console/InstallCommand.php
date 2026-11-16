@@ -20,6 +20,7 @@ use Laravel\Boost\Install\GuidelineConfig;
 use Laravel\Boost\Install\GuidelineWriter;
 use Laravel\Boost\Install\McpWriter;
 use Laravel\Boost\Install\Nightwatch;
+use Laravel\Boost\Install\Playwright;
 use Laravel\Boost\Install\RuleComposer;
 use Laravel\Boost\Install\Sail;
 use Laravel\Boost\Install\Skill;
@@ -300,6 +301,11 @@ class InstallCommand extends Command
                 'available' => $this->nightwatch->isInstalled(),
                 'default' => $this->config->getNightwatch(),
             ],
+            'playwright' => [
+                'label' => 'Playwright',
+                'available' => $this->selectedBoostFeatures->contains('skills') && (new Playwright($this->project))->isInstalled(),
+                'default' => $this->config->getPlaywright(),
+            ],
             'sail' => [
                 'label' => 'Laravel Sail',
                 'available' => $this->sail->isInstalled(),
@@ -518,6 +524,7 @@ class InstallCommand extends Command
         $guidelineConfig->aiGuidelines = $this->selectedThirdPartyPackages->values()->toArray();
         $guidelineConfig->usesSail = $this->shouldUseSail();
         $guidelineConfig->usesCloud = $this->selectedBoostFeatures->contains('cloud');
+        $guidelineConfig->usesPlaywright = $this->selectedBoostFeatures->contains('playwright');
         $guidelineConfig->hasSkills = $this->selectedBoostFeatures->contains('skills');
         $guidelineConfig->hasMcp = $this->selectedBoostFeatures->contains('mcp') || ($this->isExplicitFlagMode() && $this->config->getMcp());
 
@@ -546,6 +553,7 @@ class InstallCommand extends Command
 
         if ($this->selectedBoostFeatures->contains('skills')) {
             $this->config->setCloud($this->selectedBoostFeatures->contains('cloud'));
+            $this->config->setPlaywright($this->selectedBoostFeatures->contains('playwright'));
         }
 
         if ($this->selectedBoostFeatures->contains('mcp')) {
