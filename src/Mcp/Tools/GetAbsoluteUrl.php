@@ -31,6 +31,8 @@ class GetAbsoluteUrl extends Tool
                 ->description('The relative URL/path (e.g. "/dashboard") to convert to an absolute URL.'),
             'route' => $schema->string()
                 ->description('The named route to generate an absolute URL for (e.g. "home").'),
+            'parameters' => $schema->object()
+                ->description('Parameters for the named route (e.g. {"order": 42}). Extra values become query string parameters.'),
         ];
     }
 
@@ -47,7 +49,7 @@ class GetAbsoluteUrl extends Tool
         }
 
         if ($routeName) {
-            return Response::text(route($routeName));
+            return Response::text(route($routeName, $request->get('parameters', [])));
         }
 
         return Response::text(url('/'));
