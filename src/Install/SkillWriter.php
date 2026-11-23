@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Boost\Concerns\RendersBladeGuidelines;
 use Laravel\Boost\Contracts\SupportsSkills;
+use Laravel\Boost\Support\SkillParseFailures;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
@@ -39,6 +40,10 @@ class SkillWriter
         $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
         $canonicalPath = base_path('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
         $existed = $this->pathExists($targetPath);
+
+        if ($this->hasParseFailure($canonicalPath)) {
+            return $existed || $this->copyDirectory($skill->path, $targetPath) ? self::SUCCESS : self::FAILED;
+        }
 
         if (! $skill->custom) {
             return $this->writeNonCustomSkill($skill, $targetPath, $canonicalPath, $existed);
@@ -86,6 +91,12 @@ class SkillWriter
         }
 
         return $existed ? self::UPDATED : self::SUCCESS;
+    }
+
+    protected function hasParseFailure(string $skillPath): bool
+    {
+        return collect(app(SkillParseFailures::class)->all())
+            ->contains(fn (array $failure): bool => $this->pathsMatch(dirname($failure['path']), $skillPath));
     }
 
     protected function pathExists(string $path): bool
