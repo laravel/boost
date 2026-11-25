@@ -9,6 +9,7 @@ Use these checklists when performing complex setups. Copy the relevant checklist
 - [ ] Create the environment
 - [ ] Provision the database (`database-cluster:create` then `database:create`)
 - [ ] Provision the cache (`cache:create`)
+- [ ] Create and attach any buckets (`bucket:create`, then `environment:update --bucket-keys`)
 - [ ] Set environment variables (`environment:variables`)
 - [ ] Create and attach any secrets (`secret:create` then `environment-secret:attach`)
 - [ ] Attach custom domain (`domain:create` then `domain:verify`)
