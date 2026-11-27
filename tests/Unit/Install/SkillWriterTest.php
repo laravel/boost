@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Laravel\Boost\Install\Skill;
 use Laravel\Boost\Install\SkillWriter;
+use Laravel\Boost\Support\SkillParseFailures;
 use Symfony\Component\Process\Process;
 use Tests\Fixtures\FakeAgent;
 
@@ -94,6 +95,96 @@ it('updates existing canonical skills when installing non-custom skills', functi
     expect($result)->toBe(SkillWriter::SUCCESS)
         ->and($content)->toContain('name: test-skill');
 
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('keeps a canonical skill whose frontmatter failed to parse', function (bool $custom): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+    $contents = "---\nname: {$skillName}\ndescription: Use when: testing\n---\n";
+
+    mkdir($canonicalSkillPath, 0755, true);
+    file_put_contents($canonicalSkillPath.'/SKILL.md', $contents);
+    file_put_contents($canonicalSkillPath.'/notes.md', 'team notes');
+    app(SkillParseFailures::class)->record($canonicalSkillPath.'/SKILL.md', 'Invalid YAML');
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: fixture('skills/test-skill'),
+        description: 'Test skill',
+        custom: $custom,
+    );
+
+    $result = (new SkillWriter(new FakeAgent($relativeTarget)))->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and(file_get_contents($canonicalSkillPath.'/SKILL.md'))->toBe($contents)
+        ->and($canonicalSkillPath.'/notes.md')->toBeFile()
+        ->and(file_get_contents($absoluteTarget.'/'.$skillName.'/SKILL.md'))->toContain('name: test-skill');
+
+    app(SkillParseFailures::class)->flush();
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+})->with([
+    'package skill' => false,
+    'custom skill' => true,
+]);
+
+it('leaves an existing agent skill unchanged when the canonical skill failed to parse', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    mkdir($canonicalSkillPath, 0755, true);
+    mkdir($absoluteTarget.'/'.$skillName, 0755, true);
+    file_put_contents($canonicalSkillPath.'/SKILL.md', "---\nname: {$skillName}\ndescription: Use when: testing\n---\n");
+    file_put_contents($absoluteTarget.'/'.$skillName.'/SKILL.md', 'registered content');
+    app(SkillParseFailures::class)->record($canonicalSkillPath.'/SKILL.md', 'Invalid YAML');
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: fixture('skills/test-skill'),
+        description: 'Test skill',
+    );
+
+    $result = (new SkillWriter(new FakeAgent($relativeTarget)))->write($skill);
+
+    expect($result)->toBe(SkillWriter::SUCCESS)
+        ->and(file_get_contents($absoluteTarget.'/'.$skillName.'/SKILL.md'))->toBe('registered content');
+
+    app(SkillParseFailures::class)->flush();
+    cleanupSkillDirectory($absoluteTarget);
+    cleanupSkillDirectory($canonicalSkillPath);
+});
+
+it('updates a canonical skill when the parse failure belongs to another path', function (): void {
+    $relativeTarget = '.boost-test-skills-'.uniqid();
+    $absoluteTarget = base_path($relativeTarget);
+    $skillName = 'test-skill-'.uniqid();
+    $canonicalSkillPath = base_path('.ai/skills/'.$skillName);
+
+    mkdir($canonicalSkillPath, 0755, true);
+    file_put_contents($canonicalSkillPath.'/SKILL.md', 'old content');
+    app(SkillParseFailures::class)->record(base_path('vendor/acme/skills/'.$skillName.'/SKILL.md'), 'Invalid YAML');
+
+    $skill = new Skill(
+        name: $skillName,
+        package: 'boost',
+        path: fixture('skills/test-skill'),
+        description: 'Test skill',
+    );
+
+    (new SkillWriter(new FakeAgent($relativeTarget)))->write($skill);
+
+    expect(file_get_contents($canonicalSkillPath.'/SKILL.md'))->toContain('name: test-skill');
+
+    app(SkillParseFailures::class)->flush();
     cleanupSkillDirectory($absoluteTarget);
     cleanupSkillDirectory($canonicalSkillPath);
 });
