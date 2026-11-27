@@ -122,6 +122,18 @@ it('clearManaged removes the managed directory and regenerates the index when ro
         ->not->toContain('.ai/rules/boost');
 });
 
+it('clearManaged regenerates the index when only nested rules remain', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/billing');
+    File::put($this->rulesDir.'/billing/stripe.md', "---\npaths:\n  - app/Billing/Stripe/**\n---\n\n# Stripe\n");
+
+    $this->repository->syncManaged(managedRuleFiles('tests'));
+
+    expect($this->repository->clearManaged())->toBeTrue()
+        ->and(File::get($this->rulesDir.'/index.md'))
+        ->toContain('| app/Billing/Stripe/** | .ai/rules/billing/stripe.md |')
+        ->not->toContain('.ai/rules/boost');
+});
+
 it('clearManaged removes the whole rules directory when nothing else remains', function (): void {
     $this->repository->syncManaged(managedRuleFiles('tests'));
 

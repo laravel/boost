@@ -282,3 +282,19 @@ it('keeps multi-byte characters intact when writing and when appending a rule', 
         ->toContain('## '.$title)
         ->toContain($note);
 });
+
+it('appends a rule to the matching file in a sub-folder instead of creating a new one', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/billing');
+    File::put($this->rulesDir.'/billing/stripe.md', "---\npaths:\n  - app/Billing/Stripe/**\n---\n\n# Stripe\n");
+
+    $response = (new RecordRule($this->repository))->handle(new Request([
+        'glob' => 'app/Billing/Stripe/**',
+        'title' => 'Idempotency keys',
+        'note' => 'Every Stripe call passes an idempotency key.',
+    ]));
+
+    expect($response)->isToolResult()->toolHasNoError()
+        ->and(File::get($this->rulesDir.'/billing/stripe.md'))->toContain('## Idempotency keys')
+        ->and(ruleFiles($this->rulesDir))->toBe([])
+        ->and(File::get($this->rulesDir.'/index.md'))->toContain('| app/Billing/Stripe/** | .ai/rules/billing/stripe.md |');
+});

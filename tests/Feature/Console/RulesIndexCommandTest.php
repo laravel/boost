@@ -86,3 +86,66 @@ it('does nothing when there are no project rules', function (): void {
 
     expect(File::isDirectory($this->rulesDir))->toBeFalse();
 });
+
+it('indexes rule files grouped in sub-folders', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/billing/providers');
+    File::ensureDirectoryExists($this->rulesDir.'/boost');
+    File::put($this->rulesDir.'/models.md', "---\npaths:\n  - app/Models/**\n---\n\n# Models\n");
+    File::put($this->rulesDir.'/billing/invoices.md', "---\npaths:\n  - app/Billing/Invoices/**\n---\n\n# Invoices\n");
+    File::put($this->rulesDir.'/billing/providers/stripe.md', "---\npaths:\n  - app/Billing/Stripe/**\n---\n\n# Stripe\n");
+    File::put($this->rulesDir.'/boost/tests.md', "---\npaths:\n  - tests/**\n---\n\n# Tests\n");
+    File::ensureDirectoryExists($this->rulesDir.'/billing/boost');
+    File::put($this->rulesDir.'/billing/boost/limits.md', "---\npaths:\n  - app/Billing/Limits/**\n---\n\n# Limits\n");
+    File::put($this->rulesDir.'/billing/notes.txt', "---\npaths:\n  - app/Notes/**\n---\n");
+
+    $this->artisan('boost:index-rules')->assertSuccessful();
+
+    $index = File::get($this->rulesDir.'/index.md');
+
+    expect($index)
+        ->toContain('| app/Models/** | .ai/rules/models.md |')
+        ->toContain('| app/Billing/Invoices/** | .ai/rules/billing/invoices.md |')
+        ->toContain('| app/Billing/Stripe/** | .ai/rules/billing/providers/stripe.md |')
+        ->toContain('| app/Billing/Limits/** | .ai/rules/billing/boost/limits.md |')
+        ->toContain('| tests/** | .ai/rules/boost/tests.md |')
+        ->not->toContain('notes.txt')
+        ->and(substr_count($index, '.ai/rules/boost/tests.md'))->toBe(1);
+});
+
+it('warns about nested markdown without paths frontmatter, including a nested index', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/billing');
+    File::put($this->rulesDir.'/billing/invoices.md', "---\npaths:\n  - app/Billing/**\n---\n\n# Invoices\n");
+    File::put($this->rulesDir.'/billing/index.md', "# Billing\n");
+
+    $this->artisan('boost:index-rules')
+        ->assertSuccessful()
+        ->expectsOutputToContain('Skipped .ai/rules/billing/index.md: no valid `paths` frontmatter.');
+
+    expect(File::get($this->rulesDir.'/index.md'))->toContain('| app/Billing/** | .ai/rules/billing/invoices.md |');
+});
+
+it('refuses to regenerate while a nested rule file contains conflict markers', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/billing');
+    File::put($this->rulesDir.'/billing/invoices.md', "---\npaths:\n  - app/Billing/**\n---\n\n# Invoices\n<<<<<<< HEAD\n");
+    File::put($this->rulesDir.'/index.md', 'original');
+
+    $this->artisan('boost:index-rules')
+        ->assertFailed()
+        ->expectsOutputToContain('.ai/rules/billing/invoices.md');
+
+    expect(File::get($this->rulesDir.'/index.md'))->toBe('original');
+});
+
+it('skips sub-folders it cannot read', function (): void {
+    File::ensureDirectoryExists($this->rulesDir.'/locked');
+    File::put($this->rulesDir.'/models.md', "---\npaths:\n  - app/Models/**\n---\n\n# Models\n");
+    chmod($this->rulesDir.'/locked', 0000);
+
+    try {
+        $this->artisan('boost:index-rules')->assertSuccessful()->run();
+    } finally {
+        chmod($this->rulesDir.'/locked', 0755);
+    }
+
+    expect(File::get($this->rulesDir.'/index.md'))->toContain('| app/Models/** | .ai/rules/models.md |');
+})->skipOnWindows()->skip(fn (): bool => function_exists('posix_getuid') && posix_getuid() === 0, 'Root can read any directory.');
