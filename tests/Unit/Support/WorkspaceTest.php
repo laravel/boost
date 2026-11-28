@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\File;
 use Laravel\Boost\Support\Workspace;
 use Symfony\Component\Process\Process;
 
+use function Orchestra\Testbench\default_skeleton_path;
+
 it('uses artisan inside a Laravel application', function (): void {
     expect(Workspace::artisan())->toBe('artisan');
 });
@@ -20,7 +22,7 @@ it('installs into the package when running through the Testbench CLI', function 
 
     // The Testbench CLI writes into its skeleton application, so give it a private copy
     // rather than the shared one the rest of the test suite boots from.
-    File::copyDirectory(realpath(__DIR__.'/../../../vendor/orchestra/testbench-core/laravel'), $package.'/skeleton');
+    File::copyDirectory(default_skeleton_path(), $package.'/skeleton');
     File::delete([$package.'/skeleton/.env', ...File::glob($package.'/skeleton/bootstrap/cache/*.php')]);
 
     // Boost is the root package of the linked vendor directory, so it isn't auto-discovered.
