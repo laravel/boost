@@ -21,8 +21,12 @@ use Laravel\Boost\Services\BrowserLogger;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\RenderFailures;
 use Laravel\Boost\Support\SkillParseFailures;
+use Laravel\Boost\Support\TestbenchProjectManager;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Roster\ProjectManager;
+
+use function Orchestra\Sidekick\is_testbench_cli;
+use function Orchestra\Sidekick\working_path;
 
 class BoostServiceProvider extends ServiceProvider
 {
@@ -42,7 +46,9 @@ class BoostServiceProvider extends ServiceProvider
 
         $this->app->singleton(BoostManager::class, fn (): BoostManager => new BoostManager);
 
-        $this->app->singleton(ProjectManager::class, fn (): ProjectManager => new ProjectManager);
+        $this->app->singleton(ProjectManager::class, fn (): ProjectManager => is_testbench_cli()
+            ? new TestbenchProjectManager
+            : new ProjectManager);
 
         $this->app->singleton(GuidelineConfig::class, function (): GuidelineConfig {
             $config = new GuidelineConfig;
@@ -51,7 +57,7 @@ class BoostServiceProvider extends ServiceProvider
             return $config;
         });
 
-        $this->app->singleton(RuleRepository::class, fn (): RuleRepository => new RuleRepository(base_path('.ai/rules')));
+        $this->app->singleton(RuleRepository::class, fn (): RuleRepository => new RuleRepository(working_path('.ai/rules')));
 
         $this->app->singleton(GuidelineAssist::class, fn ($app): GuidelineAssist => new GuidelineAssist(
             $app->make(ProjectManager::class),
@@ -207,6 +213,11 @@ class BoostServiceProvider extends ServiceProvider
 
         if (app()->runningUnitTests()) {
             return false;
+        }
+
+        // Packages running through the Testbench CLI are always in development.
+        if (is_testbench_cli()) {
+            return true;
         }
 
         // Only enable Boost on local environments or when debug is true

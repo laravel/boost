@@ -12,7 +12,10 @@ use Laravel\Boost\Install\Enums\Platform;
 use Laravel\Boost\Install\Mcp\FileWriter;
 use Laravel\Boost\Install\Mcp\TomlFileWriter;
 use Laravel\Boost\Support\CommandNormalizer;
+use Laravel\Boost\Support\Workspace;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
+
+use function Orchestra\Sidekick\working_path;
 
 abstract class Agent
 {
@@ -43,7 +46,7 @@ abstract class Agent
 
     public function getArtisanPath(bool $forceAbsolutePath = false): string
     {
-        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? base_path('artisan') : 'artisan';
+        return ($this->useAbsolutePathForMcp() || $forceAbsolutePath) ? working_path(Workspace::artisan()) : Workspace::artisan();
     }
 
     /**

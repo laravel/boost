@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Laravel\Boost\Install\Assists\Inertia;
 use Laravel\Boost\Support\Composer;
 use Laravel\Boost\Support\PackageRegistry;
+use Laravel\Boost\Support\Workspace;
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\ProjectManager;
 use Symfony\Component\Finder\Finder;
@@ -181,12 +182,12 @@ class GuidelineAssist
         $phpExecutable = config('boost.executable_paths.php');
 
         if ($phpExecutable) {
-            return "{$phpExecutable} artisan";
+            return "{$phpExecutable} ".Workspace::artisan();
         }
 
         return $this->config->usesSail
             ? Sail::artisanCommand()
-            : 'php artisan';
+            : 'php '.Workspace::artisan();
     }
 
     public function sailBinaryPath(): string

@@ -7,6 +7,8 @@ namespace Laravel\Boost\Concerns;
 use Illuminate\Support\Str;
 use Laravel\Boost\Support\SkillParseFailures;
 
+use function Orchestra\Sidekick\working_path;
+
 trait ReportsSkillParseFailures
 {
     protected function reportSkillParseFailures(): void
@@ -28,7 +30,7 @@ trait ReportsSkillParseFailures
         ));
 
         foreach ($entries as $entry) {
-            $location = Str::after($this->normalizeSeparators($entry['path']), $this->normalizeSeparators(base_path()).'/');
+            $location = Str::after($this->normalizeSeparators($entry['path']), $this->normalizeSeparators(working_path()).'/');
 
             $this->line(rtrim(sprintf('  - %s (%s): %s', $entry['name'], $location, $entry['reason']), ': '));
         }

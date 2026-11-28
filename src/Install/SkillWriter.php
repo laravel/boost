@@ -15,6 +15,8 @@ use RuntimeException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
+use function Orchestra\Sidekick\working_path;
+
 class SkillWriter
 {
     use RendersBladeGuidelines;
@@ -36,8 +38,8 @@ class SkillWriter
             throw new RuntimeException("Invalid skill name: {$skill->name}");
         }
 
-        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
-        $canonicalPath = base_path('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
+        $targetPath = working_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skill->name);
+        $canonicalPath = working_path('.ai'.DIRECTORY_SEPARATOR.'skills'.DIRECTORY_SEPARATOR.$skill->name);
         $existed = $this->pathExists($targetPath);
 
         if (! $skill->custom) {
@@ -129,7 +131,7 @@ class SkillWriter
             return false;
         }
 
-        $targetPath = base_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skillName);
+        $targetPath = working_path($this->agent->skillsPath().DIRECTORY_SEPARATOR.$skillName);
 
         if (! $this->pathExists($targetPath)) {
             return true;

@@ -7,6 +7,8 @@ namespace Laravel\Boost\Install\Assists;
 use Laravel\Boost\Support\PackageRegistry;
 use Laravel\Roster\ProjectManager;
 
+use function Orchestra\Sidekick\working_path;
+
 class Inertia
 {
     public function __construct(private ProjectManager $project)
@@ -43,7 +45,7 @@ class Inertia
 
     public function pagesDirectory(): string
     {
-        $jsPath = base_path('resources/js');
+        $jsPath = working_path('resources/js');
 
         if (is_dir($jsPath)) {
             $entries = @scandir($jsPath);
