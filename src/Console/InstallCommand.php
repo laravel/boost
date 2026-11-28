@@ -40,6 +40,8 @@ use Throwable;
 use function Laravel\Prompts\grid;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\note;
+use function Orchestra\Sidekick\is_testbench_cli;
+use function Orchestra\Sidekick\working_path;
 
 class InstallCommand extends Command
 {
@@ -115,7 +117,7 @@ class InstallCommand extends Command
         }
 
         $this->systemInstalledAgents = $this->agentsDetector->discoverSystemInstalledAgents();
-        $this->projectInstalledAgents = $this->agentsDetector->discoverProjectInstalledAgents(base_path());
+        $this->projectInstalledAgents = $this->agentsDetector->discoverProjectInstalledAgents(working_path());
     }
 
     protected function collectInstallationPreferences(): void
@@ -166,7 +168,7 @@ class InstallCommand extends Command
         $this->warn(sprintf('Skipped %d %s that could not be rendered:', count($paths), Str::plural('file', $paths)));
 
         foreach ($paths as $path) {
-            $this->line('  - '.str_replace(base_path().DIRECTORY_SEPARATOR, '', $path));
+            $this->line('  - '.str_replace(working_path().DIRECTORY_SEPARATOR, '', $path));
         }
 
         if ($packages !== []) {
@@ -200,11 +202,15 @@ class InstallCommand extends Command
             return (bool) config('boost.enforce_tests');
         }
 
-        if (! file_exists(base_path('vendor/bin/phpunit'))) {
+        if (! file_exists(working_path('vendor/bin/phpunit'))) {
             return false;
         }
 
-        $process = new Process([PHP_BINARY, 'artisan', 'test', '--list-tests'], base_path());
+        $command = is_testbench_cli()
+            ? [PHP_BINARY, file_exists(working_path('vendor/bin/pest')) ? 'vendor/bin/pest' : 'vendor/bin/phpunit', '--list-tests']
+            : [PHP_BINARY, 'artisan', 'test', '--list-tests'];
+
+        $process = new Process($command, working_path());
 
         try {
             $process->run();

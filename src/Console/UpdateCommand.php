@@ -10,10 +10,12 @@ use Laravel\Boost\Concerns\ReportsSkillParseFailures;
 use Laravel\Boost\Install\ThirdPartyPackage;
 use Laravel\Boost\Support\Config;
 use Laravel\Boost\Support\SkillParseFailures;
+use Laravel\Boost\Support\Workspace;
 use Laravel\Roster\ProjectManager;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\multiselect;
+use function Orchestra\Sidekick\working_path;
 
 #[AsCommand('boost:update', 'Update the Laravel Boost guidelines & skills to the latest guidance')]
 class UpdateCommand extends Command
@@ -31,20 +33,20 @@ class UpdateCommand extends Command
         app(SkillParseFailures::class)->flush();
 
         if (! $config->isValid()) {
-            $this->error('Please set up Boost with [php artisan boost:install] first.');
+            $this->error('Please set up Boost with [php '.Workspace::artisan().' boost:install] first.');
 
             return self::FAILURE;
         }
 
         $guidelines = $config->getGuidelines();
-        $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(base_path('.ai/skills')));
+        $hasSkills = ! $this->option('ignore-skills') && ($config->hasSkills() || is_dir(working_path('.ai/skills')));
 
         if (! $guidelines && ! $hasSkills) {
             return self::SUCCESS;
         }
 
         if (empty($config->getAgents())) {
-            $this->error('Please set up Boost with [php artisan boost:install] first.');
+            $this->error('Please set up Boost with [php '.Workspace::artisan().' boost:install] first.');
 
             return self::FAILURE;
         }

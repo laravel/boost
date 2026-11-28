@@ -10,6 +10,8 @@ use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 
+use function Orchestra\Sidekick\working_path;
+
 class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
@@ -58,7 +60,7 @@ class ClaudeCode extends Agent implements SupportsGuidelines, SupportsMcp, Suppo
             return $configured;
         }
 
-        return file_exists(base_path('CLAUDE.md'))
+        return file_exists(working_path('CLAUDE.md'))
             ? 'CLAUDE.md'
             : 'AGENTS.md';
     }

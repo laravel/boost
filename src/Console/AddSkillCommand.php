@@ -27,6 +27,7 @@ use function Laravel\Prompts\note;
 use function Laravel\Prompts\spin;
 use function Laravel\Prompts\table;
 use function Laravel\Prompts\text;
+use function Orchestra\Sidekick\working_path;
 
 class AddSkillCommand extends Command
 {
@@ -269,7 +270,7 @@ class AddSkillCommand extends Command
 
     protected function skillTargetPath(RemoteSkill $skill): string
     {
-        return base_path($this->defaultSkillsPath.DIRECTORY_SEPARATOR.$skill->name);
+        return working_path($this->defaultSkillsPath.DIRECTORY_SEPARATOR.$skill->name);
     }
 
     /**

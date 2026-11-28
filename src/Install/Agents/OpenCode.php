@@ -11,6 +11,8 @@ use Laravel\Boost\Install\Enums\McpInstallationStrategy;
 use Laravel\Boost\Install\Enums\Platform;
 use stdClass;
 
+use function Orchestra\Sidekick\working_path;
+
 class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
@@ -53,7 +55,7 @@ class OpenCode extends Agent implements SupportsGuidelines, SupportsMcp, Support
             return $configured;
         }
 
-        return file_exists(base_path('opencode.jsonc'))
+        return file_exists(working_path('opencode.jsonc'))
             ? 'opencode.jsonc'
             : 'opencode.json';
     }

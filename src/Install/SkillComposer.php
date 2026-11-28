@@ -13,6 +13,8 @@ use Laravel\Roster\ProjectManager;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
+use function Orchestra\Sidekick\working_path;
+
 class SkillComposer
 {
     use DiscoverPackagePaths;
@@ -152,7 +154,7 @@ class SkillComposer
      */
     protected function discoverExplicitUserSkills(): Collection
     {
-        $path = base_path('.ai/skills');
+        $path = working_path('.ai/skills');
 
         if (! is_dir($path)) {
             return collect();
@@ -169,7 +171,7 @@ class SkillComposer
      */
     protected function discoverPackageSpecificUserSkills(): Collection
     {
-        $userAiPath = base_path('.ai');
+        $userAiPath = working_path('.ai');
 
         if (! is_dir($userAiPath)) {
             return collect();

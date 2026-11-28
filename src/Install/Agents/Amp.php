@@ -9,6 +9,8 @@ use Laravel\Boost\Contracts\SupportsMcp;
 use Laravel\Boost\Contracts\SupportsSkills;
 use Laravel\Boost\Install\Enums\Platform;
 
+use function Orchestra\Sidekick\working_path;
+
 class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkills
 {
     public function name(): string
@@ -44,7 +46,7 @@ class Amp extends Agent implements SupportsGuidelines, SupportsMcp, SupportsSkil
 
     public function mcpConfigPath(): string
     {
-        return config('boost.agents.amp.mcp_config_path', base_path('.amp/settings.json'));
+        return config('boost.agents.amp.mcp_config_path', working_path('.amp/settings.json'));
     }
 
     public function mcpConfigKey(): string

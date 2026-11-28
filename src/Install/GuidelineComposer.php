@@ -15,6 +15,8 @@ use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
+use function Orchestra\Sidekick\working_path;
+
 class GuidelineComposer
 {
     use DiscoverPackagePaths;
@@ -71,7 +73,7 @@ class GuidelineComposer
 
     public function customGuidelinePath(string $path = ''): string
     {
-        return base_path($this->userGuidelineDir.'/'.ltrim($path, '/'));
+        return working_path($this->userGuidelineDir.'/'.ltrim($path, '/'));
     }
 
     protected function isCustomGuideline(string $path): bool

@@ -12,6 +12,7 @@ use Symfony\Component\Yaml\Yaml;
 use Throwable;
 
 use function Illuminate\Filesystem\join_paths;
+use function Orchestra\Sidekick\working_path;
 
 class RuleRepository
 {
@@ -199,7 +200,7 @@ class RuleRepository
     public function relativePath(string $path): string
     {
         $path = Str::replace(DIRECTORY_SEPARATOR, '/', $path);
-        $base = Str::finish(Str::replace(DIRECTORY_SEPARATOR, '/', base_path()), '/');
+        $base = Str::finish(Str::replace(DIRECTORY_SEPARATOR, '/', working_path()), '/');
 
         return ltrim(str_starts_with($path, $base) ? substr($path, strlen($base)) : $path, '/');
     }

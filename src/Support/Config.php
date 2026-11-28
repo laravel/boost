@@ -6,6 +6,8 @@ namespace Laravel\Boost\Support;
 
 use Illuminate\Support\Str;
 
+use function Orchestra\Sidekick\working_path;
+
 class Config
 {
     protected const FILE = 'boost.json';
@@ -120,7 +122,7 @@ class Config
 
     public function flush(): void
     {
-        $path = base_path(self::FILE);
+        $path = working_path(self::FILE);
 
         if (file_exists($path)) {
             unlink($path);
@@ -142,7 +144,7 @@ class Config
 
         ksort($config);
 
-        $path = base_path(self::FILE);
+        $path = working_path(self::FILE);
 
         file_put_contents($path, Str::of(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))->append("\n"));
     }
@@ -157,7 +159,7 @@ class Config
      */
     protected function read(): ?array
     {
-        $path = base_path(self::FILE);
+        $path = working_path(self::FILE);
 
         if (! file_exists($path)) {
             return null;

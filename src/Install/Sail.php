@@ -6,13 +6,18 @@ namespace Laravel\Boost\Install;
 
 use const DIRECTORY_SEPARATOR;
 
+use Laravel\Boost\Support\Workspace;
+
+use function Orchestra\Sidekick\is_testbench_cli;
+use function Orchestra\Sidekick\working_path;
+
 class Sail
 {
     public const DEFAULT_BINARY_PATH = 'vendor'.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.'sail';
 
     public static function artisanCommand(): string
     {
-        return self::command('artisan');
+        return self::command(is_testbench_cli() ? 'php '.Workspace::artisan() : 'artisan');
     }
 
     public static function binCommand(): string
@@ -44,13 +49,13 @@ class Sail
     {
         $binaryPath = self::binaryPath();
 
-        $binaryExists = file_exists($binaryPath) || file_exists(base_path($binaryPath));
+        $binaryExists = file_exists($binaryPath) || file_exists(working_path($binaryPath));
 
         return $binaryExists && (
-            file_exists(base_path('compose.yml'))
-            || file_exists(base_path('compose.yaml'))
-            || file_exists(base_path('docker-compose.yml'))
-            || file_exists(base_path('docker-compose.yaml'))
+            file_exists(working_path('compose.yml'))
+            || file_exists(working_path('compose.yaml'))
+            || file_exists(working_path('docker-compose.yml'))
+            || file_exists(working_path('docker-compose.yaml'))
         );
     }
 
@@ -76,7 +81,9 @@ class Sail
         return [
             'key' => $serverName,
             'command' => self::binaryPath(),
-            'args' => ['artisan', 'boost:mcp'],
+            'args' => is_testbench_cli()
+                ? ['php', Workspace::artisan(), 'boost:mcp']
+                : ['artisan', 'boost:mcp'],
         ];
     }
 }

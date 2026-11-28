@@ -7,10 +7,13 @@ namespace Laravel\Boost\Mcp;
 use Dotenv\Dotenv;
 use Illuminate\Support\Env;
 use Laravel\Boost\Support\CommandNormalizer;
+use Laravel\Boost\Support\Workspace;
 use Laravel\Mcp\Response;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
+
+use function Orchestra\Sidekick\working_path;
 
 class ToolExecutor
 {
@@ -38,6 +41,7 @@ class ToolExecutor
 
         $process = new Process(
             command: $command,
+            cwd: working_path(),
             env: $cleanEnv,
             timeout: $this->getTimeout($arguments)
         );
@@ -131,7 +135,7 @@ class ToolExecutor
         return [
             $normalized['command'],
             ...$normalized['args'],
-            base_path('artisan'),
+            working_path(Workspace::artisan()),
             'boost:execute-tool',
             $toolClass,
             base64_encode(json_encode($arguments)),

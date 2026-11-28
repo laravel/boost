@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Boost\Support;
 
+use function Orchestra\Sidekick\working_path;
+
 class Composer
 {
     /** @var array<int, string> */
@@ -48,7 +50,7 @@ class Composer
 
     protected static function composerJson(): array
     {
-        $composerJsonPath = base_path('composer.json');
+        $composerJsonPath = working_path('composer.json');
 
         if (! file_exists($composerJsonPath)) {
             return [];
